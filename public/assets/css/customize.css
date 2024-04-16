@@ -1,0 +1,74 @@
+
+ .site-main-header{
+    background-color: var(--theme);
+    position: sticky;
+    top: 0;
+    z-index: 997;
+ }
+
+ .border-theme{
+   border: 2px solid var(--theme);
+ }
+
+ .report-box{
+    margin-bottom:  20px;
+    border: 1px solid var(--theme);
+    background:#EDF2F7;
+    border-radius: 4px;
+ }
+
+ .mh250{
+   max-height: 250px;
+   min-height: 250px;
+   overflow-y: auto;
+   overflow-x: hidden;
+ }
+
+ .menuBar{
+    background-color: var(--secondary); 
+ }
+
+ .curp{
+    cursor: pointer;
+ }
+
+ .sidebar{
+    top: 50px;
+    background-color: var(--theme);
+    padding: 130px 20px 20px 20px;
+    width: 250px;
+ }
+ .sidebar-nav .nav-link.collapsed {
+    color: #ffffff;
+    background: transparent;
+}
+.sidebar-nav .nav-link{
+    background: transparent;
+}
+.sidebar-nav .nav-link:hover {
+    background: transparent;
+    color: var(--secondary);
+}
+.sidebar-nav .nav-link:hover i { 
+    color: var(--secondary);
+}
+
+@media (min-width: 1200px){ 
+#main, #footer {
+    margin-left: 250px;
+}
+}
+
+.form-control{
+   border: 1px solid var(--theme);
+   background: transparent;
+}
+
+.form-control:focus{
+   box-shadow: none;
+   border: 1px solid var(--theme);
+}
+
+.sidebar-nav .nav-item.active .nav-link {
+    color: rgb(155, 198, 83);
+}

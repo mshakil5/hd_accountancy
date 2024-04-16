@@ -1,0 +1,346 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use DataTables;
+use App\Models\User;
+use App\Models\Department;
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use App\Models\UserAttendanceLog;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+
+class StaffController extends Controller
+{
+    // public function index()
+    // {
+    //     // $departments = Department::orderby('id','DESC')->get();
+    //     // $managers = User::where('type', '2')->orderby('id','DESC')->get();
+    //     $data = User::where('type', '3')->orderby('id','DESC')->get();
+    //     // return view('admin.staff.index', compact('data','departments','managers'));
+    //     return view('admin.staff.index', compact('data'));
+    // }
+
+    public function index()
+    {
+        return view('admin.staff.index');
+    }
+
+    public function getStuffs(Request $request)
+    {
+        if ($request->ajax()) {
+            $data = User::where('type', '3')->orderBy('id', 'DESC')->get();
+            return Datatables::of($data)
+                ->addIndexColumn()
+                ->make(true);
+        }
+    }
+
+    public function create()
+    {
+        $managers = User::where('type', '2')->orderby('id','DESC')->get();
+        $departments = Department::orderby('id','DESC')->get();
+        return view('admin.staff.create', compact('managers','departments'));
+    }
+
+    public function store(Request $request)
+    {
+            $validator = Validator::make($request->all(), [
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'phone' => 'required|numeric|digits:11',
+            'email' => 'required|email|unique:users,email',
+            'ni_number' => 'required|regex:/^[A-Za-z0-9]+$/',
+            'date_of_birth' => 'required|date',
+            'address' => 'required|string|max:255',
+            'department_id' => 'required|integer',
+            'job_title' => 'required|string|max:255',
+            'employment_status' => 'required|string|max:255',
+            'joining_date' => 'required|date',
+            'image' => 'nullable|mimes:jpeg,png,jpg,gif,svg,pdf|max:8048',
+            'reporting_to' => 'required',
+            'password' => 'required|string|max:255',
+            'confirm_password' => 'required|same:password',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => 422, 'errors' => $validator->errors()], 422);
+        }
+
+        $data = new User;
+
+        if ($request->hasFile('image')) {
+            $imageName = time() . '_' . $request->image->getClientOriginalName();
+            $request->image->move(public_path('images/staff'), $imageName);
+            $data->image = $imageName;
+        }
+
+        $data->first_name = $request->first_name;
+        $data->last_name = $request->last_name;
+        $data->phone = $request->phone;
+        $data->email = $request->email;
+        $data->ni_number = $request->ni_number;
+        $data->date_of_birth = $request->date_of_birth;
+        $data->address = $request->address;
+        $data->department_id = $request->department_id;
+        $data->job_title  = $request->job_title;
+        $data->employment_status  = $request->employment_status;
+        $data->joining_date  = $request->joining_date;
+        $data->reporting_to  = $request->reporting_to;
+
+        $data->type = "3";
+        $data->created_by =  Auth::id();
+
+        if(isset($request->password)){
+            $data->password = Hash::make($request->password);
+        }
+
+        if ($data->save()) {
+            return response()->json(['status' => 200, 'message' => 'Staff created successfully']);
+        } else {
+            return response()->json(['status' => 500, 'message' => 'Server Error']);
+        }
+
+    }
+
+    public function edit($id)
+    {
+        $where = [
+            'id'=>$id
+        ];
+        $info = User::where($where)->get()->first();
+        return response()->json($info);
+    }
+
+    public function update(Request $request)
+    {
+        if(empty($request->first_name)){
+            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"First name \" field..!</b></div>";
+            return response()->json(['status'=> 303,'message'=>$message]);
+            exit();
+        }
+        if(empty($request->last_name)){
+            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Last name \" field..!</b></div>";
+            return response()->json(['status'=> 303,'message'=>$message]);
+            exit();
+        }
+        if(empty($request->phone)){
+            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Phone \" field..!</b></div>";
+            return response()->json(['status'=> 303,'message'=>$message]);
+            exit();
+        }
+        if (!preg_match('/^\d{11}$/', $request->phone)) {
+            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Phone number must be 11 digits.</b></div>";
+            return response()->json(['status'=> 303,'message'=>$message]);
+            exit();
+        }
+        if(empty($request->email)){
+            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Email \" field..!</b></div>";
+            return response()->json(['status'=> 303,'message'=>$message]);
+            exit();
+        }
+        $duplicateemail = User::where('email',$request->email)->where('id','!=', $request->codeid)->first();
+        if($duplicateemail){
+            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>This email already added.</b></div>";
+            return response()->json(['status'=> 303,'message'=>$message]);
+            exit();
+        }
+        if(empty($request->ni_number)){
+            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"NI Number \" field..!</b></div>";
+            return response()->json(['status'=> 303,'message'=>$message]);
+            exit();
+        }
+        if(empty($request->date_of_birth)){
+            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Date of birth \" field..!</b></div>";
+            return response()->json(['status'=> 303,'message'=>$message]);
+            exit();
+        }
+        if(empty($request->address)){
+            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Address \" field..!</b></div>";
+            return response()->json(['status'=> 303,'message'=>$message]);
+            exit();
+        }
+        if(empty($request->department_id )){
+            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Department\" field..!</b></div>";
+            return response()->json(['status'=> 303,'message'=>$message]);
+            exit();
+        }
+        if(empty($request->job_title )){
+            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Job title\" field..!</b></div>";
+            return response()->json(['status'=> 303,'message'=>$message]);
+            exit();
+        }
+        if(empty($request->employment_status )){
+            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Employment status\" field..!</b></div>";
+            return response()->json(['status'=> 303,'message'=>$message]);
+            exit();
+        }
+        if(empty($request->joining_date )){
+            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Joining date\" field..!</b></div>";
+            return response()->json(['status'=> 303,'message'=>$message]);
+            exit();
+        }
+        if(empty($request->reporting_to )){
+            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Reporting to\" field..!</b></div>";
+            return response()->json(['status'=> 303,'message'=>$message]);
+            exit();
+        }
+        if(isset($request->password) && ($request->password != $request->confirm_password)){
+            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Password doesn't match.</b></div>";
+            return response()->json(['status'=> 303,'message'=>$message]);
+            exit();
+        }
+
+        $data = User::find($request->codeid);
+
+        if($request->image != 'null'){
+            $request->validate([
+                'image' => 'required|mimes:jpeg,png,jpg,gif,svg,pdf|max:8048',
+            ]);
+
+            if ($data->image && file_exists(public_path('images/staff/' . $data->image))) {
+                unlink(public_path('images/staff/' . $data->image));
+            }
+
+            $rand = mt_rand(100000, 999999);
+            $imageName = time(). $rand .'.'.$request->image->extension();
+            $request->image->move(public_path('images/staff'), $imageName);
+            $data->image = $imageName;
+        }
+
+        $data->first_name = $request->first_name;
+        $data->last_name = $request->last_name;
+        $data->phone = $request->phone;
+        $data->email = $request->email;
+        $data->id_number = $request->id_number;
+        $data->ni_number = $request->ni_number;
+        $data->date_of_birth = $request->date_of_birth;
+        $data->address = $request->address;
+        $data->department_id = $request->department_id;
+        $data->job_title  = $request->job_title;
+        $data->employment_status  = $request->employment_status;
+        $data->joining_date  = $request->joining_date;
+        $data->reporting_to  = $request->reporting_to;
+        $data->reporting_employee_id  = $request->reporting_employee_id;
+        $data->updated_by =  Auth::id();
+
+        if(isset($request->password)){
+            $data->password = Hash::make($request->password);
+        }
+        if ($data->save()) {
+            $message ="<div class='alert alert-success'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Data Updated Successfully.</b></div>";
+            return response()->json(['status'=> 300,'message'=>$message]);
+        }
+        else{
+            return response()->json(['status'=> 303,'message'=>'Server Error!!']);
+        } 
+    }
+
+    public function delete($id)
+    {
+        if(User::destroy($id)){
+            return response()->json(['success'=>true,'message'=>'Staff has been deleted successfully']);
+        }else{
+            return response()->json(['success'=>false,'message'=>'Delete Failed']);
+        }
+    }
+
+    public function prevLogStaffs()
+    {
+        $previouslyLoggedStaff = UserAttendanceLog::with('user')
+            ->where('status', 1)
+            ->where('start_time', '>=', now()->subHours(12))
+            ->orderBy('id', 'desc')
+            ->get()
+            ->map(function ($log) {
+                $duration = Carbon::now()->diff($log->start_time);
+                $log->duration = $duration->format('%H:%I:%S');
+                return $log;
+            });
+        
+        return view('admin.staff.previous_logged', compact('previouslyLoggedStaff'));
+
+    }
+
+    public function changeStatus(Request $request)
+    {
+        $user = User::find($request->user_id);
+        if ($user) {
+            $user->status = !$user->status;
+            $user->save();
+            return response()->json(['success' => true]);
+        } else {
+            return response()->json(['success' => false]);
+        }
+    }
+
+    public function showDetails($id)
+    {
+        $staff = User::findOrFail($id);
+        $departments = Department::orderby('id','DESC')->get();
+        $managers = User::where('type', '2')->orderby('id','DESC')->get();
+        return view('admin.staff.details', compact('staff', 'departments', 'managers'));
+    }
+    public function updateStaff(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'phone' => 'required|numeric|digits:11',
+            'email' => 'required|email|unique:users,email,' . $id,
+            'ni_number' => 'required|regex:/^[A-Za-z0-9]+$/',
+            'date_of_birth' => 'required|date',
+            'address' => 'required|string|max:255',
+            'department_id' => 'required|integer',
+            'job_title' => 'required|string|max:255',
+            'employment_status' => 'required|string|max:255',
+            'joining_date' => 'required|date',
+            'image' => 'nullable|mimes:jpeg,png,jpg,gif,svg,pdf|max:8048',
+            'reporting_to' => 'required',
+            'password' => 'nullable|string|max:255',
+            'confirm_password' => 'nullable|same:password',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => 422, 'errors' => $validator->errors()], 422);
+        }
+
+        $staff = User::findOrFail($id);
+
+        if ($request->hasFile('image')) {
+            $imageName = time() . '_' . $request->image->getClientOriginalName();
+            $request->image->move(public_path('images/staff'), $imageName);
+            $staff->image = $imageName;
+        }
+
+        $staff->first_name = $request->first_name;
+        $staff->last_name = $request->last_name;
+        $staff->phone = $request->phone;
+        $staff->email = $request->email;
+        $staff->ni_number = $request->ni_number;
+        $staff->date_of_birth = $request->date_of_birth;
+        $staff->address = $request->address;
+        $staff->department_id = $request->department_id;
+        $staff->job_title = $request->job_title;
+        $staff->employment_status = $request->employment_status;
+        $staff->joining_date = $request->joining_date;
+        $staff->reporting_to = $request->reporting_to;
+
+        $staff->type = "3";
+        $staff->updated_by = Auth::id(); // Assuming you want to track who last updated the record
+
+        if(isset($request->password)){
+            $staff->password = Hash::make($request->password);
+        }
+
+        if ($staff->save()) {
+            return response()->json(['status' => 200, 'message' => 'Staff updated successfully']);
+        } else {
+            return response()->json(['status' => 500, 'message' => 'Server Error']);
+        }
+    }
+
+}
