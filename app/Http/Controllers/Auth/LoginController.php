@@ -50,16 +50,23 @@ class LoginController extends Controller
     public function login(Request $request): RedirectResponse
     {   
         $input = $request->all();
-     
+    
         $this->validate($request, [
             'email' => 'required|email',
             'password' => 'required',
         ]);
-     
+    
         if(auth()->attempt(array('email' => $input['email'], 'password' => $input['password'])))
         {
-
             $user = Auth::user();
+
+            if ($user->type == 'staff' && $user->status == 0) {
+                auth()->logout();
+                return redirect()->route('login')
+                    ->withErrors(['email' => 'You cannot log in. Your account is deactivated.'])
+                    ->withInput($request->except('password'));
+            }
+
             if($user->type == 'staff'){
                 $attendanceLog = new UserAttendanceLog();
                 $attendanceLog->user_id = $user->id;
@@ -68,22 +75,21 @@ class LoginController extends Controller
                 $attendanceLog->created_by = Auth::user()->id;
                 $attendanceLog->save();
             }
-            
+
             if (auth()->user()->type == 'admin') {
                 return redirect()->route('admin.home');
-            }else if (auth()->user()->type == 'manager') {
+            } else if (auth()->user()->type == 'manager') {
                 return redirect()->route('manager.home');
-            }else if (auth()->user()->type == 'staff'){
+            } else if (auth()->user()->type == 'staff'){
                 return redirect()->route('staff.home');
-            }
-            else{
+            } else {
                 return redirect()->route('user.home');
             }
-        }else{
+        } else {
             return redirect()->route('login')
             ->withErrors(['email' => 'Wrong credentials.'])
             ->withInput($request->except('password'));
         }
-          
     }
+
 }

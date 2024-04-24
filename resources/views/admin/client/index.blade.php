@@ -31,6 +31,7 @@
                                 <th scope="col">Phone</th>
                                 <th scope="col">Email</th>
                                 <th scope="col">Status</th>
+                                <th scope="col">Action</th>
                                 <!-- <th scope="col">Address</th> -->
                             </tr>
                         </thead>
@@ -47,8 +48,9 @@
 
 @section('script')
 
+<!-- Client Data table start -->
 <script>
-  $(document).ready(function() {
+ $(document).ready(function() {
     var table = $('#clientsTable').DataTable({
         serverSide: true,
         ajax: "{{ route('get.Clients') }}",
@@ -68,11 +70,65 @@
                     return '<button class="' + statusClass + '" onclick="changeStatus(' + full.id + ')">' + statusText + '</button>';
                 }
             },
+            {
+                data: 'id',
+                name: 'details',
+                render: function(data, type, full, meta) {
+                    var editButtonHtml = '<a href="{{ url('admin/client/update-form') }}/' + data + '" class="btn btn-secondary"><i class="fas fa-edit"></i></a>';
+                    var deleteButtonHtml = '<a href="#" class="btn btn-danger delete-client" data-client-id="' + data + '" style="margin-left: 10px;"><i class="fas fa-trash"></i></a>';
+
+                    return editButtonHtml + deleteButtonHtml;
+                }
+            }
         ]
     });
-  });
+ });
 </script>
+<!-- Client Data table end -->
 
+<!-- Delete Client start -->
+<script>
+    $(document).ready(function() {
+        $(document).on('click', '.delete-client', function(e) {
+            e.preventDefault();
+            var clientId = $(this).data('client-id');
+
+            if (confirm("Are you sure you want to delete this client?")) {
+                $.ajax({
+                    url: '/admin/delete-client/' + clientId, 
+                    type: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') 
+                    },
+                    success: function(response) {
+                        if (response.status === 200) {
+                            // Toastify({
+                            //     text: "Client deleted successfully!"
+                            // }).showToast();
+                            swal({
+                                title: "Success!",
+                                text: "Client deleted successfully",
+                                icon: "success",
+                                button: "OK",
+                            });
+                            $('#clientsTable').DataTable().ajax.reload();
+                        } else {
+                            Toastify({
+                                text: "Failed to delete."
+                            }).showToast();
+                        }
+                    },
+                    error: function(xhr, status, error) {
+
+                    }
+                });
+            }
+        });
+    });
+</script>
+<!-- Delete Client end -->
+
+<!-- Client status change start -->
 <script>
     function changeStatus(clientId) {
         $.ajax({
@@ -97,5 +153,6 @@
         });
     }
 </script>
+<!-- Client status change end -->
 
 @endsection

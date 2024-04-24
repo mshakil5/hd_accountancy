@@ -27,7 +27,7 @@ class ContactInfoController extends Controller
         'last_name' => 'required',
         'job_title' => 'required',
         'email' => 'required',
-        'phone' => 'required',
+        'phone' => 'required|numeric|digits:11',
         
         ],[
             'client_id.required' => 'The client reference id field is required.',
@@ -49,7 +49,7 @@ class ContactInfoController extends Controller
         $data->created_by = Auth::id();
 
         if ($data->save()) {
-            return response()->json(['status' => 200, 'message' => 'Client created successfully']);
+            return response()->json(['status' => 200, 'message' => 'Contact info created successfully']);
         } else {
             return response()->json(['status' => 500, 'message' => 'Server Error']);
         }

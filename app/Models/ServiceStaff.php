@@ -16,6 +16,7 @@ class ServiceStaff extends Model
         'assigned_services',
         'deadline',
         'note',
+        'status',
         'created_by',
         'updated_by',
     ];

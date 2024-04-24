@@ -7,6 +7,9 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\Admin\StaffController;
+use App\Http\Controllers\Staff\ServiceController;
+use App\Http\Controllers\Manager\ManagerController;
   
 /*
 |--------------------------------------------------------------------------
@@ -36,6 +39,10 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::middleware(['auth', 'user-access:manager'])->group(function () {
 
     Route::get('/manager/home', [HomeController::class, 'managerHome'])->name('manager.home');
+
+    // Staff profile and profile update
+    Route::get('/manager/profile/edit', [ManagerController::class, 'editProfile'])->name('manager.profile.edit');
+    Route::post('/manager/profile', [ManagerController::class, 'updateProfile']);
     
 });
 
@@ -43,6 +50,19 @@ Route::middleware(['auth', 'user-access:manager'])->group(function () {
 Route::middleware(['auth', 'user-access:staff'])->group(function () {
 
     Route::get('/staff/home', [HomeController::class, 'staffHome'])->name('staff.home');
+
+    // Staff profile and profile update
+    Route::get('/staff/profile/edit', [StaffController::class, 'editProfile'])->name('staff.profile.edit');
+    Route::post('/staff/profile', [StaffController::class, 'updateProfile']);
+
+    //  Fetch assigned services + staff 
+     Route::get('/staff/get-services-client-staff', [ServiceController::class, 'getServicesClientStaff']);
+
+     //Change status of assigned services + staff
+     Route::post('/staff/update-service-status', [ServiceController::class, 'updateServiceStatus'])->name('update-service-status');
+
+     //Custom logout
+     Route::post('/custom-logout', [HomeController::class, 'sessionClear'])->name('customLogout');
     
 });
 

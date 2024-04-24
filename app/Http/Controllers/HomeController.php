@@ -52,23 +52,24 @@ class HomeController extends Controller
      * @return \Illuminate\Contracts\Support\Renderable
      */
 
-
-     // $loggedStaff = UserAttendanceLog::with('user')
-        //     ->where('status', 0)
-        //     ->orderBy('id', 'desc')
-        //     ->get()
-        //     ->map(function ($log) {
-        //         $duration = Carbon::now()->diff($log->start_time);
-        //         $log->duration = $duration->format('%H:%I:%S');
-        //         return $log;
-        //     });
-
-
     public function adminHome(): View
     {
+        $loggedStaff = UserAttendanceLog::with('user')
+            ->where('status', 0)
+            ->orderBy('id', 'desc')
+            ->get()
+            ->groupBy('user_id')
+            ->map(function ($logs) {
+                $log = $logs->first();
+                $duration = Carbon::now()->diff($log->start_time);
+                $log->duration = $duration->format('%H:%I:%S');
+                return $log;
+            })
+            ->values();
+
         $clients = Client::orderby('id','DESC')->get();
         $staffs = User::where('type','3')->orderby('id','DESC')->get();
-        return view('admin.dashboard',compact('clients','staffs'));
+        return view('admin.dashboard',compact('clients','staffs','loggedStaff'));
     }
 
   
@@ -138,5 +139,53 @@ class HomeController extends Controller
         session()->regenerate();
         return redirect()->route('home');
     }
+
+    // public function sessionClearByAdmin(Request $request)
+    // {
+    //     $staffId = $request->input('staffId');
+    //     $user = User::find($staffId);
+
+    //     // dd($user);
+    //     if ($user) {
+    //         $attendanceLog = UserAttendanceLog::where('user_id', $user->id)
+    //             ->where('status', 0)
+    //             ->latest()
+    //             ->first();
+
+    //         if ($attendanceLog) {
+    //             $attendanceLog->end_time = now();
+    //             $attendanceLog->status = 1;
+    //             $attendanceLog->note = $request->input('note');
+    //             $attendanceLog->save();
+    //         }
+
+    //         // Auth::logoutOtherDevices($user->id);
+
+    //         return response()->json(['success' => true]);
+    //     }
+
+    //     return response()->json(['success' => false]);
+    // }
+
+    public function sessionClearByAdmin($userId)
+    {
+
+        $user = User::find($userId);
+
+        if ($user ) {
+            // Auth::logoutOtherDevices($user->id);
+            // Auth::logout($user);
+            // $user->session()->delete();
+
+            return response()->json(['message' => 'Staff member logged out successfully'], 200);
+        } else {
+            return response()->json(['error' => 'Staff member not found'], 404);
+        }
+    }
+
+
+    // Optionally, you can update the logged_in_at column to null
+            // $user->update(['logged_in_at' => null]);
+
 
 }

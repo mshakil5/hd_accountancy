@@ -71,6 +71,8 @@
   <script src="{{ asset('assets/vendor/datatables/jquery.dataTables.min.js')}}"></script>
   <script src="{{ asset('assets/vendor/datatables/dataTables.bootstrap4.min.js')}}"></script>
   <script src="{{ asset('assets/vendor/toastify/toastify-js.js')}}"></script>
+  <script src="{{ asset('assets/vendor/moment/moment.min.js')}}"></script>
+  <script src="{{ asset('assets/vendor/sweet-alert/sweetalert.min.js')}}"></script>
 
   <!-- Template Main JS File -->
   <script src="{{ asset('assets/js/main.js') }}"></script>

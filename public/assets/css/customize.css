@@ -1,4 +1,5 @@
 
+
  .site-main-header{
     background-color: var(--theme);
     position: sticky;
@@ -68,6 +69,34 @@
    box-shadow: none;
    border: 1px solid var(--theme);
 }
+
+#myTabjustified .nav-link {
+   border-right: 1px solid var(--theme)!important;
+}
+
+input[type=checkbox] {
+   accent-color: var(--theme);
+ }
+ body{
+   overflow-x: hidden;
+ }
+
+ .sidebar-nav .nav-content a{
+   color:#fff;
+
+ }
+
+ .sidebar-nav .nav-link{
+   color:#fff;
+ }
+
+ .sidebar-nav .nav-link i{
+   color:#fff;
+ }
+
+ .sidebar-nav .nav-content a:hover{
+   color: var(--secondary) !important;
+ }
 
 .sidebar-nav .nav-item.active .nav-link {
     color: rgb(155, 198, 83);

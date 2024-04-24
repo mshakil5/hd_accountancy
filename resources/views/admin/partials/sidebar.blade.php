@@ -37,7 +37,7 @@
       </a>
   </li>
 
-      <li class="nav-item {{ request()->routeIs('allClient','createClient') ? 'active' : '' }}">
+      <li class="nav-item {{ request()->routeIs('allClient','createClient','client.update.form') ? 'active' : '' }}">
         <a class="nav-link collapsed" href="{{ route('allClient') }}">
             <i class="bi bi-person"></i>
             <span>Client</span>
@@ -76,6 +76,13 @@
         <a class="nav-link collapsed" href="{{ route('allContactMessage') }}">
             <i class="bi bi-envelope"></i>
             <span>Contact Message</span>
+        </a>
+    </li>
+
+    <li class="nav-item {{ request()->routeIs('prevLogStaffs') ? 'active' : '' }}">
+        <a class="nav-link collapsed" href="{{ route('prevLogStaffs') }}">
+            <i class="bi bi-clock-history"></i>
+            <span>Previously logged staffs</span>
         </a>
     </li>
 

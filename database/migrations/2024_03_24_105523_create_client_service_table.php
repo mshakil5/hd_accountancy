@@ -14,9 +14,10 @@ return new class extends Migration
         Schema::create('client_service', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('client_id');
-            $table->unsignedBigInteger('service_id');
+            $table->text('assigned_services')->nullable(); 
+            $table->string('deadline')->nullable();
+            $table->boolean('status')->default(1);
             $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');
-            $table->foreign('service_id')->references('id')->on('services')->onDelete('cascade');
             $table->timestamps();
         });
     }

@@ -108,7 +108,7 @@
 
           <div class="card card-secondary">
             <div class="card-header">
-              <h3 class="card-title">All Data</h3>
+              <h3 class="card-title">All Managers</h3>
             </div>
             <!-- /.card-header -->
             <div class="card-body">
@@ -207,7 +207,13 @@
                     if (d.status == 303) {
                         $(".ermsg").html(d.message);
                     }else if(d.status == 300){
-                      $(".ermsg").html(d.message);
+                      // $(".ermsg").html(d.message);
+                      swal({
+                            title: "Success!",
+                            text: "Manager created successfully",
+                            icon: "success",
+                            button: "OK",
+                        });
                       window.setTimeout(function(){location.reload()},2000)
                     }
                 },
@@ -240,7 +246,13 @@
                       if (d.status == 303) {
                           $(".ermsg").html(d.message);
                       }else if(d.status == 300){
-                        $(".ermsg").html(d.message);
+                        // $(".ermsg").html(d.message);
+                        swal({
+                            title: "Success!",
+                            text: "Manager updated successfully",
+                            icon: "success",
+                            button: "OK",
+                        });
                           window.setTimeout(function(){location.reload()},2000)
                       }
                   },
@@ -276,8 +288,14 @@
                 },
                 success: function(d){
                     if(d.success) {
-                        alert(d.message);
-                        location.reload();
+                        // alert(d.message);
+                        swal({
+                            title: "Success!",
+                            text: "Manager deleted successfully",
+                            icon: "success",
+                            button: "OK",
+                        });
+                         window.setTimeout(function(){location.reload()},2000)
                     }
                 },
                 error:function(d){

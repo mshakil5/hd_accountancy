@@ -5,6 +5,10 @@ namespace App\Models;
 use App\Models\User;
 use App\Models\Service;
 use App\Models\ClientType;
+use App\Models\ContactInfo;
+use App\Models\BusinessInfo;
+use App\Models\DirectorInfo;
+use App\Models\ClientService;
 use App\Models\ContactInformation;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -28,6 +32,26 @@ class Client extends Model
     public function manager()
     {
         return $this->belongsTo(User::class, 'manager_id');
+    }
+
+    public function businessInfo()
+    {
+        return $this->hasOne(BusinessInfo::class);
+    }
+
+    public function directorInfos()
+    {
+        return $this->hasMany(DirectorInfo::class);
+    }
+
+    public function clientService()
+    {
+        return $this->hasOne(ClientService::class);
+    }
+
+    public function contactInfos()
+    {
+        return $this->hasMany(ContactInfo::class);
     }
 
 }

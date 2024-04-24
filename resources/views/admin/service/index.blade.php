@@ -34,30 +34,40 @@
                 <div class="row">
                 <div class="col-sm-12">
                     <div class="form-group">
-                    <label>Name</label>
+                    <label>Name of the service</label>
                     <input type="text" class="form-control" id="name" name="name">
                     </div>
                 </div>
                 </div>
-                <div class="row">
-                <div class="col-sm-12">
-                    <div class="form-group">
-                    <label>Tag</label>
-                    <input type="text" class="form-control" id="tag" name="tag">
-                    </div>
+                  <div class="row">
+                      <div class="col-sm-12">
+                          <div class="form-group">
+                              <label>Sub services</label>
+                              <div id="subServicesContainer">
+                                  <div class="input-group mb-3">
+                                      <input type="text" class="form-control" name="sub_services[]">
+                                      <div class="input-group-append" style="margin-left: 10px;">
+                                          <button class="btn btn-secondary add-sub-service" type="button">+</button>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
                 </div>
-                </div>
-
-                
+               
             </form>
+
+            <div class="card-footer">
+                <button type="submit" id="addBtn" class="btn btn-secondary" value="Create">Create</button>
+                <button type="submit" id="FormCloseBtn" class="btn btn-default">Cancel</button>
+            </div>
+
             </div>
 
             
             <!-- /.card-body -->
-            <div class="card-footer">
-            <button type="submit" id="addBtn" class="btn btn-secondary" value="Create">Create</button>
-            <button type="submit" id="FormCloseBtn" class="btn btn-default">Cancel</button>
-            </div>
+
             <!-- /.card-footer -->
             <!-- /.card-body -->
         </div>
@@ -79,16 +89,16 @@
 
           <div class="card card-secondary">
             <div class="card-header">
-              <h3 class="card-title">All Data</h3>
+              <h3 class="card-title">All Services</h3>
             </div>
             <!-- /.card-header -->
             <div class="card-body">
-              <table id="example1" class="table table-bordered table-striped">
+              <table id="example1" class="table cell-border table-striped">
                 <thead>
                 <tr>
                   <th style="text-align: center">Sl</th>
                   <th style="text-align: center">Name</th>
-                  <th style="text-align: center">Tag</th>
+                  <th style="text-align: center">Sub services</th>
                   <th style="text-align: center">Action</th>
                 </tr>
                 </thead>
@@ -97,7 +107,14 @@
                   <tr>
                     <td style="text-align: center">{{ $key + 1 }}</td>
                     <td style="text-align: center">{{$data->name}}</td>
-                    <td style="text-align: center">{{$data->tag}}</td>
+                    <td style="text-align: center">
+                        @foreach($data->subServices as $subService)
+                           {{ $subService->name }}
+                            @if(!$loop->last)
+                              ,
+                            @endif
+                        @endforeach
+                    </td>
                     <td style="text-align: center">
                       <a class="btn btn-link" id="EditBtn" rid="{{$data->id}}"><i class="fa fa-edit" style="font-size: 20px;"></i></a>
                       <a class="btn btn-link" id="deleteBtn" rid="{{$data->id}}"><i class="fas fa-trash" style="color: red; font-size: 20px;"></i></a>
@@ -143,6 +160,7 @@
           $("#addThisFormContainer").hide(200);
           $("#newBtn").show(100);
           clearform();
+          window.location.reload();
       });
       //header for csrf-token is must in laravel
       $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') } });
@@ -155,7 +173,10 @@
           if($(this).val() == 'Create') {
               var form_data = new FormData();
               form_data.append("name", $("#name").val());
-              form_data.append("tag", $("#tag").val());
+              var subServiceNames = $('input[name="sub_services[]"]').map(function () {
+                  return $(this).val();
+              }).get();
+              
               $.ajax({
                 url: url,
                 method: "POST",
@@ -167,7 +188,35 @@
                         $(".ermsg").html(d.message);
                     }else if(d.status == 300){
                       $(".ermsg").html(d.message);
-                      window.setTimeout(function(){location.reload()},2000)
+                      var serviceId = d.service_id;
+
+                      $.ajax({
+                          url: "/admin/sub-service", 
+                          method: "POST",
+                          data: {
+                              service_id: serviceId,
+                              sub_services: subServiceNames
+                          },
+                          success: function (d) {
+                              if (d.status == 303) {
+                                  $(".ermsg").html(d.message);
+                              } else if (d.status == 300) {
+                                  // $(".ermsg").html(d.message);
+                                  swal({
+                                        title: "Success!",
+                                        text: "Created successfully",
+                                        icon: "success",
+                                        button: "OK",
+                                    });
+                                  window.setTimeout(function(){location.reload()},2000)
+                              }
+                          },
+                          error: function(xhr, status, error) {
+                          console.error("Error occurred: " + error);
+                          console.error(xhr.responseText); 
+                      }
+                      });
+
                     }
                 },
                 error: function (d) {
@@ -180,9 +229,24 @@
           if($(this).val() == 'Update'){
               var form_data = new FormData();
               form_data.append("name", $("#name").val());
-              form_data.append("tag", $("#tag").val());
               form_data.append("codeid", $("#codeid").val());
-              
+
+              var currentSubServiceNames = $('input[name="sub_services[]"]').map(function() {
+                    return $(this).val();
+              }).get();
+              var currentSubServiceIds = $('input[name="sub_services_id[]"]').map(function() {
+                    return $(this).val();
+              }).get();
+
+            //   console.log(currentSubServiceNames);
+
+             currentSubServiceNames.forEach(function(name) {
+                form_data.append("current_sub_service_names[]", name);
+            });
+            currentSubServiceIds.forEach(function(id) {
+                form_data.append("current_sub_service_ids[]", id);
+            });
+
               $.ajax({
                   url:upurl,
                   type: "POST",
@@ -195,7 +259,13 @@
                       if (d.status == 303) {
                           $(".ermsg").html(d.message);
                       }else if(d.status == 300){
-                        $(".ermsg").html(d.message);
+                        // $(".ermsg").html(d.message);
+                        swal({
+                            title: "Success!",
+                            text: "Updated successfully",
+                            icon: "success",
+                            button: "OK",
+                        });
                           window.setTimeout(function(){location.reload()},2000)
                       }
                   },
@@ -214,6 +284,7 @@
           info_url = url + '/'+codeid+'/edit';
           //console.log($info_url);
           $.get(info_url,{},function(d){
+                // console.log(d);
               populateForm(d);
           });
       });
@@ -231,8 +302,14 @@
                 },
                 success: function(d){
                     if(d.success) {
-                        alert(d.message);
-                        location.reload();
+                        // alert(d.message);
+                        swal({
+                            title: "Success!",
+                            text: "Deleted successfully",
+                            icon: "success",
+                            button: "OK",
+                        });
+                         window.setTimeout(function(){location.reload()},2000)
                     }
                 },
                 error:function(d){
@@ -249,6 +326,23 @@
           $("#addBtn").html('Update');
           $("#addThisFormContainer").show(300);
           $("#newBtn").hide(100);
+          $('#subServicesContainer').empty();
+
+            (data.sub_services || []).forEach(function(subService) {
+                var inputField = '<div class="input-group mb-3">' +
+                    '<input type="text" class="form-control" name="sub_services[]" value="' + subService.name + '">' +
+                    '<input type="hidden" class="form-control" name="sub_services_id[]" value="' + subService.id + '">' +
+                    '<div class="input-group-append">' +
+                    '<button class="btn btn-secondary remove-sub-service" style="margin-left: 10px;" type="button">-</button>' +
+                    '</div>' +
+                    '</div>';
+                $('#subServicesContainer').append(inputField);
+            });
+
+            var addSubServiceButton = '<button class="mb-3 btn btn-secondary add-sub-service" style="margin-top: 10px;" type="button">+</button>';
+            $('#subServicesContainer').append(addSubServiceButton);
+            
+
       }
       function clearform(){
           $('#createThisForm')[0].reset();
@@ -256,4 +350,25 @@
       }
   });
 </script>
+
+<!-- Sub service + - start -->
+<script>
+    $(document).ready(function () {
+        $(document).on('click', '.add-sub-service', function () {
+            var inputField = '<div class="input-group mb-3">' +
+                '<input type="text" class="form-control" name="sub_services[]">' +
+                '<div class="input-group-append">' +
+                '<button class="btn btn-secondary remove-sub-service" style="margin-left: 10px;" type="button">-</button>' +
+                '</div>' +
+                '</div>';
+            $('#subServicesContainer').append(inputField);
+        });
+
+        $(document).on('click', '.remove-sub-service', function () {
+            $(this).closest('.input-group').remove();
+        });
+    });
+</script>
+<!-- Sub service + - start -->
+
 @endsection

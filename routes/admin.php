@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\Admin\TaskController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Admin\ClientController;
@@ -11,7 +10,7 @@ use App\Http\Controllers\Admin\ManagerController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\ClientTypeController;
 use App\Http\Controllers\Admin\DepartmentController;
-use App\Http\Controllers\Admin\TaskAssignController;
+use App\Http\Controllers\Admin\SubServiceController;
 use App\Http\Controllers\Admin\WebServiceController;
 use App\Http\Controllers\Admin\ContactInfoController;
 use App\Http\Controllers\Admin\BusinessInfoController;
@@ -29,8 +28,8 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
 
     Route::get('/home', [HomeController::class, 'adminHome'])->name('admin.home');
 
-    //Custom logout
-    Route::post('/custom-logout', [HomeController::class, 'sessionClear'])->name('customLogout');
+    // Admin logs out staff
+    Route::post('/custom-logout-admin/{userId}', [HomeController::class, 'sessionClearByAdmin'])->name('customLogoutByAdmin');
 
     //Admin crud
     Route::get('/new-admin', [AdminController::class, 'getAdmin'])->name('allAdmin');
@@ -54,6 +53,9 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/staff/{id}/edit', [StaffController::class, 'edit']);
     Route::post('/staff-update', [StaffController::class, 'update']);
     Route::get('/staff/{id}', [StaffController::class, 'delete']);
+    
+    //Staff Delete
+    Route::delete('/delete-staff/{id}', [StaffController::class, 'deleteStaff'])->name('delete.staff');
 
     //Staff status change
     Route::post('/staff-change-status', [StaffController::class,'changeStatus'])->name('staff.change.status');
@@ -62,10 +64,7 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/staff/details/{id}', [StaffController::class,'showDetails'])->name('staff.details');
 
     // Update staff details
-    // routes/web.php
-
     Route::post('/staff/{id}', [StaffController::class,'updateStaff'])->name('staff.update');
-
 
     //Department crud
     Route::get('/department', [DepartmentController::class, 'index'])->name('allDepartment');
@@ -78,13 +77,47 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/client', [ClientController::class, 'index'])->name('allClient');
     Route::get('/client-list', [ClientController::class, 'getClients'])->name('get.Clients');
     Route::get('/create-client', [ClientController::class, 'create'])->name('createClient');
+    Route::get('/create-client/{id}', [ClientController::class, 'create1'])->name('createNewClient');
     Route::post('/client', [ClientController::class, 'store']);
     Route::get('/client/{id}/edit', [ClientController::class, 'edit']);
     Route::post('/client-update', [ClientController::class, 'update']);
     Route::get('/client/{id}', [ClientController::class, 'delete']);
 
+    //Client Delete
+    Route::delete('/delete-client/{id}', [ClientController::class, 'deleteContact'])->name('delete.client');
+
     //Client status change
     Route::post('/client-change-status', [ClientController::class,'changeStatus'])->name('client.change.status');
+
+    //client update form
+    Route::get('/client/update-form/{id}', [ClientController::class,'updateForm'])->name('client.update.form');
+
+    //Client details update
+    Route::post('/client-details-update/{id}', [ClientController::class,'updateClientDetails']);
+
+    //Client businessinfo update
+    Route::post('/client-businessinfo-update/{id}', [ClientController::class,'updateClientBusinessInfo']);
+
+    //Client directorinfo update
+    Route::post('/client-directorinfo-update/{id}', [ClientController::class,'updateClientDirectorInfo']);
+
+    //Director info delete
+    Route::delete('/delete-director/{id}', [ClientController::class, 'destroyDirector']);
+
+    //Client contactinfo update
+    Route::post('/client-contactinfo-update/{id}', [ClientController::class,'updateClientContactInfo']);
+
+    //Contact info delete
+    Route::delete('/delete-contact/{id}', [ClientController::class, 'destroyContact']);
+
+    // Fetch sssigned and non assigned services together
+    Route::get('/client-services/{clientId}', [ClientController::class, 'getClientServices']);
+
+    //Contactinfo update
+    Route::post('/client-contactinfo-update/{id}', [ClientController::class,'updateClientContactInfo']);
+
+    //Clinet assigned services update
+    Route::post('/client-services-update/{id}', [ClientController::class,'updateClientServices']);
 
     //Contact info crud
     Route::get('/contact-info', [ContactInfoController::class, 'index'])->name('allContactInfo');
@@ -102,6 +135,9 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     // Service assign to client
      Route::post('/service-assign', [ServiceController::class, 'serviceAssign']);
 
+    //Fetch all assigned service
+    Route::get('/get-all-services', [ServiceController::class, 'getAllAssignedServices']);
+
      //Fetch assigned services
      Route::get('/get-assigned-services/{client_id}', [ServiceController::class, 'getAssignedServices']);
 
@@ -110,6 +146,12 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
 
     //  Fetch assigned services + staff 
      Route::get('/get-services-client-staff', [ServiceController::class, 'getServicesClientStaff']);
+
+     //  Fetch completed services
+     Route::get('/get-completed-services', [ServiceController::class, 'getCompletedServices']);
+
+     //Change status of assigned services + staff
+     Route::post('/update-service-status', [ServiceController::class, 'updateServiceStatus'])->name('update-service-status');
 
     //Business info crud
     Route::get('/business-info', [BusinessInfoController::class, 'index'])->name('allBusinessInfo');
@@ -140,19 +182,8 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::post('/service-update', [ServiceController::class, 'update']);
     Route::get('/service/{id}', [ServiceController::class, 'delete']);
 
-    //Tasks crud
-    Route::get('/task', [TaskController::class, 'index'])->name('allTask');
-    Route::post('/task', [TaskController::class, 'store']);
-    Route::get('/task/{id}/edit', [TaskController::class, 'edit']);
-    Route::post('/task-update', [TaskController::class, 'update']);
-    Route::get('/task/{id}', [TaskController::class, 'delete']);
-
-    //Task Assign crud
-    Route::get('/task-assign', [TaskAssignController::class, 'index'])->name('allTaskAssign');
-    Route::post('/task-assign', [TaskAssignController::class, 'store']);
-    Route::get('/task-assign/{id}/edit', [TaskAssignController::class, 'edit']);
-    Route::post('/task-assign-update', [TaskAssignController::class, 'update']);
-    Route::get('/task-assign/{id}', [TaskAssignController::class, 'delete']);
+    //SubServices crud
+    Route::post('/sub-service', [SubServiceController::class, 'store']);
 
     //Web Services crud
     Route::get('/web-service', [WebServiceController::class, 'index'])->name('allWebService');

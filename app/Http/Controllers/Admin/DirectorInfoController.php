@@ -32,7 +32,6 @@ class DirectorInfoController extends Controller
             'utr_number' => 'required', 
             'utr_authorization' => 'required', 
             'nino' => 'required', 
-            'status' => 'required',
         ],[
             'client_id.required' => 'The client reference id field is required.',
         ]);
@@ -53,11 +52,10 @@ class DirectorInfoController extends Controller
         $data->utr_number = $request->utr_number;
         $data->utr_authorization = $request->utr_authorization;
         $data->nino = $request->nino;
-        $data->status = $request->status;
         $data->created_by = Auth::id();
 
         if ($data->save()) {
-            return response()->json(['status' => 200, 'message' => 'Client created successfully']);
+            return response()->json(['status' => 200, 'message' => 'Director info created successfully']);
         } else {
             return response()->json(['status' => 500, 'message' => 'Server Error']);
         }

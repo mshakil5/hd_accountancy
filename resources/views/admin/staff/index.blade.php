@@ -30,7 +30,7 @@
                             <th scope="col">Email</th>
                             <th scope="col">Image</th>
                             <th scope="col">Status</th> 
-                            <th scope="col">Details</th> 
+                            <th scope="col">Action</th> 
                         </tr>
                     </thead>
                     <tbody>
@@ -56,7 +56,15 @@
                 data: null,
                 name: 'name',
                 render: function(data, type, full, meta) {
-                    return full.first_name + ' ' + full.last_name;
+                    var fullName = '';
+                    if (full.first_name && full.last_name) {
+                        fullName = full.first_name + ' ' + full.last_name;
+                    } else if (full.first_name) {
+                        fullName = full.first_name;
+                    } else if (full.last_name) {
+                        fullName = full.last_name;
+                    }
+                    return fullName;
                 }
             },
             {data: 'phone', name: 'phone'},
@@ -86,7 +94,10 @@
                 data: 'id',
                 name: 'details',
                 render: function(data, type, full, meta) {
-                    return '<a href="{{ url('admin/staff/details') }}/' + data + '" class="btn btn-secondary"><i class="fas fa-eye"></i></a>';
+                    var editButtonHtml = '<a href="{{ url('admin/staff/details') }}/' + data + '" class="btn btn-secondary"><i class="fa fa-edit"></i></a>';
+                    var deleteButtonHtml = '<a href="#" class="btn btn-danger delete-staff" data-staff-id="' + data + '" style="margin-left: 10px;"><i class="fas fa-trash"></i></a>';
+
+                    return editButtonHtml + deleteButtonHtml;
                 }
             }
         ]
@@ -94,6 +105,47 @@
   });
 </script>
 
+
+Delete staff start
+<script>
+    $(document).ready(function() {
+        $(document).on('click', '.delete-staff', function(e) {
+            e.preventDefault();
+            var staffId = $(this).data('staff-id');
+
+            if (confirm("Are you sure you want to delete this staff member?")) {
+                $.ajax({
+                    url: '/admin/delete-staff/' + staffId, 
+                    type: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') 
+                    },
+                    success: function(response) {
+                        if (response.status === 200) {
+                            swal({
+                                title: "Success!",
+                                text: "Staff deleted successfully",
+                                icon: "success",
+                                button: "OK",
+                            });
+                            $('#staffsTable').DataTable().ajax.reload();
+                        } else {
+                                Toastify({
+                                    text: "Failed to delete."
+                                }).showToast();
+                            }
+                    },
+                    error: function(xhr, status, error) {
+                    
+                    }
+                });
+            }
+        });
+    });
+</script>
+Delete staff start
+
+<!-- Staff status change start -->
 <script>
     function changeStatus(userId) {
         $.ajax({
@@ -118,6 +170,6 @@
         });
     }
 </script>
-
+<!-- Staff status change end -->
 
 @endsection

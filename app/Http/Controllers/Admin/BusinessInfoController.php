@@ -57,7 +57,7 @@ class BusinessInfoController extends Controller
         $data->created_by = Auth::id();
 
         if ($data->save()) {
-            return response()->json(['status' => 200, 'message' => 'Client created successfully']);
+            return response()->json(['status' => 200, 'message' => 'Business info created successfully']);
         } else {
             return response()->json(['status' => 500, 'message' => 'Server Error']);
         }
@@ -138,6 +138,7 @@ class BusinessInfoController extends Controller
             return response()->json(['status'=> 303,'message'=>'Server Error!!']);
         }
     }
+    
     public function delete($id)
     {
         if(BusinessInfo::destroy($id)){

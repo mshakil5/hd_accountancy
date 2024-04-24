@@ -18,6 +18,8 @@ return new class extends Migration
             $table->json('assigned_services')->nullable();
             $table->date('deadline');
             $table->text('note')->nullable();
+            $table->boolean('status')->default(1);
+            // 1 = processing , 2 = completed , 3 = cancelled
             $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');
             $table->foreign('staff_id')->references('id')->on('users')->where('type', 3)->onDelete('cascade');
             $table->string('created_by')->nullable();

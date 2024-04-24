@@ -20,7 +20,11 @@ return new class extends Migration
             $table->string('email')->unique()->nullable();
             $table->string('ni_number')->nullable();
             $table->date('date_of_birth')->nullable();
-            $table->string('address')->nullable();
+            $table->string('address_line1')->nullable();
+            $table->string('address_line2')->nullable();
+            $table->string('address_line3')->nullable();
+            $table->string('town')->nullable();
+            $table->string('postcode')->nullable();
             $table->string('image')->nullable();
             $table->unsignedBigInteger('department_id')->nullable();
             $table->foreign('department_id')->references('id')->on('departments')->onDelete('cascade');

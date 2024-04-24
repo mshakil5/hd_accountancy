@@ -32,6 +32,18 @@
                         <div class="card-body">
                             <form id="myForm">
                                 <div class="row my-4">
+                                    <div class="col-lg-9">
+                                    </div>
+                                    <div class="col-lg-3 text-center">
+                                        <div class="img mb-2">
+                                            <img src="{{ $staff->image ? asset('images/staff/' . $staff->image) : asset('assets/img/human-placeholder.jpg') }}" id="imagePreview" width="150" class="border-theme border-2 rounded-3">
+                                        </div>
+                                        <label for="pic" class="mb-0" style="cursor: pointer;">
+                                            <i class="bi bi-cloud-upload"></i>
+                                            <small>Update Image</small>
+                                        </label>
+                                        <input type="file" id="pic" name="image" class="invisible">
+                                    </div>
                                     <div class="col-lg-4">
                                         <label for="">First Name</label>
                                         <input type="text" class="form-control my-2" id="first_name" name="first_name" value="{{ $staff->first_name }}" placeholder="Enter first name">
@@ -50,15 +62,31 @@
                                     </div>
                                     <div class="col-lg-4">
                                         <label for="">NI Number</label>
-                                        <input type="number" class="form-control my-2" id="ni_number" name="ni_number" value="{{ $staff->ni_number }}" placeholder="Enter NI number">
+                                        <input type="text" class="form-control my-2" id="ni_number" name="ni_number" value="{{ $staff->ni_number }}" placeholder="Enter NI number">
                                     </div>
                                     <div class="col-lg-4">
                                         <label for="">Date of Birth</label>
                                         <input type="date" class="form-control my-2" id="date_of_birth" name="date_of_birth" value="{{ $staff->date_of_birth }}" placeholder="Enter date of birth">
                                     </div>
                                     <div class="col-lg-4">
-                                        <label for="">Address</label>
-                                        <input type="text" class="form-control my-2" id="address" name="address" value="{{ $staff->address}}" placeholder="Enter address">
+                                        <label for="">Address line 1</label>
+                                        <input type="text" class="form-control my-2" id="address_line1" name="address_line1" value="{{ $staff->address_line1}}" placeholder="Enter address line 1">
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <label for="">Address line 2</label>
+                                        <input type="text" class="form-control my-2" id="address_line2" name="address_line2" value="{{ $staff->address_line2}}" placeholder="Enter address line 2">
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <label for="">Address line 3</label>
+                                        <input type="text" class="form-control my-2" id="address_line3" name="address_line3" value="{{ $staff->address_line3}}" placeholder="Enter address line 3">
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <label for="">Town</label>
+                                        <input type="text" class="form-control my-2" id="town" name="town" value="{{ $staff->town}}" placeholder="Enter town">
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <label for="">Post Code</label>
+                                        <input type="text" class="form-control my-2" id="postcode" name="postcode" value="{{ $staff->postcode}}" placeholder="Enter post code">
                                     </div>
                                     <div class="col-lg-4">
                                         <label for="country">Department</label>
@@ -82,11 +110,6 @@
                                     <div class="col-lg-4">
                                         <label for="">Joining Date Status</label>
                                         <input type="date" class="form-control my-2" id="joining_date" name="joining_date" value="{{ $staff->joining_date }}"placeholder="Enter joining date">
-                                    </div>
-                                    
-                                    <div class="col-lg-4">
-                                        <label for="">Upload Image</label>
-                                        <input type="file" class="form-control my-2" id="image" name="image">
                                     </div>
                                     <div class="col-lg-4">
                                         <label for="">Reporting To</label>
@@ -134,6 +157,21 @@
     $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') } });
 </script>
 
+<!-- Image preview start -->
+<script>
+    document.getElementById('pic').addEventListener('change', function(event) {
+        var file = event.target.files[0];
+        var reader = new FileReader();
+
+        reader.onload = function(e) {
+            document.getElementById('imagePreview').src = e.target.result;
+        };
+
+        reader.readAsDataURL(file);
+    });
+</script>
+<!-- Image preview end -->
+
 <!-- Staff update -->
 <script>
 $(document).ready(function () {
@@ -157,9 +195,16 @@ $(document).ready(function () {
                 data: formData,
                 async: false,
                 success: function (response) {
-                    $('#successMessage b').text(response.message);
-                    $('#successMessage').show();
-                    window.location.href = "{{ route('allStaff') }}";
+                    swal({
+                        title: "Success!",
+                        text: "Staff updated successfully",
+                        icon: "success",
+                        button: "OK",
+                    });
+
+                    setTimeout(function() {
+                        window.location.href = "{{ route('allStaff') }}";
+                    }, 2000);
                 },
                 error: function (xhr, status, error) {
                     var errorMessage = "";

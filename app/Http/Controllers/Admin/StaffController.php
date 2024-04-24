@@ -15,15 +15,6 @@ use Illuminate\Support\Facades\Validator;
 
 class StaffController extends Controller
 {
-    // public function index()
-    // {
-    //     // $departments = Department::orderby('id','DESC')->get();
-    //     // $managers = User::where('type', '2')->orderby('id','DESC')->get();
-    //     $data = User::where('type', '3')->orderby('id','DESC')->get();
-    //     // return view('admin.staff.index', compact('data','departments','managers'));
-    //     return view('admin.staff.index', compact('data'));
-    // }
-
     public function index()
     {
         return view('admin.staff.index');
@@ -53,9 +44,12 @@ class StaffController extends Controller
             'last_name' => 'required|string|max:255',
             'phone' => 'required|numeric|digits:11',
             'email' => 'required|email|unique:users,email',
-            'ni_number' => 'required|regex:/^[A-Za-z0-9]+$/',
+            'ni_number' => 'required|regex:/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]+$/',
             'date_of_birth' => 'required|date',
-            'address' => 'required|string|max:255',
+            'address_line1' => 'required|string|max:255',
+            'address_line2' => 'required|string|max:255',
+            'town' => 'required|string|max:255',
+            'postcode' => 'required|string|max:255',
             'department_id' => 'required|integer',
             'job_title' => 'required|string|max:255',
             'employment_status' => 'required|string|max:255',
@@ -64,6 +58,8 @@ class StaffController extends Controller
             'reporting_to' => 'required',
             'password' => 'required|string|max:255',
             'confirm_password' => 'required|same:password',
+        ],[
+            'ni_number.regex' => 'The NI number must contain alphabet and  number.',
         ]);
 
         if ($validator->fails()) {
@@ -72,19 +68,17 @@ class StaffController extends Controller
 
         $data = new User;
 
-        if ($request->hasFile('image')) {
-            $imageName = time() . '_' . $request->image->getClientOriginalName();
-            $request->image->move(public_path('images/staff'), $imageName);
-            $data->image = $imageName;
-        }
-
         $data->first_name = $request->first_name;
         $data->last_name = $request->last_name;
         $data->phone = $request->phone;
         $data->email = $request->email;
         $data->ni_number = $request->ni_number;
         $data->date_of_birth = $request->date_of_birth;
-        $data->address = $request->address;
+        $data->address_line1 = $request->address_line1;
+        $data->address_line2 = $request->address_line2;
+        $data->address_line3 = $request->address_line3;
+        $data->town = $request->town;
+        $data->postcode = $request->postcode;
         $data->department_id = $request->department_id;
         $data->job_title  = $request->job_title;
         $data->employment_status  = $request->employment_status;
@@ -96,6 +90,12 @@ class StaffController extends Controller
 
         if(isset($request->password)){
             $data->password = Hash::make($request->password);
+        }
+
+        if ($request->hasFile('image')) {
+            $imageName = time() . '_' . $request->image->getClientOriginalName();
+            $request->image->move(public_path('images/staff'), $imageName);
+            $data->image = $imageName;
         }
 
         if ($data->save()) {
@@ -284,6 +284,7 @@ class StaffController extends Controller
         $managers = User::where('type', '2')->orderby('id','DESC')->get();
         return view('admin.staff.details', compact('staff', 'departments', 'managers'));
     }
+    
     public function updateStaff(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
@@ -291,9 +292,12 @@ class StaffController extends Controller
             'last_name' => 'required|string|max:255',
             'phone' => 'required|numeric|digits:11',
             'email' => 'required|email|unique:users,email,' . $id,
-            'ni_number' => 'required|regex:/^[A-Za-z0-9]+$/',
+            'ni_number' => 'required|regex:/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]+$/',
             'date_of_birth' => 'required|date',
-            'address' => 'required|string|max:255',
+            'address_line1' => 'required|string|max:255',
+            'address_line2' => 'string|max:255',
+            'town' => 'required|string|max:255',
+            'postcode' => 'required|string|max:255',
             'department_id' => 'required|integer',
             'job_title' => 'required|string|max:255',
             'employment_status' => 'required|string|max:255',
@@ -302,6 +306,8 @@ class StaffController extends Controller
             'reporting_to' => 'required',
             'password' => 'nullable|string|max:255',
             'confirm_password' => 'nullable|same:password',
+        ],[
+            'ni_number.regex' => 'The NI number must contain alphabet and number.',
         ]);
 
         if ($validator->fails()) {
@@ -311,6 +317,13 @@ class StaffController extends Controller
         $staff = User::findOrFail($id);
 
         if ($request->hasFile('image')) {
+            if (!empty($staff->image)) {
+                $oldImagePath = public_path('images/staff') . '/' . $staff->image;
+                if (file_exists($oldImagePath)) {
+                    unlink($oldImagePath);
+                }
+            }
+
             $imageName = time() . '_' . $request->image->getClientOriginalName();
             $request->image->move(public_path('images/staff'), $imageName);
             $staff->image = $imageName;
@@ -322,7 +335,11 @@ class StaffController extends Controller
         $staff->email = $request->email;
         $staff->ni_number = $request->ni_number;
         $staff->date_of_birth = $request->date_of_birth;
-        $staff->address = $request->address;
+        $staff->address_line1 = $request->address_line1;
+        $staff->address_line2 = $request->address_line2;
+        $staff->address_line3 = $request->address_line3;
+        $staff->town = $request->town;
+        $staff->postcode = $request->postcode;
         $staff->department_id = $request->department_id;
         $staff->job_title = $request->job_title;
         $staff->employment_status = $request->employment_status;
@@ -330,7 +347,7 @@ class StaffController extends Controller
         $staff->reporting_to = $request->reporting_to;
 
         $staff->type = "3";
-        $staff->updated_by = Auth::id(); // Assuming you want to track who last updated the record
+        $staff->updated_by = Auth::id();
 
         if(isset($request->password)){
             $staff->password = Hash::make($request->password);
@@ -341,6 +358,126 @@ class StaffController extends Controller
         } else {
             return response()->json(['status' => 500, 'message' => 'Server Error']);
         }
+    }
+
+    public function getServicesClientStaff(Request $request)
+    {
+        if ($request->ajax()) {
+            $data = ServiceStaff::with(['client', 'staff'])->orderBy('id', 'desc')->get();
+
+            $data->transform(function ($item, $key) {
+                $assigned_services = $item->assigned_services;
+                $services_names = [];
+
+                foreach ($assigned_services as $service_id) {
+                    $service = Service::find($service_id);
+                    if ($service) {
+                        $services_names[] = $service->name;
+                    }
+                }
+                $item->assigned_services = implode(', ', $services_names);
+
+                return $item;
+            });
+
+            return DataTables::of($data)
+                ->addIndexColumn()
+                ->addColumn('client_name', function($row) {
+                    return $row->client ? $row->client->name : '';
+                })
+                ->addColumn('tasks', function($row) {
+                    return $row->assigned_services;
+                })
+                ->addColumn('staff_name', function($row) {
+                    return $row->staff ? $row->staff->first_name : '';
+                })
+                ->rawColumns(['client_name', 'tasks', 'staff_name'])
+                ->make(true);
+        }
+
+    }
+
+    public function deleteStaff($id)
+    {
+            $user = User::findOrFail($id);
+            $user->delete();
+            return response()->json([
+                'status' => 200,
+                'message' => 'Staff deleted successfully.'
+            ]);
+    }
+
+    public function editProfile(Request $request)
+    {
+         $staffId = auth()->id();
+         $staff = User::findOrFail($staffId);
+         return view('staff.profile.edit', compact('staff'));
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $staffId = auth()->id();
+        $validator = Validator::make($request->all(), [
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'phone' => 'required|numeric|digits:11',
+            'email' => 'required|email|unique:users,email,' . $staffId,
+            'ni_number' => 'required|regex:/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]+$/',
+            'date_of_birth' => 'required|date',
+            'address_line1' => 'required|string|max:255',
+            'address_line2' => 'string|max:255',
+            'town' => 'required|string|max:255',
+            'postcode' => 'required|string|max:255',
+            'image' => 'nullable|mimes:jpeg,png,jpg,gif,svg,pdf|max:8048',
+            'password' => 'nullable|string|max:255',
+            'confirm_password' => 'nullable|same:password',
+        ],[
+            'ni_number.regex' => 'The NI number must contain alphabet and number.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => 422, 'errors' => $validator->errors()], 422);
+        }
+
+        $staff = User::findOrFail($staffId);
+
+        if ($request->hasFile('image')) {
+            if (!empty($staff->image)) {
+                $oldImagePath = public_path('images/staff') . '/' . $staff->image;
+                if (file_exists($oldImagePath)) {
+                    unlink($oldImagePath);
+                }
+            }
+
+            $imageName = time() . '_' . $request->image->getClientOriginalName();
+            $request->image->move(public_path('images/staff'), $imageName);
+            $staff->image = $imageName;
+        }
+
+        $staff->first_name = $request->first_name;
+        $staff->last_name = $request->last_name;
+        $staff->phone = $request->phone;
+        $staff->email = $request->email;
+        $staff->ni_number = $request->ni_number;
+        $staff->date_of_birth = $request->date_of_birth;
+        $staff->address_line1 = $request->address_line1;
+        $staff->address_line2 = $request->address_line2;
+        $staff->address_line3 = $request->address_line3;
+        $staff->town = $request->town;
+        $staff->postcode = $request->postcode;
+        $staff->type = "3";
+        $staff->updated_by = Auth::id();
+
+        if(isset($request->password)){
+            $staff->password = Hash::make($request->password);
+        }
+
+        if ($staff->save()) {
+            return response()->json(['status' => 200, 'message' => 'Staff updated successfully']);
+        } else {
+            return response()->json(['status' => 500, 'message' => 'Server Error']);
+        }
+
     }
 
 }

@@ -1,67 +1,91 @@
 <form id="directorForm">
-    <div class="row my-4">
-        <div class="col-lg-4">
-            <label for="">Client reference</label>
-                <div class="mt-2">
-                <select class="form-control my-2 select2" id="client_id" name="client_id">
-                    <option value="" selected disabled>Choose client reference</option>
-                    @foreach($clients as $client)
-                        <option value="{{ $client->id }}">{{ $client->refid }}</option>
-                    @endforeach
-                </select>
-            </div>
-        </div>
-        <div class="col-lg-4">
-            <label for="">Director Name</label>
-            <input type="text" class="form-control my-2" id="name" name="name" placeholder="Enter name">
-        </div>
-        <div class="col-lg-4">
-            <label for="">Director Phone</label>
-            <input type="number" class="form-control my-2" id="phone" name="phone" placeholder="Enter phone number">
-        </div>
-        <div class="col-lg-4">
-            <label for="">Director Email</label>
-            <input type="email" class="form-control my-2" id="email" name="email" placeholder="Enter email">
-        </div>
-        <div class="col-lg-4">
-            <label for=""> Director Address</label>
-            <input type="text" class="form-control my-2" id="address" name="address" placeholder="Enter address">
-        </div>
-        <div class="col-lg-4">
-            <label for="">Date Of Birth</label>
-            <input type="date" class="form-control my-2" id="confirmation_due_date" name="dob" placeholder="Enter date of birth">
-        </div>
-        <div class="col-lg-4">
-            <label for="">NI Number</label>
-            <input type="number" class="form-control my-2" id="ni_number" name="ni_number" placeholder="Enter NI number">
-        </div>
-        <div class="col-lg-4">
-            <label for="">UTR Number</label>
-            <input type="number" class="form-control my-2" id="utr_number" name="utr_number" placeholder="Enter UTR number">
-        </div>
-        <div class="col-lg-4">
-            <label for="">UTR Authorization</label>
-            <input type="number" class="form-control my-2" id="utr_authorization" name="utr_authorization" placeholder="Enter UTR authorization">
-        </div>
-        <div class="col-lg-4">
-            <label for="">NINO</label>
-            <input type="number" class="form-control my-2" id="nino" name="nino" placeholder="Enter NINO number">
-        </div>
-        <div class="col-lg-4">
-            <label for="">Company status</label>
-            <div class="mt-2">
-                <select class="form-control my-2" name="status" id="status">
-                    <option value="" selected disabled>Select status</option>
-                    <option value="0" {{ request('status') == '0' ? 'selected' : '' }}>Inactive</option>
-                    <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>Active</option>
-                </select>
-            </div>
-        </div>
-    </div>
     <div class="row">
-        <div class="col-lg-4 mx-auto text-center">
-            <button id="director-clearButton" class="btn btn-sm btn-outline-dark">Clear</button>
-            <button id="director-saveButton"  class="btn btn-sm bg-theme text-light btn-outline-dark">Save</button>
+        <div class="col-lg-4">
+            <div class="row my-3">
+                <input type="hidden" id="directorIdInput" name="director_id">
+                <div class="col-lg-12">
+                    <label for="name">Director Name</label>
+                    <input type="text" class="form-control my-2" id="dir-name" name="name" placeholder="Enter name">
+                </div>
+                <div class="col-lg-12">
+                    <label for="phone">Director Phone</label>
+                    <input type="number" class="form-control my-2" id="dir-phone" name="phone" placeholder="Enter phone number">
+                </div>
+                <div class="col-lg-12">
+                    <label for="email">Director Email</label>
+                    <input type="email" class="form-control my-2" id="dir-email" name="email" placeholder="Enter email">
+                </div>
+                <div class="col-lg-12">
+                    <label for="address">Director Address</label>
+                    <input type="text" class="form-control my-2" id="address" name="address" placeholder="Enter address">
+                </div>
+                <div class="col-lg-12">
+                    <label for="dob">Date Of Birth</label>
+                    <input type="date" class="form-control my-2" id="dob" name="dob" placeholder="Enter date of birth">
+                </div>
+                <div class="col-lg-12">
+                    <label for="ni_number">NI Number</label>
+                    <input type="text" class="form-control my-2" id="ni_number" name="ni_number" placeholder="Enter NI number">
+                </div>
+                <div class="col-lg-12">
+                    <label for="utr_number">UTR Number</label>
+                    <input type="number" class="form-control my-2" id="utr_number" name="utr_number" placeholder="Enter UTR number">
+                </div>
+                <div class="col-lg-12">
+                    <label for="utr_authorization">UTR Authorization</label>
+                    <input type="number" class="form-control my-2" id="utr_authorization" name="utr_authorization" placeholder="Enter UTR authorization">
+                </div>
+                <div class="col-lg-12">
+                    <label for="nino">NINO</label>
+                    <input type="text" class="form-control my-2" id="nino" name="nino" placeholder="Enter NINO number">
+                </div>
+            </div>
+            <div class="col-12 mx-auto text-center">
+                <button id="director-cancelButton" class="btn btn-sm btn-outline-dark" type="button" style="display: none;">Cancel</button>
+                <button id="director-updateButton" class="btn btn-sm bg-theme text-light btn-outline-dark" style="display: none;">Update</button>
+                <button id="director-clearButton" class="btn btn-sm btn-outline-dark">Clear</button>
+                <button id="director-saveButton" class="btn btn-sm bg-theme text-light btn-outline-dark">Save</button>
+            </div>
         </div>
+        @if(isset($client->directorInfos))
+        <div class="col-lg-8">
+            <p class="p-2 mt-3 bg-theme text-white px-3  mb-0 text-capitalize d-flex align-items-center">
+                Director Info List
+            </p>
+            <div class="border-theme p-3 border-1">
+                <table id="directorTable" class="table ">
+                    <thead>
+                        <tr>
+                            <th>Director Name</th>
+                            <th>Phone</th>
+                            <th>Email</th>
+                            <th>NI Number</th>
+                            <th>UTR Number</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($client->directorInfos as $directorInfo)
+                            <tr data-director-id="{{ $directorInfo->id }}"
+                            data-client-id="{{ $directorInfo->client_id }}"
+                            data-director-info='@json($directorInfo)'>
+                                <td>{{ $directorInfo->name }}</td>
+                                <td>{{ $directorInfo->phone }}</td>
+                                <td>{{ $directorInfo->email }}</td> 
+                                <td>{{ $directorInfo->ni_number }}</td> 
+                                <td>{{ $directorInfo->utr_number }}</td> 
+                                <td>
+                                    <a type="button" class="fa fa-edit edit-director" style="font-size: 20px;">
+                                    </a>
+                                    <a type="button" class="fas fa-trash delete-director" style="color: red; font-size: 20px;">
+                                    </a>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @endif
     </div>
 </form>
