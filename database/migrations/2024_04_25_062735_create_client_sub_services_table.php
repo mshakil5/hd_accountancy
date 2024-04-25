@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('client_service_id')->nullable();
             $table->unsignedBigInteger('client_id')->nullable();
-            $table->unsignedBigInteger('service_id')->nullable();
+            $table->unsignedBigInteger('sub_service_id')->nullable();
             $table->unsignedBigInteger('manager_id')->nullable();
             $table->unsignedBigInteger('staff_id')->nullable();
             $table->string('frequency')->nullable();
@@ -26,7 +26,7 @@ return new class extends Migration
             $table->boolean('staff_notification')->default(1); // default 1 == No notification , 0 == New notification
             $table->foreign('client_service_id')->references('id')->on('client_service')->onDelete('cascade');
             $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');
-            $table->foreign('service_id')->references('id')->on('services')->onDelete('cascade');
+            $table->foreign('sub_service_id')->references('id')->on('sub_services')->onDelete('set null');
             $table->foreign('manager_id')->references('id')->on('users')->where('type', 2)->onDelete('cascade');
             $table->foreign('staff_id')->references('id')->on('users')->where('type', 3)->onDelete('cascade');
             $table->softDeletes();

@@ -9,6 +9,7 @@ use App\Models\SubService;
 use App\Models\ServiceStaff;
 use Illuminate\Http\Request;
 use App\Models\ClientService;
+use App\Models\ClientSubService;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -392,8 +393,45 @@ class ServiceController extends Controller
     public function getSubServices($serviceId)
     {
         $service = Service::find($serviceId);
-        $subServices = $service->subServices()->pluck('name', 'id')->toArray();
+        $subServices = SubService::where('service_id',$serviceId)->select('id', 'name')->get();
         return response()->json($subServices);
+    }
+
+    public function saveService(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'clientId' => 'required|integer',
+            'serviceId' => 'required|integer',
+            'managerId' => 'required|integer',
+            'subServices' => 'nullable|array',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => 422, 'errors' => $validator->errors()], 422);
+        }
+
+        $clientService = new ClientService();
+        $clientService->client_id = $request->clientId;
+        $clientService->service_id = $request->serviceId;
+        $clientService->manager_id = $request->managerId;
+        $clientService->save();
+
+        if ($request->has('subServices')) {
+            foreach ($request->subServices as $subServiceData) {
+                $clientSubService = new ClientSubService();
+                $clientSubService->client_service_id = $clientService->id;
+                $clientSubService->client_id = $request->clientId; 
+                $clientSubService->manager_id = $request->managerId;
+                $clientSubService->sub_service_id = $subServiceData['subServiceId'];
+                $clientSubService->frequency = $subServiceData['frequency'];
+                $clientSubService->deadline = $subServiceData['deadline'];
+                $clientSubService->note = $subServiceData['note'];
+                $clientSubService->staff_id = $subServiceData['staffId'];
+                $clientSubService->save();
+            }
+        }
+
+        return response()->json(['status' => 200, 'message' => 'Data saved successfully']);
     }
 
 }

@@ -701,32 +701,34 @@
                     url: '/admin/getSubServices/' + serviceId,
                     type: "GET",
                     dataType: "json",
-                    success:function(data) {
+                    success: function(data) {
+                        console.log(data);
                         $('#serviceDetailsTable tr').remove();
 
                         $.each(data, function(key, value) {
                             var newRow = `
                                 <tr>
-                                    <td>${value}</td>
+                                    <td>${value.name}</td> <!-- Display sub-service name -->
                                     <td>
-                                        <select class="form-select frequency">
+                                        <select class="form-select frequency" name="frequency">
                                             <option value="">Select Frequency</option>
-                                            <option >Daily</option>
+                                            <option>Daily</option>
                                             <option>Weekly</option>
                                             <option>Monthly</option>
                                             <option>Yearly</option>
                                         </select>
                                     </td>
-                                    <td><input type="date" class="form-control"></td>
-                                    <td> <textarea name="note" rows="2" class="form-control"></textarea> </td>
+                                    <td><input type="date" name="deadline" class="form-control"></td>
+                                    <td><textarea name="note" rows="2" class="form-control"></textarea></td>
                                     <td>
-                                        <select class="form-control staffDropdown">
+                                        <select class="form-control staffDropdown" name="staff_id">
                                             <option value="">Select Staff</option>
                                             @foreach($staffs as $staff)
                                                 <option value="{{ $staff->id }}">{{ $staff->first_name }}</option>
                                             @endforeach
                                         </select>
                                     </td>
+                                <input type="hidden" class="sub-service-id" data-sub-service-id="${value.id}">
                                 </tr>
                             `;
                             $('#serviceDetailsTable').append(newRow);
@@ -741,6 +743,77 @@
     });
 </script>
 <!-- Fetching sub services and putting on table end -->
+
+<!-- Storing services and sub services start -->
+<script>
+    $(document).ready(function() {
+        $('#service-saveButton').click(function(e) {
+            e.preventDefault(); 
+
+            var clientId = "{{ $id }}"; 
+            var serviceId = $('#serviceDropdown').val();
+            var managerId = $('#managerDropdown').val(); 
+            var subServices = [];
+
+            $('#serviceDetailsTable tr').each(function() {
+                var subServiceId = $(this).find('.sub-service-id').attr('data-sub-service-id');
+                var frequency = $(this).find('.frequency').val();
+                var deadline = $(this).find('input[type="date"]').val();
+                var note = $(this).find('textarea').val();
+                var staffId = $(this).find('.staffDropdown').val();
+                
+                subServices.push({
+                    subServiceId: subServiceId, 
+                    frequency: frequency,
+                    deadline: deadline,
+                    note: note,
+                    staffId: staffId
+                });
+            });
+
+            var data = {
+                clientId: clientId,
+                serviceId: serviceId,
+                managerId: managerId,
+                subServices: subServices
+            };
+
+            $.ajax({
+                url: '/admin/store-service',
+                type: 'POST',
+                data: data,
+                success: function(response) {
+                    swal({
+                        title: "Success!",
+                        text: "Task assigned successfully",
+                        icon: "success",
+                        button: "OK",
+                    });
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                },
+                error: function(xhr, status, error) {
+                    var errorMessage = "";
+                    if (xhr.responseJSON && xhr.responseJSON.errors){
+                        $.each(xhr.responseJSON.errors, function (key, value) {
+                            errorMessage += key + ": " + value.join(", ") + "<br>";
+                        });
+                    } else {
+                        errorMessage = "An error occurred. Please try again later.";
+                    }
+                    $('#errorMessage').html(errorMessage);
+                    $('#errorMessage').show();
+                    $('#successMessage').hide();
+                    console.error("Error occurred: " + error);
+                    console.error(xhr.responseText);
+                }
+            });
+        });
+    });
+</script>
+
+<!-- Storing services and sub services start -->
 
 <!-- Service assign Start -->
 <!-- <script>
