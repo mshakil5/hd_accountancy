@@ -156,7 +156,10 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     //  Fetch sub services under one service
     Route::get('/getSubServices/{serviceId}', [ServiceController::class, 'getSubServices'])->name('getSubServices');
 
+    //Store service + sub service + assign to staff
     Route::post('/store-service', [ServiceController::class,'saveService'])->name('saveService');
+
+    Route::delete('/delete-sub-service/{id}', [ServiceController::class, 'deleteSubservice']);
 
     //Business info crud
     Route::get('/business-info', [BusinessInfoController::class, 'index'])->name('allBusinessInfo');

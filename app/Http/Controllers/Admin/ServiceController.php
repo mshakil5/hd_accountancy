@@ -410,19 +410,32 @@ class ServiceController extends Controller
             return response()->json(['status' => 422, 'errors' => $validator->errors()], 422);
         }
 
-        $clientService = new ClientService();
-        $clientService->client_id = $request->clientId;
-        $clientService->service_id = $request->serviceId;
-        $clientService->manager_id = $request->managerId;
-        $clientService->save();
+        $clientService = ClientService::where('client_id', $request->clientId)
+                                        ->where('service_id', $request->serviceId)
+                                        ->first();
+
+        if (!$clientService) {
+            $clientService = new ClientService();
+            $clientService->client_id = $request->clientId;
+            $clientService->service_id = $request->serviceId;
+            $clientService->manager_id = $request->managerId;
+            $clientService->save();
+        }
 
         if ($request->has('subServices')) {
             foreach ($request->subServices as $subServiceData) {
-                $clientSubService = new ClientSubService();
-                $clientSubService->client_service_id = $clientService->id;
-                $clientSubService->client_id = $request->clientId; 
-                $clientSubService->manager_id = $request->managerId;
-                $clientSubService->sub_service_id = $subServiceData['subServiceId'];
+                $clientSubService = ClientSubService::where('client_service_id', $clientService->id)
+                                                        ->where('sub_service_id', $subServiceData['subServiceId'])
+                                                        ->first();
+
+                if (!$clientSubService) {
+                    $clientSubService = new ClientSubService();
+                    $clientSubService->client_service_id = $clientService->id;
+                    $clientSubService->client_id = $request->clientId; 
+                    $clientSubService->manager_id = $request->managerId;
+                    $clientSubService->sub_service_id = $subServiceData['subServiceId'];
+                }
+
                 $clientSubService->frequency = $subServiceData['frequency'];
                 $clientSubService->deadline = $subServiceData['deadline'];
                 $clientSubService->note = $subServiceData['note'];
@@ -432,6 +445,13 @@ class ServiceController extends Controller
         }
 
         return response()->json(['status' => 200, 'message' => 'Data saved successfully']);
+    }
+
+    public function deleteSubservice($id)
+    {
+        $subService = ClientSubService::find($id);
+        $subService->delete();
+        return response()->json(['message' => 'Sub-service deleted successfully'], 200);
     }
 
 }

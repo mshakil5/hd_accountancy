@@ -8,4 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class ClientSubService extends Model
 {
     use HasFactory;
+
+    public function clientService()
+    {
+        return $this->belongsTo(ClientService::class);
+    }
 }

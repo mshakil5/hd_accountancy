@@ -691,6 +691,15 @@
 </script>
 <!-- Director Info create End -->
 
+<!-- Service data table -->
+<script>
+    $(document).ready(function() {
+         $('#serviceTable').DataTable({
+        });
+    });
+</script>
+<!-- Service data table -->
+
 <!-- Fetching sub services and putting on table start -->
 <script>
     $(document).ready(function() {
@@ -812,8 +821,48 @@
         });
     });
 </script>
-
 <!-- Storing services and sub services start -->
+
+<script>
+$('.delete-sub-service').click(function(e) {
+    e.preventDefault();
+    var subServiceId = $(this).data('sub-service-id');
+    var confirmDelete = confirm("Are you sure you want to delete this sub-service?");
+    
+    if (confirmDelete) {
+        $.ajax({
+            url: '/admin/delete-sub-service/' + subServiceId,
+            type: 'DELETE',
+            success: function(response) {
+                swal({
+                    title: "Success!",
+                    text: "Deleted successfully",
+                    icon: "success",
+                    button: "OK",
+                 });
+                setTimeout(function() {
+                    location.reload();
+                }, 2000);
+            },
+            error: function(xhr, status, error) {
+                var errorMessage = "";
+                if (xhr.responseJSON && xhr.responseJSON.errors){
+                    $.each(xhr.responseJSON.errors, function (key, value) {
+                        errorMessage += key + ": " + value.join(", ") + "<br>";
+                    });
+                } else {
+                    errorMessage = "An error occurred. Please try again later.";
+                }
+                $('#errorMessage').html(errorMessage);
+                $('#errorMessage').show();
+                $('#successMessage').hide();
+                console.error("Error occurred: " + error);
+                console.error(xhr.responseText);
+            }
+        });
+    }
+});
+</script>
 
 <!-- Service assign Start -->
 <!-- <script>
