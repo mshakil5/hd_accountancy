@@ -14,14 +14,15 @@ class ClientService extends Model
 
     protected $fillable = [
         'client_id',
-        'assigned_services',
+        'assigned_service',
         'deadline',
         'status',
+        'manager_id'
     ];
 
-     protected $casts = [
-        'assigned_services' => 'array',
-    ];
+    //  protected $casts = [
+    //     'assigned_services' => 'array',
+    // ];
 
     public function client()
     {

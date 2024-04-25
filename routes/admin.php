@@ -153,6 +153,9 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
      //Change status of assigned services + staff
      Route::post('/update-service-status', [ServiceController::class, 'updateServiceStatus'])->name('update-service-status');
 
+    //  Fetch sub services under one service
+    Route::get('/getSubServices/{serviceId}', [ServiceController::class, 'getSubServices'])->name('getSubServices');
+
     //Business info crud
     Route::get('/business-info', [BusinessInfoController::class, 'index'])->name('allBusinessInfo');
     Route::get('/create-business-info', [BusinessInfoController::class, 'create'])->name('createBusinessInfo');

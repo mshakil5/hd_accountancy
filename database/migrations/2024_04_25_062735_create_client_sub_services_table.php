@@ -11,20 +11,26 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('client_service', function (Blueprint $table) {
+        Schema::create('client_sub_services', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('client_id');
+            $table->unsignedBigInteger('client_service_id')->nullable();
+            $table->unsignedBigInteger('client_id')->nullable();
             $table->unsignedBigInteger('service_id')->nullable();
             $table->unsignedBigInteger('manager_id')->nullable();
-
+            $table->unsignedBigInteger('staff_id')->nullable();
+            $table->string('frequency')->nullable();
             $table->string('deadline')->nullable();
-            $table->boolean('manager_notification')->default(1);// default 1 == No notification , 0 == New notification
+            $table->longText('note')->nullable();
             $table->boolean('status')->default(1);
+            $table->boolean('manager_notification')->default(1);
+            $table->boolean('staff_notification')->default(1); // default 1 == No notification , 0 == New notification
+            $table->foreign('client_service_id')->references('id')->on('client_service')->onDelete('cascade');
             $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');
             $table->foreign('service_id')->references('id')->on('services')->onDelete('cascade');
             $table->foreign('manager_id')->references('id')->on('users')->where('type', 2)->onDelete('cascade');
-            $table->timestamps();
+            $table->foreign('staff_id')->references('id')->on('users')->where('type', 3)->onDelete('cascade');
             $table->softDeletes();
+            $table->timestamps();
         });
     }
 
@@ -33,6 +39,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('client_service');
+        Schema::dropIfExists('client_sub_services');
     }
 };

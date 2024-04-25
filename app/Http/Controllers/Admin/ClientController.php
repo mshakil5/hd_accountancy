@@ -39,22 +39,24 @@ class ClientController extends Controller
     {
         $managers = User::where('type', '2')->orderby('id','DESC')->get();
         $clients = Client::with(['clientType', 'manager'])->orderBy('id', 'DESC')->get();
+        $staffs = User::where('type', '3')->orderby('id','DESC')->get();
         $clientTypes = ClientType::orderby('id','DESC')->get();
         $services = Service::orderby('id','DESC')->get();
         $allDirectorInfos = DirectorInfo::orderBy('id', 'DESC')->get();
         $id = "";
         $client = "";
-        return view('admin.client.create', compact('clientTypes','managers','clients','services','allDirectorInfos','id','client'));
+        return view('admin.client.create', compact('clientTypes','managers','clients','services','allDirectorInfos','id','client','staffs'));
     }
 
     public function create1($id)
     {
         $managers = User::where('type', '2')->orderby('id','DESC')->get();
+        $staffs = User::where('type', '3')->orderby('id','DESC')->get();
         $client = Client::with(['clientType', 'manager','businessInfo','directorInfos','clientService','contactInfos'])->find($id);
         $clientTypes = ClientType::orderby('id','DESC')->get();
         $services = Service::orderby('id','DESC')->get();
         $allDirectorInfos = DirectorInfo::orderBy('id', 'DESC')->get();
-        return view('admin.client.create', compact('clientTypes','managers','client','services','allDirectorInfos', 'id'));
+        return view('admin.client.create', compact('clientTypes','managers','client','services','allDirectorInfos', 'id','staffs'));
     }
 
     public function store(Request $request)

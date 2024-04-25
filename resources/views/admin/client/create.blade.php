@@ -691,8 +691,59 @@
 </script>
 <!-- Director Info create End -->
 
-<!-- Service assign Start -->
+<!-- Fetching sub services and putting on table start -->
 <script>
+    $(document).ready(function() {
+        $('#serviceDropdown').change(function() {
+            var serviceId = $(this).val();
+            if(serviceId) {
+                $.ajax({
+                    url: '/admin/getSubServices/' + serviceId,
+                    type: "GET",
+                    dataType: "json",
+                    success:function(data) {
+                        $('#serviceDetailsTable tr').remove();
+
+                        $.each(data, function(key, value) {
+                            var newRow = `
+                                <tr>
+                                    <td>${value}</td>
+                                    <td>
+                                        <select class="form-select frequency">
+                                            <option value="">Select Frequency</option>
+                                            <option >Daily</option>
+                                            <option>Weekly</option>
+                                            <option>Monthly</option>
+                                            <option>Yearly</option>
+                                        </select>
+                                    </td>
+                                    <td><input type="date" class="form-control"></td>
+                                    <td> <textarea name="note" rows="2" class="form-control"></textarea> </td>
+                                    <td>
+                                        <select class="form-control staffDropdown">
+                                            <option value="">Select Staff</option>
+                                            @foreach($staffs as $staff)
+                                                <option value="{{ $staff->id }}">{{ $staff->first_name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </td>
+                                </tr>
+                            `;
+                            $('#serviceDetailsTable').append(newRow);
+                        });
+                        $('#subServiceDropdown').show();
+                    }
+                });
+            } else {
+                $('#subServiceDropdown').empty().hide();
+            }
+        });
+    });
+</script>
+<!-- Fetching sub services and putting on table end -->
+
+<!-- Service assign Start -->
+<!-- <script>
     $(document).ready(function () {
         $('#service-saveButton').click(function (event) {
             event.preventDefault();
@@ -742,11 +793,11 @@
             $('#serviceForm')[0].reset();
         });
     });
-</script>
+</script> -->
 <!-- Service assign End -->
 
 <!-- Add New Service and Fetch All Updated and assigned Services  -->
-<script>
+<!-- <script>
     $(document).ready(function () {
         var clientId = "{{ $client->id ?? '' }}";
 
@@ -842,7 +893,7 @@
             }
         });
     });
-</script>
+</script> -->
 <!-- Add New Service and Fetch All Updated and assigned Services End -->
 
 <!-- Contact Info create Start -->

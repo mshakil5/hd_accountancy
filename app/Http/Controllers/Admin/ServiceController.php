@@ -389,4 +389,11 @@ class ServiceController extends Controller
 
     }
 
+    public function getSubServices($serviceId)
+    {
+        $service = Service::find($serviceId);
+        $subServices = $service->subServices()->pluck('name', 'id')->toArray();
+        return response()->json($subServices);
+    }
+
 }
