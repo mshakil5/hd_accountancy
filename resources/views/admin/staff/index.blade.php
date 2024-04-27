@@ -10,13 +10,13 @@
                 <i class="bx bxs-user-plus fs-4 me-2"></i> All Staffs
             </p>
             <div class="row px-3">
-                <div class="col-lg-4 p-3">
+                {{-- <div class="col-lg-4 p-3">
                     <input type="search" name="" placeholder="Search..." class="form-control" id="">
                 </div>
                 <div class="col-lg-4 p-3">
                     <input type="search" name="" placeholder="Sort By" class="form-control" id="">
-                </div>
-                <div class="col-lg-4 p-3 text-end">
+                </div> --}}
+                <div class="col-lg-12 p-3 text-end">
                     <a href="{{ route('createStuff') }}" class="btn btn-sm bg-theme text-light btn-outline-dark">+ New Staff</a>
                 </div>
             </div>
@@ -106,7 +106,7 @@
 </script>
 
 
-Delete staff start
+{{-- Delete staff start --}}
 <script>
     $(document).ready(function() {
         $(document).on('click', '.delete-staff', function(e) {
@@ -143,7 +143,7 @@ Delete staff start
         });
     });
 </script>
-Delete staff start
+{{-- Delete staff start --}}
 
 <!-- Staff status change start -->
 <script>
