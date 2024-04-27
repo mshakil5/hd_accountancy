@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\BusinessInfoController;
 use App\Http\Controllers\Admin\DirectorInfoController;
 use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\WeWorkWithImageController;
+use App\Http\Controllers\Admin\ProrotaController;
 
 //Fallback route
 Route::fallback(function () {
@@ -215,5 +216,16 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
 
     //Previously logged in staffs
     Route::get('/prev-staffs', [StaffController::class, 'prevLogStaffs'])->name('prevLogStaffs');
+
+    // prorota make
+    Route::get('/prorota', [ProrotaController::class, 'index'])->name('prorota');
+    Route::get('/prorota-list', [ProrotaController::class, 'getprorota'])->name('get.prorota');
+    Route::get('/create-prorota', [ProrotaController::class, 'create'])->name('createprorota');
+    Route::post('/prorota', [ProrotaController::class, 'store']);
+    Route::post('/prorota/update', [ProrotaController::class, 'update']);
+    Route::get('/prorota/details/{id}', [ProrotaController::class,'showDetails'])->name('prorota.details');
+    Route::delete('/delete-prorota/{id}', [ProrotaController::class, 'deleteData'])->name('delete.staff');
+    Route::get('/prorota/edit/{id}', [ProrotaController::class,'edit'])->name('prorota.edit');
+
 
 });

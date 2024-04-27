@@ -100,8 +100,8 @@
         </a>
       </li>
 
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="">
+      <li class="nav-item {{ request()->routeIs('prorota') ? 'active' : '' }}">
+        <a class="nav-link collapsed" href="{{ route('prorota') }}">
           <i class="bi bi-box-arrow-in-right"></i>
           <span>Prorota</span>
         </a>
