@@ -12,6 +12,7 @@ use App\Models\BusinessInfo;
 use App\Models\DirectorInfo;
 use Illuminate\Http\Request;
 use App\Models\ClientService;
+use App\Models\ClientSubService;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -52,8 +53,7 @@ class ClientController extends Controller
     {
         $managers = User::where('type', '2')->orderby('id','DESC')->get();
         $staffs = User::where('type', '3')->orderby('id','DESC')->get();
-        $client = Client::with(['clientType', 'manager','businessInfo','directorInfos','clientServices','clientServices.clientSubServices','contactInfos'])->find($id);
-
+        $client = Client::with(['clientType', 'manager','businessInfo','directorInfos','clientService','clientService.clientSubServices','contactInfos'])->where('id', $id)->first();
         $clientTypes = ClientType::orderby('id','DESC')->get();
         $services = Service::orderby('id','DESC')->get();
         $allDirectorInfos = DirectorInfo::orderBy('id', 'DESC')->get();

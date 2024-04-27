@@ -18,7 +18,6 @@ return new class extends Migration
             $table->unsignedBigInteger('sub_service_id')->nullable();
             $table->unsignedBigInteger('manager_id')->nullable();
             $table->unsignedBigInteger('staff_id')->nullable();
-            $table->string('frequency')->nullable();
             $table->string('deadline')->nullable();
             $table->longText('note')->nullable();
             $table->boolean('status')->default(1);
@@ -29,8 +28,8 @@ return new class extends Migration
             $table->foreign('sub_service_id')->references('id')->on('sub_services')->onDelete('set null');
             $table->foreign('manager_id')->references('id')->on('users')->where('type', 2)->onDelete('cascade');
             $table->foreign('staff_id')->references('id')->on('users')->where('type', 3)->onDelete('cascade');
-            $table->softDeletes();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

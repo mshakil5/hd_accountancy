@@ -13,14 +13,6 @@ class ClientService extends Model
     use HasFactory;
     protected $table = 'client_service';
 
-    protected $fillable = [
-        'client_id',
-        'assigned_service',
-        'deadline',
-        'status',
-        'manager_id'
-    ];
-
     public function client()
     {
         return $this->belongsTo(Client::class);

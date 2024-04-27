@@ -44,9 +44,9 @@ class Client extends Model
         return $this->hasMany(DirectorInfo::class);
     }
 
-    public function clientServices()
+    public function clientService()
     {
-        return $this->hasMany(ClientService::class);
+        return $this->hasOne(ClientService::class);
     }
 
     public function contactInfos()

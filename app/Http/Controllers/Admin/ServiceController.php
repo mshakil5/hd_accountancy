@@ -403,6 +403,8 @@ class ServiceController extends Controller
             'clientId' => 'required|integer',
             'serviceId' => 'required|integer',
             'managerId' => 'required|integer',
+            'service_frequency' => 'required',
+            'service_deadline' => 'required',
             'subServices' => 'nullable|array',
         ]);
 
@@ -414,11 +416,18 @@ class ServiceController extends Controller
                                         ->where('service_id', $request->serviceId)
                                         ->first();
 
-        if (!$clientService) {
+            if ($clientService) {
+            $clientService->manager_id = $request->managerId;
+            $clientService->service_frequency = $request->service_frequency;
+            $clientService->service_deadline = $request->service_deadline;
+            $clientService->save();
+        } else {
             $clientService = new ClientService();
             $clientService->client_id = $request->clientId;
             $clientService->service_id = $request->serviceId;
             $clientService->manager_id = $request->managerId;
+            $clientService->service_frequency = $request->service_frequency;
+            $clientService->service_deadline = $request->service_deadline;
             $clientService->save();
         }
 
@@ -436,7 +445,6 @@ class ServiceController extends Controller
                     $clientSubService->sub_service_id = $subServiceData['subServiceId'];
                 }
 
-                $clientSubService->frequency = $subServiceData['frequency'];
                 $clientSubService->deadline = $subServiceData['deadline'];
                 $clientSubService->note = $subServiceData['note'];
                 $clientSubService->staff_id = $subServiceData['staffId'];
@@ -445,6 +453,54 @@ class ServiceController extends Controller
         }
 
         return response()->json(['status' => 200, 'message' => 'Data saved successfully']);
+    }
+
+    public function updateService(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'clientId' => 'required|integer',
+            'serviceId' => 'required|integer',
+            'managerId' => 'required|integer',
+            'service_frequency' => 'required',
+            'service_deadline' => 'required',
+            'subServices' => 'nullable|array',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => 422, 'errors' => $validator->errors()], 422);
+        }
+
+        $clientService = ClientService::where('client_id', $request->clientId)
+                                        ->where('service_id', $request->serviceId)
+                                        ->first();
+
+        if ($clientService) {
+            $clientService->manager_id = $request->managerId;
+            $clientService->service_frequency = $request->service_frequency;
+            $clientService->service_deadline = $request->service_deadline;
+            $clientService->save();
+        } else {
+            return response()->json(['status' => 404, 'message' => 'Client service not found'], 404);
+        }
+
+        if ($request->has('subServices')) {
+            foreach ($request->subServices as $subServiceData) {
+                $clientSubService = ClientSubService::where('client_service_id', $clientService->id)
+                                                        ->where('sub_service_id', $subServiceData['subServiceId'])
+                                                        ->first();
+
+                if (!$clientSubService) {
+                    return response()->json(['status' => 404, 'message' => 'Client sub-service not found'], 404);
+                }
+
+                $clientSubService->deadline = $subServiceData['deadline'];
+                $clientSubService->note = $subServiceData['note'];
+                $clientSubService->staff_id = $subServiceData['staffId'];
+                $clientSubService->save();
+            }
+        }
+
+        return response()->json(['status' => 200, 'message' => 'Data updated successfully']);
     }
 
     public function deleteSubservice($id)

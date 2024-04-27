@@ -159,6 +159,9 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     //Store service + sub service + assign to staff
     Route::post('/store-service', [ServiceController::class,'saveService'])->name('saveService');
 
+    //Update service + sub service + assign to staff
+    Route::post('/update-service', [ServiceController::class,'updateService'])->name('updateService');
+
     Route::delete('/delete-sub-service/{id}', [ServiceController::class, 'deleteSubservice']);
 
     //Business info crud

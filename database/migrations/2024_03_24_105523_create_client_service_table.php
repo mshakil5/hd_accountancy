@@ -16,8 +16,8 @@ return new class extends Migration
             $table->unsignedBigInteger('client_id');
             $table->unsignedBigInteger('service_id')->nullable();
             $table->unsignedBigInteger('manager_id')->nullable();
-
-            $table->string('deadline')->nullable();
+            $table->string('service_deadline')->nullable();
+            $table->string('service_frequency')->nullable();
             $table->boolean('manager_notification')->default(1);// default 1 == No notification , 0 == New notification
             $table->boolean('status')->default(1);
             $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');

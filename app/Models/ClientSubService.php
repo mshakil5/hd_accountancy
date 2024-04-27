@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\SubService;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class ClientSubService extends Model
 {
@@ -12,5 +13,10 @@ class ClientSubService extends Model
     public function clientService()
     {
         return $this->belongsTo(ClientService::class);
+    }
+
+    public function subService()
+    {
+        return $this->belongsTo(SubService::class);
     }
 }

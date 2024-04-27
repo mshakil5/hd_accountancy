@@ -711,32 +711,22 @@
                     type: "GET",
                     dataType: "json",
                     success: function(data) {
-                        console.log(data);
                         $('#serviceDetailsTable tr').remove();
 
                         $.each(data, function(key, value) {
                             var newRow = `
                                 <tr>
-                                    <td>${value.name}</td> <!-- Display sub-service name -->
-                                    <td>
-                                        <select class="form-select frequency" name="frequency">
-                                            <option value="">Select Frequency</option>
-                                            <option>Daily</option>
-                                            <option>Weekly</option>
-                                            <option>Monthly</option>
-                                            <option>Yearly</option>
-                                        </select>
-                                    </td>
+                                    <td>${value.name}</td>
                                     <td><input type="date" name="deadline" class="form-control"></td>
-                                    <td><textarea name="note" rows="2" class="form-control"></textarea></td>
                                     <td>
-                                        <select class="form-control staffDropdown" name="staff_id">
+                                        <select class="form-control select2 staffDropdown" name="staff_id">
                                             <option value="">Select Staff</option>
                                             @foreach($staffs as $staff)
                                                 <option value="{{ $staff->id }}">{{ $staff->first_name }}</option>
                                             @endforeach
                                         </select>
                                     </td>
+                                    <td><textarea name="note" rows="1" class="form-control"></textarea></td>
                                 <input type="hidden" class="sub-service-id" data-sub-service-id="${value.id}">
                                 </tr>
                             `;
@@ -762,18 +752,18 @@
             var clientId = "{{ $id }}"; 
             var serviceId = $('#serviceDropdown').val();
             var managerId = $('#managerDropdown').val(); 
+            var service_frequency = $('#service_frequency').val(); 
+            var service_deadline = $('#service_deadline').val(); 
             var subServices = [];
 
             $('#serviceDetailsTable tr').each(function() {
                 var subServiceId = $(this).find('.sub-service-id').attr('data-sub-service-id');
-                var frequency = $(this).find('.frequency').val();
                 var deadline = $(this).find('input[type="date"]').val();
                 var note = $(this).find('textarea').val();
                 var staffId = $(this).find('.staffDropdown').val();
                 
                 subServices.push({
-                    subServiceId: subServiceId, 
-                    frequency: frequency,
+                    subServiceId: subServiceId,
                     deadline: deadline,
                     note: note,
                     staffId: staffId
@@ -784,6 +774,8 @@
                 clientId: clientId,
                 serviceId: serviceId,
                 managerId: managerId,
+                service_frequency: service_frequency,
+                service_deadline: service_deadline,
                 subServices: subServices
             };
 
@@ -821,48 +813,124 @@
         });
     });
 </script>
-<!-- Storing services and sub services start -->
+<!-- Storing services and sub services end -->
 
+<!-- Updating services and sub services start -->
 <script>
-$('.delete-sub-service').click(function(e) {
-    e.preventDefault();
-    var subServiceId = $(this).data('sub-service-id');
-    var confirmDelete = confirm("Are you sure you want to delete this sub-service?");
-    
-    if (confirmDelete) {
-        $.ajax({
-            url: '/admin/delete-sub-service/' + subServiceId,
-            type: 'DELETE',
-            success: function(response) {
-                swal({
-                    title: "Success!",
-                    text: "Deleted successfully",
-                    icon: "success",
-                    button: "OK",
-                 });
-                setTimeout(function() {
-                    location.reload();
-                }, 2000);
-            },
-            error: function(xhr, status, error) {
-                var errorMessage = "";
-                if (xhr.responseJSON && xhr.responseJSON.errors){
-                    $.each(xhr.responseJSON.errors, function (key, value) {
-                        errorMessage += key + ": " + value.join(", ") + "<br>";
+    $(document).ready(function() {
+        $('#service-updateButton').click(function(e) {
+            e.preventDefault(); 
+
+            var clientId = "{{ $id }}"; 
+            var serviceId = $('#serviceDropdown').val();
+            var managerId = $('#managerDropdown').val(); 
+            var service_frequency = $('#service_frequency').val(); 
+            var service_deadline = $('#service_deadline').val(); 
+            var subServices = [];
+
+            $('#serviceDetailsTable tr').each(function() {
+                var subServiceId = $(this).find('input[name="sub_service_id[]"]').val();
+                var deadline = $(this).find('input[type="date"]').val();
+                var note = $(this).find('textarea').val();
+                var staffId = $(this).find('select[name="staff_id"]').val();
+                
+                subServices.push({
+                    subServiceId: subServiceId,
+                    deadline: deadline,
+                    note: note,
+                    staffId: staffId
+                });
+            });
+
+            var data = {
+                clientId: clientId,
+                serviceId: serviceId,
+                managerId: managerId,
+                service_frequency: service_frequency,
+                service_deadline: service_deadline,
+                subServices: subServices
+            };
+
+            console.log(data);
+
+            $.ajax({
+                url: '/admin/update-service',
+                type: 'POST',
+                data: data,
+                success: function(response) {
+                    swal({
+                        title: "Success!",
+                        text: "Task updated successfully",
+                        icon: "success",
+                        button: "OK",
                     });
-                } else {
-                    errorMessage = "An error occurred. Please try again later.";
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                },
+                error: function(xhr, status, error) {
+                    var errorMessage = "";
+                    if (xhr.responseJSON && xhr.responseJSON.errors){
+                        $.each(xhr.responseJSON.errors, function (key, value) {
+                            errorMessage += key + ": " + value.join(", ") + "<br>";
+                        });
+                    } else {
+                        errorMessage = "An error occurred. Please try again later.";
+                    }
+                    $('#errorMessage').html(errorMessage);
+                    $('#errorMessage').show();
+                    $('#successMessage').hide();
+                    console.error("Error occurred: " + error);
+                    console.error(xhr.responseText);
                 }
-                $('#errorMessage').html(errorMessage);
-                $('#errorMessage').show();
-                $('#successMessage').hide();
-                console.error("Error occurred: " + error);
-                console.error(xhr.responseText);
-            }
+            });
         });
-    }
-});
+    });
 </script>
+<!-- Updating services and sub services end -->
+
+<!-- Deleting sub services start -->
+<!-- <script>
+    $('.delete-sub-service').click(function(e) {
+        e.preventDefault();
+        var subServiceId = $(this).data('sub-service-id');
+        var confirmDelete = confirm("Are you sure you want to delete this sub-service?");
+        
+        if (confirmDelete) {
+            $.ajax({
+                url: '/admin/delete-sub-service/' + subServiceId,
+                type: 'DELETE',
+                success: function(response) {
+                    swal({
+                        title: "Success!",
+                        text: "Deleted successfully",
+                        icon: "success",
+                        button: "OK",
+                    });
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                },
+                error: function(xhr, status, error) {
+                    var errorMessage = "";
+                    if (xhr.responseJSON && xhr.responseJSON.errors){
+                        $.each(xhr.responseJSON.errors, function (key, value) {
+                            errorMessage += key + ": " + value.join(", ") + "<br>";
+                        });
+                    } else {
+                        errorMessage = "An error occurred. Please try again later.";
+                    }
+                    $('#errorMessage').html(errorMessage);
+                    $('#errorMessage').show();
+                    $('#successMessage').hide();
+                    console.error("Error occurred: " + error);
+                    console.error(xhr.responseText);
+                }
+            });
+        }
+    });
+</script> -->
+<!-- Deleting sub services end -->
 
 <!-- Service assign Start -->
 <!-- <script>
