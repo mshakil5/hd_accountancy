@@ -303,36 +303,13 @@ class ServiceController extends Controller
     public function getAllAssignedServices(Request $request)
     {
         if ($request->ajax()) {
-            $data = ClientService::with('client')->where('status', 1)->whereDate('deadline', '<=', now()->addDays(30))->orderBy('id', 'desc')->get();
-
-            $data->transform(function ($item, $key) {
-                $servicesIds = $item->assigned_services ?: [];
-                $serviceNames = [];
-
-                foreach ($servicesIds as $serviceId) {
-                    $service = Service::find($serviceId);
-                    if ($service) {
-                        $serviceNames[] = $service->name;
-                    }
-                }
-
-                $item->service_names = implode(', ', $serviceNames);
-
-                return $item;
-            });
+            $data = ClientService::with('client', 'manager','service')
+            ->where('status', 1)
+            ->whereDate('service_deadline', '<=', now()->addDays(30))
+            ->orderBy('id', 'desc')
+            ->get();
 
             return DataTables::of($data)
-                ->addIndexColumn()
-                ->addColumn('client_name', function($row) {
-                    return $row->client ? $row->client->name : '';
-                })
-                ->addColumn('assigned_services', function($row) {
-                    return $row->service_names;
-                })
-                ->addColumn('deadline', function($row) {
-                    return $row->deadline;
-                })
-                ->rawColumns(['client_name', 'assigned_services', 'deadline'])
                 ->make(true);
         }
     }
@@ -492,6 +469,7 @@ class ServiceController extends Controller
                 if (!$clientSubService) {
                     return response()->json(['status' => 404, 'message' => 'Client sub-service not found'], 404);
                 }
+
 
                 $clientSubService->deadline = $subServiceData['deadline'];
                 $clientSubService->note = $subServiceData['note'];

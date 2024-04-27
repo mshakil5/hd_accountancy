@@ -18,13 +18,18 @@ class ClientService extends Model
         return $this->belongsTo(Client::class);
     }
 
-    public function services()
+    public function service()
     {
-        return $this->belongsToMany(Service::class);
+        return $this->belongsTo(Service::class, 'service_id');
     }
 
     public function clientSubServices()
     {
         return $this->hasMany(ClientSubService::class);
+    }
+
+     public function manager()
+    {
+        return $this->belongsTo(User::class, 'manager_id');
     }
 }

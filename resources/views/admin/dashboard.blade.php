@@ -204,11 +204,11 @@
                       <table id="servicesTable" class="table cell-border table-striped" style="width:100%">
                           <thead>
                               <tr>
-                                  <th>SL</th>
                                   <th>Client Name</th>
-                                  <th>Tasks</th>
+                                  <th>Service Name</th>
+                                  <th>Manager Name</th>
                                   <th>Deadline</th>
-                                  <th>Action</th>
+                                  <th>Frequency</th>
                               </tr>
                           </thead>
                       </table>
@@ -610,73 +610,30 @@
 
 <!-- Task need to be assigned -->
 <script>
-  $(document).ready(function() {
-      var previousClientId = null;
-
-      $('#servicesTable').DataTable({
-          processing: true,
-          serverSide: true,
-          ajax: {
-              url: '/admin/get-all-services',
-              type: 'GET',
-              dataSrc: function (json) {
-                  return json.data;
+  $('#servicesTable').DataTable({
+      processing: true,
+      serverSide: true,
+      ajax: {
+          url: '/admin/get-all-services',
+          type: 'GET',
+          dataSrc: 'data',
+          error: function (xhr, error, thrown) {
+              console.error('DataTables error:', error, thrown);
+          }
+      },
+      columns: [
+          { data: 'client.name', name: 'client.name' },
+          { data: 'service.name', name: 'service.name' },
+          { data: 'manager.first_name', name: 'manager.first_name' }, 
+          { 
+              data: 'service_deadline', 
+              name: 'service_deadline',
+              render: function(data, type, row) {
+                  return moment(data).format('DD.MM.YY');
               }
           },
-          columns: [
-              { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-              { data: 'client_name', name: 'client_name' },
-              { 
-                  data: 'assigned_services', 
-                  name: 'assigned_services',
-                  render: function(data, type, row, meta) {
-                      if (Array.isArray(data)) {
-                          return data.join(', ');
-                      } else {
-                          return data;
-                      }
-                  }
-              },
-              { 
-                  data: 'deadline', 
-                  name: 'deadline',
-                  render: function(data, type, row, meta) {
-                      var date = new Date(data);
-                      var day = ("0" + date.getDate()).slice(-2);
-                      var month = ("0" + (date.getMonth() + 1)).slice(-2);
-                      var year = date.getFullYear();
-                      return day + '.' + month + '.' + year;
-                  }
-              },
-              {
-                  data: null,
-                  render: function(data, type, row, meta) {
-                      return '<button class="btn btn-secondary btn-sm assign-btn" data-client-id="' + row.client_id + '" data-client-service-id="' + row.id + '" data-client-name="' + row.client_name + '">Assign</button>';
-                  }
-              }
-          ]
-      });
-
-      $(document).on('click', '.assign-btn', function() {
-          var clientId = $(this).data('client-id');
-          var clientServiceId = $(this).data('client-service-id');
-          var clientName = $(this).data('client-name');
-          if (previousClientId === clientId) {
-              $('#taskAssignForm').toggle();
-          } else {
-              $('#taskAssignForm').show();
-          }
-          previousClientId = clientId;
-          
-          $('select[name="client_id"]').val(clientId).trigger('change').prop('disabled', true);
-          $('input[name="client_id"]').val(clientId);
-          
-          $('input[name="client_service_id"]').val(clientServiceId); 
-      });
-
-      $('#cancelButton').on('click', function() {
-          $('select[name="client_id"]').prop('disabled', false);
-      });
+          { data: 'service_frequency', name: 'service_frequency' }
+      ]
   });
 </script>
 <!-- Task need to be assigned -->
