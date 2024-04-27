@@ -547,8 +547,206 @@
 </script>
 <!-- Director Info create End -->
 
-<!-- Service update Start -->
+<!-- Service data table -->
 <script>
+    $(document).ready(function() {
+         $('#serviceTable').DataTable({
+        });
+    });
+</script>
+<!-- Service data table -->
+
+<!-- Fetching sub services and putting on table start -->
+<script>
+    $(document).ready(function() {
+        $('#serviceDropdown').change(function() {
+            var serviceId = $(this).val();
+            if(serviceId) {
+                $.ajax({
+                    url: '/admin/getSubServices/' + serviceId,
+                    type: "GET",
+                    dataType: "json",
+                    success: function(data) {
+                        $('#serviceDetailsTable tr').remove();
+
+                        $.each(data, function(key, value) {
+                            var newRow = `
+                                <tr>
+                                    <td>${value.name}</td>
+                                    <td><input type="date" name="deadline" class="form-control"></td>
+                                    <td>
+                                        <select class="form-control select2 staffDropdown" name="staff_id">
+                                            <option value="">Select Staff</option>
+                                            @foreach($staffs as $staff)
+                                                <option value="{{ $staff->id }}">{{ $staff->first_name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </td>
+                                    <td><textarea name="note" rows="1" class="form-control"></textarea></td>
+                                <input type="hidden" class="sub-service-id" data-sub-service-id="${value.id}">
+                                </tr>
+                            `;
+                            $('#serviceDetailsTable').append(newRow);
+                        });
+                        $('#subServiceDropdown').show();
+                    }
+                });
+            } else {
+                $('#subServiceDropdown').empty().hide();
+            }
+        });
+    });
+</script>
+<!-- Fetching sub services and putting on table end -->
+
+<!-- Storing services and sub services start -->
+<script>
+    $(document).ready(function() {
+        $('#service-saveButton').click(function(e) {
+            e.preventDefault(); 
+
+            var clientId = "{{ $client->id ?? '' }}";
+            var serviceId = $('#serviceDropdown').val();
+            var managerId = $('#managerDropdown').val(); 
+            var service_frequency = $('#service_frequency').val(); 
+            var service_deadline = $('#service_deadline').val(); 
+            var subServices = [];
+
+            $('#serviceDetailsTable tr').each(function() {
+                var subServiceId = $(this).find('.sub-service-id').attr('data-sub-service-id');
+                var deadline = $(this).find('input[type="date"]').val();
+                var note = $(this).find('textarea').val();
+                var staffId = $(this).find('.staffDropdown').val();
+                
+                subServices.push({
+                    subServiceId: subServiceId,
+                    deadline: deadline,
+                    note: note,
+                    staffId: staffId
+                });
+            });
+
+            var data = {
+                clientId: clientId,
+                serviceId: serviceId,
+                managerId: managerId,
+                service_frequency: service_frequency,
+                service_deadline: service_deadline,
+                subServices: subServices
+            };
+
+            $.ajax({
+                url: '/admin/store-service',
+                type: 'POST',
+                data: data,
+                success: function(response) {
+                    swal({
+                        title: "Success!",
+                        text: "Task assigned successfully",
+                        icon: "success",
+                        button: "OK",
+                    });
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                },
+                error: function(xhr, status, error) {
+                    var errorMessage = "";
+                    if (xhr.responseJSON && xhr.responseJSON.errors){
+                        $.each(xhr.responseJSON.errors, function (key, value) {
+                            errorMessage += key + ": " + value.join(", ") + "<br>";
+                        });
+                    } else {
+                        errorMessage = "An error occurred. Please try again later.";
+                    }
+                    $('#errorMessage').html(errorMessage);
+                    $('#errorMessage').show();
+                    $('#successMessage').hide();
+                    console.error("Error occurred: " + error);
+                    console.error(xhr.responseText);
+                }
+            });
+        });
+    });
+</script>
+<!-- Storing services and sub services end -->
+
+<!-- Updating services and sub services start -->
+<script>
+    $(document).ready(function() {
+        $('#service-updateButton').click(function(e) {
+            e.preventDefault(); 
+
+            var clientId = "{{ $client->id ?? '' }}";
+            var serviceId = $('#serviceDropdown').val();
+            var managerId = $('#managerDropdown').val(); 
+            var service_frequency = $('#service_frequency').val(); 
+            var service_deadline = $('#service_deadline').val(); 
+            var subServices = [];
+
+            $('#serviceDetailsTable tr').each(function() {
+                var subServiceId = $(this).find('input[name="sub_service_id[]"]').val();
+                var deadline = $(this).find('input[type="date"]').val();
+                var note = $(this).find('textarea').val();
+                var staffId = $(this).find('select[name="staff_id"]').val();
+                
+                subServices.push({
+                    subServiceId: subServiceId,
+                    deadline: deadline,
+                    note: note,
+                    staffId: staffId
+                });
+            });
+
+            var data = {
+                clientId: clientId,
+                serviceId: serviceId,
+                managerId: managerId,
+                service_frequency: service_frequency,
+                service_deadline: service_deadline,
+                subServices: subServices
+            };
+
+            console.log(data);
+
+            $.ajax({
+                url: '/admin/update-service',
+                type: 'POST',
+                data: data,
+                success: function(response) {
+                    swal({
+                        title: "Success!",
+                        text: "Task updated successfully",
+                        icon: "success",
+                        button: "OK",
+                    });
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                },
+                error: function(xhr, status, error) {
+                    var errorMessage = "";
+                    if (xhr.responseJSON && xhr.responseJSON.errors){
+                        $.each(xhr.responseJSON.errors, function (key, value) {
+                            errorMessage += key + ": " + value.join(", ") + "<br>";
+                        });
+                    } else {
+                        errorMessage = "An error occurred. Please try again later.";
+                    }
+                    $('#errorMessage').html(errorMessage);
+                    $('#errorMessage').show();
+                    $('#successMessage').hide();
+                    console.error("Error occurred: " + error);
+                    console.error(xhr.responseText);
+                }
+            });
+        });
+    });
+</script>
+<!-- Updating services and sub services end -->
+
+<!-- Service update Start -->
+<!-- <script>
     $(document).ready(function () {
         $('#service-saveButton').click(function (event) {
             event.preventDefault();
@@ -599,11 +797,11 @@
             $('#serviceForm')[0].reset();
         });
     });
-</script>
+</script> -->
 <!-- Service update End -->
 
 <!-- New service add and dynamically update -->
-<script>
+<!-- <script>
     $(document).ready(function () {
         var clientId = "{{ $client->id ?? '' }}";
 
@@ -701,7 +899,7 @@
             }
         });
     });
-</script>
+</script> -->
 <!-- New service add and dynamically update -->
 
 <!-- Contact Info create Start -->

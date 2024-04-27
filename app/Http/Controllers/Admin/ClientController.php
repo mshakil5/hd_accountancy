@@ -260,7 +260,9 @@ class ClientController extends Controller
         $businessInfo = BusinessInfo::where('client_id', $id)->first();
         $directorInfos = DirectorInfo::where('client_id', $id)->get();
         $contactInfo = ContactInfo::where('client_id', $id)->first();
-        return view('admin.client.updateForm', compact('client', 'clientTypes', 'managers', 'businessInfo', 'directorInfos','contactInfo'));
+        $services = Service::orderby('id','DESC')->get();
+        $staffs = User::where('type', '3')->orderby('id','DESC')->get();
+        return view('admin.client.updateForm', compact('client', 'clientTypes', 'managers', 'businessInfo', 'directorInfos','contactInfo','services','staffs'));
     }
 
     public function updateClientDetails(Request $request, $id)

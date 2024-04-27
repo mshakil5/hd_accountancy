@@ -64,33 +64,34 @@
               </tr>
           </thead>
           <tbody id="serviceDetailsTable">
-
+           
+          @if(isset($client->clientService->clientSubServices))
               @foreach($client->clientService->clientSubServices as $clientSubService)
-                <tr>
-                   <td>{{ $clientSubService->subService->name }}</td>
-                   <input type="hidden" name="sub_service_id[]" value="{{ $clientSubService->subService->id }}">
-                    
-                    <td>
-                        <input type="date" name="deadline" class="form-control" value="{{ $clientSubService->deadline }}">
-                    </td>
+                  <tr>
+                      <td>{{ $clientSubService->subService->name }}</td>
+                      <input type="hidden" name="sub_service_id[]" value="{{ $clientSubService->subService->id }}">
 
-                    <td>
-                        <select class="form-control select2" name="staff_id">
-                            <option value="">Select Staff</option>
-                            @foreach($staffs as $staff)
-                                <option value="{{ $staff->id }}" {{ $clientSubService->staff_id == $staff->id ? 'selected' : '' }}>
-                                    {{ $staff->first_name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </td>
+                      <td>
+                          <input type="date" name="deadline" class="form-control" value="{{ $clientSubService->deadline }}">
+                      </td>
 
-                    <td>
-                      <textarea name="note" rows="1" class="form-control">{{ $clientSubService->note }}</textarea>
-                    </td>
+                      <td>
+                          <select class="form-control select2" name="staff_id">
+                              <option value="">Select Staff</option>
+                              @foreach($staffs as $staff)
+                                  <option value="{{ $staff->id }}" {{ $clientSubService->staff_id == $staff->id ? 'selected' : '' }}>
+                                      {{ $staff->first_name }}
+                                  </option>
+                              @endforeach
+                          </select>
+                      </td>
 
-                </tr>
+                      <td>
+                          <textarea name="note" rows="1" class="form-control">{{ $clientSubService->note }}</textarea>
+                      </td>
+                  </tr>
               @endforeach
+          @endif
 
       </tbody>
       </table>
