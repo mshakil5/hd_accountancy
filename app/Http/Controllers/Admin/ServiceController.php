@@ -303,7 +303,7 @@ class ServiceController extends Controller
     public function getAllAssignedServices(Request $request)
     {
         if ($request->ajax()) {
-            $data = ClientService::with('client', 'manager','service')
+            $data = ClientService::with('client', 'manager','service','clientSubServices')
             ->where('status', 1)
             ->whereDate('service_deadline', '<=', now()->addDays(30))
             ->orderBy('id', 'desc')

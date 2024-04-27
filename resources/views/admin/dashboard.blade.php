@@ -75,7 +75,7 @@
         </div>
 
         <!-- Task Assign to staff start -->
-        <div class="col-lg-12" id="taskAssignForm" style="display: none;">
+        <!-- <div class="col-lg-12" id="taskAssignForm" style="display: none;">
             <div class="card border shadow-sm mb-3">
                 <p class="p-2 bg-theme-light txt-theme px-3 mb-3 text-capitalize d-flex align-items-center">
                     <i class="bx bxs-user-plus fs-4 me-2"></i>Assign Task
@@ -114,7 +114,6 @@
                             <div class="col-lg-6 mb-3">
                                 <label class="form-label">Assigned Services</label>
                                 <div id="assigned-services">
-                                    <!-- Assigned services checkboxes -->
                                     <input name="assigned_services[]" id="" value="">
                                 </div>
                             </div>
@@ -136,8 +135,53 @@
                     </form>
                 </div>
             </div>
-        </div>
+        </div> -->
         <!-- Task Assign to staff end -->
+
+          <!-- <div class="row my-4">
+            <div class="col-12">
+              <h5 class="p-2 bg-theme text-white mb-0 text-capitalize">Sub Services Details</h5>
+              <div class="border-theme p-3 border-1">
+              <table class="table mt-3">
+                  <thead>
+                      <tr>
+                          <th>Sub Service Name</th>
+                          <th>Deadline</th>
+                          <th>Staff</th>
+                          <th>Note</th>
+                      </tr>
+                  </thead>
+                  <tbody id="serviceDetailsTable">
+                  
+                            <tr>
+                                <td></td>
+                                <input type="hidden" name="sub_service_id[]" value="">
+
+                                <td>
+                                    <input type="date" name="deadline" class="form-control" value="">
+                                </td>
+
+                                <td>
+                                    <select class="form-control select2" name="staff_id">
+                                        <option value="">Select Staff</option>
+                                        @foreach($staffs as $staff)
+                                            <option value="{{ $staff->id }}">
+                                                {{ $staff->first_name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </td>
+
+                                <td>
+                                    <textarea name="note" rows="1" class="form-control"></textarea>
+                                </td>
+                            </tr>
+
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div> -->
 
         <div class="row px-0 mx-auto">
           <div class="col-lg-5">
@@ -209,6 +253,7 @@
                                   <th>Manager Name</th>
                                   <th>Deadline</th>
                                   <th>Frequency</th>
+                                  <th>Action</th>
                               </tr>
                           </thead>
                       </table>
@@ -617,6 +662,9 @@
           url: '/admin/get-all-services',
           type: 'GET',
           dataSrc: 'data',
+          // success: function(response) {
+          //     console.log(response);
+          // },
           error: function (xhr, error, thrown) {
               console.error('DataTables error:', error, thrown);
           }
@@ -624,7 +672,13 @@
       columns: [
           { data: 'client.name', name: 'client.name' },
           { data: 'service.name', name: 'service.name' },
-          { data: 'manager.first_name', name: 'manager.first_name' }, 
+          { 
+              data: null,
+              name: 'manager',
+              render: function(data, type, row) {
+                  return data.manager.first_name + ' ' + data.manager.last_name;
+              }
+          },
           { 
               data: 'service_deadline', 
               name: 'service_deadline',
@@ -632,12 +686,32 @@
                   return moment(data).format('DD.MM.YY');
               }
           },
-          { data: 'service_frequency', name: 'service_frequency' }
+          { data: 'service_frequency', name: 'service_frequency' },
+          {
+              data: null,
+              name: 'action',
+              render: function(data, type, row) {
+                  return '<button class="btn btn-secondary btn-sm assign-btn" data-clientservice-id="' + data.id + '" data-service-id="' + data.service.id + '">Assign</button>';
+              }
+          }
       ]
   });
+
+  $('#servicesTable').on('click', '.assign-btn', function() {
+      var clientserviceId = $(this).data('clientservice-id');
+      var serviceId = $(this).data('service-id');
+      console.log('ClientService ID:', clientserviceId);
+      console.log('Service ID:', serviceId);
+      var row = $('#servicesTable').DataTable().row($(this).closest('tr'));
+      var rowData = row.data();
+      var subServices = rowData.client_sub_services;
+      console.log('Sub-Services:', subServices);
+
+      $('#serviceDetailsTable').show();
+  });
+
 </script>
 <!-- Task need to be assigned -->
-
 
 <!-- Data table initialize -->
 <script>
@@ -645,7 +719,6 @@
       $("#active-staff").DataTable();
     });
 </script>
-
 <!-- Data table initialize -->
 
 <!-- <script>
