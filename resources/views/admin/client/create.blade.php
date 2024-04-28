@@ -851,7 +851,7 @@
                 subServices: subServices
             };
 
-            console.log(data);
+            // console.log(data);
 
             $.ajax({
                 url: '/admin/update-service',

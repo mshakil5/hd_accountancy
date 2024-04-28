@@ -481,11 +481,45 @@ class ServiceController extends Controller
         return response()->json(['status' => 200, 'message' => 'Data updated successfully']);
     }
 
-    public function deleteSubservice($id)
+    // public function deleteSubservice($id)
+    // {
+    //     $subService = ClientSubService::find($id);
+    //     $subService->delete();
+    //     return response()->json(['message' => 'Sub-service deleted successfully'], 200);
+    // }
+
+     public function getClientSubServices($clientserviceId)
     {
-        $subService = ClientSubService::find($id);
-        $subService->delete();
-        return response()->json(['message' => 'Sub-service deleted successfully'], 200);
+        $clientSubServices = ClientSubService::with('subService')->where('client_service_id', $clientserviceId)->get();
+        return response()->json($clientSubServices);
+    }
+
+    public function updateSubservices(Request $request)
+    {
+        $subServicesData = $request->input('subServicesData');
+        $clientServiceId = $request->input('clientServiceId');
+
+        foreach ($subServicesData as $subServiceData) {
+            $clientSubService = ClientSubService::where('sub_service_id', $subServiceData['subServiceId'])
+                                                  ->first();
+
+            if ($clientSubService) {
+                $clientSubService->update([
+                    'deadline' => $subServiceData['deadline'],
+                    'note' => $subServiceData['note'],
+                    'staff_id' => $subServiceData['staffId']
+                ]);
+            } else {
+                return response()->json(['status' => 404, 'message' => 'Sub-service not found'], 404);
+            }
+        }
+
+        return response()->json(['status' => 200, 'message' => 'Sub-services updated successfully']);
+
+        //     return response()->json([
+        //     'subServicesData' => $subServicesData,
+        //     'clientServiceId' => $clientServiceId
+        // ]);
     }
 
 }

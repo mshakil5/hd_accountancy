@@ -74,114 +74,81 @@
           </div>
         </div>
 
-        <!-- Task Assign to staff start -->
-        <!-- <div class="col-lg-12" id="taskAssignForm" style="display: none;">
-            <div class="card border shadow-sm mb-3">
-                <p class="p-2 bg-theme-light txt-theme px-3 mb-3 text-capitalize d-flex align-items-center">
-                    <i class="bx bxs-user-plus fs-4 me-2"></i>Assign Task
-                </p>
-                <div class="card-body">
-                    <div id="successMessage" class="alert alert-success" style="display: none;">
-                        <button type="button" class="btn-close" aria-label="Close"></button>
-                        <b></b>
-                    </div>
-                    <div id="errorMessage" class="alert alert-danger" style="display: none;">
-                        <button type="button" class="btn-close" aria-label="Close"></button>
-                        <b></b>
-                    </div>
-                    <form id="myForm">
-                        <div class="row">
-                            <div class="col-lg-6 mb-3" style="margin-top: 10px;">
-                                <input type="hidden" id="client_service_id" name="client_service_id">
-                                <input type="hidden" name="client_id" id="client_id">
-                                <label for="client_id" class="form-label">Client Name</label>
-                                <select name="client_id" class="form-control select2">
-                                    <option value="">Client Name</option>
-                                    @foreach($clients as $client)
-                                    <option value="{{ $client->id }}">{{ $client->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-lg-6 mb-3" style="margin-top: 10px;">
-                                <label for="staff_id" class="form-label">Select Staff</label>
-                                <select name="staff_id" class="form-control select2">
-                                    <option value="">Select Staff</option>
-                                    @foreach($staffs as $staff)
-                                    <option value="{{ $staff->id }}">{{ $staff->first_name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-lg-6 mb-3">
-                                <label class="form-label">Assigned Services</label>
-                                <div id="assigned-services">
-                                    <input name="assigned_services[]" id="" value="">
-                                </div>
-                            </div>
-                            <div class="col-lg-6 mb-3">
-                                <label for="deadline" class="form-label">Deadline</label>
-                                <input type="date" name="deadline" class="form-control">
-                            </div>
-                            <div class="col-lg-12 mb-3">
-                                <label for="note" class="form-label">Notes</label>
-                                <textarea name="note" class="form-control" placeholder="Enter your notes here..."></textarea>
-                            </div>
-                        </div>
-                        <div class="row justify-content-center">
-                            <div class="col-lg-6 text-center">
-                                <button type="submit" class="btn btn-sm bg-theme text-light btn-outline-dark px-3 mx-2">Submit</button>
-                                 <button type="button" id="cancelButton" class="btn btn-sm btn-outline-dark rounded-2 px-3">Cancel</button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div> -->
-        <!-- Task Assign to staff end -->
+        <div class="col-lg-12">
+          <div class="card border shadow-sm mb-3" id="assignTaskSection" style="display: none;">
+            <p class="p-2 bg-theme-light txt-theme px-3 mb-3 text-capitalize d-flex align-items-center">
+                <i class="bx bxs-user-plus fs-4 me-2"></i>Assign Task
+            </p>
 
-          <!-- <div class="row my-4">
-            <div class="col-12">
-              <h5 class="p-2 bg-theme text-white mb-0 text-capitalize">Sub Services Details</h5>
-              <div class="border-theme p-3 border-1">
-              <table class="table mt-3">
-                  <thead>
-                      <tr>
-                          <th>Sub Service Name</th>
-                          <th>Deadline</th>
-                          <th>Staff</th>
-                          <th>Note</th>
-                      </tr>
-                  </thead>
-                  <tbody id="serviceDetailsTable">
-                  
-                            <tr>
-                                <td></td>
-                                <input type="hidden" name="sub_service_id[]" value="">
-
-                                <td>
-                                    <input type="date" name="deadline" class="form-control" value="">
-                                </td>
-
-                                <td>
-                                    <select class="form-control select2" name="staff_id">
-                                        <option value="">Select Staff</option>
-                                        @foreach($staffs as $staff)
-                                            <option value="{{ $staff->id }}">
-                                                {{ $staff->first_name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </td>
-
-                                <td>
-                                    <textarea name="note" rows="1" class="form-control"></textarea>
-                                </td>
-                            </tr>
-
-                  </tbody>
-                </table>
+            <div class="col-md-12">
+              <div class="row mt-3">
+                  <div class="col-3 text-center">
+                      <h5 class="mb-3">Choose Service</h5>
+                      <div class="form-check">
+                        <select id="servicesDropdown" class="form-control mt-2 select2">
+                            <option value="">Select Service</option>
+                                @foreach($services as $service)
+                                <option value="{{ $service->id }}">
+                                    {{ $service->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                      </div>
+                  </div>    
+                  <div class="col-3 text-center">
+                      <h5 class="mb-3">Choose Manager</h5>
+                      <div class="form-check">
+                          <select id="managerDropdown" class="form-control mt-2 select2">
+                            <option value="">Select Manager</option>
+                            @foreach($managers as $manager)
+                                <option value="{{ $manager->id }}">
+                                    {{ $manager->first_name }}
+                                </option>
+                            @endforeach
+                        </select>
+                      </div>
+                  </div>  
+                  <div class="col-3 text-center">
+                      <h5 class="mb-3">Choose Frequency</h5>
+                      <div class="form-check">
+                          <select id="service_frequency" class="form-control mt-2 select2" name="service_frequency">
+                              <option value="">Select Frequency</option>
+                              <option >Daily</option>
+                              <option>Weekly</option>
+                              <option >Monthly</option>
+                              <option >Quarterly</option> 
+                              <option >Yearly</option>
+                          </select>
+                      </div>
+                  </div>   
+                  <div class="col-3 text-center">
+                      <h5 class="mb-3">Deadline</h5>
+                      <div class="form-check">
+                          <input type="date" id="service_deadline" class="form-control mt-2" name="service_deadline" value="">
+                      </div>
+                  </div>
               </div>
             </div>
-          </div> -->
+
+            <table class="table mt-3">
+              <thead>
+                <tr>
+                  <th>Sub Service Name</th>
+                  <th>Deadline</th>
+                  <th>Staff</th>
+                  <th>Note</th>
+                </tr>
+              </thead>
+              <tbody id="serviceDetailsTable"></tbody>
+            </table>
+            <div class="row mt-3 mb-3">
+              <div class="col-lg-4 mx-auto text-center">
+                <button id="sub-service-updateButton" class="btn btn-sm bg-theme text-light btn-outline-dark" style="display: none;">Update</button>
+                <button id="sub-service-cancelButton" class="btn btn-sm bg-theme text-light btn-outline-dark" style="display: none;">Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div class="row px-0 mx-auto">
           <div class="col-lg-5">
@@ -444,7 +411,7 @@
 </script>
 
 <!-- Fetch services for each client -->
-<script>
+<!-- <script>
   $(document).ready(function() {
       $('select[name="client_id"]').change(function() {
           var clientId = $(this).val();
@@ -484,7 +451,7 @@
           }
       });
   });
-</script>
+</script> -->
 <!-- Fetch services for each client -->
 
 <!-- Assign service staff -->
@@ -655,63 +622,219 @@
 
 <!-- Task need to be assigned -->
 <script>
-  $('#servicesTable').DataTable({
+  $(document).ready(function() {
+
+    $('#servicesTable').DataTable({
       processing: true,
       serverSide: true,
       ajax: {
-          url: '/admin/get-all-services',
-          type: 'GET',
-          dataSrc: 'data',
-          // success: function(response) {
-          //     console.log(response);
-          // },
-          error: function (xhr, error, thrown) {
-              console.error('DataTables error:', error, thrown);
-          }
+        url: '/admin/get-all-services',
+        type: 'GET',
+        dataSrc: 'data',
+        error: function(xhr, error, thrown) {
+          console.error('DataTables error:', error, thrown);
+        }
       },
       columns: [
-          { data: 'client.name', name: 'client.name' },
-          { data: 'service.name', name: 'service.name' },
-          { 
-              data: null,
-              name: 'manager',
-              render: function(data, type, row) {
-                  return data.manager.first_name + ' ' + data.manager.last_name;
-              }
-          },
-          { 
-              data: 'service_deadline', 
-              name: 'service_deadline',
-              render: function(data, type, row) {
-                  return moment(data).format('DD.MM.YY');
-              }
-          },
-          { data: 'service_frequency', name: 'service_frequency' },
-          {
-              data: null,
-              name: 'action',
-              render: function(data, type, row) {
-                  return '<button class="btn btn-secondary btn-sm assign-btn" data-clientservice-id="' + data.id + '" data-service-id="' + data.service.id + '">Assign</button>';
-              }
+        { data: 'client.name', name: 'client.name' },
+        { data: 'service.name', name: 'service.name' },
+        { 
+          data: null,
+          name: 'manager',
+          render: function(data, type, row) {
+            return data.manager.first_name + ' ' + data.manager.last_name;
           }
+        },
+        { 
+          data: 'service_deadline', 
+          name: 'service_deadline',
+          render: function(data, type, row) {
+            return moment(data).format('DD.MM.YY');
+          }
+        },
+        { data: 'service_frequency', name: 'service_frequency' },
+        {
+          data: null,
+          name: 'action',
+            render: function(data, type, row) {
+                return '<button class="btn btn-secondary btn-sm assign-btn" ' +
+                      'data-clientservice-id="' + data.id + '" ' +
+                      'data-service-id="' + data.service.id + '" ' +
+                      'data-client-service-id="' + data.client_service_id + '" ' +
+                      'data-client-id="' + data.client.id + '" ' +
+                      'data-client-name="' + data.client.name + '" ' +
+                      'data-service-id="' + data.service.id + '" ' + 
+                      'data-service-name="' + data.service.name + '" ' +
+                      'data-manager-id="' + data.manager.id + '" ' +
+                      'data-manager-name="' + (data.manager.first_name + ' ' + data.manager.last_name) + '" ' +
+                      'data-service-deadline="' + moment(data.service_deadline).format('DD.MM.YY') + '" ' +
+                      'data-service-frequency="' + data.service_frequency + '">' +
+                      'Assign</button>';
+            }
+        }
       ]
+    });
+
+    function populateSubServiceForm(subServices, clientName, serviceName, managerName, serviceDeadline, serviceFrequency) {
+      var subServiceTable = $('#serviceDetailsTable');
+      subServiceTable.empty();
+
+      $.each(subServices, function(index, subService) {
+        var newRow = `
+          <tr>
+            <td>${subService.sub_service.name}</td>
+            <input type="hidden" name="sub_service_id[]" value="${subService.sub_service_id}">
+            <td>
+              <input type="date" name="deadline[]" class="form-control" value="${subService.deadline}">
+            </td>
+            <td>
+              <select class="form-control select2 staffDropdown" name="staff_id[]">
+                <option value="">Select Staff</option>
+                @foreach($staffs as $staff)
+                  <option value="{{ $staff->id }}" ${subService.staff_id == {{$staff->id}} ? 'selected' : ''}>
+                    {{ $staff->first_name }}
+                  </option>
+                @endforeach
+              </select>
+            </td>
+            <td><textarea name="note[]" rows="1" class="form-control">${subService.note}</textarea></td>
+          </tr>
+        `;
+        subServiceTable.append(newRow);
+      });
+    }
+
+    $('#servicesTable').on('click', '.assign-btn', function() {
+      
+          var clientserviceId = $(this).data('clientservice-id');
+          var serviceId = $(this).data('service-id');
+          var clientId = $(this).data('client-id'); 
+          var clientName = $(this).data('client-name');
+          var serviceName = $(this).data('service-name');
+          var managerId = $(this).data('manager-id');
+          var managerName = $(this).data('manager-name');
+          var serviceDeadline = $(this).data('service-deadline');
+          var serviceFrequency = $(this).data('service-frequency');
+
+          // console.log('Assign button clicked');
+          console.log(serviceId);
+          console.log(managerName);
+
+        $('#servicesDropdown').val(serviceId);
+        $('#managerDropdown').val(managerId);
+        $('#service_frequency').val(serviceFrequency);
+        $('#service_deadline').val(serviceDeadline);
+          
+
+
+      $('#assignTaskSection').toggle();
+      $('#sub-service-updateButton').show();
+      $('#sub-service-cancelButton').show();
+
+      
+      $('#testtittimeDiv').html("THis is test");
+
+      $.ajax({
+        url: '/admin/getClientSubServices/' + clientserviceId,
+        type: "GET",
+        dataType: "json",
+        success: function(data) {
+          populateSubServiceForm(data, clientserviceId, serviceId, clientId, clientName, serviceName, managerId, managerName, serviceDeadline, serviceFrequency);
+          
+        },
+        error: function(xhr, status, error) {
+          console.error(error);
+        }
+      });
+    });
+
+    $('#sub-service-cancelButton').click(function() {
+      $('#assignTaskSection').hide();
+      $('#serviceDetailsTable').empty();
+      $('#sub-service-updateButton, #sub-service-cancelButton').hide();
+    });
   });
-
-  $('#servicesTable').on('click', '.assign-btn', function() {
-      var clientserviceId = $(this).data('clientservice-id');
-      var serviceId = $(this).data('service-id');
-      console.log('ClientService ID:', clientserviceId);
-      console.log('Service ID:', serviceId);
-      var row = $('#servicesTable').DataTable().row($(this).closest('tr'));
-      var rowData = row.data();
-      var subServices = rowData.client_sub_services;
-      console.log('Sub-Services:', subServices);
-
-      $('#serviceDetailsTable').show();
-  });
-
 </script>
 <!-- Task need to be assigned -->
+
+<!-- Updating sub services start -->
+<script>
+  $('#sub-service-updateButton').click(function() {
+      var subServicesData = [];
+
+      $('#serviceDetailsTable tr').each(function() {
+          var subService = {};
+
+          subService.subServiceId = $(this).find('input[name="sub_service_id[]"]').val();
+          subService.deadline = $(this).find('input[name="deadline[]"]').val();
+          subService.staffId = $(this).find('select[name="staff_id[]"]').val();
+          subService.note = $(this).find('textarea[name="note[]"]').val();
+
+          subServicesData.push(subService);
+      });
+
+      var data = {
+          subServicesData: subServicesData,
+          clientServiceId: currentClientServiceId
+      };
+
+      $.ajax({
+          url: '/admin/update-sub-services',
+          type: 'POST',
+          data: data,
+          success: function(response) {
+              console.log(response);
+          },
+          error: function(xhr, status, error) {
+              console.error(error);
+          }
+      });
+  });
+</script>
+<!-- Updating sub services end -->
+
+<!-- Fetching sub services and putting on table start -->
+<script>
+    $(document).ready(function() {
+        $('#serviceDropdown').change(function() {
+            var serviceId = $(this).val();
+            if(serviceId) {
+                $.ajax({
+                    url: '/admin/getSubServices/' + serviceId,
+                    type: "GET",
+                    dataType: "json",
+                    success: function(data) {
+                        $('#serviceDetailsTable tr').remove();
+
+                        $.each(data, function(key, value) {
+                            var newRow = `
+                                <tr>
+                                    <td>${value.name}</td>
+                                    <td><input type="date" name="deadline" class="form-control"></td>
+                                    <td>
+                                        <select class="form-control select2 staffDropdown" name="staff_id">
+                                            <option value="">Select Staff</option>
+                                            @foreach($staffs as $staff)
+                                                <option value="{{ $staff->id }}">{{ $staff->first_name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </td>
+                                    <td><textarea name="note" rows="1" class="form-control"></textarea></td>
+                                <input type="hidden" class="sub-service-id" data-sub-service-id="${value.id}">
+                                </tr>
+                            `;
+                            $('#serviceDetailsTable').append(newRow);
+                        });
+                        $('#subServiceDropdown').show();
+                    }
+                });
+            } else {
+                $('#subServiceDropdown').empty().hide();
+            }
+        });
+    });
+</script>
+<!-- Fetching sub services and putting on table end -->
 
 <!-- Data table initialize -->
 <script>
