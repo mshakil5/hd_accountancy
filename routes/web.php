@@ -8,8 +8,8 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\Admin\StaffController;
-use App\Http\Controllers\Staff\ServiceController;
 use App\Http\Controllers\Manager\ManagerController;
+use App\Http\Controllers\Manager\ServiceController;
   
 /*
 |--------------------------------------------------------------------------
@@ -43,6 +43,8 @@ Route::middleware(['auth', 'user-access:manager'])->group(function () {
     // Staff profile and profile update
     Route::get('/manager/profile/edit', [ManagerController::class, 'editProfile'])->name('manager.profile.edit');
     Route::post('/manager/profile', [ManagerController::class, 'updateProfile']);
+
+    Route::get('/manager/get-all-services', [ServiceController::class, 'getAllAssignedServices']);
     
 });
 

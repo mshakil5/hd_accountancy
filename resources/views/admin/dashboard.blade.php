@@ -80,12 +80,28 @@
                 <i class="bx bxs-user-plus fs-4 me-2"></i>Assign Task
             </p>
 
+            <!-- Success and Error message -->
+            <div class="row my-4 px-3">
+                <div class="col-lg-12">
+                    <div id="successMessage" class="alert alert-success" style="display: none;">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <b></b>
+                    </div>
+                    <div id="errorMessage" class="alert alert-danger" style="display: none;">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <b></b>
+                    </div>
+                </div>
+            </div>
+            <!-- Success and Error message -->
+
             <div class="col-md-12">
               <div class="row mt-3">
                   <div class="col-3 text-center">
                       <h5 class="mb-3">Choose Service</h5>
                       <div class="form-check">
-                        <select id="servicesDropdown" class="form-control mt-2 select2">
+                        <input type="hidden" id="clientId">
+                        <select id="servicesDropdown" class="form-control mt-2">
                             <option value="">Select Service</option>
                                 @foreach($services as $service)
                                 <option value="{{ $service->id }}">
@@ -98,7 +114,7 @@
                   <div class="col-3 text-center">
                       <h5 class="mb-3">Choose Manager</h5>
                       <div class="form-check">
-                          <select id="managerDropdown" class="form-control mt-2 select2">
+                          <select id="managerDropdown" class="form-control mt-2">
                             <option value="">Select Manager</option>
                             @foreach($managers as $manager)
                                 <option value="{{ $manager->id }}">
@@ -111,7 +127,7 @@
                   <div class="col-3 text-center">
                       <h5 class="mb-3">Choose Frequency</h5>
                       <div class="form-check">
-                          <select id="service_frequency" class="form-control mt-2 select2" name="service_frequency">
+                          <select id="service_frequency" class="form-control mt-2" name="service_frequency">
                               <option value="">Select Frequency</option>
                               <option >Daily</option>
                               <option>Weekly</option>
@@ -410,50 +426,6 @@
     $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') } });
 </script>
 
-<!-- Fetch services for each client -->
-<!-- <script>
-  $(document).ready(function() {
-      $('select[name="client_id"]').change(function() {
-          var clientId = $(this).val();
-          if (clientId) {
-              $.ajax({
-                  url: '/admin/get-assigned-services/' + clientId,
-                  type: 'GET',
-                  success: function(data) {
-                      if (data && data.assigned_services && data.assigned_services.length > 0) {
-                          var checkboxes = '';
-                          $.each(data.assigned_services, function(key, service) {
-                              checkboxes += '<div class="form-check form-check-inline">';
-                              checkboxes += '<input class="form-check-input" type="checkbox" id="service_' + service.id + '" name="assigned_services[]" value="' + service.id + '" checked>';
-                              checkboxes += '<label class="form-check-label" for="service_' + service.id + '">' + service.name + '</label>';
-                              checkboxes += '</div>';
-                          });
-                          $('#assigned-services').html(checkboxes);
-                      } else {
-                          $('#assigned-services').html('<small class="text-danger"> Not Found</small>');
-                      }
-
-                      if (data && data.deadline) {
-                          $('input[name="deadline"]').val(data.deadline);
-                      } else {
-                          $('input[name="deadline"]').val('');
-                      }
-                  },
-                  error: function(xhr, status, error) {
-                      $('#assigned-services').html('<small class="text-danger"> Not Found</small>');
-                      $('input[name="deadline"]').val('');
-                      console.error(error);
-                  }
-              });
-          } else {
-              $('#assigned-services').empty();
-              $('input[name="deadline"]').val('');
-          }
-      });
-  });
-</script> -->
-<!-- Fetch services for each client -->
-
 <!-- Assign service staff -->
 <script>
   $(document).ready(function () {
@@ -656,21 +628,21 @@
         {
           data: null,
           name: 'action',
-            render: function(data, type, row) {
-                return '<button class="btn btn-secondary btn-sm assign-btn" ' +
-                      'data-clientservice-id="' + data.id + '" ' +
-                      'data-service-id="' + data.service.id + '" ' +
-                      'data-client-service-id="' + data.client_service_id + '" ' +
-                      'data-client-id="' + data.client.id + '" ' +
-                      'data-client-name="' + data.client.name + '" ' +
-                      'data-service-id="' + data.service.id + '" ' + 
-                      'data-service-name="' + data.service.name + '" ' +
-                      'data-manager-id="' + data.manager.id + '" ' +
-                      'data-manager-name="' + (data.manager.first_name + ' ' + data.manager.last_name) + '" ' +
-                      'data-service-deadline="' + moment(data.service_deadline).format('DD.MM.YY') + '" ' +
-                      'data-service-frequency="' + data.service_frequency + '">' +
-                      'Assign</button>';
-            }
+          render: function(data, type, row) {
+            return '<button class="btn btn-secondary btn-sm assign-btn" ' +
+                  'data-clientservice-id="' + data.id + '" ' +
+                  'data-service-id="' + data.service.id + '" ' +
+                  'data-client-service-id="' + data.client_service_id + '" ' +
+                  'data-client-id="' + data.client.id + '" ' +
+                  'data-client-name="' + data.client.name + '" ' +
+                  'data-service-id="' + data.service.id + '" ' + 
+                  'data-service-name="' + data.service.name + '" ' +
+                  'data-manager-id="' + data.manager.id + '" ' +
+                  'data-manager-name="' + (data.manager.first_name + ' ' + data.manager.last_name) + '" ' +
+                  'data-service-deadline="' + data.service_deadline + '"'+
+                  'data-service-frequency="' + data.service_frequency + '">' +
+                  'Assign</button>';
+          }
         }
       ]
     });
@@ -689,15 +661,17 @@
             </td>
             <td>
               <select class="form-control select2 staffDropdown" name="staff_id[]">
-                <option value="">Select Staff</option>
+                <option value="">Select Staff</option>`;
+                
                 @foreach($staffs as $staff)
-                  <option value="{{ $staff->id }}" ${subService.staff_id == {{$staff->id}} ? 'selected' : ''}>
+                  newRow += `<option value="{{ $staff->id }}" ${subService.staff_id == {{$staff->id}} ? 'selected' : ''}>
                     {{ $staff->first_name }}
-                  </option>
+                  </option>`;
                 @endforeach
-              </select>
+
+              newRow += `</select>
             </td>
-            <td><textarea name="note[]" rows="1" class="form-control">${subService.note}</textarea></td>
+            <td><textarea name="note[]" rows="1" class="form-control">${subService.note ? subService.note : ''}</textarea></td>
           </tr>
         `;
         subServiceTable.append(newRow);
@@ -705,34 +679,26 @@
     }
 
     $('#servicesTable').on('click', '.assign-btn', function() {
+      var clientserviceId = $(this).data('clientservice-id');
+      var serviceId = $(this).data('service-id');
+      var clientId = $(this).data('client-id'); 
+      var clientName = $(this).data('client-name');
+      var serviceName = $(this).data('service-name');
+      var managerId = $(this).data('manager-id');
+      var managerName = $(this).data('manager-name');
+      var serviceDeadline = $(this).data('service-deadline');
+      var serviceFrequency = $(this).data('service-frequency');
+
+
+      $('#clientId').val(clientId);
+      $('#servicesDropdown').val(serviceId);
+      $('#managerDropdown').val(managerId);
+      $('#service_frequency').val(serviceFrequency);
+      $('#service_deadline').val(serviceDeadline);
       
-          var clientserviceId = $(this).data('clientservice-id');
-          var serviceId = $(this).data('service-id');
-          var clientId = $(this).data('client-id'); 
-          var clientName = $(this).data('client-name');
-          var serviceName = $(this).data('service-name');
-          var managerId = $(this).data('manager-id');
-          var managerName = $(this).data('manager-name');
-          var serviceDeadline = $(this).data('service-deadline');
-          var serviceFrequency = $(this).data('service-frequency');
-
-          // console.log('Assign button clicked');
-          console.log(serviceId);
-          console.log(managerName);
-
-        $('#servicesDropdown').val(serviceId);
-        $('#managerDropdown').val(managerId);
-        $('#service_frequency').val(serviceFrequency);
-        $('#service_deadline').val(serviceDeadline);
-          
-
-
       $('#assignTaskSection').toggle();
       $('#sub-service-updateButton').show();
       $('#sub-service-cancelButton').show();
-
-      
-      $('#testtittimeDiv').html("THis is test");
 
       $.ajax({
         url: '/admin/getClientSubServices/' + clientserviceId,
@@ -740,7 +706,6 @@
         dataType: "json",
         success: function(data) {
           populateSubServiceForm(data, clientserviceId, serviceId, clientId, clientName, serviceName, managerId, managerName, serviceDeadline, serviceFrequency);
-          
         },
         error: function(xhr, status, error) {
           console.error(error);
@@ -757,8 +722,86 @@
 </script>
 <!-- Task need to be assigned -->
 
-<!-- Updating sub services start -->
+
 <script>
+  $(document).ready(function() {
+    $('#sub-service-updateButton').click(function(e) {
+      e.preventDefault(); 
+
+      var clientId = $('#clientId').val(); 
+      var serviceId = $('#servicesDropdown').val();
+      var managerId = $('#managerDropdown').val(); 
+      var serviceFrequency = $('#service_frequency').val(); 
+      var serviceDeadline = $('#service_deadline').val(); 
+
+      var subServices = [];
+      $('#serviceDetailsTable tr').each(function() {
+        var subServiceId = $(this).find('input[name="sub_service_id[]"]').val();
+        var deadline = $(this).find('input[name="deadline[]"]').val();
+        var staffId = $(this).find('select[name="staff_id[]"]').val();
+        var note = $(this).find('textarea[name="note[]"]').val();
+
+        subServices.push({
+          subServiceId: subServiceId,
+          deadline: deadline,
+          staffId: staffId,
+          note: note
+        });
+      });
+
+
+      var data = {
+        clientId: clientId,
+        serviceId: serviceId,
+        managerId: managerId,
+        service_frequency: serviceFrequency,
+        service_deadline: serviceDeadline,
+        subServices: subServices
+      };
+
+      console.log(data);
+
+      $.ajax({
+        url: '/admin/update-service-staff', 
+        type: 'POST',
+        data: data,
+        success: function(response) {
+          console.log(response);
+          swal({
+              title: "Success!",
+              text: "Task updated successfully",
+              icon: "success",
+              button: "OK",
+          });
+          setTimeout(function() {
+              location.reload();
+          }, 2000);
+        },
+        error: function(xhr, status, error) {
+          console.error(error);
+          var errorMessage = "";
+          if (xhr.responseJSON && xhr.responseJSON.errors){
+              $.each(xhr.responseJSON.errors, function (key, value) {
+                  errorMessage += key + ": " + value.join(", ") + "<br>";
+              });
+          } else {
+              errorMessage = "An error occurred. Please try again later.";
+          }
+          $('#errorMessage').html(errorMessage);
+          $('#errorMessage').show();
+          $('#successMessage').hide();
+          console.error("Error occurred: " + error);
+          console.error(xhr.responseText);
+        }
+      });
+    });
+  });
+</script>
+
+
+
+<!-- Updating sub services start -->
+<!-- <script>
   $('#sub-service-updateButton').click(function() {
       var subServicesData = [];
 
@@ -790,13 +833,13 @@
           }
       });
   });
-</script>
+</script> -->
 <!-- Updating sub services end -->
 
 <!-- Fetching sub services and putting on table start -->
 <script>
     $(document).ready(function() {
-        $('#serviceDropdown').change(function() {
+        $('#servicesDropdown').change(function() {
             var serviceId = $(this).val();
             if(serviceId) {
                 $.ajax({
@@ -825,11 +868,11 @@
                             `;
                             $('#serviceDetailsTable').append(newRow);
                         });
-                        $('#subServiceDropdown').show();
+                        $('#subServicesDropdown').show();
                     }
                 });
             } else {
-                $('#subServiceDropdown').empty().hide();
+                $('#subServicesDropdown').empty().hide();
             }
         });
     });

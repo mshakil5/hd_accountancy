@@ -163,6 +163,9 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     //Update service + sub service + assign to staff
     Route::post('/update-service', [ServiceController::class,'updateService'])->name('updateService');
 
+    //Update service + sub service + assign to staff from Dashboard
+    Route::post('/update-service-staff', [ServiceController::class,'updateStaffService']);
+
     Route::delete('/delete-sub-service/{id}', [ServiceController::class, 'deleteSubservice']);
 
     // Fetch Sub Services

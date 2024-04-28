@@ -409,7 +409,10 @@ class ServiceController extends Controller
         }
 
         if ($request->has('subServices')) {
-            foreach ($request->subServices as $subServiceData) {
+
+            
+            foreach ($request->subServices as $key => $subServiceData) {
+                $serialKey = $key + 1;
                 $clientSubService = ClientSubService::where('client_service_id', $clientService->id)
                                                         ->where('sub_service_id', $subServiceData['subServiceId'])
                                                         ->first();
@@ -418,6 +421,14 @@ class ServiceController extends Controller
                     $clientSubService = new ClientSubService();
                     $clientSubService->client_service_id = $clientService->id;
                     $clientSubService->client_id = $request->clientId; 
+                    $clientSubService->sequence_id = $serialKey; 
+
+                    if ($serialKey == 1) {
+                    $clientSubService->sequence_status = 0; 
+                    } else {
+                    $clientSubService->sequence_status = 1; 
+                    }
+
                     $clientSubService->manager_id = $request->managerId;
                     $clientSubService->sub_service_id = $subServiceData['subServiceId'];
                 }
@@ -441,6 +452,59 @@ class ServiceController extends Controller
             'service_frequency' => 'required',
             'service_deadline' => 'required',
             'subServices' => 'nullable|array',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => 422, 'errors' => $validator->errors()], 422);
+        }
+
+        $clientService = ClientService::where('client_id', $request->clientId)
+                                        ->where('service_id', $request->serviceId)
+                                        ->first();
+
+        if ($clientService) {
+            $clientService->manager_id = $request->managerId;
+            $clientService->service_frequency = $request->service_frequency;
+            $clientService->service_deadline = $request->service_deadline;
+            $clientService->save();
+        } else {
+            return response()->json(['status' => 404, 'message' => 'Client service not found'], 404);
+        }
+
+        if ($request->has('subServices')) {
+            foreach ($request->subServices as $subServiceData) {
+                $clientSubService = ClientSubService::where('client_service_id', $clientService->id)
+                                                        ->where('sub_service_id', $subServiceData['subServiceId'])
+                                                        ->first();
+
+                if (!$clientSubService) {
+                    return response()->json(['status' => 404, 'message' => 'Client sub-service not found'], 404);
+                }
+
+
+                $clientSubService->deadline = $subServiceData['deadline'];
+                $clientSubService->note = $subServiceData['note'];
+                $clientSubService->staff_id = $subServiceData['staffId'];
+                $clientSubService->save();
+            }
+        }
+
+        return response()->json(['status' => 200, 'message' => 'Data updated successfully']);
+    }
+    
+    public function updateStaffService(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'clientId' => 'required|integer',
+            'serviceId' => 'required|integer',
+            'managerId' => 'required|integer',
+            'service_frequency' => 'required',
+            'service_deadline' => 'required',
+            'subServices' => 'required|array',
+            'subServices.*.subServiceId' => 'required|integer',
+            'subServices.*.deadline' => 'required',
+            'subServices.*.staffId' => 'required|integer',
+            'subServices.*.note' => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -515,11 +579,6 @@ class ServiceController extends Controller
         }
 
         return response()->json(['status' => 200, 'message' => 'Sub-services updated successfully']);
-
-        //     return response()->json([
-        //     'subServicesData' => $subServicesData,
-        //     'clientServiceId' => $clientServiceId
-        // ]);
     }
 
 }

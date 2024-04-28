@@ -21,6 +21,8 @@ return new class extends Migration
             $table->string('deadline')->nullable();
             $table->longText('note')->nullable();
             $table->boolean('status')->default(1);
+            $table->string('sequence_id')->nullable();
+            $table->boolean('sequence_status')->default(1); // defaualt 1 = Work isnt start yet , 2 = Work is completed , 0 = work is processing 
             $table->boolean('manager_notification')->default(1);
             $table->boolean('staff_notification')->default(1); // default 1 == No notification , 0 == New notification
             $table->foreign('client_service_id')->references('id')->on('client_service')->onDelete('cascade');
