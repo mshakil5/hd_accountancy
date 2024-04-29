@@ -56,6 +56,7 @@
                                           <th>Staff</th>
                                           <th>Note</th>
                                           <th>Status</th>
+                                          <th>Message</th>
                                       </tr>
                                   </thead>
                                   <tbody id="serviceDetailsTable"></tbody>
@@ -86,6 +87,35 @@
                 </div>
             </div>
         </div>
+
+        <!-- Service message modal start -->
+        <div class="modal fade" id="messageModal" tabindex="-1" role="dialog" aria-labelledby="messageModalLabel" aria-hidden="true">
+            <div class="modal-dialog mt-2">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+                            <div class="card-body px-0">
+                                <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                                    Message
+                                </div>
+                                 <input type="hidden" id="hiddenStaffId" />
+                <input type="hidden" id="hiddenClientSubServiceId" />
+                                    <div class="form-group">
+                                        <div class="form-group mt-4">
+                                            <textarea class="form-control" id="service-message" rows="7" name="message" placeholder="Your message to staff..."></textarea>
+                                        </div>
+                                    </div>
+                                <div class="text-center">
+                                    <button type="button" class="mt-3 btn btn-primary bg-theme-light fs-4 border-theme border-2 fw-bold txt-theme" id="saveMessage">Save Message</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Service message modal end -->
+
         <div class="col-lg-8 mb-3">
             <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
                 <div class="card-body px-0">
@@ -119,38 +149,35 @@
 
 <!-- Assigned tasks list start -->
 <script>
-  $(document).ready(function() {
+$(document).ready(function() {
 
     $('#serviceManagerTable').DataTable({
-      processing: true,
-      serverSide: true,
-      ajax: {
-        url: '/manager/get-all-services',
-        type: 'GET',
-        //     success: function(data) {
-        //     console.log(data);
-        // },
-        dataSrc: 'data',
-        error: function(xhr, error, thrown) {
-          console.error('DataTables error:', error, thrown);
-        }
-      },
-      columns: [
-        { data: 'clientname', name: 'clientname' },
-        { data: 'servicename', name: 'servicename' },
-        { 
-          data: 'service_deadline', 
-          name: 'service_deadline',
-          render: function(data, type, row) {
-            return moment(data).format('DD.MM.YY');
-          }
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: '/manager/get-all-services',
+            type: 'GET',
+            dataSrc: 'data',
+            error: function(xhr, error, thrown) {
+                console.error('DataTables error:', error, thrown);
+            }
         },
-        { data: 'service_frequency', name: 'service_frequency' },
-        { data: 'action', name: 'action', orderable: false, searchable: false }
-      ]
+        columns: [
+            { data: 'clientname', name: 'clientname' },
+            { data: 'servicename', name: 'servicename' },
+            { 
+                data: 'service_deadline', 
+                name: 'service_deadline',
+                render: function(data, type, row) {
+                    return moment(data).format('DD.MM.YY');
+                }
+            },
+            { data: 'service_frequency', name: 'service_frequency' },
+            { data: 'action', name: 'action', orderable: false, searchable: false }
+        ]
     });
 
-     $(document).on('click', '.change-status', function() {
+    $(document).on('click', '.change-status', function() {
         var clientserviceId = $(this).data('id');
         var managerName = $(this).data('manager');
         var rowData = $('#serviceManagerTable').DataTable().row($(this).closest('tr')).data();
@@ -168,7 +195,6 @@
             type: "GET",
             dataType: "json",
             success: function(data) {
-                // console.log(data);
                 populateSubServiceForm(data);
             },
             error: function(xhr, error, thrown) {
@@ -178,15 +204,14 @@
     });
 
     function populateSubServiceForm(subServices) {
-      var subServiceTable = $('#serviceDetailsTable');
-      subServiceTable.empty();
+        var subServiceTable = $('#serviceDetailsTable');
+        subServiceTable.empty();
 
-      var staffs = @json($staffs);
+        var staffs = @json($staffs);
 
         $.each(subServices, function(index, subService) {
             var statusText = '';
             var statusDropdown = '';
-            // console.log(subService);
 
             var staff = staffs.find(function(staff) {
                 return staff.id === subService.staff_id;
@@ -213,67 +238,124 @@
                     <td>${staffName}</td>
                     <td>${subService.note}</td>
                     <td>${statusText} ${statusDropdown}</td>
+                    <td>
+                        <button type="button" class="btn btn-secondary open-modal" data-toggle="modal" data-target="#messageModal" data-staff-id="${subService.staff_id}" data-client-sub-service-id="${subService.sub_service_id}">
+                            <i class="fas fa-plus-circle"></i>
+                        </button>
+                    </td>
                 </tr>
             `;
             subServiceTable.append(newRow);
         });
 
-       $('#assignTaskSection').show();
+        $('#assignTaskSection').show();
     }
 
-    $(document).on('change', '.change-service-status', function() {
-      var clientSubServiceId = $(this).data('sub-service-id');
-      var newStatus = $(this).val();
-
-      $.ajax({
-        url: '/manager/update-sub-service-status',
-        type: 'POST',
-        dataType: 'json',
-            headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        },
-        data: {
-          clientSubServiceId: clientSubServiceId,
-          newStatus: newStatus
-        },
-        success: function(response) {
-          // console.log('Status updated successfully:', response);
-            swal({
-              title: "Success!",
-              text: "Task updated successfully",
-              icon: "success",
-              button: "OK",
-          });
-          setTimeout(function() {
-              location.reload();
-          }, 2000);
-        },
-        error: function(xhr, status, error) {
-          console.error(error);
-          var errorMessage = "";
-          if (xhr.responseJSON && xhr.responseJSON.errors){
-              $.each(xhr.responseJSON.errors, function (key, value) {
-                  errorMessage += key + ": " + value.join(", ") + "<br>";
-              });
-          } else {
-              errorMessage = "An error occurred. Please try again later.";
-          }
-          $('#errorMessage').html(errorMessage);
-          $('#errorMessage').show();
-          $('#successMessage').hide();
-          console.error("Error occurred: " + error);
-          console.error(xhr.responseText);
-        }
-      });
+    $(document).on('click', '.open-modal', function(){
+        var staffId = $(this).data('staff-id');
+        var clientSubServiceId = $(this).data('client-sub-service-id');
+        $('#hiddenStaffId').val(staffId);
+        $('#hiddenClientSubServiceId').val(clientSubServiceId);
+        $('#messageModal').modal('show');
     });
 
+    $('#saveMessage').click(function() {
+        var message = $('#service-message').val();
+        var staffId = $('#hiddenStaffId').val();
+        var clientSubServiceId = $('#hiddenClientSubServiceId').val(); 
+
+        $.ajax({
+            url: '/manager/store-message',
+            type: "POST",
+            data: {
+                message: message,
+                staff_id: staffId,
+                client_sub_service_id: clientSubServiceId,
+                _token: "{{ csrf_token() }}"
+            },
+            success: function(response) {
+                swal({
+                    title: "Success!",
+                    text: "Task updated successfully",
+                    icon: "success",
+                    button: "OK",
+                });
+                setTimeout(function() {
+                    location.reload();
+                }, 2000);
+                $('#messageModal').modal('hide'); 
+            },
+            error: function(xhr, status, error) {
+                console.error(error);
+                var errorMessage = "";
+                if (xhr.responseJSON && xhr.responseJSON.errors){
+                    $.each(xhr.responseJSON.errors, function (key, value) {
+                        errorMessage += key + ": " + value.join(", ") + "<br>";
+                    });
+                } else {
+                    errorMessage = "An error occurred. Please try again later.";
+                }
+                $('#errorMessage').html(errorMessage);
+                $('#errorMessage').show();
+                $('#successMessage').hide();
+                console.error("Error occurred: " + error);
+                console.error(xhr.responseText);
+            }
+        });
+    });
+
+    $(document).on('change', '.change-service-status', function() {
+        var clientSubServiceId = $(this).data('sub-service-id');
+        var newStatus = $(this).val();
+
+        $.ajax({
+            url: '/manager/update-sub-service-status',
+            type: 'POST',
+            dataType: 'json',
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            data: {
+                clientSubServiceId: clientSubServiceId,
+                newStatus: newStatus
+            },
+            success: function(response) {
+                swal({
+                    title: "Success!",
+                    text: "Message sent successfully",
+                    icon: "success",
+                    button: "OK",
+                });
+                setTimeout(function() {
+                    location.reload();
+                }, 2000);
+            },
+            error: function(xhr, status, error) {
+                console.error(error);
+                var errorMessage = "";
+                if (xhr.responseJSON && xhr.responseJSON.errors){
+                    $.each(xhr.responseJSON.errors, function (key, value) {
+                        errorMessage += key + ": " + value.join(", ") + "<br>";
+                    });
+                } else {
+                    errorMessage = "An error occurred. Please try again later.";
+                }
+                $('#errorMessage').html(errorMessage);
+                $('#errorMessage').show();
+                $('#successMessage').hide();
+                console.error("Error occurred: " + error);
+                console.error(xhr.responseText);
+            }
+        });
+    });
 
     $('#sub-service-cancelButton').click(function() {
-      $('#assignTaskSection').hide();
+        $('#assignTaskSection').hide();
     });
 
-  });
+});
 </script>
+
 <!-- Assigned tasks list start -->
 
 @endsection

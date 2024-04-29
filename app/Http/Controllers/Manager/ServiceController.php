@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Manager;
 use DataTables;
 use Illuminate\Http\Request;
 use App\Models\ClientService;
+use App\Models\ServiceMessage;
 use App\Models\ClientSubService;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 class ServiceController extends Controller
 {
@@ -70,4 +72,36 @@ class ServiceController extends Controller
         }
 
     }
+
+    public function storeMessage(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'message' => 'required',
+            'staff_id' => 'required',
+            'client_sub_service_id' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 422);
+        }
+        
+        $existingMessage = ServiceMessage::where('client_sub_service_id', $request->client_sub_service_id)->first();
+
+        if ($existingMessage) {
+            $existingMessage->message = $request->message;
+            $existingMessage->updated_by = auth()->id();
+            $existingMessage->save();
+        } else {
+            $serviceMessage = new ServiceMessage;
+            $serviceMessage->manager_id = auth()->id(); 
+            $serviceMessage->staff_id = $request->staff_id;
+            $serviceMessage->client_sub_service_id = $request->client_sub_service_id;
+            $serviceMessage->message = $request->message;
+            $serviceMessage->created_by = auth()->id();
+            $serviceMessage->save();
+        }
+
+        return response()->json(['success' => 'Message saved successfully.']);
+    }
+
 }

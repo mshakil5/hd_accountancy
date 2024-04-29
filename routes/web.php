@@ -51,6 +51,9 @@ Route::middleware(['auth', 'user-access:manager'])->group(function () {
 
     // Change Status of sub service
     Route::post('/manager/update-sub-service-status', [ServiceController::class,'updateSubServiceStatus']);
+
+    //Store message to staff
+    Route::post('/manager/store-message', [ServiceController::class,'storeMessage']);
     
 });
 

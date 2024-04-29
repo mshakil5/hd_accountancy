@@ -25,6 +25,7 @@
   <link href="{{ asset('assets/vendor/select2/select2.min.css')}}" rel="stylesheet">
   <link href="{{ asset('assets/vendor/datatables/dataTables.dataTables.bootstrap4.min.css')}}" rel="stylesheet">
   <link href="{{ asset('assets/vendor/datatables/jquery.dataTables.min.css')}}" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <link href="{{ asset('assets/vendor/toastify/toastify.min.css')}}" rel="stylesheet">
 
   <!-- Template Main CSS File -->
