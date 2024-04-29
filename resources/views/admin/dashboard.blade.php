@@ -153,6 +153,7 @@
                   <th>Deadline</th>
                   <th>Staff</th>
                   <th>Note</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody id="serviceDetailsTable"></tbody>
@@ -160,7 +161,7 @@
             <div class="row mt-3 mb-3">
               <div class="col-lg-4 mx-auto text-center">
                 <button id="sub-service-updateButton" class="btn btn-sm bg-theme text-light btn-outline-dark" style="display: none;">Update</button>
-                <button id="sub-service-cancelButton" class="btn btn-sm bg-theme text-light btn-outline-dark" style="display: none;">Cancel</button>
+                <button id="sub-service-cancelButton" class="btn btn-sm btn-outline-dark" style="display: none;">Cancel</button>
               </div>
             </div>
           </div>
@@ -722,7 +723,7 @@
 </script>
 <!-- Task need to be assigned -->
 
-
+<!-- Task update / Assign start -->
 <script>
   $(document).ready(function() {
     $('#sub-service-updateButton').click(function(e) {
@@ -797,44 +798,7 @@
     });
   });
 </script>
-
-
-
-<!-- Updating sub services start -->
-<!-- <script>
-  $('#sub-service-updateButton').click(function() {
-      var subServicesData = [];
-
-      $('#serviceDetailsTable tr').each(function() {
-          var subService = {};
-
-          subService.subServiceId = $(this).find('input[name="sub_service_id[]"]').val();
-          subService.deadline = $(this).find('input[name="deadline[]"]').val();
-          subService.staffId = $(this).find('select[name="staff_id[]"]').val();
-          subService.note = $(this).find('textarea[name="note[]"]').val();
-
-          subServicesData.push(subService);
-      });
-
-      var data = {
-          subServicesData: subServicesData,
-          clientServiceId: currentClientServiceId
-      };
-
-      $.ajax({
-          url: '/admin/update-sub-services',
-          type: 'POST',
-          data: data,
-          success: function(response) {
-              console.log(response);
-          },
-          error: function(xhr, status, error) {
-              console.error(error);
-          }
-      });
-  });
-</script> -->
-<!-- Updating sub services end -->
+<!-- Task update / Assign end -->
 
 <!-- Fetching sub services and putting on table start -->
 <script>

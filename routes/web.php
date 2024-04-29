@@ -45,6 +45,12 @@ Route::middleware(['auth', 'user-access:manager'])->group(function () {
     Route::post('/manager/profile', [ManagerController::class, 'updateProfile']);
 
     Route::get('/manager/get-all-services', [ServiceController::class, 'getAllAssignedServices']);
+
+    // Fetch Sub Services
+    Route::get('/manager/getClientSubServices/{clientserviceId}', [ServiceController::class, 'getClientSubServices']);
+
+    // Change Status of sub service
+    Route::post('/manager/update-sub-service-status', [ServiceController::class,'updateSubServiceStatus']);
     
 });
 

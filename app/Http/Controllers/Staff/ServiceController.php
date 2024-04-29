@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Validator;
 class ServiceController extends Controller
 {
 
-   public function getServicesClientStaff(Request $request)
+    public function getServicesClientStaff(Request $request)
     {
         if ($request->ajax()) {
             $staffId = auth()->id();
