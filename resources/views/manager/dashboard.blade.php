@@ -56,7 +56,8 @@
                                           <th>Staff</th>
                                           <th>Note</th>
                                           <th>Status</th>
-                                          <th>Message</th>
+                                          <th>Sent Message</th>
+                                          <th>Send New Message</th>
                                       </tr>
                                   </thead>
                                   <tbody id="serviceDetailsTable"></tbody>
@@ -218,6 +219,7 @@ $(document).ready(function() {
             });
 
             var staffName = staff ? staff.first_name : 'N/A';
+            var messageText = subService.message ? subService.message.message : 'No message sent';
 
             if (subService.sequence_status === 0) {
                 statusDropdown = `
@@ -238,6 +240,7 @@ $(document).ready(function() {
                     <td>${staffName}</td>
                     <td>${subService.note}</td>
                     <td>${statusText} ${statusDropdown}</td>
+                    <td>${messageText}</td>
                     <td>
                         <button type="button" class="btn btn-secondary open-modal" data-toggle="modal" data-target="#messageModal" data-staff-id="${subService.staff_id}" data-client-sub-service-id="${subService.sub_service_id}">
                             <i class="fas fa-plus-circle"></i>
