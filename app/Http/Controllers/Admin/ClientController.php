@@ -52,7 +52,7 @@ class ClientController extends Controller
     public function create1($id)
     {
         $managers = User::where('type', '2')->orderby('id','DESC')->get();
-        $staffs = User::where('type', '3')->orderby('id','DESC')->get();
+        $staffs = User::whereIn('type', ['3','2'])->orderby('id','DESC')->get();
         $client = Client::with(['clientType', 'manager','businessInfo','directorInfos','clientService','clientService.clientSubServices','contactInfos'])->where('id', $id)->first();
         $clientTypes = ClientType::orderby('id','DESC')->get();
         $services = Service::orderby('id','DESC')->get();
@@ -261,7 +261,7 @@ class ClientController extends Controller
         $directorInfos = DirectorInfo::where('client_id', $id)->get();
         $contactInfo = ContactInfo::where('client_id', $id)->first();
         $services = Service::orderby('id','DESC')->get();
-        $staffs = User::where('type', '3')->orderby('id','DESC')->get();
+        $staffs = User::whereIn('type', ['3','2'])->orderby('id','DESC')->get();
         return view('admin.client.updateForm', compact('client', 'clientTypes', 'managers', 'businessInfo', 'directorInfos','contactInfo','services','staffs'));
     }
 

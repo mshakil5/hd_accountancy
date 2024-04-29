@@ -17,12 +17,15 @@ class ServiceController extends Controller
     {
         $currentUserId = Auth::id();
         $managerName = Auth::user()->first_name;
-        if ($request->ajax()) {
+            if ($request->ajax()) {
             $data = ClientService::with('clientSubServices')
-            ->where('manager_id', $currentUserId)
-            ->whereDate('service_deadline', '<=', now()->addDays(30))
-            ->orderBy('id', 'desc')
-            ->get();
+                ->where('manager_id', $currentUserId)
+                ->whereDate('service_deadline', '<=', now()->addDays(30))
+                ->whereHas('clientSubServices', function ($query) {
+                    $query->whereIn('sequence_status', [0, 1]);
+                })
+                ->orderBy('id', 'desc')
+                ->get();
 
             return DataTables::of($data)
             

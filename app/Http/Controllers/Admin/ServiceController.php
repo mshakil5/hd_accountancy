@@ -394,19 +394,19 @@ class ServiceController extends Controller
                                         ->first();
 
             if ($clientService) {
-            $clientService->manager_id = $request->managerId;
-            $clientService->service_frequency = $request->service_frequency;
-            $clientService->service_deadline = $request->service_deadline;
-            $clientService->save();
-        } else {
-            $clientService = new ClientService();
-            $clientService->client_id = $request->clientId;
-            $clientService->service_id = $request->serviceId;
-            $clientService->manager_id = $request->managerId;
-            $clientService->service_frequency = $request->service_frequency;
-            $clientService->service_deadline = $request->service_deadline;
-            $clientService->save();
-        }
+                $clientService->manager_id = $request->managerId;
+                $clientService->service_frequency = $request->service_frequency;
+                $clientService->service_deadline = $request->service_deadline;
+                $clientService->save();
+            } else {
+                $clientService = new ClientService();
+                $clientService->client_id = $request->clientId;
+                $clientService->service_id = $request->serviceId;
+                $clientService->manager_id = $request->managerId;
+                $clientService->service_frequency = $request->service_frequency;
+                $clientService->service_deadline = $request->service_deadline;
+                $clientService->save();
+            }
 
         if ($request->has('subServices')) {
 
@@ -472,7 +472,8 @@ class ServiceController extends Controller
         }
 
         if ($request->has('subServices')) {
-            foreach ($request->subServices as $subServiceData) {
+            foreach ($request->subServices as $key => $subServiceData) {
+                $serialKey = $key + 1;
                 $clientSubService = ClientSubService::where('client_service_id', $clientService->id)
                                                         ->where('sub_service_id', $subServiceData['subServiceId'])
                                                         ->first();
@@ -481,10 +482,10 @@ class ServiceController extends Controller
                     return response()->json(['status' => 404, 'message' => 'Client sub-service not found'], 404);
                 }
 
-
                 $clientSubService->deadline = $subServiceData['deadline'];
                 $clientSubService->note = $subServiceData['note'];
                 $clientSubService->staff_id = $subServiceData['staffId'];
+                $clientSubService->sequence_id = $serialKey;
                 $clientSubService->save();
             }
         }
@@ -525,7 +526,8 @@ class ServiceController extends Controller
         }
 
         if ($request->has('subServices')) {
-            foreach ($request->subServices as $subServiceData) {
+            foreach ($request->subServices as $key => $subServiceData) {
+                $serialKey = $key + 1;
                 $clientSubService = ClientSubService::where('client_service_id', $clientService->id)
                                                         ->where('sub_service_id', $subServiceData['subServiceId'])
                                                         ->first();
@@ -534,10 +536,10 @@ class ServiceController extends Controller
                     return response()->json(['status' => 404, 'message' => 'Client sub-service not found'], 404);
                 }
 
-
                 $clientSubService->deadline = $subServiceData['deadline'];
                 $clientSubService->note = $subServiceData['note'];
                 $clientSubService->staff_id = $subServiceData['staffId'];
+                $clientSubService->sequence_id = $serialKey;
                 $clientSubService->save();
             }
         }
