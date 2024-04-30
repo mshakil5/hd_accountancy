@@ -44,8 +44,14 @@ class ServiceController extends Controller
 
     public function getClientSubServices($clientserviceId)
     {
-        $clientSubServices = ClientSubService::with('subService','message')->where('client_service_id', $clientserviceId)->get();
+        $clientSubServices = ClientSubService::with('subService','serviceMessage')->where('client_service_id', $clientserviceId)->get();
         return response()->json($clientSubServices);
+    }
+
+    public function getServiceMessages($clientSubServiceId)
+    {
+        $messages = ServiceMessage::where('client_sub_service_id', $clientSubServiceId)->get();
+        return response()->json($messages);
     }
 
     public function updateSubServiceStatus(Request $request)
@@ -88,13 +94,6 @@ class ServiceController extends Controller
             return response()->json(['error' => $validator->errors()], 422);
         }
         
-        $existingMessage = ServiceMessage::where('client_sub_service_id', $request->client_sub_service_id)->first();
-
-        if ($existingMessage) {
-            $existingMessage->message = $request->message;
-            $existingMessage->updated_by = auth()->id();
-            $existingMessage->save();
-        } else {
             $serviceMessage = new ServiceMessage;
             $serviceMessage->manager_id = auth()->id(); 
             $serviceMessage->staff_id = $request->staff_id;
@@ -102,7 +101,6 @@ class ServiceController extends Controller
             $serviceMessage->message = $request->message;
             $serviceMessage->created_by = auth()->id();
             $serviceMessage->save();
-        }
 
         return response()->json(['success' => 'Message saved successfully.']);
     }

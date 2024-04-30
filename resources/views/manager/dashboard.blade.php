@@ -56,7 +56,6 @@
                                           <th>Staff</th>
                                           <th>Note</th>
                                           <th>Status</th>
-                                          <th>Sent Message</th>
                                           <th>Send New Message</th>
                                       </tr>
                                   </thead>
@@ -91,23 +90,38 @@
 
         <!-- Service message modal start -->
         <div class="modal fade" id="messageModal" tabindex="-1" role="dialog" aria-labelledby="messageModalLabel" aria-hidden="true">
-            <div class="modal-dialog mt-2">
+            <div class="modal-dialog modal-lg mt-2" role="document">
                 <div class="modal-content">
                     <div class="modal-body">
-                        <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
-                            <div class="card-body px-0">
-                                <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                                    Message
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+                                    <div class="card-body px-0">
+                                        <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                                            Previous Messages
+                                        </div>
+                                        <div id="previousMessages" class="mt-4">
+                                            <!-- Previous messages -->
+                                        </div>
+                                    </div>
                                 </div>
-                                 <input type="hidden" id="hiddenStaffId" />
-                <input type="hidden" id="hiddenClientSubServiceId" />
-                                    <div class="form-group">
+                            </div>
+                            <!--Message Input Section -->
+                            <div class="col-md-6">
+                                <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+                                    <div class="card-body px-0">
+                                        <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                                            Message
+                                        </div>
+                                        <input type="hidden" id="hiddenStaffId" />
+                                        <input type="hidden" id="hiddenClientSubServiceId" />
                                         <div class="form-group mt-4">
                                             <textarea class="form-control" id="service-message" rows="7" name="message" placeholder="Your message to staff..."></textarea>
                                         </div>
+                                        <div class="text-center">
+                                            <button type="button" class="mt-3 btn btn-primary bg-theme-light fs-4 border-theme border-2 fw-bold txt-theme" id="saveMessage">Send Message</button>
+                                        </div>
                                     </div>
-                                <div class="text-center">
-                                    <button type="button" class="mt-3 btn btn-primary bg-theme-light fs-4 border-theme border-2 fw-bold txt-theme" id="saveMessage">Save Message</button>
                                 </div>
                             </div>
                         </div>
@@ -213,13 +227,12 @@ $(document).ready(function() {
         $.each(subServices, function(index, subService) {
             var statusText = '';
             var statusDropdown = '';
-
+            // console.log(subService);
             var staff = staffs.find(function(staff) {
                 return staff.id === subService.staff_id;
             });
 
             var staffName = staff ? staff.first_name : 'N/A';
-            var messageText = subService.message ? subService.message.message : 'No message sent';
 
             if (subService.sequence_status === 0) {
                 statusDropdown = `
@@ -240,9 +253,8 @@ $(document).ready(function() {
                     <td>${staffName}</td>
                     <td>${subService.note}</td>
                     <td>${statusText} ${statusDropdown}</td>
-                    <td>${messageText}</td>
                     <td>
-                        <button type="button" class="btn btn-secondary open-modal" data-toggle="modal" data-target="#messageModal" data-staff-id="${subService.staff_id}" data-client-sub-service-id="${subService.sub_service_id}">
+                        <button type="button" class="btn btn-secondary open-modal" data-toggle="modal" data-target="#messageModal" data-staff-id="${subService.staff_id}" data-client-sub-service-id="${subService.id}">
                             <i class="fas fa-plus-circle"></i>
                         </button>
                     </td>
@@ -257,10 +269,45 @@ $(document).ready(function() {
     $(document).on('click', '.open-modal', function(){
         var staffId = $(this).data('staff-id');
         var clientSubServiceId = $(this).data('client-sub-service-id');
+        console.log(clientSubServiceId);
         $('#hiddenStaffId').val(staffId);
         $('#hiddenClientSubServiceId').val(clientSubServiceId);
+
+        populateMessage(clientSubServiceId);
+
         $('#messageModal').modal('show');
     });
+
+    
+    function populateMessage(clientSubServiceId) {
+        $.ajax({
+            url: '/manager/getServiceMessage/' + clientSubServiceId,
+            type: "GET",
+            dataType: "json",
+            success: function(data) {
+                var managers = @json($managers);
+                function getManagerName(managerId) {
+                    var manager = managers.find(manager => String(manager.id) === String(managerId));
+                    return manager ? manager.first_name : '';
+                }
+                $('#previousMessages').empty();
+                // console.log(data);
+                data.forEach(function(message) {
+                    var messageDiv = $('<div>').addClass('message');
+                    var managerName = getManagerName(message.created_by);
+                    var messageContent = message.message ? message.message : ''; 
+
+                    messageDiv.html('<span style="font-weight: bold; color: #007bff;">' + managerName + ': </span>' + messageContent); 
+                    $('#previousMessages').append(messageDiv);
+                });
+            },
+            error: function(xhr, error, thrown) {
+                console.error('Error fetching previous messages:', error, thrown);
+            }
+        });
+
+    }
+
 
     $('#saveMessage').click(function() {
         var message = $('#service-message').val();
@@ -279,7 +326,7 @@ $(document).ready(function() {
             success: function(response) {
                 swal({
                     title: "Success!",
-                    text: "Task updated successfully",
+                    text: "Message sent successfully",
                     icon: "success",
                     button: "OK",
                 });

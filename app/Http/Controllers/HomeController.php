@@ -84,7 +84,8 @@ class HomeController extends Controller
     public function managerHome(): View
     {
         $staffs = User::where('type','3')->orderby('id','DESC')->get();
-        return view('manager.dashboard',compact('staffs'));
+        $managers = User::where('type', '2')->orderby('id','DESC')->get();
+        return view('manager.dashboard',compact('staffs','managers'));
     }
 
     /**
