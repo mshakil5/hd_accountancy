@@ -105,4 +105,33 @@ class ServiceController extends Controller
         return response()->json(['success' => 'Message saved successfully.']);
     }
 
+    public function getCompetedServices(Request $request)
+    {
+        $currentUserId = Auth::id();
+        $managerName = Auth::user()->first_name;
+            if ($request->ajax()) {
+            $data = ClientService::with('clientSubServices')
+                ->where('manager_id', $currentUserId)
+                ->whereDate('service_deadline', '<=', now()->addDays(30))
+                ->whereHas('clientSubServices', function ($query) {
+                   $query->where('sequence_status', 2);
+                })
+                ->orderBy('id', 'desc')
+                ->get();
+
+            return DataTables::of($data)
+            
+                ->addColumn('clientname', function(ClientService $clientservice) {
+                    return $clientservice->client->name;
+                })
+                ->addColumn('servicename', function(ClientService $clientservice) {
+                    return $clientservice->service->name;
+                })
+                ->addColumn('action', function(ClientService $clientservice) use ($managerName) {
+                    return '<button class="btn btn-secondary task-details" data-id="' . $clientservice->id . '" data-manager="' . $managerName . '">Details</button>';
+                })
+                ->make(true);
+        }
+    }
+
 }

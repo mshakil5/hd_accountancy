@@ -47,6 +47,9 @@ Route::middleware(['auth', 'user-access:manager'])->group(function () {
     // Fetch all services by manager
     Route::get('/manager/get-all-services', [ServiceController::class, 'getAllAssignedServices']);
 
+    // Fetch completed services by manager
+    Route::get('/manager/get-completed-services', [ServiceController::class, 'getCompetedServices']);
+
     // Fetch Sub Services
     Route::get('/manager/getClientSubServices/{clientserviceId}', [ServiceController::class, 'getClientSubServices']);
 
