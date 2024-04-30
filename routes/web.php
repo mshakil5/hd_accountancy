@@ -61,7 +61,12 @@ Route::middleware(['auth', 'user-access:manager'])->group(function () {
 
     //Store message to staff
     Route::post('/manager/store-message', [ServiceController::class,'storeMessage']);
-    
+
+    // Start, End work time
+    Route::post('/manager/start-work-time', [ServiceController::class,'startWorkTime']);
+    Route::post('/manager/stop-work-time', [ServiceController::class,'stopWorkTime']);
+
+    Route::get('/manager/get-work-times/{clientSubServiceId}', [ServiceController::class, 'getWorkTimes']);
 });
 
 //Staff

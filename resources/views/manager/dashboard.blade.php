@@ -58,6 +58,7 @@
                                           <th>Note</th>
                                           <th>Status</th>
                                           <th>Message</th>
+                                          <th>Timer</th>
                                       </tr>
                                   </thead>
                                   <tbody id="serviceDetailsTable"></tbody>
@@ -186,6 +187,87 @@
         </div>
         <!-- Service message modal end -->
 
+        <!-- Work time modal start -->
+        <!-- <div class="modal fade" id="timerModal" tabindex="-1" role="dialog" aria-labelledby="timerModalLabel" aria-hidden="true">
+            <div class="modal-dialog mt-2" role="document">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+                                    <div class="card-body px-0">
+                                        <input type="hidden" id="hiddenStaffId" />
+                                        <input type="hidden" id="hiddenClientSubServiceId" />
+                                        <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                                            Timer
+                                        </div>
+                                        <div class="d-flex gap-3 my-5">
+                                            <div class="text-center flex-fill">
+                                                <div class="text-center fs-2 txt-theme fw-bold">
+                                                    
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-3 justify-content-center">
+                                            <div class="col-lg-4">
+                                                <a href="#" class="p-2 border-theme text-center fs-6 d-block rounded-3 border-3 txt-theme fw-bold my-1" id="startButton">Start</a>
+                                            </div>
+                                            <div class="col-lg-4">
+                                                <a href="#" class="p-2 border-theme text-center fs-6 d-block rounded-3 border-3 txt-theme fw-bold my-1" id="stopButton">Stop</a>
+                                            </div> -->
+                                            <!-- <div class="col-lg-4">
+                                                <button type="button" class="btn btn-primary bg-theme-light fs-4 border-theme border-2 fw-bold txt-theme" id="breakButton">Break</button>
+                                            </div> -->
+                                        <!-- </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div> -->
+        <!-- Work time modal end -->
+
+        <!-- Timer Modal -->
+        <div class="modal fade" id="timerModal" tabindex="-1" role="dialog" aria-labelledby="timerModalLabel" aria-hidden="true">
+            <div class="modal-dialog mt-2" role="document">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+                                    <div class="card-body px-0">
+                                        <input type="hidden" id="hiddenStaffId" />
+                                        <input type="hidden" id="hiddenClientSubServiceId" />
+                                        <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                                            Timer
+                                        </div>
+                                        <div class="d-flex gap-3 my-5">
+                                            <div class="text-center flex-fill">
+                                                <div class="text-center fs-2 txt-theme fw-bold duration-display">
+                                                    <!-- Duration will be displayed here -->
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-3 justify-content-center">
+                                            <div class="col-lg-4">
+                                                <a href="#" class="p-2 border-theme text-center fs-6 d-block rounded-3 border-3 txt-theme fw-bold my-1" id="startButton">Start</a>
+                                            </div>
+                                            <div class="col-lg-4" style="display: none;">
+                                                <a href="#" class="p-2 border-theme text-center fs-6 d-block rounded-3 border-3 txt-theme fw-bold my-1" id="stopButton">Stop</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
         <!-- Works assigned to a user and specified staff start-->
         <div class="col-lg-8 mb-3">
             <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
@@ -306,7 +388,6 @@
             $.each(subServices, function(index, subService) {
                 var statusText = '';
                 var statusDropdown = '';
-                // console.log(subService);
                 var staff = staffs.find(function(staff) {
                     return staff.id === subService.staff_id;
                 });
@@ -325,6 +406,58 @@
                     statusText = 'Work is completed';
                 }
 
+                var durationText = '';
+                var startButton = '';
+                var stopButton = '';
+
+                if (subService.work_time && subService.work_time.start_time) {
+                    var endTime = subService.work_time.end_time || new Date().toISOString();
+                    durationText = formatDuration(subService.work_time.start_time, endTime);
+                }
+
+                if (subService.sequence_status === 0) {
+                    if (subService.work_time && subService.work_time.start_time && subService.work_time.end_time) {
+                        durationText = formatDuration(subService.work_time.start_time, subService.work_time.end_time);
+                    } else if (subService.work_time && subService.work_time.start_time) {
+                        durationText = formatDuration(subService.work_time.start_time, new Date().toISOString());
+                        stopButton = `<button type="button" class="btn btn-secondary stop-timer" data-sub-service-id="${subService.id}">Stop</button>`;
+                    } else {
+                        startButton = `<button type="button" class="btn btn-secondary start-timer" data-sub-service-id="${subService.id}">Start</button>`;
+                    }
+                }
+
+                function formatDuration(startTime, endTime) {
+                    var start = new Date(startTime);
+                    var end = new Date(endTime);
+                    var duration = end - start; 
+
+                    var days = Math.floor(duration / (1000 * 60 * 60 * 24));
+                    var hours = Math.floor((duration % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    var minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
+                    var seconds = Math.floor((duration % (1000 * 60)) / 1000);
+
+                    var durationText = '';
+                    if (days > 0) {
+                        durationText += days + " days ";
+                    }
+                    if (hours > 0) {
+                        durationText += hours + " hours ";
+                    }
+                    if (minutes > 0) {
+                        durationText += minutes + " minutes ";
+                    }
+                    if (seconds > 0) {
+                        durationText += seconds + " seconds";
+                    }
+
+                    if (durationText === '') {
+                        durationText = seconds + " seconds";
+                    }
+
+                    return durationText;
+                }
+
+
                 var newRow = `
                     <tr>
                         <td>${subService.sub_service.name}</td>
@@ -337,6 +470,11 @@
                                 <i class="fas fa-plus-circle"></i>
                             </button>
                         </td>
+                        <td>
+                            ${startButton}
+                            ${stopButton}
+                            <span class="timer-duration">${durationText}</span>
+                        </td>
                     </tr>
                 `;
                 subServiceTable.append(newRow);
@@ -348,12 +486,9 @@
         $(document).on('click', '.open-modal', function(){
             var staffId = $(this).data('staff-id');
             var clientSubServiceId = $(this).data('client-sub-service-id');
-            // console.log(clientSubServiceId);
             $('#hiddenStaffId').val(staffId);
             $('#hiddenClientSubServiceId').val(clientSubServiceId);
-
             populateMessage(clientSubServiceId);
-
             $('#messageModal').modal('show');
         });
 
@@ -369,12 +504,10 @@
                         return manager ? manager.first_name : '';
                     }
                     $('#previousMessages').empty();
-                    // console.log(data);
                     data.forEach(function(message) {
                         var messageDiv = $('<div>').addClass('message');
                         var managerName = getManagerName(message.created_by);
                         var messageContent = message.message ? message.message : ''; 
-
                         messageDiv.html('<span style="font-weight: bold;">' + managerName + ': </span>' + messageContent); 
                         $('#previousMessages').append(messageDiv);
                     });
@@ -383,7 +516,6 @@
                     console.error('Error fetching previous messages:', error, thrown);
                 }
             });
-
         }
 
         $('#saveMessage').click(function() {
@@ -480,6 +612,65 @@
             $('#assignTaskSection').hide();
         });
 
+        var updateIntervalId = null;
+        $(document).on('click', '.start-timer', function() {
+            var clientSubServiceId = $(this).data('sub-service-id');
+            var startTime = new Date().toISOString();
+        $.ajax({
+                type: 'POST',
+                url: '/manager/start-work-time',
+                data: {
+                    startTime: startTime,
+                    clientSubServiceId: clientSubServiceId ,
+                    _token: "{{ csrf_token() }}"
+                },
+                success: function(response) {
+                    swal({
+                        title: "Success!",
+                        text: "Time has started successfully",
+                        icon: "success",
+                        button: "OK",
+                    });
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                    $('#timerModal').modal('hide'); 
+
+                },
+                error: function(xhr, status, error) {
+                    console.error(error);
+                }
+            });
+        });
+
+        $(document).on('click', '.stop-timer', function() {
+            var clientSubServiceId = $(this).data('sub-service-id');
+            var stopTime = new Date().toISOString();
+            $.ajax({
+                type: 'POST',
+                url: '/manager/stop-work-time',
+                data: {
+                    stopTime: stopTime,
+                    clientSubServiceId: clientSubServiceId,
+                    _token: "{{ csrf_token() }}" 
+                },
+                success: function(response) {
+                    swal({
+                        title: "Success!",
+                        text: "Time has been stopped successfully",
+                        icon: "success",
+                        button: "OK",
+                    });
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                    $('#timerModal').modal('hide'); 
+                },
+                error: function(xhr, status, error) {
+                    console.error(error);
+                }
+            });
+        });
     });
 </script>
 <!-- Assigned tasks list start -->
@@ -563,7 +754,13 @@
                         <td>${subService.deadline}</td>
                         <td>${staffName}</td>
                         <td>${subService.note}</td>
-                        <td>${subService.sequence_status === 2 ? 'Work is completed' : 'N/A'}</td>
+                        <td>
+                            ${  subService.sequence_status === 2 ? 'Work is completed' 
+                                : subService.sequence_status === 1 ? 'Not Started' 
+                                : subService.sequence_status === 0 ? 'Processing'
+                                : 'N/A'
+                             }
+                         </td>
                         <td>
                             <button type="button" class="btn btn-secondary open-modal" data-toggle="modal" data-target="#messageModal" data-staff-id="${subService.staff_id}" data-client-sub-service-id="${subService.id}">
                                 <i class="fas fa-plus-circle"></i>

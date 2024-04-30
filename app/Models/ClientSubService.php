@@ -24,4 +24,9 @@ class ClientSubService extends Model
     {
         return $this->hasMany(ServiceMessage::class);
     }
+
+    public function workTime()
+    {
+        return $this->hasOne(WorkTime::class);
+    }
 }
