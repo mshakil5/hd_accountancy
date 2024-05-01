@@ -93,8 +93,8 @@
         </a>
       </li>
 
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="">
+      <li class="nav-item {{ request()->routeIs('holiday') ? 'active' : '' }}">
+        <a class="nav-link collapsed" href="{{ route('holiday') }}">
           <i class="bi bi-card-list"></i>
           <span>Holidays</span>
         </a>

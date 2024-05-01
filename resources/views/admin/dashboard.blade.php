@@ -98,16 +98,19 @@
             <div class="col-md-12">
               <div class="row mt-3">
                   <div class="col-3 text-center">
-                      <h5 class="mb-3">Choose Service</h5>
+                      <h5 class="mb-3" id="testtittimeDiv">Choose Service</h5>
                       <div class="form-check">
+<<<<<<< Updated upstream
                         <input type="hidden" id="clientId">
+=======
+>>>>>>> Stashed changes
                         <select id="servicesDropdown" class="form-control mt-2">
                             <option value="">Select Service</option>
                                 @foreach($services as $service)
-                                <option value="{{ $service->id }}">
-                                    {{ $service->name }}
-                                </option>
-                            @endforeach
+                                    <option value="{{ $service->id }}">
+                                        {{ $service->name }}
+                                    </option>
+                                @endforeach
                         </select>
                       </div>
                   </div>    
@@ -140,7 +143,7 @@
                   <div class="col-3 text-center">
                       <h5 class="mb-3">Deadline</h5>
                       <div class="form-check">
-                          <input type="date" id="service_deadline" class="form-control mt-2" name="service_deadline" value="">
+                          <input type="date" id="service_deadline" class="form-control mt-2" name="service_deadline" >
                       </div>
                   </div>
               </div>
@@ -629,6 +632,7 @@
         {
           data: null,
           name: 'action',
+<<<<<<< Updated upstream
           render: function(data, type, row) {
             return '<button class="btn btn-secondary btn-sm assign-btn" ' +
                   'data-clientservice-id="' + data.id + '" ' +
@@ -644,6 +648,23 @@
                   'data-service-frequency="' + data.service_frequency + '">' +
                   'Assign</button>';
           }
+=======
+            render: function(data, type, row) {
+                return '<button class="btn btn-secondary btn-sm assign-btn" ' +
+                      'data-clientservice-id="' + data.id + '" ' +
+                      'data-service-id="' + data.service.id + '" ' +
+                      'data-client-service-id="' + data.client_service_id + '" ' +
+                      'data-client-id="' + data.client.id + '" ' +
+                      'data-client-name="' + data.client.name + '" ' +
+                      'data-service-id="' + data.service.id + '" ' + 
+                      'data-service-name="' + data.service.name + '" ' +
+                      'data-manager-id="' + data.manager.id + '" ' +
+                      'data-manager-name="' + (data.manager.first_name + ' ' + data.manager.last_name) + '" ' +
+                      'data-service-deadline="' + moment(data.service_deadline).format('MM/DD/YY') + '" ' +
+                      'data-service-frequency="' + data.service_frequency + '">' +
+                      'Assign</button>';
+            }
+>>>>>>> Stashed changes
         }
       ]
     });
@@ -697,10 +718,40 @@
       $('#service_frequency').val(serviceFrequency);
       $('#service_deadline').val(serviceDeadline);
       
+<<<<<<< Updated upstream
+=======
+          var clientserviceId = $(this).data('clientservice-id');
+          var serviceId = $(this).data('service-id');
+          var clientId = $(this).data('client-id'); 
+          var clientName = $(this).data('client-name');
+          var serviceName = $(this).data('service-name');
+          var managerId = $(this).data('manager-id');
+          var managerName = $(this).data('manager-name');
+          var serviceDeadline = $(this).data('service-deadline');
+          var serviceFrequency = $(this).data('service-frequency');
+
+          // console.log('Assign button clicked');
+          console.log(serviceId);
+          console.log(serviceDeadline);
+
+        $('#servicesDropdown').val(serviceId);
+        $('#managerDropdown').val(managerId);
+        $('#service_frequency').val(serviceFrequency);
+        $('#service_deadline').val(serviceDeadline);
+          
+
+
+>>>>>>> Stashed changes
       $('#assignTaskSection').toggle();
       $('#sub-service-updateButton').show();
       $('#sub-service-cancelButton').show();
 
+<<<<<<< Updated upstream
+=======
+      
+      $('#testtittimeDiv').html("THis is test" + serviceDeadline);
+
+>>>>>>> Stashed changes
       $.ajax({
         url: '/admin/getClientSubServices/' + clientserviceId,
         type: "GET",

@@ -15,7 +15,6 @@ class ProrotaController extends Controller
 {
     public function index()
     {   
-        // $data = WeWorkWithImage::orderby('id','DESC')->get();
         return view('admin.prorota.index');
     }
 

@@ -86,6 +86,7 @@ class StaffController extends Controller
         $data->reporting_to  = $request->reporting_to;
 
         $data->type = "3";
+        $data->total_holiday = "20";
         $data->created_by =  Auth::id();
 
         if(isset($request->password)){

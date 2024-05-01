@@ -36,28 +36,13 @@
                                     <form id="myForm">
                                         <div class="row my-4">
                                             
-                                            <div class="col-lg-4">
-                                                <label for="country">Employee</label>
-                                                <div class="mt-2">
-                                                <select class="form-control select2 my-2" id="staff_id" name="staff_id">
-                                                    <option value="" selected disabled>Choose Employee</option>
-                                                    @foreach($staffs as $staff)
-                                                    <option value="{{ $staff->id }}">{{ $staff->first_name }} {{ $staff->last_name }}</option>
-                                                    @endforeach
-                                                </select>
-                                                </div>
+                                            <div class="col-lg-8">
+                                                <h4>Employee Name: {{$data->staff->first_name}} {{$data->staff->last_name}}</h4>
                                             </div>
                                             
-                                            {{-- <div class="col-lg-4">
-                                                <label for="schedule_type">Schedule Type</label>
-                                                  <div class="mt-2">
-                                                    <select class="form-control my-2" name="schedule_type" id="schedule_type">
-                                                        <option value="">Please select</option>
-                                                        <option value="Salary">Salary</option>
-                                                        <option value="Wages">Wages</option>
-                                                    </select>
-                                                </div>
-                                            </div> --}}
+                                            <div class="col-lg-4">
+                                                <h4>Schedule type:  {{$data->schedule_type}}</h4>
+                                            </div>
 
 
                                             {{-- <div class="col-lg-4">
@@ -77,49 +62,23 @@
                                                         </tr>
                                                     </thead>
                                                     <tbody>
+
+                                                        @foreach ($data->prorotaDetail as $detail)
+                                                           
                                                         <tr>
-                                                            <td><input type="text" name="day[]" class="form-control" value="Monday" readonly></td>
-                                                            <td><input type="time" name="start_time[]" class="form-control" value="10:00"></td>
-                                                            <td><input type="time" name="end_time[]" class="form-control" value="18:00"></td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td><input type="text" name="day[]" class="form-control" value="Tuesday" readonly></td>
-                                                            <td><input type="time" name="start_time[]" class="form-control" value="10:00"></td>
-                                                            <td><input type="time" name="end_time[]" class="form-control" value="18:00"></td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td><input type="text" name="day[]" class="form-control" value="Wednesday" readonly></td>
-                                                            <td><input type="time" name="start_time[]" class="form-control" value="10:00"></td>
-                                                            <td><input type="time" name="end_time[]" class="form-control" value="18:00"></td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td><input type="text" name="day[]" class="form-control" value="Thursday" readonly></td>
-                                                            <td><input type="time" name="start_time[]" class="form-control" value="10:00"></td>
-                                                            <td><input type="time" name="end_time[]" class="form-control" value="18:00"></td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td><input type="text" name="day[]" class="form-control" value="Friday" readonly></td>
-                                                            <td><input type="time" name="start_time[]" class="form-control" value="10:00"></td>
-                                                            <td><input type="time" name="end_time[]" class="form-control" value="18:00"></td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td><input type="text" name="day[]" class="form-control" value="Saturday" readonly></td>
-                                                            <td><input type="time" name="start_time[]" class="form-control" value="10:00"></td>
-                                                            <td><input type="time" name="end_time[]" class="form-control" value="18:00"></td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td><input type="text" name="day[]" class="form-control" value="Sunday" readonly></td>
-                                                            <td><input type="time" name="start_time[]" class="form-control"></td>
-                                                            <td><input type="time" name="end_time[]" class="form-control"></td>
-                                                        </tr>
+                                                            <td><input type="text" name="day[]" class="form-control" value="{{$detail->day}}" readonly></td>
+                                                            <td><input type="time" name="start_time[]" class="form-control" value="{{$detail->start_time}}"></td>
+                                                            <td><input type="time" name="end_time[]" class="form-control" value="{{$detail->end_time}}"></td>
+                                                        </tr> 
+                                                        @endforeach
+
                                                     </tbody>
                                                 </table>
                                             </div>
                                         </div>
                                         <div class="row">
                                             <div class="col-lg-4 mx-auto text-center">
-                                                <button id="clearButton" class="btn btn-sm btn-outline-dark">Clear</button>
-                                                <button id="saveButton" class="btn btn-sm bg-theme text-light btn-outline-dark">Save</button>
+                                                <a href="{{route('prorota')}}" class="btn btn-sm btn-outline-dark">Back</a>
                                             </div>
                                         </div>
                                     </form>

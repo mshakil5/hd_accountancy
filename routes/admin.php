@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\DirectorInfoController;
 use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\WeWorkWithImageController;
 use App\Http\Controllers\Admin\ProrotaController;
+use App\Http\Controllers\Admin\HolidayController;
 
 //Fallback route
 Route::fallback(function () {
@@ -235,6 +236,17 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/prorota/details/{id}', [ProrotaController::class,'showDetails'])->name('prorota.details');
     Route::delete('/delete-prorota/{id}', [ProrotaController::class, 'deleteData'])->name('delete.staff');
     Route::get('/prorota/edit/{id}', [ProrotaController::class,'edit'])->name('prorota.edit');
+
+    
+    // holiday make
+    Route::get('/holiday', [HolidayController::class, 'index'])->name('holiday');
+    Route::get('/holiday-list', [HolidayController::class, 'getholiday'])->name('get.holiday');
+    Route::get('/create-holiday', [HolidayController::class, 'create'])->name('createholiday');
+    Route::post('/holiday', [HolidayController::class, 'store']);
+    Route::post('/holiday/update', [HolidayController::class, 'update']);
+    Route::get('/holiday/details/{id}', [HolidayController::class,'showDetails'])->name('holiday.details');
+    Route::delete('/delete-holiday/{id}', [HolidayController::class, 'deleteData'])->name('delete.staff');
+    Route::get('/holiday/edit/{id}', [HolidayController::class,'edit'])->name('holiday.edit');
 
 
 });

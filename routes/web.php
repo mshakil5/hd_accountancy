@@ -7,6 +7,12 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\CategoryController;
+<<<<<<< Updated upstream
+=======
+use App\Http\Controllers\Admin\StaffController;
+use App\Http\Controllers\Staff\ServiceController;
+use App\Http\Controllers\Staff\HolidayController;
+>>>>>>> Stashed changes
 use App\Http\Controllers\Manager\ManagerController;
 use App\Http\Controllers\Manager\ServiceController;
 use App\Http\Controllers\Staff\StaffServiceController;
@@ -99,6 +105,12 @@ Route::middleware(['auth', 'user-access:staff'])->group(function () {
 
      //Custom logout
      Route::post('/custom-logout', [HomeController::class, 'sessionClear'])->name('customLogout');
+
+     // staff holiday
+     Route::get('/staff/holiday', [HolidayController::class, 'index'])->name('staff.holiday');
+     Route::post('/staff/holiday-request', [HolidayController::class, 'holidayRequest'])->name('staff.holidayRequest');
+
+     
     
 });
 
