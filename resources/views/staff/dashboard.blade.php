@@ -5,77 +5,6 @@
 <section class="section dashboard">
     <div class="row">
 
-         <!-- Assigned service details section start -->
-          <div class="col-lg-12">
-              <div class="report-box border-theme sales-card p-4 mb-3 rounded-4 border-3" id="assignTaskSection" style="display: none;">
-                  <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                       Work Details
-                    </div>
-
-                  <!-- Success and Error message -->
-                  <div class="row my-4 px-3">
-                      <div class="col-lg-12">
-                          <div id="successMessage" class="alert alert-success" style="display: none;">
-                              <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                              <b></b>
-                          </div>
-                          <div id="errorMessage" class="alert alert-danger" style="display: none;">
-                              <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                              <b></b>
-                          </div>
-                      </div>
-                  </div>
-                  <!-- Success and Error message -->
-
-                  <div class="container-fluid">
-                      <div class="row mt-3">
-                          <div class="col-md-3 text-center">
-                              <h5 class="mb-3">Service</h5>
-                              <input type="text" id="service_name" class="form-control mt-2" readonly>
-                          </div>    
-                          <div class="col-md-3 text-center">
-                              <h5 class="mb-3">Manager</h5>
-                              <input type="text" id="manager_name" class="form-control mt-2" value="" readonly>
-                          </div>  
-                          <div class="col-md-3 text-center">
-                              <h5 class="mb-3">Frequency</h5>
-                              <input type="text" id="service_frequency" class="form-control mt-2" readonly>
-                          </div>   
-                          <div class="col-md-3 text-center">
-                              <h5 class="mb-3">Deadline</h5>
-                              <input type="date" id="service_deadline" class="form-control mt-2" readonly>
-                          </div>
-                      </div>
-
-                      <div class="row mt-3">
-                          <div class="col-md-12">
-                              <table class="table">
-                                  <thead>
-                                      <tr>
-                                          <th>Sub Service Name</th>
-                                          <th>Deadline</th>
-                                          <th>Staff</th>
-                                          <th>Note</th>
-                                          <th>Status</th>
-                                          <th>Comment</th>
-                                          <th>Timer</th>
-                                      </tr>
-                                  </thead>
-                                  <tbody id="serviceDetailsTable"></tbody>
-                              </table>
-                          </div>
-                      </div>
-
-                      <div class="row mt-3 mb-3">
-                          <div class="col-lg-4 mx-auto text-center">
-                              <button id="sub-service-cancelButton" class="btn btn-sm btn-outline-dark">Cancel</button>
-                          </div>
-                      </div>
-                  </div>
-              </div>
-          </div>
-          <!-- Assigned service details section start -->
-
         <!-- Service message modal start -->
             <div class="modal fade" id="messageModal" tabindex="-1" role="dialog" aria-labelledby="messageModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-lg mt-2" role="document">
@@ -246,6 +175,77 @@
         </div>
     </div>
 
+    <!-- Assigned service details section start -->
+    <div class="col-lg-12">
+        <div class="report-box border-theme sales-card p-4 mb-3 rounded-4 border-3" id="assignTaskSection" style="display: none;">
+            <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                Work Details
+            </div>
+
+            <!-- Success and Error message -->
+            <div class="row my-4 px-3">
+                <div class="col-lg-12">
+                    <div id="successMessage" class="alert alert-success" style="display: none;">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <b></b>
+                    </div>
+                    <div id="errorMessage" class="alert alert-danger" style="display: none;">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <b></b>
+                    </div>
+                </div>
+            </div>
+            <!-- Success and Error message -->
+
+            <div class="container-fluid">
+                <div class="row mt-3">
+                    <div class="col-md-3 text-center">
+                        <h5 class="mb-3">Service</h5>
+                        <input type="text" id="service_name" class="form-control mt-2" readonly>
+                    </div>    
+                    <div class="col-md-3 text-center">
+                        <h5 class="mb-3">Manager</h5>
+                        <input type="text" id="manager_name" class="form-control mt-2" value="" readonly>
+                    </div>  
+                    <div class="col-md-3 text-center">
+                        <h5 class="mb-3">Frequency</h5>
+                        <input type="text" id="service_frequency" class="form-control mt-2" readonly>
+                    </div>   
+                    <div class="col-md-3 text-center">
+                        <h5 class="mb-3">Deadline</h5>
+                        <input type="date" id="service_deadline" class="form-control mt-2" readonly>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Sub Service Name</th>
+                                    <th>Deadline</th>
+                                    <th>Staff</th>
+                                    <th>Note</th>
+                                    <th>Status</th>
+                                    <th>Comment</th>
+                                    <th>Timer</th>
+                                </tr>
+                            </thead>
+                            <tbody id="serviceDetailsTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="row mt-3 mb-3">
+                    <div class="col-lg-4 mx-auto text-center">
+                        <button id="sub-service-cancelButton" class="btn btn-sm btn-outline-dark">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Assigned service details section start -->
+
     <div class="row">
         <div class="col-lg-4 mb-3">
             <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
@@ -335,14 +335,14 @@
 
         $(document).on('click', '.change-status', function() {
             var clientserviceId = $(this).data('id');
-            var managerName = $(this).data('manager');
+            var managerFirstName = $(this).data('manager-firstname');
             var rowData = $('#serviceStaffTable').DataTable().row($(this).closest('tr')).data();
             var serviceName = rowData.servicename;
             var frequency = rowData.service_frequency;
             var deadline = rowData.service_deadline;
 
             $('#service_name').val(serviceName);
-            $('#manager_name').val(managerName);
+            $('#manager_name').val(managerFirstName);
             $('#service_frequency').val(frequency);
             $('#service_deadline').val(deadline);
 
@@ -382,23 +382,20 @@
                                 <option value="0" selected>Processing</option>
                                 <option value="2">Completed</option>
                             </select>`;
+                    } else if (subService.sequence_status === 1) {
+                        statusText = 'Not Started Yet';
+                    } else if (subService.sequence_status === 2) {
+                        statusText = 'Completed';
                     }
-                    if (subService.sequence_status === 0) {
+                    } else {
+                        if (subService.sequence_status === 0) {
                             statusText = 'Processing';
                         } else if (subService.sequence_status === 1) {
                             statusText = 'Not Started Yet';
                         } else if (subService.sequence_status === 2) {
                             statusText = 'Completed';
                         }
-                }else {
-                     if (subService.sequence_status === 0) {
-                            statusText = 'Processing';
-                        } else if (subService.sequence_status === 1) {
-                            statusText = 'Not Started Yet';
-                        } else if (subService.sequence_status === 2) {
-                            statusText = 'Completed';
-                        }
-                }
+                    }
 
                 var durationText = '';
                 var startButton = '';

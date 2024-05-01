@@ -16,8 +16,7 @@ class ServiceController extends Controller
 {
     public function getAllAssignedServices(Request $request)
     {
-        $currentUserId = Auth::id();
-        $managerName = Auth::user()->first_name;
+            $currentUserId = Auth::id();
             if ($request->ajax()) {
             $data = ClientService::with('clientSubServices')
                 ->where('manager_id', $currentUserId)
@@ -36,8 +35,9 @@ class ServiceController extends Controller
                 ->addColumn('servicename', function(ClientService $clientservice) {
                     return $clientservice->service->name;
                 })
-                ->addColumn('action', function(ClientService $clientservice) use ($managerName) {
-                    return '<button class="btn btn-secondary change-status" data-id="' . $clientservice->id . '" data-manager="' . $managerName . '">Change Status</button>';
+                ->addColumn('action', function(ClientService $clientservice) {
+                    $managerFirstName = $clientservice->manager->first_name;
+                    return '<button class="btn btn-secondary change-status" data-id="'. $clientservice->id. '" data-manager-firstname="'. $managerFirstName. '">Change Status</button>';
                 })
                 ->make(true);
         }

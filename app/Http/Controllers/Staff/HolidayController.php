@@ -16,16 +16,18 @@ class HolidayController extends Controller
     {
         $pending = HolidayRequest::where('staff_id', Auth::user()->id)->where('status', 0)->sum('total_day');
         $taken = HolidayRequest::where('staff_id', Auth::user()->id)->where('status', 1)->sum('total_day');
+        $holidayRequests = HolidayRequest::where('staff_id', Auth::user()->id)
+                                        ->orderBy('id', 'desc')
+                                        ->get();
 
-
-        return view('staff.holiday.index', compact('pending','taken'));
+        return view('staff.holiday.index', compact('pending','taken','holidayRequests'));
     }
 
 
     public function holidayRequest(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'holiday_type' => 'required|max:255',
+            'holiday_type' => 'max:255',
             'comment' => 'required|string|max:255',
             'start_date' => 'required',
             'start_date' => ['required_with:end_date'],

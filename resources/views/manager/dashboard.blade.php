@@ -312,14 +312,14 @@
 
         $(document).on('click', '.change-status', function() {
             var clientserviceId = $(this).data('id');
-            var managerName = $(this).data('manager');
+            var managerFirstName = $(this).data('manager-firstname');
             var rowData = $('#serviceManagerTable').DataTable().row($(this).closest('tr')).data();
             var serviceName = rowData.servicename;
             var frequency = rowData.service_frequency;
             var deadline = rowData.service_deadline;
 
             $('#service_name').val(serviceName);
-            $('#manager_name').val(managerName);
+            $('#manager_name').val(managerFirstName);
             $('#service_frequency').val(frequency);
             $('#service_deadline').val(deadline);
 

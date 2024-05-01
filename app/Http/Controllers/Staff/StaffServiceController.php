@@ -19,13 +19,12 @@ class StaffServiceController extends Controller
 {
     public function getServicesClientStaff(Request $request)
     {
-            $currentUserId = Auth::id();
-            $managerName = Auth::user()->first_name;
             if ($request->ajax()) {
             $data = ClientService::with('clientSubServices')
                 ->whereDate('service_deadline', '<=', now()->addDays(30))
                 ->whereHas('clientSubServices', function ($query) {
-                    $query->whereIn('sequence_status', [0, 1]);
+                    $query->whereIn('sequence_status', [0, 1])
+                          ->where('staff_id', Auth::id());
                 })
                 ->orderBy('id', 'desc')
                 ->get();
@@ -38,8 +37,9 @@ class StaffServiceController extends Controller
                 ->addColumn('servicename', function(ClientService $clientservice) {
                     return $clientservice->service->name;
                 })
-                ->addColumn('action', function(ClientService $clientservice) use ($managerName) {
-                    return '<button class="btn btn-secondary change-status" data-id="' . $clientservice->id . '" data-manager="' . $managerName . '">Change Status</button>';
+                ->addColumn('action', function(ClientService $clientservice) {
+                    $managerFirstName = $clientservice->manager->first_name;
+                    return '<button class="btn btn-secondary change-status" data-id="'. $clientservice->id. '" data-manager-firstname="'. $managerFirstName. '">Change Status</button>';
                 })
                 ->make(true);
         }

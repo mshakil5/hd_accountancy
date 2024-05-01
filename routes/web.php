@@ -7,12 +7,8 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\CategoryController;
-<<<<<<< Updated upstream
-=======
 use App\Http\Controllers\Admin\StaffController;
-use App\Http\Controllers\Staff\ServiceController;
 use App\Http\Controllers\Staff\HolidayController;
->>>>>>> Stashed changes
 use App\Http\Controllers\Manager\ManagerController;
 use App\Http\Controllers\Manager\ServiceController;
 use App\Http\Controllers\Staff\StaffServiceController;

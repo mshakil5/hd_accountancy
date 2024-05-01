@@ -8,4 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 class HolidayRequest extends Model
 {
     use HasFactory;
+
+    public function staff()
+    {
+        return $this->belongsTo(User::class, 'staff_id');
+    }
+
 }

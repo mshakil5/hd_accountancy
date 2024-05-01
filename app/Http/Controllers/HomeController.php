@@ -100,7 +100,7 @@ class HomeController extends Controller
 
     public function staffHome(): View
     {
-        $staffs = User::where('type','3')->orderby('id','DESC')->get();
+        $staffs = User::whereIn('type', ['3','2'])->orderby('id','DESC')->get();
         $managers = User::whereIn('type', ['3','2'])->orderby('id','DESC')->get();
         $user = Auth::user();
         $attendanceLog = UserAttendanceLog::where('user_id', $user->id)

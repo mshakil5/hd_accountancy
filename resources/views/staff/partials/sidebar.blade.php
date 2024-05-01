@@ -33,7 +33,7 @@
         
         <li class="nav-item {{ request()->routeIs('staff.holiday') ? 'active' : '' }}">
           <a class="nav-link collapsed" href="{{route('staff.holiday')}}">
-            <i class="bi bi-check-square"></i>
+            <i class="bi bi-card-list"></i>
             <span>Holiday</span>
           </a>
         </li>

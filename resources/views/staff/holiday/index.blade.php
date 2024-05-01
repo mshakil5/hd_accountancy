@@ -69,7 +69,7 @@
                         <form id="myForm">
                             @csrf
                             <div class="row mt-3">
-                                <div class="col-lg-12">
+                                <!-- <div class="col-lg-12">
                                     <label for="holiday_type" class="fw-bold">Holiday Type</label>
                                     <select name="holiday_type" id="holiday_type" class="form-control p-2 border-theme text-center fs-6 d-block rounded-3 border-3 txt-theme fw-bold my-1">
                                         <option value="">Holiday Type</option>
@@ -77,7 +77,7 @@
                                         <option value="Test1">Test2</option>
                                         <option value="Test1">Test3</option>
                                     </select>
-                                </div>
+                                </div> -->
                                 <div class="col-lg-6">
                                     <label for="start_date" class="fw-bold">Start Date</label>
                                     <input type="date" id="start_date" name="start_date" class="form-control p-2 border-theme text-center fs-6 d-block rounded-3 border-3 txt-theme fw-bold my-1">
@@ -107,7 +107,7 @@
         </div>
     </div>
 
-    <div class="row" style="display: none">
+    <div class="row">
         <div class="col-lg-4 mb-3">
             <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
                 <div class="card-body px-0">
@@ -124,32 +124,42 @@
             <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
                 <div class="card-body px-0">
                     <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                        Your Assigned Tasks
+                        Requested Holidays
                     </div>
-                <!-- Works assigned to a user and specified staff -->
-                        <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                        <table id="serviceStaffTable" class="table cell-border table-striped" style="width:100%">
+                    <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
+                        <table id="holidayRequestsTable" class="table cell-border table-striped" style="width:100%">
                             <thead>
                                 <tr>
-                                    <th scope="col">Sl</th>
-                                    <th scope="col">Client</th>
-                                    <th scope="col">Tasks</th>
-                                    <th scope="col">Staff</th>
+                                    <th scope="col">Start Date</th>
+                                    <th scope="col">End Date</th>
+                                    <th scope="col">Comment</th>
+                                    <th scope="col">Total Days</th>
                                     <th scope="col">Status</th>
                                 </tr>
                             </thead>
                             <tbody>
+                                @foreach($holidayRequests as $request)
                                 <tr>
-                                    <th scope="row">1</th>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
+                                    <td>{{ \Carbon\Carbon::parse($request->start_date)->format('d F Y') }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($request->end_date)->format('d F Y') }}</td>
+                                    <td>{{ $request->comment }}</td>
+                                    <td>{{ $request->total_day }}</td>
+                                    <td>
+                                        @if($request->status == 0)
+                                            Processing
+                                        @elseif($request->status == 1)
+                                            Approved
+                                        @elseif($request->status == 2)
+                                            Declined
+                                        @else
+                                            Unknown
+                                        @endif
+                                    </td>
                                 </tr>
+                                @endforeach
                             </tbody>
                         </table>
-                        </div>
-                <!-- Works assigned to a user and specified staff -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -230,6 +240,11 @@
 </script>
 <!-- Holiday End -->
 
+<script>
+    $(document).ready(function() {
+        $('#holidayRequestsTable').DataTable();
+    });
 
+</script>
 
 @endsection
