@@ -83,8 +83,8 @@ class HomeController extends Controller
      */
     public function managerHome(): View
     {
-        $staffs = User::where('type','3')->orderby('id','DESC')->get();
-        $managers = User::where('type', '2')->orderby('id','DESC')->get();
+        $staffs = User::whereIn('type', ['3','2'])->orderby('id','DESC')->get();
+        $managers = User::whereIn('type', ['3','2'])->orderby('id','DESC')->get();
         return view('manager.dashboard',compact('staffs','managers'));
     }
 
@@ -100,6 +100,8 @@ class HomeController extends Controller
 
     public function staffHome(): View
     {
+        $staffs = User::where('type','3')->orderby('id','DESC')->get();
+        $managers = User::whereIn('type', ['3','2'])->orderby('id','DESC')->get();
         $user = Auth::user();
         $attendanceLog = UserAttendanceLog::where('user_id', $user->id)
             ->orderBy('start_time', 'desc')
@@ -113,7 +115,7 @@ class HomeController extends Controller
             $activeTime = $timeDifference->format('%H:%I:%S');
             $breakTime = $activeTime;
         }
-        return view('staff.dashboard', compact('activeTime', 'breakTime'));
+        return view('staff.dashboard', compact('activeTime', 'breakTime','staffs','managers'));
     }
     /**
      * Show the application dashboard.

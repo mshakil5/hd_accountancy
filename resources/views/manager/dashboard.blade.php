@@ -57,7 +57,7 @@
                                           <th>Staff</th>
                                           <th>Note</th>
                                           <th>Status</th>
-                                          <th>Message</th>
+                                          <th>Comment</th>
                                           <th>Timer</th>
                                       </tr>
                                   </thead>
@@ -113,7 +113,7 @@
                                           <th>Staff</th>
                                           <th>Note</th>
                                           <th>Status</th>
-                                          <th>Message</th>
+                                          <th>Comment</th>
                                       </tr>
                                   </thead>
                                   <tbody id="completedServiceDetailsTable"></tbody>
@@ -154,7 +154,7 @@
                                 <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
                                     <div class="card-body px-0">
                                         <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                                            Previous Messages
+                                            Previous Comment
                                         </div>
                                         <div id="previousMessages" class="mt-4">
                                             <!-- Previous messages -->
@@ -167,12 +167,12 @@
                                 <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
                                     <div class="card-body px-0">
                                         <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                                           Send New Message
+                                           New Comment
                                         </div>
                                         <input type="hidden" id="hiddenStaffId" />
                                         <input type="hidden" id="hiddenClientSubServiceId" />
                                         <div class="form-group mt-4">
-                                            <textarea class="form-control" id="service-message" rows="7" name="message" placeholder="Your message to staff..."></textarea>
+                                            <textarea class="form-control" id="service-message" rows="7" name="message" placeholder="Your comment..."></textarea>
                                         </div>
                                         <div class="text-center">
                                             <button type="button" class="mt-3 btn btn-primary bg-theme-light fs-4 border-theme border-2 fw-bold txt-theme" id="saveMessage">Send</button>
@@ -186,48 +186,6 @@
             </div>
         </div>
         <!-- Service message modal end -->
-
-        <!-- Work time modal start -->
-        <!-- <div class="modal fade" id="timerModal" tabindex="-1" role="dialog" aria-labelledby="timerModalLabel" aria-hidden="true">
-            <div class="modal-dialog mt-2" role="document">
-                <div class="modal-content">
-                    <div class="modal-body">
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
-                                    <div class="card-body px-0">
-                                        <input type="hidden" id="hiddenStaffId" />
-                                        <input type="hidden" id="hiddenClientSubServiceId" />
-                                        <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                                            Timer
-                                        </div>
-                                        <div class="d-flex gap-3 my-5">
-                                            <div class="text-center flex-fill">
-                                                <div class="text-center fs-2 txt-theme fw-bold">
-                                                    
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="row mt-3 justify-content-center">
-                                            <div class="col-lg-4">
-                                                <a href="#" class="p-2 border-theme text-center fs-6 d-block rounded-3 border-3 txt-theme fw-bold my-1" id="startButton">Start</a>
-                                            </div>
-                                            <div class="col-lg-4">
-                                                <a href="#" class="p-2 border-theme text-center fs-6 d-block rounded-3 border-3 txt-theme fw-bold my-1" id="stopButton">Stop</a>
-                                            </div> -->
-                                            <!-- <div class="col-lg-4">
-                                                <button type="button" class="btn btn-primary bg-theme-light fs-4 border-theme border-2 fw-bold txt-theme" id="breakButton">Break</button>
-                                            </div> -->
-                                        <!-- </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div> -->
-        <!-- Work time modal end -->
 
         <!-- Timer Modal -->
         <div class="modal fade" id="timerModal" tabindex="-1" role="dialog" aria-labelledby="timerModalLabel" aria-hidden="true">
@@ -266,7 +224,6 @@
                 </div>
             </div>
         </div>
-
 
         <!-- Works assigned to a user and specified staff start-->
         <div class="col-lg-8 mb-3">
@@ -535,7 +492,7 @@
                 success: function(response) {
                     swal({
                         title: "Success!",
-                        text: "Message sent successfully",
+                        text: "Comment sent successfully",
                         icon: "success",
                         button: "OK",
                     });
@@ -581,7 +538,7 @@
                 success: function(response) {
                     swal({
                         title: "Success!",
-                        text: "Message sent successfully",
+                        text: "Status chnaged successfully",
                         icon: "success",
                         button: "OK",
                     });
@@ -612,35 +569,34 @@
             $('#assignTaskSection').hide();
         });
 
-        var updateIntervalId = null;
         $(document).on('click', '.start-timer', function() {
             var clientSubServiceId = $(this).data('sub-service-id');
             var startTime = new Date().toISOString();
-        $.ajax({
-                type: 'POST',
-                url: '/manager/start-work-time',
-                data: {
-                    startTime: startTime,
-                    clientSubServiceId: clientSubServiceId ,
-                    _token: "{{ csrf_token() }}"
-                },
-                success: function(response) {
-                    swal({
-                        title: "Success!",
-                        text: "Time has started successfully",
-                        icon: "success",
-                        button: "OK",
-                    });
-                    setTimeout(function() {
-                        location.reload();
-                    }, 2000);
-                    $('#timerModal').modal('hide'); 
+            $.ajax({
+                    type: 'POST',
+                    url: '/manager/start-work-time',
+                    data: {
+                        startTime: startTime,
+                        clientSubServiceId: clientSubServiceId ,
+                        _token: "{{ csrf_token() }}"
+                    },
+                    success: function(response) {
+                        swal({
+                            title: "Success!",
+                            text: "Time has started successfully",
+                            icon: "success",
+                            button: "OK",
+                        });
+                        setTimeout(function() {
+                            location.reload();
+                        }, 2000);
+                        $('#timerModal').modal('hide'); 
 
-                },
-                error: function(xhr, status, error) {
-                    console.error(error);
-                }
-            });
+                    },
+                    error: function(xhr, status, error) {
+                        console.error(error);
+                    }
+                });
         });
 
         $(document).on('click', '.stop-timer', function() {

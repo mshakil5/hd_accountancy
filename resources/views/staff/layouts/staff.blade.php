@@ -26,6 +26,7 @@
   <link href="{{ asset('assets/vendor/datatables/dataTables.dataTables.bootstrap4.min.css')}}" rel="stylesheet">
   <link href="{{ asset('assets/vendor/datatables/jquery.dataTables.min.css')}}" rel="stylesheet">
   <link href="{{ asset('assets/vendor/toastify/toastify.min.css')}}" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <script src="{{ asset('assets/vendor/sweet-alert/sweetalert.min.js')}}"></script>
 
   <!-- Template Main CSS File -->
@@ -70,6 +71,7 @@
   <script src="{{ asset('assets/vendor/select2/select2.min.js')}}"></script>
   <script src="{{ asset('assets/vendor/datatables/jquery.dataTables.min.js')}}"></script>
   <script src="{{ asset('assets/vendor/datatables/dataTables.bootstrap4.min.js')}}"></script>
+  <script src="{{ asset('assets/vendor/moment/moment.min.js')}}"></script>
   <script src="{{ asset('assets/vendor/toastify/toastify-js.js')}}"></script>
 
   <!-- Template Main JS File -->
