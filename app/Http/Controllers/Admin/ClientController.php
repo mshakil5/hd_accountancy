@@ -53,7 +53,7 @@ class ClientController extends Controller
     {
         $managers = User::where('type', '2')->orderby('id','DESC')->get();
         $staffs = User::whereIn('type', ['3','2'])->orderby('id','DESC')->get();
-        $client = Client::with(['clientType', 'manager','businessInfo','directorInfos','clientService','clientService.clientSubServices','contactInfos'])->where('id', $id)->first();
+        $client = Client::with(['clientType', 'manager','businessInfo','directorInfos','clientServices','clientServices.clientSubServices','contactInfos'])->where('id', $id)->first();
         $clientTypes = ClientType::orderby('id','DESC')->get();
         $services = Service::orderby('id','DESC')->get();
         $allDirectorInfos = DirectorInfo::orderBy('id', 'DESC')->get();

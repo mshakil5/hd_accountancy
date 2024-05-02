@@ -75,10 +75,10 @@
         </div>
 
         <div class="col-lg-12">
-          <div class="card border shadow-sm mb-3" id="assignTaskSection" style="display: none;">
-            <p class="p-2 bg-theme-light txt-theme px-3 mb-3 text-capitalize d-flex align-items-center">
-                <i class="bx bxs-user-plus fs-4 me-2"></i>Assign Task
-            </p>
+          <div class="report-box border-theme sales-card p-4 mb-3 rounded-4 border-3" id="assignTaskSection" style="display: none;">
+            <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                Assign Task
+            </div>
 
             <!-- Success and Error message -->
             <div class="row my-4 px-3">
@@ -153,7 +153,6 @@
                   <th>Deadline</th>
                   <th>Staff</th>
                   <th>Note</th>
-                  <th>Status</th>
                 </tr>
               </thead>
               <tbody id="serviceDetailsTable"></tbody>
@@ -249,7 +248,7 @@
         </div>
         </div>
 
-        <div class="col-lg-12">
+        <div class="col-lg-12" style="display: none;">
           <div class="col-lg-12 px-0 border shadow-sm mb-3">
 
             <p class="p-2 bg-theme-light txt-theme px-3 mb-0 text-capitalize d-flex align-items-center">
@@ -346,7 +345,7 @@
           </div>
         </div>
         
-        <!-- All Work List -->
+        <!-- Assigned Work List -->
         <div class="col-lg-12">
           <div class="col-lg-12 px-0 border shadow-sm mb-3">
 
@@ -380,7 +379,7 @@
              <!-- Works assigned to a user and staff -->
           </div>
         </div>
-        <!-- All Work List -->
+        <!-- AAssigned Work List -->
 
         <!-- Completed Work List -->
         <div class="col-lg-12">

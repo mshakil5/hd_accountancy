@@ -69,8 +69,8 @@ class HomeController extends Controller
             ->values();
 
         $clients = Client::orderby('id','DESC')->get();
-        $staffs = User::where('type','3')->orderby('id','DESC')->get();
-        $managers = User::where('type', '2')->orderby('id','DESC')->get();
+        $staffs = User::whereIn('type', ['3','2'])->orderby('id','DESC')->get();
+        $managers = User::whereIn('type', ['3','2'])->orderby('id','DESC')->get();
         $services = Service::orderby('id','DESC')->get();
         return view('admin.dashboard',compact('clients','staffs','loggedStaff','managers','services'));
     }

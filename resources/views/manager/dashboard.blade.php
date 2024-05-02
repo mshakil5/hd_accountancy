@@ -76,61 +76,6 @@
           </div>
           <!-- Assigned service details section start -->
 
-          <!-- Completed service details section start -->
-         <div class="col-lg-12">
-              <div class="report-box border-theme sales-card p-4 mb-3 rounded-4 border-3" id="completedTaskSection" style="display: none;">
-                  <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                       Work Details
-                    </div>
-
-                  <div class="container-fluid">
-                      <div class="row mt-3">
-                          <div class="col-md-3 text-center">
-                              <h5 class="mb-3">Service</h5>
-                              <input type="text" id="service_name1" class="form-control mt-2" readonly>
-                          </div>    
-                          <div class="col-md-3 text-center">
-                              <h5 class="mb-3">Manager</h5>
-                              <input type="text" id="manager_name1" class="form-control mt-2" value="" readonly>
-                          </div>  
-                          <div class="col-md-3 text-center">
-                              <h5 class="mb-3">Frequency</h5>
-                              <input type="text" id="service_frequency1" class="form-control mt-2" readonly>
-                          </div>   
-                          <div class="col-md-3 text-center">
-                              <h5 class="mb-3">Deadline</h5>
-                              <input type="date" id="service_deadline1" class="form-control mt-2" readonly>
-                          </div>
-                      </div>
-
-                      <div class="row mt-3">
-                          <div class="col-md-12">
-                              <table class="table">
-                                  <thead>
-                                      <tr>
-                                          <th>Sub Service Name</th>
-                                          <th>Deadline</th>
-                                          <th>Staff</th>
-                                          <th>Note</th>
-                                          <th>Status</th>
-                                          <th>Comment</th>
-                                      </tr>
-                                  </thead>
-                                  <tbody id="completedServiceDetailsTable"></tbody>
-                              </table>
-                          </div>
-                      </div>
-
-                      <div class="row mt-3 mb-3">
-                          <div class="col-lg-4 mx-auto text-center">
-                              <button id="completed-service-cancelButton" class="btn btn-sm btn-outline-dark">Cancel</button>
-                          </div>
-                      </div>
-                  </div>
-              </div>
-         </div>
-         <!-- Completed service details section end -->
-
         <div class="col-lg-4 mb-3">
             <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
                 <div class="card-body px-0">
@@ -249,6 +194,62 @@
             </div>
         </div>
         <!-- Works assigned to a user and specified staff start-->
+
+        <!-- Completed service details section start -->
+         <div class="col-lg-12">
+              <div class="report-box border-theme sales-card p-4 mb-3 rounded-4 border-3" id="completedTaskSection" style="display: none;">
+                  <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                       Completed Work Details
+                    </div>
+
+                  <div class="container-fluid">
+                      <div class="row mt-3">
+                          <div class="col-md-3 text-center">
+                              <h5 class="mb-3">Service</h5>
+                              <input type="text" id="service_name1" class="form-control mt-2" readonly>
+                          </div>    
+                          <div class="col-md-3 text-center">
+                              <h5 class="mb-3">Manager</h5>
+                              <input type="text" id="manager_name1" class="form-control mt-2" value="" readonly>
+                          </div>  
+                          <div class="col-md-3 text-center">
+                              <h5 class="mb-3">Frequency</h5>
+                              <input type="text" id="service_frequency1" class="form-control mt-2" readonly>
+                          </div>   
+                          <div class="col-md-3 text-center">
+                              <h5 class="mb-3">Deadline</h5>
+                              <input type="date" id="service_deadline1" class="form-control mt-2" readonly>
+                          </div>
+                      </div>
+
+                      <div class="row mt-3">
+                          <div class="col-md-12">
+                              <table class="table">
+                                  <thead>
+                                      <tr>
+                                          <th>Sub Service Name</th>
+                                          <th>Deadline</th>
+                                          <th>Staff</th>
+                                          <th>Note</th>
+                                          <th>Status</th>
+                                          <th>Comment</th>
+                                          <th>Timer</th>
+                                      </tr>
+                                  </thead>
+                                  <tbody id="completedServiceDetailsTable"></tbody>
+                              </table>
+                          </div>
+                      </div>
+
+                      <div class="row mt-3 mb-3">
+                          <div class="col-lg-4 mx-auto text-center">
+                              <button id="completed-service-cancelButton" class="btn btn-sm btn-outline-dark">Cancel</button>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+         </div>
+         <!-- Completed service details section end -->
 
         <!-- Completed tasks table start-->
         <div class="col-lg-8 mb-3">
@@ -704,6 +705,43 @@
 
                 var staffName = staff ? staff.first_name : 'N/A';
 
+                var durationText = '';
+                if (subService.work_time && subService.work_time.start_time) {
+                    var endTime = subService.work_time.end_time || new Date().toISOString();
+                    durationText = formatDuration(subService.work_time.start_time, endTime);
+                }
+
+                function formatDuration(startTime, endTime) {
+                    var start = new Date(startTime);
+                    var end = new Date(endTime);
+                    var duration = end - start; 
+
+                    var days = Math.floor(duration / (1000 * 60 * 60 * 24));
+                    var hours = Math.floor((duration % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    var minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
+                    var seconds = Math.floor((duration % (1000 * 60)) / 1000);
+
+                    var durationText = '';
+                    if (days > 0) {
+                        durationText += days + " days ";
+                    }
+                    if (hours > 0) {
+                        durationText += hours + " hours ";
+                    }
+                    if (minutes > 0) {
+                        durationText += minutes + " minutes ";
+                    }
+                    if (seconds > 0) {
+                        durationText += seconds + " seconds";
+                    }
+
+                    if (durationText === '') {
+                        durationText = seconds + " seconds";
+                    }
+
+                    return durationText;
+                }
+
                 var newRow = `
                     <tr>
                         <td>${subService.sub_service.name}</td>
@@ -721,6 +759,9 @@
                             <button type="button" class="btn btn-secondary open-modal" data-toggle="modal" data-target="#messageModal" data-staff-id="${subService.staff_id}" data-client-sub-service-id="${subService.id}">
                                 <i class="fas fa-plus-circle"></i>
                             </button>
+                        </td>
+                         <td>
+                            <span class="timer-duration">${durationText}</span>
                         </td>
                     </tr>
                 `;

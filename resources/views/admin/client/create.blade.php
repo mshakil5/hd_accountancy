@@ -702,44 +702,123 @@
 
 <!-- Fetching sub services and putting on table start -->
 <script>
-    $(document).ready(function() {
-        $('#serviceDropdown').change(function() {
-            var serviceId = $(this).val();
-            if(serviceId) {
-                $.ajax({
-                    url: '/admin/getSubServices/' + serviceId,
-                    type: "GET",
-                    dataType: "json",
-                    success: function(data) {
-                        $('#serviceDetailsTable tr').remove();
+  $(document).ready(function() {
+    $('#serviceDropdown').change(function() {
+      var serviceId = $(this).val();
+      if(serviceId) {
+        $.ajax({
+          url: '/admin/getSubServices/' + serviceId,
+          type: "GET",
+          dataType: "json",
+          success: function(data) {
+            var subServiceDetailsTemplate = `
+              <div class="row mt-4 subServiceDetails">
+                <div class="col-12">
+                  <h5 class="p-2 bg-theme text-white mb-0 text-capitalize">Sub Services Details</h5>
+                  <div class="border-theme p-3 border-1">
+                    <div class="row mt-2">
+                      <!-- Sub-service details -->
+                    </div>
+                    <table class="table mt-3">
+                      <thead>
+                        <tr>
+                          <th>Sub Service Name</th>
+                          <th>Deadline</th>
+                          <th>Staff</th>
+                          <th>Note</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <!-- Sub-service rows  -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            `;
 
-                        $.each(data, function(key, value) {
-                            var newRow = `
-                                <tr>
-                                    <td>${value.name}</td>
-                                    <td><input type="date" name="deadline" class="form-control"></td>
-                                    <td>
-                                        <select class="form-control select2 staffDropdown" name="staff_id">
-                                            <option value="">Select Staff</option>
-                                            @foreach($staffs as $staff)
-                                                <option value="{{ $staff->id }}">{{ $staff->first_name }}</option>
-                                            @endforeach
-                                        </select>
-                                    </td>
-                                    <td><textarea name="note" rows="1" class="form-control"></textarea></td>
-                                <input type="hidden" class="sub-service-id" data-sub-service-id="${value.id}">
-                                </tr>
-                            `;
-                            $('#serviceDetailsTable').append(newRow);
-                        });
-                        $('#subServiceDropdown').show();
-                    }
-                });
-            } else {
-                $('#subServiceDropdown').empty().hide();
-            }
+            $('#serviceForm').append(subServiceDetailsTemplate);
+
+            var serviceName = $('#serviceDropdown option:selected').text();
+
+            var serviceFields = `
+              <div class="row">
+                <div class="col-md-12">
+                  <div class="row">
+                    <div class="col-md-2">
+                      <h5 class="mb-3">Service Name</h5>
+                      <p> <b>${serviceName}</b> </p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                    <h5 class="mb-3">Manager</h5>
+                    <div class="form-check">
+                        <select class="form-control mt-2 select2 managerDropdown" name="manager_id">
+                        <option value="">Select</option>
+                        @foreach($managers as $manager)
+                        <option value="{{ $manager->id }}">{{ $manager->first_name }}</option>
+                        @endforeach
+                        </select>
+                    </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                    <h5 class="mb-3">Frequency</h5>
+                    <div class="form-check">
+                        <select class="form-control mt-2 select2 serviceFrequency" name="service_frequency">
+                        <option value="">Select</option>
+                        <option>Daily</option>
+                        <option>Weekly</option>
+                        <option>Monthly</option>
+                        <option>Quarterly</option>
+                        <option>Yearly</option>
+                        </select>
+                    </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                    <h5 class="mb-3">Deadline</h5>
+                    <div class="form-check">
+                        <input type="date" class="form-control serviceDeadline" name="service_deadline">
+                    </div>
+                    </div>
+                    <div class="col-md-1">
+                      <h5 class="mb-3">Action</h5>
+                      <span class="removeSubServiceDetails" style="cursor: pointer; font-size: 24px; color: red;">&#10006;</span>
+                      
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+            $('.subServiceDetails:last').find('.row:first').after(serviceFields);
+
+            $('.subServiceDetails:last').find('tbody').empty();
+            $.each(data, function(key, value) {
+              var newRow = `
+                <tr>
+                  <td>${value.name}</td>
+                  <td><input type="date" name="deadline" class="form-control"></td>
+                  <td>
+                    <select class="form-control select2 staffDropdown" name="staff_id">
+                      <option value="">Select Staff</option>
+                      @foreach($staffs as $staff)
+                      <option value="{{ $staff->id }}">{{ $staff->first_name }}</option>
+                      @endforeach
+                    </select>
+                  </td>
+                  <td><textarea name="note" rows="1" class="form-control" placeholder="Note for this task"></textarea></td>
+                   <input type="hidden" class="sub-service-id" data-sub-service-id="${value.id}">
+                </tr>
+              `;
+              $('.subServiceDetails:last').find('tbody').append(newRow);
+            });
+          }
         });
+      }
     });
+
+    $(document).on('click', '.removeSubServiceDetails', function() {
+      $(this).closest('.subServiceDetails').remove();
+    });
+  });
 </script>
 <!-- Fetching sub services and putting on table end -->
 
@@ -747,46 +826,59 @@
 <script>
     $(document).ready(function() {
         $('#service-saveButton').click(function(e) {
-            e.preventDefault(); 
+            e.preventDefault();
 
-            var clientId = "{{ $id }}"; 
-            var serviceId = $('#serviceDropdown').val();
-            var managerId = $('#managerDropdown').val(); 
-            var service_frequency = $('#service_frequency').val(); 
-            var service_deadline = $('#service_deadline').val(); 
-            var subServices = [];
+            var clientId = "{{ $id }}";
+            var services = [];
 
-            $('#serviceDetailsTable tr').each(function() {
-                var subServiceId = $(this).find('.sub-service-id').attr('data-sub-service-id');
-                var deadline = $(this).find('input[type="date"]').val();
-                var note = $(this).find('textarea').val();
-                var staffId = $(this).find('.staffDropdown').val();
-                
-                subServices.push({
-                    subServiceId: subServiceId,
-                    deadline: deadline,
-                    note: note,
-                    staffId: staffId
+            $('.subServiceDetails').each(function() {
+                var serviceId = $('#serviceDropdown').val();
+
+                var managerId = $(this).find('.managerDropdown').val();
+                var service_frequency = $(this).find('.serviceFrequency').val();
+                var service_deadline = $(this).find('.serviceDeadline').val();
+                var subServices = [];
+
+                $(this).find('tbody tr').each(function() {
+                    var subServiceId = $(this).find('.sub-service-id').attr('data-sub-service-id'); 
+                    var deadline = $(this).find('input[type="date"]').val();
+                    var note = $(this).find('textarea').val();
+                    var staffId = $(this).find('.staffDropdown').val();
+
+                    subServices.push({
+                        subServiceId: subServiceId,
+                        deadline: deadline,
+                        note: note,
+                        staffId: staffId
+                    });
+                });
+
+                services.push({
+                    serviceId: serviceId,
+                    managerId: managerId,
+                    service_frequency: service_frequency,
+                    service_deadline: service_deadline,
+                    subServices: subServices
                 });
             });
 
             var data = {
                 clientId: clientId,
-                serviceId: serviceId,
-                managerId: managerId,
-                service_frequency: service_frequency,
-                service_deadline: service_deadline,
-                subServices: subServices
+                services: services
             };
+
+            console.log(data);
 
             $.ajax({
                 url: '/admin/store-service',
                 type: 'POST',
-                data: data,
+                data: JSON.stringify(data), 
+                contentType: 'application/json', 
                 success: function(response) {
+                    console.log(response)
                     swal({
                         title: "Success!",
-                        text: "Task assigned successfully",
+                        text: "Tasks assigned successfully",
                         icon: "success",
                         button: "OK",
                     });
@@ -815,8 +907,73 @@
 </script>
 <!-- Storing services and sub services end -->
 
-<!-- Updating services and sub services start -->
 <script>
+    $(document).ready(function() {
+        $('#service-updateButton').click(function(e) {
+            e.preventDefault();
+
+            var clientId = "{{ $id }}";
+            var services = [];
+
+            $('.subServiceDetails').each(function() {
+                var serviceId = $(this).find('input[name="service_id"]').val();
+                var clientServiceId = $(this).find('input[name="client_service_id[]"]').val();
+                var managerId = $(this).find('.managerDropdown').val();
+                var service_frequency = $(this).find('#service_frequency').val();
+                var service_deadline = $(this).find('.serviceDeadline').val();
+                var subServices = [];
+
+                $(this).find('tbody tr').each(function() {
+                    var subServiceId = $(this).find('input[name="sub_service_id[]"]').val();
+                    var clientSubServiceId = $(this).find('input[name="client_sub_service_id[]"]').val();
+                    var deadline = $(this).find('input[type="date"]').val();
+                    var note = $(this).find('textarea').val();
+                    var staffId = $(this).find('.select2').val();
+
+                    subServices.push({
+                        subServiceId: subServiceId,
+                        client_sub_service_id: clientSubServiceId,
+                        deadline: deadline,
+                        note: note,
+                        staffId: staffId
+                    });
+                });
+
+                services.push({
+                    serviceId: serviceId,
+                    client_service_id: clientServiceId,
+                    managerId: managerId,
+                    service_frequency: service_frequency,
+                    service_deadline: service_deadline,
+                    subServices: subServices
+                });
+            });
+
+            var data = {
+                clientId: clientId,
+                services: services
+            };
+
+            console.log(data);
+
+            $.ajax({
+                url: '/admin/update-service',
+                type: 'POST',
+                data: JSON.stringify(data),
+                contentType: 'application/json',
+                success: function(response) {
+                    console.log(response);
+                },
+                error: function(xhr, status, error) {
+                    console.error(xhr.responseText);
+                }
+            });
+        });
+    });
+</script>
+
+<!-- Updating services and sub services start -->
+<!-- <script>
     $(document).ready(function() {
         $('#service-updateButton').click(function(e) {
             e.preventDefault(); 
@@ -886,7 +1043,7 @@
             });
         });
     });
-</script>
+</script> -->
 <!-- Updating services and sub services end -->
 
 <!-- Deleting sub services start -->

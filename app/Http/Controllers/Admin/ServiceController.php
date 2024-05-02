@@ -303,9 +303,12 @@ class ServiceController extends Controller
     public function getAllAssignedServices(Request $request)
     {
         if ($request->ajax()) {
-            $data = ClientService::with('client', 'manager','service','clientSubServices')
+            $data = ClientService::with('client', 'manager', 'service', 'clientSubServices')
             ->where('status', 1)
             ->whereDate('service_deadline', '<=', now()->addDays(30))
+            ->whereHas('clientSubServices', function ($query) {
+                $query->whereNull('staff_id');
+            })
             ->orderBy('id', 'desc')
             ->get();
 
@@ -374,10 +377,19 @@ class ServiceController extends Controller
         return response()->json($subServices);
     }
 
-    public function saveService(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'clientId' => 'required|integer',
+public function saveService(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'clientId' => 'required|integer',
+        'services' => 'required|array',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json(['status' => 422, 'errors' => $validator->errors()->toArray()], 422);
+    }
+
+    foreach ($request->services as $serviceData) {
+        $validator = Validator::make($serviceData, [
             'serviceId' => 'required|integer',
             'managerId' => 'required|integer',
             'service_frequency' => 'required',
@@ -386,108 +398,102 @@ class ServiceController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['status' => 422, 'errors' => $validator->errors()], 422);
+            return response()->json(['status' => 422, 'errors' => $validator->errors()->toArray()], 422);
         }
 
-        $clientService = ClientService::where('client_id', $request->clientId)
-                                        ->where('service_id', $request->serviceId)
-                                        ->first();
+        $clientService = new ClientService();
+        $clientService->client_id = $request->clientId;
+        $clientService->service_id = $serviceData['serviceId'];
+        $clientService->manager_id = $serviceData['managerId'];
+        $clientService->service_frequency = $serviceData['service_frequency'];
+        $clientService->service_deadline = $serviceData['service_deadline'];
+        $clientService->save();
 
-            if ($clientService) {
-                $clientService->manager_id = $request->managerId;
-                $clientService->service_frequency = $request->service_frequency;
-                $clientService->service_deadline = $request->service_deadline;
-                $clientService->save();
-            } else {
-                $clientService = new ClientService();
-                $clientService->client_id = $request->clientId;
-                $clientService->service_id = $request->serviceId;
-                $clientService->manager_id = $request->managerId;
-                $clientService->service_frequency = $request->service_frequency;
-                $clientService->service_deadline = $request->service_deadline;
-                $clientService->save();
-            }
-
-        if ($request->has('subServices')) {
-
-            
-            foreach ($request->subServices as $key => $subServiceData) {
-                $serialKey = $key + 1;
-                $clientSubService = ClientSubService::where('client_service_id', $clientService->id)
-                                                        ->where('sub_service_id', $subServiceData['subServiceId'])
-                                                        ->first();
-
-                if (!$clientSubService) {
-                    $clientSubService = new ClientSubService();
-                    $clientSubService->client_service_id = $clientService->id;
-                    $clientSubService->client_id = $request->clientId; 
-                    $clientSubService->sequence_id = $serialKey; 
-
-                    if ($serialKey == 1) {
-                    $clientSubService->sequence_status = 0; 
-                    } else {
-                    $clientSubService->sequence_status = 1; 
-                    }
-
-                    $clientSubService->manager_id = $request->managerId;
-                    $clientSubService->sub_service_id = $subServiceData['subServiceId'];
-                }
-
+        if (isset($serviceData['subServices'])) {
+            foreach ($serviceData['subServices'] as $key => $subServiceData) {
+                $clientSubService = new ClientSubService();
+                $clientSubService->client_service_id = $clientService->id;
+                $clientSubService->client_id = $request->clientId;
+                $clientSubService->sequence_id = $key + 1;
+                $clientSubService->sub_service_id = $subServiceData['subServiceId'];
                 $clientSubService->deadline = $subServiceData['deadline'];
                 $clientSubService->note = $subServiceData['note'];
                 $clientSubService->staff_id = $subServiceData['staffId'];
                 $clientSubService->save();
             }
         }
-
-        return response()->json(['status' => 200, 'message' => 'Data saved successfully']);
     }
+
+    return response()->json(['status' => 200, 'message' => 'Data saved successfully']);
+}
 
     public function updateService(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'clientId' => 'required|integer',
-            'serviceId' => 'required|integer',
-            'managerId' => 'required|integer',
-            'service_frequency' => 'required',
-            'service_deadline' => 'required',
-            'subServices' => 'nullable|array',
+            'services' => 'required|array',
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['status' => 422, 'errors' => $validator->errors()], 422);
+            return response()->json(['status' => 422, 'errors' => $validator->errors()->toArray()], 422);
         }
 
-        $clientService = ClientService::where('client_id', $request->clientId)
-                                        ->where('service_id', $request->serviceId)
-                                        ->first();
-
-        if ($clientService) {
-            $clientService->manager_id = $request->managerId;
-            $clientService->service_frequency = $request->service_frequency;
-            $clientService->service_deadline = $request->service_deadline;
-            $clientService->save();
-        } else {
-            return response()->json(['status' => 404, 'message' => 'Client service not found'], 404);
-        }
-
-        if ($request->has('subServices')) {
-            foreach ($request->subServices as $key => $subServiceData) {
-                $serialKey = $key + 1;
-                $clientSubService = ClientSubService::where('client_service_id', $clientService->id)
-                                                        ->where('sub_service_id', $subServiceData['subServiceId'])
-                                                        ->first();
-
-                if (!$clientSubService) {
-                    return response()->json(['status' => 404, 'message' => 'Client sub-service not found'], 404);
+        foreach ($request->services as $serviceData) {
+            if (!isset($serviceData['client_service_id'])) {
+                $clientService = new ClientService();
+                $clientService->client_id = $request->clientId;
+                $clientService->service_id = $serviceData['serviceId']; 
+                $clientService->manager_id = $serviceData['managerId'];
+                $clientService->service_frequency = $serviceData['service_frequency'];
+                $clientService->service_deadline = $serviceData['service_deadline'];
+                $clientService->save();
+                
+                $serviceData['client_service_id'] = $clientService->id;
+            } else {
+                $existingService = ClientService::find($serviceData['client_service_id']);
+                if ($existingService) {
+                    $existingService->update([
+                        'manager_id' => $serviceData['managerId'],
+                        'service_frequency' => $serviceData['service_frequency'],
+                        'service_deadline' => $serviceData['service_deadline'],
+                    ]);
                 }
-
-                $clientSubService->deadline = $subServiceData['deadline'];
-                $clientSubService->note = $subServiceData['note'];
-                $clientSubService->staff_id = $subServiceData['staffId'];
-                $clientSubService->sequence_id = $serialKey;
-                $clientSubService->save();
             }
+
+            $clientServiceIds = collect($request->services)->pluck('client_service_id')->toArray();
+            ClientService::where('client_id', $request->clientId)
+                        ->whereNotIn('id', $clientServiceIds)
+                        ->delete();
+
+            if (isset($serviceData['subServices'])) {
+                foreach ($serviceData['subServices'] as $key => $subServiceData) {
+                    if (!isset($subServiceData['client_sub_service_id'])) {
+                        $clientSubService = new ClientSubService();
+                        $clientSubService->client_service_id = $serviceData['client_service_id']; 
+                        $clientSubService->client_id = $request->clientId;
+                        $clientSubService->sequence_id = $key + 1;
+                        $clientSubService->sub_service_id = $subServiceData['subServiceId'];
+                        $clientSubService->deadline = $subServiceData['deadline'];
+                        $clientSubService->note = $subServiceData['note'];
+                        $clientSubService->staff_id = $subServiceData['staffId'];
+                        $clientSubService->save();
+                    } else {
+                        $existingSubService = ClientSubService::find($subServiceData['client_sub_service_id']);
+                        if ($existingSubService) {
+                            $existingSubService->update([
+                                'deadline' => $subServiceData['deadline'],
+                                'note' => $subServiceData['note'],
+                                'staff_id' => $subServiceData['staffId'],
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            $clientSubServiceIds = collect($serviceData['subServices'])->pluck('client_sub_service_id')->toArray();
+            ClientSubService::where('client_service_id', $serviceData['client_service_id'])
+                            ->whereNotIn('id', $clientSubServiceIds)
+                            ->delete();
         }
 
         return response()->json(['status' => 200, 'message' => 'Data updated successfully']);
