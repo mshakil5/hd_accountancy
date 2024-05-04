@@ -340,7 +340,8 @@
         function populateSubServiceForm(subServices) {
             var subServiceTable = $('#serviceDetailsTable');
             subServiceTable.empty();
-
+            var staffs = @json($staffs);
+            var authUserId = {{ auth()->user()->id }};
             var staffs = @json($staffs);
 
             $.each(subServices, function(index, subService) {
@@ -351,77 +352,61 @@
                 });
 
                 var staffName = staff ? staff.first_name : 'N/A';
+                var isAuthUserStaff = authUserId === subService.staff_id;
 
                 if (subService.sequence_status === 0) {
-                    statusDropdown = `
-                        <select class="form-select change-service-status" data-sub-service-id="${subService.id}">
-                            <option value="0" selected>Processing</option>
-                            <option value="2">Completed</option>
-                        </select>`;
+                    if (isAuthUserStaff) {
+                        statusDropdown = `
+                            <select class="form-select change-service-status" data-sub-service-id="${subService.id}">
+                                <option value="0" selected>Processing</option>
+                                <option value="2">Completed</option>
+                            </select>`;
+                    } else {
+                        statusText = 'Processing';
+                    }
                 } else if (subService.sequence_status === 1) {
                     statusText = 'Work isn\'t started yet';
                 } else if (subService.sequence_status === 2) {
                     statusText = 'Work is completed';
                 }
 
-                var durationText = '';
                 var startButton = '';
                 var stopButton = '';
+                var startBreakButton = '';
+                var stopBreakButton = '';
+                var duration = '';
 
-                if (subService.work_time && subService.work_time.start_time) {
-                    var endTime = subService.work_time.end_time || new Date().toISOString();
-                    durationText = formatDuration(subService.work_time.start_time, endTime);
-                }
+                    var firstWorkTime = subService.work_times[0];
+                    if (firstWorkTime) {
+                        var durationInSeconds = firstWorkTime.duration;
+                        var hours = Math.floor(durationInSeconds / 3600);
+                        var minutes = Math.floor((durationInSeconds % 3600) / 60);
+                        var seconds = durationInSeconds % 60;
+                        duration = `<div>${hours}h ${minutes}m ${seconds}s</div>`;
+                    }
 
-                if (subService.sequence_status === 0) {
-                    if (subService.work_time && subService.work_time.start_time && subService.work_time.end_time) {
-                        durationText = formatDuration(subService.work_time.start_time, subService.work_time.end_time);
-                    } else if (subService.work_time && subService.work_time.start_time) {
-                        durationText = formatDuration(subService.work_time.start_time, new Date().toISOString());
+                if (isAuthUserStaff && subService.sequence_status === 0) {
+                    if (subService.status === 2) {
+                        startBreakButton = `<button type="button" class="btn btn-secondary start-break" data-sub-service-id="${subService.id}">Start Break</button>`;
                         stopButton = `<button type="button" class="btn btn-secondary stop-timer" data-sub-service-id="${subService.id}">Stop</button>`;
-                    } else {
+                        
+                    } else if (subService.status === 3) {
+                        if (subService.work_times) {
+                            subService.work_times.forEach(function(work_time) {
+                                stopBreakButton = `<button type="button" class="btn btn-danger stop-break" data-sub-service-id="${subService.id}" data-work-times-id="${work_time.id}">Stop Break</button>`;
+                            });
+                        }
+                    } else if (subService.status === 1) {
                         startButton = `<button type="button" class="btn btn-secondary start-timer" data-sub-service-id="${subService.id}">Start</button>`;
                     }
                 }
 
-                function formatDuration(startTime, endTime) {
-                    var start = new Date(startTime);
-                    var end = new Date(endTime);
-                    var duration = end - start; 
-
-                    var days = Math.floor(duration / (1000 * 60 * 60 * 24));
-                    var hours = Math.floor((duration % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    var minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
-                    var seconds = Math.floor((duration % (1000 * 60)) / 1000);
-
-                    var durationText = '';
-                    if (days > 0) {
-                        durationText += days + " days ";
-                    }
-                    if (hours > 0) {
-                        durationText += hours + " hours ";
-                    }
-                    if (minutes > 0) {
-                        durationText += minutes + " minutes ";
-                    }
-                    if (seconds > 0) {
-                        durationText += seconds + " seconds";
-                    }
-
-                    if (durationText === '') {
-                        durationText = seconds + " seconds";
-                    }
-
-                    return durationText;
-                }
-
-
                 var newRow = `
                     <tr>
                         <td>${subService.sub_service.name}</td>
-                        <td>${subService.deadline}</td>
+                        <td>${moment(subService.deadline).format('DD.MM.YYYY')}</td>
                         <td>${staffName}</td>
-                        <td>${subService.note}</td>
+                        <td>${subService.note ? subService.note : ''}</td>
                         <td>${statusText} ${statusDropdown}</td>
                         <td>
                             <button type="button" class="btn btn-secondary open-modal" data-toggle="modal" data-target="#messageModal" data-staff-id="${subService.staff_id}" data-client-sub-service-id="${subService.id}">
@@ -431,7 +416,9 @@
                         <td>
                             ${startButton}
                             ${stopButton}
-                            <span class="timer-duration">${durationText}</span>
+                            ${startBreakButton}
+                            ${stopBreakButton}
+                            ${duration}
                         </td>
                     </tr>
                 `;
@@ -572,42 +559,37 @@
 
         $(document).on('click', '.start-timer', function() {
             var clientSubServiceId = $(this).data('sub-service-id');
-            var startTime = new Date().toISOString();
             $.ajax({
-                    type: 'POST',
-                    url: '/manager/start-work-time',
-                    data: {
-                        startTime: startTime,
-                        clientSubServiceId: clientSubServiceId ,
-                        _token: "{{ csrf_token() }}"
-                    },
-                    success: function(response) {
-                        swal({
-                            title: "Success!",
-                            text: "Time has started successfully",
-                            icon: "success",
-                            button: "OK",
-                        });
-                        setTimeout(function() {
-                            location.reload();
-                        }, 2000);
-                        $('#timerModal').modal('hide'); 
-
-                    },
-                    error: function(xhr, status, error) {
-                        console.error(error);
-                    }
-                });
-        });
+                type: 'POST',
+                url: '/manager/start-work-time',
+                data: {
+                    clientSubServiceId: clientSubServiceId,
+                    _token: "{{ csrf_token() }}"
+                },
+                success: function(response) {
+                    swal({
+                        title: "Success!",
+                        text: "Time has started successfully",
+                        icon: "success",
+                        button: "OK",
+                    });
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                    $('#timerModal').modal('hide');
+                },
+                error: function(xhr, status, error) {
+                    console.error(error);
+                }
+            });
+        }); 
 
         $(document).on('click', '.stop-timer', function() {
             var clientSubServiceId = $(this).data('sub-service-id');
-            var stopTime = new Date().toISOString();
             $.ajax({
                 type: 'POST',
                 url: '/manager/stop-work-time',
                 data: {
-                    stopTime: stopTime,
                     clientSubServiceId: clientSubServiceId,
                     _token: "{{ csrf_token() }}" 
                 },
@@ -624,7 +606,63 @@
                     $('#timerModal').modal('hide'); 
                 },
                 error: function(xhr, status, error) {
+                    console.error(xhr.responseText);
+                }
+            });
+        });
+
+        $(document).on('click', '.start-break', function() {
+            var clientSubServiceId = $(this).data('sub-service-id');
+            $.ajax({
+                type: 'POST',
+                url: '/manager/start-break',
+                data: {
+                    clientSubServiceId: clientSubServiceId,
+                    _token: "{{ csrf_token() }}"
+                },
+                success: function(response) {
+                    swal({
+                        title: "Success!",
+                        text: "Break time has started successfully",
+                        icon: "success",
+                        button: "OK",
+                    });
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                    $('#timerModal').modal('hide');
+                },
+                error: function(xhr, status, error) {
                     console.error(error);
+                }
+            });
+        });
+
+        $(document).on('click', '.stop-break', function() {
+            var clientSubServiceId = $(this).data('sub-service-id');
+            var workTimesId = $(this).data('work-times-id');
+            $.ajax({
+                type: 'POST',
+                url: '/manager/stop-break',
+                data: {
+                    clientSubServiceId: clientSubServiceId,
+                     workTimesId: workTimesId,
+                    _token: "{{ csrf_token() }}"
+                },
+                success: function(response) {
+                    swal({
+                        title: "Success!",
+                        text: "Break time has stopped successfully",
+                        icon: "success",
+                        button: "OK",
+                    });
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                    $('#timerModal').modal('hide');
+                },
+                error: function(xhr, status, error) {
+                    console.error( error);
                 }
             });
         });
@@ -704,50 +742,22 @@
                 });
 
                 var staffName = staff ? staff.first_name : 'N/A';
-
-                var durationText = '';
-                if (subService.work_time && subService.work_time.start_time) {
-                    var endTime = subService.work_time.end_time || new Date().toISOString();
-                    durationText = formatDuration(subService.work_time.start_time, endTime);
-                }
-
-                function formatDuration(startTime, endTime) {
-                    var start = new Date(startTime);
-                    var end = new Date(endTime);
-                    var duration = end - start; 
-
-                    var days = Math.floor(duration / (1000 * 60 * 60 * 24));
-                    var hours = Math.floor((duration % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    var minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
-                    var seconds = Math.floor((duration % (1000 * 60)) / 1000);
-
-                    var durationText = '';
-                    if (days > 0) {
-                        durationText += days + " days ";
+                var duration = '';
+                var firstWorkTime = subService.work_times[0];
+                    if (firstWorkTime) {
+                        var durationInSeconds = firstWorkTime.duration;
+                        var hours = Math.floor(durationInSeconds / 3600);
+                        var minutes = Math.floor((durationInSeconds % 3600) / 60);
+                        var seconds = durationInSeconds % 60;
+                        duration = `<div>${hours}h ${minutes}m ${seconds}s</div>`;
                     }
-                    if (hours > 0) {
-                        durationText += hours + " hours ";
-                    }
-                    if (minutes > 0) {
-                        durationText += minutes + " minutes ";
-                    }
-                    if (seconds > 0) {
-                        durationText += seconds + " seconds";
-                    }
-
-                    if (durationText === '') {
-                        durationText = seconds + " seconds";
-                    }
-
-                    return durationText;
-                }
 
                 var newRow = `
                     <tr>
                         <td>${subService.sub_service.name}</td>
-                        <td>${subService.deadline}</td>
+                        <td>${moment(subService.deadline).format('DD.MM.YYYY')}</td>
                         <td>${staffName}</td>
-                        <td>${subService.note}</td>
+                         <td>${subService.note ? subService.note : ''}</td>
                         <td>
                             ${  subService.sequence_status === 2 ? 'Work is completed' 
                                 : subService.sequence_status === 1 ? 'Not Started' 
@@ -761,7 +771,7 @@
                             </button>
                         </td>
                          <td>
-                            <span class="timer-duration">${durationText}</span>
+                            <span class="timer-duration">${duration}</span>
                         </td>
                     </tr>
                 `;

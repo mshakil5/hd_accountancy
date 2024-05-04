@@ -1,4 +1,4 @@
-@extends('staff.layouts.staff')
+@extends('manager.layouts.manager')
 
 @section('content')
 
@@ -186,14 +186,14 @@
             var formData = new FormData($('#myForm')[0]);
             console.log(formData);
             $.ajax({
-                url: "{{URL::to('/staff/holiday-request')}}",
+                url: "{{URL::to('/manager/holiday-request')}}",
                 type: 'POST',
                 data: formData,
                 async: false,
                 success: function (response) {
                     swal({
                         title: "Success!",
-                        text: "Staff schedule created successfully",
+                        text: "Schedule created successfully",
                         icon: "success",
                         button: "OK",
                     });

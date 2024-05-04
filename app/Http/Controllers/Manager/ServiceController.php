@@ -7,6 +7,7 @@ use App\Models\WorkTime;
 use Illuminate\Http\Request;
 use App\Models\ClientService;
 use App\Models\ServiceMessage;
+use Illuminate\Support\Carbon;
 use App\Models\ClientSubService;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -45,7 +46,7 @@ class ServiceController extends Controller
 
     public function getClientSubServices($clientserviceId)
     {
-        $clientSubServices = ClientSubService::with('subService','serviceMessage','workTime')->where('client_service_id', $clientserviceId)->get();
+        $clientSubServices = ClientSubService::with('subService','serviceMessage','workTimes')->where('client_service_id', $clientserviceId)->get();
         return response()->json($clientSubServices);
     }
 
@@ -138,7 +139,6 @@ class ServiceController extends Controller
     public function startWorkTime(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'startTime' => 'required',
             'clientSubServiceId' => 'required',
         ]);
 
@@ -146,51 +146,127 @@ class ServiceController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $startTime = $request->startTime;
         $clientSubServiceId = $request->clientSubServiceId;
         $managerId = Auth::id();
 
         $workTime = new WorkTime();
         $workTime->manager_id = $managerId;
         $workTime->client_sub_service_id = $clientSubServiceId;
-        $workTime->start_time = $startTime;
+        $workTime->start_time = Carbon::now();
+        $workTime->start_date = Carbon::today()->format('d-m-Y');
         $workTime->created_by = $managerId;
-        $workTime->save();
 
-        return response()->json(['message' => 'Work time started successfully'], 200);
+        if ($workTime->save()) {
+            $changests = ClientSubService::find($clientSubServiceId);
+            $changests->status = 2;
+            $changests->save();
+            return response()->json(['message' => 'Work time started successfully'], 200);
+        } else {
+            return response()->json(['error' => 'Failed to start work time.'], 422);
+        }
     }
 
     public function stopWorkTime(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'stopTime' => 'required',
             'clientSubServiceId' => 'required',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
-        $stopTime = $request->stopTime;
+
         $clientSubServiceId = $request->clientSubServiceId;
-        $workTime = WorkTime::where('client_sub_service_id', $clientSubServiceId)->first();
+        $workTime = WorkTime::where('client_sub_service_id', $clientSubServiceId)
+                    ->orderBy('created_at')
+                    ->first();
+        $workTime->end_time = Carbon::now();
+        $workTime->start_time = Carbon::parse($workTime->start_time);
+        $workTime->end_time = Carbon::parse($workTime->end_time);
+        $workTime->duration = $workTime->start_time->diffInSeconds($workTime->end_time);
 
-        if (!$workTime) {
-            return response()->json(['error' => 'No active work time found for the provided client sub-service'], 404);
+         $breaks = WorkTime::where('client_sub_service_id', $clientSubServiceId)
+                    ->where('is_break', 1)
+                    ->whereBetween('start_time', [$workTime->start_time, $workTime->end_time])
+                    ->get();
+        $breakDuration = $breaks->sum(function ($break) {
+          
+            $break->start_time = Carbon::parse($break->start_time);
+            $break->end_time = Carbon::parse($break->end_time);
+            return $break->end_time->diffInSeconds($break->start_time);
+        });
+
+        $workTime->duration -= $breakDuration;
+
+        if ($workTime->save()) {
+            $changests = ClientSubService::find($clientSubServiceId);
+            $changests->status = 0;
+            $changests->save();
+            return response()->json(['message' => 'Work time stopped successfully'], 200);
+        } else {
+            return response()->json(['error' => 'Failed to stop work time.'], 422);
         }
-        $workTime->end_time = $stopTime;
-        $workTime->save();
-
-        return response()->json(['message' => 'Work time stopped successfully'], 200);
     }
 
-    public function getWorkTimes($clientSubServiceId)
+    public function startBreak(Request $request)
     {
-        $workTime = WorkTime::where('client_sub_service_id', $clientSubServiceId)->latest()->first();
-        
-        return response()->json([
-            'startTime' => $workTime ? $workTime->start_time : null,
-            'endTime' => $workTime ? $workTime->end_time : null,
+        $validator = Validator::make($request->all(), [
+            'clientSubServiceId' => 'required',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $clientSubServiceId = $request->clientSubServiceId;
+        $managerId = Auth::id();
+        $workTime = new WorkTime();
+        
+        
+        $workTime->manager_id = $managerId;
+        $workTime->client_sub_service_id = $clientSubServiceId;
+        $workTime->start_time = Carbon::now();
+        $workTime->start_date = Carbon::today()->format('d-m-Y');
+        $workTime->is_break = 1;
+        $workTime->created_by = $managerId;
+
+        if ($workTime->save()) {
+            $changests = ClientSubService::find($clientSubServiceId);
+            $changests->status = 3;
+            $changests->save();
+            return response()->json(['message' => 'Break time started successfully'], 200);
+        } else {
+            return response()->json(['error' => 'Failed to start work time.'], 422);
+        }
     }
 
+    public function stopBreak(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'clientSubServiceId' => 'required',
+            'workTimesId' => 'required', 
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $workTime = WorkTime::find($request->workTimesId);
+        $workTime->end_time = Carbon::now();
+        $startTime = Carbon::parse($workTime->start_time);
+        $endTime = Carbon::parse($workTime->end_time);
+        $duration = $endTime->diffInSeconds($startTime);
+        $workTime->duration = $duration;
+
+        if ($workTime->save()) {
+            $clientSubServiceId = $request->clientSubServiceId;
+            $changests = ClientSubService::find($clientSubServiceId);
+            $changests->status = 2;
+            $changests->save();
+
+            return response()->json(['message' => 'Break time ended successfully'], 200);
+        } else {
+            return response()->json(['error' => 'Failed to start work time.'], 422);
+        }
+    }
 }

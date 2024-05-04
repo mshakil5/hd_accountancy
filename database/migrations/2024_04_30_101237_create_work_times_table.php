@@ -18,7 +18,9 @@ return new class extends Migration
             $table->unsignedBigInteger('client_sub_service_id')->nullable();
             $table->string('start_time')->nullable();
             $table->string('end_time')->nullable();
+            $table->string('start_date')->nullable();
             $table->string('duration')->nullable();
+            $table->boolean('is_break')->default(0);
             $table->boolean('status')->default(1);
             $table->foreign('manager_id')->references('id')->on('users')->where('type', 2)->onDelete('cascade');
             $table->foreign('staff_id')->references('id')->on('users')->where('type', 3)->onDelete('cascade');

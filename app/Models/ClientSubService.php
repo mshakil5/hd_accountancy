@@ -43,8 +43,8 @@ class ClientSubService extends Model
         return $this->hasMany(ServiceMessage::class);
     }
 
-    public function workTime()
+    public function workTimes()
     {
-        return $this->hasOne(WorkTime::class);
+        return $this->hasMany(WorkTime::class);
     }
 }

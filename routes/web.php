@@ -64,11 +64,15 @@ Route::middleware(['auth', 'user-access:manager'])->group(function () {
     //Store message to staff
     Route::post('/manager/store-message', [ServiceController::class,'storeMessage']);
 
-    // Start, End work time
+    // Start, Stop, Start Break, Stop Break
     Route::post('/manager/start-work-time', [ServiceController::class,'startWorkTime']);
     Route::post('/manager/stop-work-time', [ServiceController::class,'stopWorkTime']);
+    Route::post('/manager/start-break', [ServiceController::class,'startBreak']);
+    Route::post('/manager/stop-break', [ServiceController::class,'stopBreak']);
 
-    Route::get('/manager/get-work-times/{clientSubServiceId}', [ServiceController::class, 'getWorkTimes']);
+    // Manager holiday
+    Route::get('/manager/holiday', [HolidayController::class, 'indexManager'])->name('manager.holiday');
+    Route::post('/manager/holiday-request', [HolidayController::class, 'holidayRequestManager'])->name('manager.holidayRequest');
 });
 
 //Staff

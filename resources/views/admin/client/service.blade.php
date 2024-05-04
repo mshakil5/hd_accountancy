@@ -121,10 +121,8 @@
 
 <div class="row mt-3">
     <div class="col-lg-4 mx-auto text-center">
-        @if(isset($client->clientServices))
-        <button id="service-updateButton" class="btn btn-sm bg-theme text-light btn-outline-dark">Update</button>
-        @else
+
         <button id="service-saveButton" class="btn btn-sm bg-theme text-light btn-outline-dark">Save</button>
-        @endif
+
     </div>
 </div>
