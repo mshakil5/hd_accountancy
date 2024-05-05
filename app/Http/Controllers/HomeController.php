@@ -104,12 +104,31 @@ class HomeController extends Controller
             });
 
 
+            $today = now()->toDateString();
+
+            $absentStaff = User::whereIn('type', [2, 3])
+                ->whereNotIn('id', function ($query) use ($today) {
+                    $query->select('user_id')
+                        ->from('user_attendance_logs')
+                        ->whereDate('start_time', $today);
+                })
+                ->whereNotIn('id', function ($query) use ($today) {
+                    $query->select('staff_id')
+                        ->from('holiday_requests')
+                        ->where('status', 1)
+                        ->whereDate('start_date', '<=', $today)
+                        ->whereDate('end_date', '>=', $today);
+                })
+                ->orderBy('id', 'desc')
+                ->get();
+                // dd($absentStaff);
+
         $clients = Client::orderBy('id', 'DESC')->get();
         $staffs = User::whereIn('type', ['3', '2'])->orderBy('id', 'DESC')->get();
         $managers = User::whereIn('type', ['3', '2'])->orderBy('id', 'DESC')->get();
         $services = Service::orderBy('id', 'DESC')->get();
 
-        return view('admin.dashboard', compact('clients', 'staffs', 'loggedStaff', 'managers', 'services', 'lateStaff'));
+        return view('admin.dashboard', compact('clients', 'staffs', 'loggedStaff', 'managers', 'services', 'lateStaff', 'absentStaff'));
     }
 
   

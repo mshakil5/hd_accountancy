@@ -387,7 +387,35 @@
             </div>
         </div>
         <!-- Todays's Late Staffs End -->
-        
+
+        <!-- Todays's Absent Staffs Start -->
+      <div class="col-lg-12">
+          <div class="col-lg-12 px-0 border shadow-sm mb-3">
+              <p class="p-2 bg-theme-light txt-theme px-3 mb-0 text-capitalize d-flex align-items-center">
+                  <i class="bx bxs-user-plus fs-4 me-2"></i>Absent Staffs
+              </p>
+              <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
+                  <table class="table cell-border table-striped" id="absent-staff">
+                      <thead>
+                          <tr>
+                              <th scope="col">Sl</th>
+                              <th scope="col">Name</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          @foreach ($absentStaff as $index => $staff)
+                          <tr>
+                              <td>{{ $index + 1 }}</td>
+                              <td>{{ $staff->first_name }} {{ $staff->last_name }}</td>
+                          </tr>
+                          @endforeach
+                      </tbody>
+                  </table>
+              </div>
+          </div>
+      </div>
+      <!-- Todays's Absent Staffs End -->
+
         <!-- Assigned Work List -->
         <div class="col-lg-12">
           <div class="col-lg-12 px-0 border shadow-sm mb-3">
@@ -887,13 +915,8 @@
 
 <!-- Data table initialize -->
 <script>
-    $(function () {
-      $("#active-staff").DataTable();
-    });
-</script>
-<script>
-    $(function () {
-      $("#late-staff-prorota").DataTable();
+    $(document).ready(function () {
+        $("#active-staff, #late-staff-prorota, #absent-staff").DataTable();
     });
 </script>
 <!-- Data table initialize -->
