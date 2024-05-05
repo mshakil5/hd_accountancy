@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('start_date')->nullable();
             $table->string('end_date')->nullable();
             $table->longText('comment')->nullable();
+            $table->longText('admin_note')->nullable();
             $table->integer('total_day')->nullable();
             $table->boolean('status')->default(0); // 0 = Processing, 1 = Approved, 2 = Decline
             $table->boolean('staff_notification')->default(0); // 0 = note get, 1 = get

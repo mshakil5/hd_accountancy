@@ -12,15 +12,18 @@
                     <div class="modal-content">
                         <div class="modal-body">
                             <div class="row">
-                                <!-- New Comment Section -->
                                 <div class="col-md-12">
                                     <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
                                         <div class="card-body px-0">
                                             <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
                                                Note
                                             </div>
+                                             <div class="form-group mt-4">
+                                                <label for="holidayType" class="txt-theme fw-bold">Holiday Type</label>
+                                                <input type="text" class="form-control mt-2" id="holidayType" name="holidayType" placeholder="Enter holiday type">
+                                            </div>
                                             <div class="form-group mt-4">
-                                                <textarea class="form-control" id="note" rows="7" name="" placeholder="Your comment..."></textarea>
+                                                <textarea class="form-control" id="note" rows="7" name="" placeholder="Note..."></textarea>
                                             </div>
                                             <div class="text-center">
                                                 <button type="button" class="mt-3 btn btn-primary bg-theme-light fs-4 border-theme border-2 fw-bold txt-theme" id="saveNote">Send</button>
@@ -76,51 +79,91 @@
 @section('script')
 
 <script>
-  $(document).ready(function() {
-    var table = $('#thisTable').DataTable({
-        serverSide: true,
-        ajax: "{{ route('get.holiday') }}",
-        columns: [
-            {data: 'DT_RowIndex', name: 'DT_RowIndex'},
-            {data: 'staff_name', name: 'staff_name' },
-            {
-                data: 'start_date',
-                name: 'start_date',
-                render: function(data, type, row) {
-                      return moment(data).format('DD.MM.YY');
-                  }
-            },
-            {
-                data: 'end_date',
-                name: 'end_date',
-                render: function(data, type, row) {
-                      return moment(data).format('DD.MM.YY');
-                  }
-            },
-            {data: 'comment', name: 'comment'},
-            {data: 'total_day', name: 'total_day'},
-            {
-                data: 'status', 
-                name: 'status',
-                render: function(data, type, row) {
-                    var dropdown = `
-                        <select class="form-select change-status" data-status-id="${data}">
-                            <option value="0">Processing</option>
-                            <option value="1">Approved</option>
-                            <option value="2">Declined</option>
-                        </select>`;
-                    return dropdown;
+    $(document).ready(function() {
+        var table = $('#thisTable').DataTable({
+            serverSide: true,
+            ajax: "{{ route('get.holiday') }}",
+            columns: [
+                {data: 'DT_RowIndex', name: 'DT_RowIndex'},
+                {data: 'staff_name', name: 'staff_name' },
+                {
+                    data: 'start_date',
+                    name: 'start_date',
+                    render: function(data, type, row) {
+                        return moment(data).format('DD.MM.YY');
+                    }
+                },
+                {
+                    data: 'end_date',
+                    name: 'end_date',
+                    render: function(data, type, row) {
+                        return moment(data).format('DD.MM.YY');
+                    }
+                },
+                {data: 'comment', name: 'comment'},
+                {data: 'total_day', name: 'total_day'},
+                {
+                    data: 'status', 
+                    name: 'status',
+                    render: function(data, type, row) {
+                        var dropdown = `
+                            <select class="form-select change-status" data-status-id="${row.DT_RowId}">
+                                <option value="0" ${data === 0 ? 'selected' : ''}>Processing</option>
+                                <option value="1" ${data === 1 ? 'selected' : ''}>Approved</option>
+                                <option value="2" ${data === 2 ? 'selected' : ''}>Declined</option>
+                            </select>`;
+                        return dropdown;
+                    }
+                },
+            ]
+        });
+
+        $(document).on('click', '#saveNote', function() {
+            var holidayType = $('#holidayType').val();
+            var note = $('#note').val();
+            var holidayId = window.selectedHolidayId;
+            var status = window.selectedStatus;
+
+            var data = {
+                holiday_type: holidayType,
+                admin_note: note,
+                status: status,
+                holiday_id: holidayId,
+                _token: '{{ csrf_token() }}'
+            };
+
+            console.log(data);
+            $.ajax({
+                url: "{{ route('store.holiday') }}",
+                type: "POST",
+                data: data,
+                success: function(response) {
+                    swal({
+                        title: "Success!",
+                        text: "Status chnaged successfully",
+                        icon: "success",
+                        button: "OK",
+                    });
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                    $('#myModal').modal('hide');
+                },
+                error: function(xhr, status, error) {
+                     console.error(xhr.responseText);
                 }
-            },
-        ]
-    });
+            });
+        });
 
-    $(document).on('change', '.change-status', function() {
-        var modal = $('#myModal');
-        modal.modal('show');
+        $(document).on('change', '.change-status', function() {
+            var modal = $('#myModal');
+            modal.modal('show');
+            var selectedStatus = $(this).val();
+            window.selectedStatus = selectedStatus;
+            var selectedHolidayId = $(this).data('status-id');
+            window.selectedHolidayId = selectedHolidayId;
+        });
     });
-
-  });
 </script>
 
 

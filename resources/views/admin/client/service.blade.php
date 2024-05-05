@@ -32,7 +32,6 @@
                                         <h5 class="mb-3">Service Name</h5>
                                         <p><b>{{ isset($clientService->service->name) ? $clientService->service->name : '' }}</b></p>
                                         <input type="hidden" name="service_id" value="{{ optional($clientService->service)->id }}">
-
                                         <input type="hidden" name="client_service_id[]" value="{{ optional($clientService)->id }}">
                                         
                                     </div>
@@ -120,9 +119,15 @@
 </form>
 
 <div class="row mt-3">
-    <div class="col-lg-4 mx-auto text-center">
-
-        <button id="service-saveButton" class="btn btn-sm bg-theme text-light btn-outline-dark">Save</button>
-
-    </div>
+    @if(isset($client->clientServices) && count($client->clientServices) > 0)
+        @foreach($client->clientServices as $clientService)
+            <div class="col-lg-4 mx-auto text-center">
+                <button id="service-updateButton" class="btn btn-sm bg-theme text-light btn-outline-dark">Update</button>
+            </div>
+        @endforeach
+    @else
+        <div class="col-lg-4 mx-auto text-center">
+            <button id="service-saveButton" class="btn btn-sm bg-theme text-light btn-outline-dark">Save</button>
+        </div>
+    @endif
 </div>

@@ -247,6 +247,7 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/holiday/details/{id}', [HolidayController::class,'showDetails'])->name('holiday.details');
     Route::delete('/delete-holiday/{id}', [HolidayController::class, 'deleteData'])->name('delete.staff');
     Route::get('/holiday/edit/{id}', [HolidayController::class,'edit'])->name('holiday.edit');
+    Route::post('/store-holiday', [HolidayController::class, 'storeHoliday'])->name('store.holiday');
 
 
 });

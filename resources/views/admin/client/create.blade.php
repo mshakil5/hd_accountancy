@@ -867,7 +867,7 @@
                 services: services
             };
 
-            console.log(data);
+            // console.log(data);
 
             $.ajax({
                 url: '/admin/store-service',
@@ -907,9 +907,10 @@
 </script>
 <!-- Storing services and sub services end -->
 
+<!-- Updating services and sub services start -->
 <script>
     $(document).ready(function() {
-        $('#service-updateButton').click(function(e) {
+        $(document).on('click', '#service-updateButton', function(e) { 
             e.preventDefault();
 
             var clientId = "{{ $id }}";
@@ -956,292 +957,23 @@
 
             console.log(data);
 
-            $.ajax({
-                url: '/admin/update-service',
-                type: 'POST',
-                data: JSON.stringify(data),
-                contentType: 'application/json',
-                success: function(response) {
-                    console.log(response);
-                },
-                error: function(xhr, status, error) {
-                    console.error(xhr.responseText);
-                }
-            });
+            // $.ajax({
+            //     url: '/admin/update-service',
+            //     type: 'POST',
+            //     data: JSON.stringify(data),
+            //     contentType: 'application/json',
+            //     success: function(response) {
+            //         console.log(response);
+            //     },
+            //     error: function(xhr, status, error) {
+            //         console.error(xhr.responseText);
+            //     }
+            // });
         });
     });
+
 </script>
-
-<!-- Updating services and sub services start -->
-<!-- <script>
-    $(document).ready(function() {
-        $('#service-updateButton').click(function(e) {
-            e.preventDefault(); 
-
-            var clientId = "{{ $id }}"; 
-            var serviceId = $('#serviceDropdown').val();
-            var managerId = $('#managerDropdown').val(); 
-            var service_frequency = $('#service_frequency').val(); 
-            var service_deadline = $('#service_deadline').val(); 
-            var subServices = [];
-
-            $('#serviceDetailsTable tr').each(function() {
-                var subServiceId = $(this).find('input[name="sub_service_id[]"]').val();
-                var deadline = $(this).find('input[type="date"]').val();
-                var note = $(this).find('textarea').val();
-                var staffId = $(this).find('select[name="staff_id"]').val();
-                
-                subServices.push({
-                    subServiceId: subServiceId,
-                    deadline: deadline,
-                    note: note,
-                    staffId: staffId
-                });
-            });
-
-            var data = {
-                clientId: clientId,
-                serviceId: serviceId,
-                managerId: managerId,
-                service_frequency: service_frequency,
-                service_deadline: service_deadline,
-                subServices: subServices
-            };
-
-            // console.log(data);
-
-            $.ajax({
-                url: '/admin/update-service',
-                type: 'POST',
-                data: data,
-                success: function(response) {
-                    swal({
-                        title: "Success!",
-                        text: "Task updated successfully",
-                        icon: "success",
-                        button: "OK",
-                    });
-                    setTimeout(function() {
-                        location.reload();
-                    }, 2000);
-                },
-                error: function(xhr, status, error) {
-                    var errorMessage = "";
-                    if (xhr.responseJSON && xhr.responseJSON.errors){
-                        $.each(xhr.responseJSON.errors, function (key, value) {
-                            errorMessage += key + ": " + value.join(", ") + "<br>";
-                        });
-                    } else {
-                        errorMessage = "An error occurred. Please try again later.";
-                    }
-                    $('#errorMessage').html(errorMessage);
-                    $('#errorMessage').show();
-                    $('#successMessage').hide();
-                    console.error("Error occurred: " + error);
-                    console.error(xhr.responseText);
-                }
-            });
-        });
-    });
-</script> -->
 <!-- Updating services and sub services end -->
-
-<!-- Deleting sub services start -->
-<!-- <script>
-    $('.delete-sub-service').click(function(e) {
-        e.preventDefault();
-        var subServiceId = $(this).data('sub-service-id');
-        var confirmDelete = confirm("Are you sure you want to delete this sub-service?");
-        
-        if (confirmDelete) {
-            $.ajax({
-                url: '/admin/delete-sub-service/' + subServiceId,
-                type: 'DELETE',
-                success: function(response) {
-                    swal({
-                        title: "Success!",
-                        text: "Deleted successfully",
-                        icon: "success",
-                        button: "OK",
-                    });
-                    setTimeout(function() {
-                        location.reload();
-                    }, 2000);
-                },
-                error: function(xhr, status, error) {
-                    var errorMessage = "";
-                    if (xhr.responseJSON && xhr.responseJSON.errors){
-                        $.each(xhr.responseJSON.errors, function (key, value) {
-                            errorMessage += key + ": " + value.join(", ") + "<br>";
-                        });
-                    } else {
-                        errorMessage = "An error occurred. Please try again later.";
-                    }
-                    $('#errorMessage').html(errorMessage);
-                    $('#errorMessage').show();
-                    $('#successMessage').hide();
-                    console.error("Error occurred: " + error);
-                    console.error(xhr.responseText);
-                }
-            });
-        }
-    });
-</script> -->
-<!-- Deleting sub services end -->
-
-<!-- Service assign Start -->
-<!-- <script>
-    $(document).ready(function () {
-        $('#service-saveButton').click(function (event) {
-            event.preventDefault();
-            var clientId = "{{ $id }}";
-
-            var formData = new FormData($('#serviceForm')[0]);
-            formData.append('client_id', clientId);
-
-            $.ajax({
-                url: "{{URL::to('/admin/service-assign')}}",
-                type: 'POST',
-                data: formData,
-                async: false,
-                success: function (response) {
-                    if (response.status === 200) {
-                        $('#successMessage b').text(response.message);
-                        $('#successMessage').show();
-                        $('#errorMessage').hide();
-                    } else {
-                        $('#errorMessage b').text(response.message);
-                        $('#errorMessage').show();
-                        $('#successMessage').hide();
-                    }
-                },
-                error: function (xhr, status, error) {
-                    var errorMessage = "";
-                        if (xhr.responseJSON && xhr.responseJSON.errors) {
-                            $.each(xhr.responseJSON.errors, function (key, value) {
-                                errorMessage += key + ": " + value.join(", ") + "<br>";
-                            });
-                        } else {
-                            errorMessage = "An error occurred. Please try again later.";
-                        }
-                        $('#errorMessage').html(errorMessage);
-                        $('#errorMessage').show();
-                        $('#successMessage').hide();
-                },
-                cache: false,
-                contentType: false,
-                processData: false
-            });
-            return false;
-        });
-
-        $('#service-clearButton').click(function () {
-            event.preventDefault();
-            $('#serviceForm')[0].reset();
-        });
-    });
-</script> -->
-<!-- Service assign End -->
-
-<!-- Add New Service and Fetch All Updated and assigned Services  -->
-<!-- <script>
-    $(document).ready(function () {
-        var clientId = "{{ $client->id ?? '' }}";
-
-        function fetchAndRenderAllServices(clientId) {
-            $.ajax({
-                url: "/admin/client-services/" + clientId,
-                type: 'GET',
-                success: function (response) {
-                    if (response.status === 200) {
-                        var allServices = response.all_services;
-                        var assignedServices = response.assigned_services;
-                        var deadline = response.deadline;
-
-                        $('#deadline').val(deadline);
-                        $('.services-container').empty();
-                        allServices.forEach(function (service) {
-                            var isAssigned = assignedServices.some(function(assignedService) {
-                                return assignedService.id === service.id;
-                            });
-                            var checked = isAssigned ? 'checked' : '';
-
-                            var serviceHtml = `
-                                <div class="form-check form-check-inline" style="font-size: 1.2em;">
-                                    <input class="form-check-input" type="checkbox" id="service_${service.id}" name="services[]" value="${service.id}" ${checked}>
-                                    <label class="form-check-label ml-2" for="service_${service.id}">${service.name}</label>
-                                </div>
-                            `;
-                            $('.services-container').append(serviceHtml);
-                        });
-                    } else {
-                        $('#successMessage').hide();
-                    }
-                },
-                error: function (xhr, status, error) {
-                    // var errorMessage = "An error occurred. Please try again later.";
-                    // if (xhr.responseJSON && xhr.responseJSON.errors) {
-                    //     errorMessage = "";
-                    //     $.each(xhr.responseJSON.errors, function (key, value) {
-                    //         errorMessage += key + ": " + value.join(", ") + "<br>";
-                    //     });
-                    // }
-                    // $('#errorMessage').html(errorMessage);
-                    // $('#errorMessage').show();
-                    // $('#successMessage').hide();
-                }
-            });
-        }
-
-        fetchAndRenderAllServices(clientId);
-
-        $('#addServiceButton').click(function (event) {
-            event.preventDefault();
-
-            var newServiceName = $('#new_service_name').val();
-
-            if (newServiceName.trim() !== '') {
-                $.ajax({
-                    url: "/admin/create-specific-service",
-                    type: 'POST',
-                    data: {
-                        name: newServiceName
-                    },
-                    success: function (response) {
-                        if (response.status === 200) {
-                            $('#new_service_name').val('');
-                            $('#successMessage b').text('Service added successfully!');
-                            $('#successMessage').show();
-                            $('#errorMessage').hide();
-                            fetchAndRenderAllServices(clientId);
-                        } else {
-                            $('#errorMessage b').text('Failed to add service. Please try again.');
-                            $('#errorMessage').show();
-                            $('#successMessage').hide();
-                        }
-                    },
-                    error: function (xhr, status, error) {
-                        var errorMessage = "An error occurred. Please try again later.";
-                        if (xhr.responseJSON && xhr.responseJSON.errors) {
-                            errorMessage = "";
-                            $.each(xhr.responseJSON.errors, function (key, value) {
-                                errorMessage += key + ": " + value.join(", ") + "<br>";
-                            });
-                        }
-                        $('#errorMessage').html(errorMessage);
-                        $('#errorMessage').show();
-                        $('#successMessage').hide();
-                    }
-                });
-            } else {
-                $('#errorMessage b').text('Please enter a valid service name.');
-                $('#errorMessage').show();
-                $('#successMessage').hide();
-            }
-        });
-    });
-</script> -->
-<!-- Add New Service and Fetch All Updated and assigned Services End -->
 
 <!-- Contact Info create Start -->
 <script>

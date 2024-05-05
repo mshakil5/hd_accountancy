@@ -24,7 +24,7 @@ class HolidayController extends Controller
         return view('admin.holiday.create', compact('staffs'));
     }
 
-     public function getholiday(Request $request)
+    public function getholiday(Request $request)
     {
         if ($request->ajax()) {
             $data = HolidayRequest::orderBy('id', 'DESC')->get();
@@ -33,8 +33,39 @@ class HolidayController extends Controller
                 ->addColumn('staff_name', function($row) {
                     return $row->staff ? $row->staff->first_name : '';
                 })
+                ->addColumn('DT_RowId', function($row) {
+                    return $row->id;
+                })
                 ->make(true);
         }
     }
+
+    public function storeHoliday(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'holiday_id' => 'required',
+            'holiday_id' => 'required',
+            'admin_note' => 'required',
+            'status' => 'required',  
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $holiday = HolidayRequest::find($request->holiday_id);
+
+        if ($holiday) {
+            $holiday->update([
+                'holiday_type' => $request->holiday_type,
+                'admin_note' => $request->admin_note,
+                'status' => $request->status,
+            ]);
+            return response()->json(['success' => true]);
+        } else {
+            return response()->json(['error' => 'Holiday not found'], 404);
+        }
+    }
+
     
 }
