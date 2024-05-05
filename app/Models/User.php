@@ -75,6 +75,11 @@ class User extends Authenticatable
         return $this->hasMany(Client::class, 'manager_id');
     }
 
+    public function logComments()
+    {
+        return $this->hasMany(LogComment::class);
+    }
+
     protected function type(): Attribute
     {
         return new Attribute(

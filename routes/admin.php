@@ -3,10 +3,13 @@
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\Admin\LogController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Admin\ClientController;
+use App\Http\Controllers\Admin\HolidayController;
 use App\Http\Controllers\Admin\ManagerController;
+use App\Http\Controllers\Admin\ProrotaController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\ClientTypeController;
 use App\Http\Controllers\Admin\DepartmentController;
@@ -17,8 +20,6 @@ use App\Http\Controllers\Admin\BusinessInfoController;
 use App\Http\Controllers\Admin\DirectorInfoController;
 use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\WeWorkWithImageController;
-use App\Http\Controllers\Admin\ProrotaController;
-use App\Http\Controllers\Admin\HolidayController;
 
 //Fallback route
 Route::fallback(function () {
@@ -248,6 +249,9 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::delete('/delete-holiday/{id}', [HolidayController::class, 'deleteData'])->name('delete.staff');
     Route::get('/holiday/edit/{id}', [HolidayController::class,'edit'])->name('holiday.edit');
     Route::post('/store-holiday', [HolidayController::class, 'storeHoliday'])->name('store.holiday');
+
+    // User absent log
+    Route::post('/add-comment', [LogController::class, 'addComment'])->name('add.comment');
 
 
 });

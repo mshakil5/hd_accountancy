@@ -389,32 +389,46 @@
         <!-- Todays's Late Staffs End -->
 
         <!-- Todays's Absent Staffs Start -->
-      <div class="col-lg-12">
-          <div class="col-lg-12 px-0 border shadow-sm mb-3">
-              <p class="p-2 bg-theme-light txt-theme px-3 mb-0 text-capitalize d-flex align-items-center">
-                  <i class="bx bxs-user-plus fs-4 me-2"></i>Absent Staffs
-              </p>
-              <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                  <table class="table cell-border table-striped" id="absent-staff">
-                      <thead>
-                          <tr>
-                              <th scope="col">Sl</th>
-                              <th scope="col">Name</th>
-                          </tr>
-                      </thead>
-                      <tbody>
-                          @foreach ($absentStaff as $index => $staff)
-                          <tr>
-                              <td>{{ $index + 1 }}</td>
-                              <td>{{ $staff->first_name }} {{ $staff->last_name }}</td>
-                          </tr>
-                          @endforeach
-                      </tbody>
-                  </table>
-              </div>
-          </div>
-      </div>
-      <!-- Todays's Absent Staffs End -->
+        <div class="col-lg-12">
+            <div class="col-lg-12 px-0 border shadow-sm mb-3">
+                <p class="p-2 bg-theme-light txt-theme px-3 mb-0 text-capitalize d-flex align-items-center">
+                    <i class="bx bxs-user-plus fs-4 me-2"></i>Today's Absent Staffs
+                </p>
+                <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
+                    <table class="table cell-border table-striped" id="absent-staff">
+                        <thead>
+                            <tr>
+                                <th scope="col">Sl</th>
+                                <th scope="col">Name</th>
+                                <th scope="col">Comment</th>
+                                <th scope="col">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($absentStaff as $index => $staff)
+                            <tr>
+                                <td>{{ $index + 1 }}</td>
+                                <td>{{ $staff->first_name }} {{ $staff->last_name }}</td>
+                                <td>
+                                    @if ($staff->logComments->isNotEmpty())
+                                        <textarea class="form-control comment-textarea" rows="1" readonly>{{ $staff->logComments->last()->comment }}</textarea>
+                                    @else
+                                        <textarea class="form-control comment-textarea" rows="1"></textarea>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if ($staff->logComments->isEmpty())
+                                        <button class="btn btn-secondary submit-comment" data-staff-id="{{ $staff->id }}">Submit</button>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!-- Todays's Absent Staffs End -->
 
         <!-- Assigned Work List -->
         <div class="col-lg-12">
@@ -913,6 +927,41 @@
 </script>
 <!-- Fetching sub services and putting on table end -->
 
+<!-- Comment On absent staffs start -->
+<script>
+    $(document).ready(function() {
+        $('.submit-comment').click(function() {
+            var staffId = $(this).data('staff-id');
+            var comment = $(this).closest('tr').find('.comment-textarea').val();
+            
+            $.ajax({
+                type: 'POST',
+                url: '{{ route("add.comment") }}',
+                data: {
+                    user_id: staffId,
+                    comment: comment,
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    swal({
+                        title: "Success!",
+                        text: "Note sent successfully",
+                        icon: "success",
+                        button: "OK",
+                    });
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                },
+                error: function(xhr, status, error) {
+                    console.error(xhr.responseText);
+                }
+            });
+        });
+    });
+</script>
+<!-- Comment On absent staffs start -->
+
 <!-- Data table initialize -->
 <script>
     $(document).ready(function () {
@@ -920,52 +969,6 @@
     });
 </script>
 <!-- Data table initialize -->
-
-<!-- <script>
-
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.logout-btn').forEach(function(button) {
-        button.addEventListener('click', function(event) {
-            event.preventDefault();
-            var staffId = this.getAttribute('data-staff-id');
-            console.log(staffId);
-
-            if (!confirm('Are you sure you want to logout this staff member?')) {
-                return;
-            }
-
-            var url = '{{ route('customLogoutByAdmin', ['userId' => ':staffId']) }}';
-            url = url.replace(':staffId', staffId);
-
-            $.ajax({
-                url: url,
-                type: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                success: function(data) {
-                    if (data.success) {
-                        alert('Staff member has been logged out successfully.');
-                    } else {
-                        alert('Failed to logout staff member. Please try again.');
-                    }
-                },
-                error: function(xhr, status, error) {
-                    try {
-                        var errorMessage = JSON.parse(xhr.responseText).message;
-                        alert('An error occurred: ' + errorMessage);
-                    } catch (e) {
-                        console.error('Error:', error);
-                        alert('An error occurred. Please try again.');
-                    }
-                }
-            });
-        });
-    });
-});
-
-</script> -->
-
 
 
 @endsection

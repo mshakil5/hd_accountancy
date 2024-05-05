@@ -119,6 +119,7 @@ class HomeController extends Controller
                         ->whereDate('start_date', '<=', $today)
                         ->whereDate('end_date', '>=', $today);
                 })
+                ->with('logComments')
                 ->orderBy('id', 'desc')
                 ->get();
                 // dd($absentStaff);
