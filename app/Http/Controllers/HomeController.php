@@ -8,6 +8,7 @@ use App\Models\Client;
 use App\Models\Service;
 use Illuminate\View\View;
 use Illuminate\Http\Request;
+use App\Models\ProrotaDetail;
 use Illuminate\Support\Carbon;
 use App\Models\UserAttendanceLog;
 use Illuminate\Support\Facades\Auth;
@@ -59,20 +60,56 @@ class HomeController extends Controller
             ->where('status', 0)
             ->orderBy('id', 'desc')
             ->get()
+            ->map(function ($log) {
+                $startTime = Carbon::parse($log->start_time);
+                $endTime = $log->end_time? Carbon::parse($log->end_time) : Carbon::now();
+                $duration = $endTime->diff($startTime)->format('%H:%I:%S');
+                $log->duration = $duration;
+
+                $currentDayOfWeek = Carbon::now()->format('l');
+                $prorotaDetail = ProrotaDetail::where('staff_id', $log->user_id)
+                    ->where('day', $currentDayOfWeek)
+                    ->first();
+
+                if ($prorotaDetail) {
+                    $log->is_late = $startTime->format('H:i:s') > $prorotaDetail->start_time;
+                } else {
+                    $log->is_late = false;
+                    $log->prorotaNotFound = true;
+                }
+
+                return $log;
+            })
+            ->values(); 
+
+           $lateStaff = UserAttendanceLog::with('user')
+            ->orderBy('id', 'desc')
+            ->get()
             ->groupBy('user_id')
             ->map(function ($logs) {
                 $log = $logs->first();
-                $duration = Carbon::now()->diff($log->start_time);
-                $log->duration = $duration->format('%H:%I:%S');
-                return $log;
-            })
-            ->values();
+                $startTime = Carbon::parse($log->start_time);
+                $currentDayOfWeek = Carbon::now()->format('l');
+                $prorotaDetail = ProrotaDetail::where('staff_id', $log->user_id)
+                    ->where('day', $currentDayOfWeek)
+                    ->first();
 
-        $clients = Client::orderby('id','DESC')->get();
-        $staffs = User::whereIn('type', ['3','2'])->orderby('id','DESC')->get();
-        $managers = User::whereIn('type', ['3','2'])->orderby('id','DESC')->get();
-        $services = Service::orderby('id','DESC')->get();
-        return view('admin.dashboard',compact('clients','staffs','loggedStaff','managers','services'));
+                if ($prorotaDetail) {
+                    $log->isLate = $startTime->gt(Carbon::parse($prorotaDetail->start_time));
+                } else {
+                    $log->isLate = true;
+                }
+
+                return $log;
+            });
+
+
+        $clients = Client::orderBy('id', 'DESC')->get();
+        $staffs = User::whereIn('type', ['3', '2'])->orderBy('id', 'DESC')->get();
+        $managers = User::whereIn('type', ['3', '2'])->orderBy('id', 'DESC')->get();
+        $services = Service::orderBy('id', 'DESC')->get();
+
+        return view('admin.dashboard', compact('clients', 'staffs', 'loggedStaff', 'managers', 'services', 'lateStaff'));
     }
 
   

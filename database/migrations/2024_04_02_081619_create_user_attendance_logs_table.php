@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('end_time')->nullable();
             $table->text('note')->nullable();
             $table->boolean('status')->default(1);
+            $table->boolean('is_late')->default(0); // Default 0 == Not late , 1 == late
             $table->string('created_by')->nullable();
             $table->string('updated_by')->nullable();
             $table->timestamps();

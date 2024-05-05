@@ -45,7 +45,7 @@ class ProrotaController extends Controller
 
         $validator = Validator::make($request->all(), [
             'staff_id' => 'required|max:255',
-            'schedule_type' => 'required|string|max:255',
+            'schedule_type' => 'string|max:255',
             'start_time.*' => ['required_with:end_time.*'],
             'end_time.*' => ['required_with:start_time.*'],
         ],[
@@ -116,7 +116,7 @@ class ProrotaController extends Controller
 
         $validator = Validator::make($request->all(), [
             'staff_id' => 'required|max:255',
-            'schedule_type' => 'required|string|max:255',
+            // 'schedule_type' => '|string|max:255',
             'start_time.*' => ['required_with:end_time.*'],
             'end_time.*' => ['required_with:start_time.*'],
             'day.*' => ['distinct'],

@@ -40,9 +40,9 @@
                                                 <h4>Employee Name: {{$data->staff->first_name}} {{$data->staff->last_name}}</h4>
                                             </div>
                                             
-                                            <div class="col-lg-4">
+                                            {{-- <div class="col-lg-4">
                                                 <h4>Schedule type:  {{$data->schedule_type}}</h4>
-                                            </div>
+                                            </div> --}}
 
 
                                             {{-- <div class="col-lg-4">

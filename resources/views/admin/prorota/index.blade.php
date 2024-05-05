@@ -26,7 +26,7 @@
                         <tr>
                             <th scope="col">Sl</th>
                             <th scope="col">Staff Name</th>
-                            <th scope="col">Schedule Type</th>
+                            <!-- <th scope="col">Schedule Type</th> -->
                             <th scope="col">Schedule</th>
                             <th scope="col">Action</th> 
                         </tr>
@@ -51,7 +51,7 @@
         columns: [
             {data: 'DT_RowIndex', name: 'DT_RowIndex'},
             {data: 'staff_name', name: 'staff_name' },
-            {data: 'schedule_type', name: 'schedule_type'},
+            // {data: 'schedule_type', name: 'schedule_type'},
             {
                 data: 'id',
                 name: 'details',

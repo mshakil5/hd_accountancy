@@ -301,7 +301,7 @@
 
           </div>
         </div>
-
+        <!-- Currently Active Staffs Start-->
         <div class="col-lg-12">
           <div class="col-lg-12 px-0 border shadow-sm mb-3">
 
@@ -316,34 +316,77 @@
                       <th scope="col">Sl</th>
                       <th scope="col">Name</th>
                       <th scope="col">Login Time</th>
+                      <th scope="col">Attendence Status</th>
                       <th scope="col">Duration</th>
                       <th scope="col">Note</th>
                        <th scope="col">Action</th>
                   </tr>
               </thead>
               <tbody>
-                  @foreach ($loggedStaff as $staff)
-                      <tr>
-                          <td>{{ $loop->iteration }}</td>
-                          <td>{{ $staff->user->first_name }} {{ $staff->user->last_name }}</td>
-                          <td>{{ \Carbon\Carbon::parse($staff->start_time)->format('H:i . d/m/Y') }}</td>
-                          <td>
-                              <div id="duration_{{ $staff->id }}">{{ $staff->duration }}</div>
-                          </td>
-                          <td>
-                              <textarea rows="2" name="note" placeholder="Add a note here..." style="border-radius: 5px;"></textarea>
-                          </td>
-                          <td>
-                              <button class="btn btn-danger btn-sm logout-btn" data-staff-id="{{ $staff->id }}">Logout</button>
-                          </td>
-                      </tr>
-                  @endforeach
+              @foreach ($loggedStaff as $staff)
+                  <tr>
+                      <td>{{ $loop->iteration }}</td>
+                      <td>{{ $staff->user->first_name }} {{ $staff->user->last_name }}</td>
+                      <td>{{ \Carbon\Carbon::parse($staff->start_time)->format('H:i. d/m/Y') }}</td>
+                      <td>
+                          @if ($staff->prorotaNotFound)
+                              Prorota not found
+                          @else
+                              @if ($staff->is_late)
+                                  Late
+                              @else
+                                  In Time
+                              @endif
+                          @endif
+                      </td>
+                      <td>
+                          <div id="duration_{{ $staff->id }}">{{ $staff->duration }}</div>
+                      </td>
+                      <td>
+                          <textarea rows="2" name="note" placeholder="Add a note here..." style="border-radius: 5px;"></textarea>
+                      </td>
+                      <td>
+                          <button class="btn btn-danger btn-sm logout-btn" data-staff-id="{{ $staff->id }}">Logout</button>
+                      </td>
+                  </tr>
+              @endforeach
               </tbody>
               </table>
             </div>
 
           </div>
         </div>
+        <!-- Currently Active Staffs End-->
+
+        <!-- Todays's Late Staffs Start -->
+        <div class="col-lg-12">
+            <div class="col-lg-12 px-0 border shadow-sm mb-3">
+                <p class="p-2 bg-theme-light txt-theme px-3 mb-0 text-capitalize d-flex align-items-center">
+                    <i class="bx bxs-user-plus fs-4 me-2"></i>Late Staffs
+                </p>
+                <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
+                    <table class="table cell-border table-striped" id="late-staff-prorota">
+                        <thead>
+                            <tr>
+                                <th scope="col">Sl</th>
+                                <th scope="col">Name</th>
+                                <th scope="col">Login Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($lateStaff as $staff)
+                            <tr>
+                                <td>{{ $loop->iteration }}</td>
+                                <td>{{ $staff->user->first_name }} {{ $staff->user->last_name }}</td>
+                                <td>{{ \Carbon\Carbon::parse($staff->start_time)->format('H:i . d/m/Y') }}</td>
+                            </tr>
+                          @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!-- Todays's Late Staffs End -->
         
         <!-- Assigned Work List -->
         <div class="col-lg-12">
@@ -846,6 +889,11 @@
 <script>
     $(function () {
       $("#active-staff").DataTable();
+    });
+</script>
+<script>
+    $(function () {
+      $("#late-staff-prorota").DataTable();
     });
 </script>
 <!-- Data table initialize -->

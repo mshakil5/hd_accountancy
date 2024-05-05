@@ -18,6 +18,7 @@ class UserAttendanceLog extends Model
         'end_time',
         'note',
         'status',
+        'is_late',
         'created_by',
         'updated_by',
     ];
@@ -26,4 +27,10 @@ class UserAttendanceLog extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function prorotaDetail()
+    {
+        return $this->belongsTo(ProrotaDetail::class);
+    }
+
 }
