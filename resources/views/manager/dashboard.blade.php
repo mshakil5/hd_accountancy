@@ -132,44 +132,6 @@
         </div>
         <!-- Service message modal end -->
 
-        <!-- Timer Modal -->
-        <div class="modal fade" id="timerModal" tabindex="-1" role="dialog" aria-labelledby="timerModalLabel" aria-hidden="true">
-            <div class="modal-dialog mt-2" role="document">
-                <div class="modal-content">
-                    <div class="modal-body">
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
-                                    <div class="card-body px-0">
-                                        <input type="hidden" id="hiddenStaffId" />
-                                        <input type="hidden" id="hiddenClientSubServiceId" />
-                                        <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                                            Timer
-                                        </div>
-                                        <div class="d-flex gap-3 my-5">
-                                            <div class="text-center flex-fill">
-                                                <div class="text-center fs-2 txt-theme fw-bold duration-display">
-                                                    <!-- Duration will be displayed here -->
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="row mt-3 justify-content-center">
-                                            <div class="col-lg-4">
-                                                <a href="#" class="p-2 border-theme text-center fs-6 d-block rounded-3 border-3 txt-theme fw-bold my-1" id="startButton">Start</a>
-                                            </div>
-                                            <div class="col-lg-4" style="display: none;">
-                                                <a href="#" class="p-2 border-theme text-center fs-6 d-block rounded-3 border-3 txt-theme fw-bold my-1" id="stopButton">Stop</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Works assigned to a user and specified staff start-->
         <div class="col-lg-8 mb-3">
             <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
@@ -342,7 +304,6 @@
             subServiceTable.empty();
             var staffs = @json($staffs);
             var authUserId = {{ auth()->user()->id }};
-            var staffs = @json($staffs);
 
             $.each(subServices, function(index, subService) {
                 var statusText = '';
@@ -576,10 +537,9 @@
                     setTimeout(function() {
                         location.reload();
                     }, 2000);
-                    $('#timerModal').modal('hide');
                 },
                 error: function(xhr, status, error) {
-                    console.error(error);
+                    console.error(xhr.responseText);
                 }
             });
         }); 
@@ -603,7 +563,6 @@
                     setTimeout(function() {
                         location.reload();
                     }, 2000);
-                    $('#timerModal').modal('hide'); 
                 },
                 error: function(xhr, status, error) {
                     console.error(xhr.responseText);
@@ -630,10 +589,9 @@
                     setTimeout(function() {
                         location.reload();
                     }, 2000);
-                    $('#timerModal').modal('hide');
                 },
                 error: function(xhr, status, error) {
-                    console.error(error);
+                   console.error(xhr.responseText);
                 }
             });
         });
@@ -659,10 +617,9 @@
                     setTimeout(function() {
                         location.reload();
                     }, 2000);
-                    $('#timerModal').modal('hide');
                 },
                 error: function(xhr, status, error) {
-                    console.error( error);
+                    console.error(xhr.responseText);
                 }
             });
         });
@@ -744,6 +701,8 @@
                 var staffName = staff ? staff.first_name : 'N/A';
                 var duration = '';
                 var firstWorkTime = subService.work_times[0];
+
+                if (subService.sequence_status === 2) {
                     if (firstWorkTime) {
                         var durationInSeconds = firstWorkTime.duration;
                         var hours = Math.floor(durationInSeconds / 3600);
@@ -751,6 +710,7 @@
                         var seconds = durationInSeconds % 60;
                         duration = `<div>${hours}h ${minutes}m ${seconds}s</div>`;
                     }
+                }
 
                 var newRow = `
                     <tr>

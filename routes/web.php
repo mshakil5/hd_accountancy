@@ -64,7 +64,7 @@ Route::middleware(['auth', 'user-access:manager'])->group(function () {
     //Store message to staff
     Route::post('/manager/store-message', [ServiceController::class,'storeMessage']);
 
-    // Start, Stop, Start Break, Stop Break
+    // Start, Stop, Start Break, Stop Break by Manager
     Route::post('/manager/start-work-time', [ServiceController::class,'startWorkTime']);
     Route::post('/manager/stop-work-time', [ServiceController::class,'stopWorkTime']);
     Route::post('/manager/start-break', [ServiceController::class,'startBreak']);
@@ -87,6 +87,9 @@ Route::middleware(['auth', 'user-access:staff'])->group(function () {
     //  Task list
      Route::get('/staff/get-all-services', [StaffServiceController::class, 'getServicesClientStaff']);
 
+     //  completed list
+     Route::get('/staff/get-completed-services', [StaffServiceController::class, 'getCompetedServices']);
+
      // Fetch Sub Services
      Route::get('/staff/getClientSubServices/{clientserviceId}', [StaffServiceController::class, 'getClientSubServices']);
 
@@ -99,9 +102,11 @@ Route::middleware(['auth', 'user-access:staff'])->group(function () {
      // Change Status of sub service
     Route::post('/staff/update-sub-service-status', [StaffServiceController::class,'updateSubServiceStatus']);
 
-    // Start, End work time
+    // Start, Stop, Start Break, Stop Break by Staff
     Route::post('/staff/start-work-time', [StaffServiceController::class,'startWorkTime']);
     Route::post('/staff/stop-work-time', [StaffServiceController::class,'stopWorkTime']);
+    Route::post('/staff/start-break', [StaffServiceController::class,'startBreak']);
+    Route::post('/staff/stop-break', [StaffServiceController::class,'stopBreak']);
 
      //Custom logout
      Route::post('/custom-logout', [HomeController::class, 'sessionClear'])->name('customLogout');

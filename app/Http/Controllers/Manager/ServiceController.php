@@ -190,7 +190,6 @@ class ServiceController extends Controller
                     ->whereBetween('start_time', [$workTime->start_time, $workTime->end_time])
                     ->get();
         $breakDuration = $breaks->sum(function ($break) {
-          
             $break->start_time = Carbon::parse($break->start_time);
             $break->end_time = Carbon::parse($break->end_time);
             return $break->end_time->diffInSeconds($break->start_time);
