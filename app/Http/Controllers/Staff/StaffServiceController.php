@@ -269,4 +269,17 @@ class StaffServiceController extends Controller
         }
         
     }
+
+    public function checkWorkTimeStatus()
+    {
+        $staffId = Auth::id();
+        $ongoingWorkTime = WorkTime::where('staff_id', $staffId)
+            ->whereNull('end_time')
+            ->exists();
+        if ($ongoingWorkTime) {
+            return response()->json(['status' => 'ongoing']);
+        } else {
+            return response()->json(['status' => 'completed']);
+        }
+    }
 }

@@ -115,6 +115,8 @@ Route::middleware(['auth', 'user-access:staff'])->group(function () {
      Route::get('/staff/holiday', [HolidayController::class, 'index'])->name('staff.holiday');
      Route::post('/staff/holiday-request', [HolidayController::class, 'holidayRequest'])->name('staff.holidayRequest');
 
+     Route::get('/staff/check-work-time-status', [StaffServiceController::class,'checkWorkTimeStatus']);
+
      
     
 });

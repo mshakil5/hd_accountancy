@@ -254,7 +254,7 @@ class ClientController extends Controller
 
     public function updateForm($id)
     {
-        $client = Client::with(['clientType', 'manager','businessInfo','directorInfos','clientService','contactInfos'])->find($id);
+        $client = Client::with(['clientType', 'manager','businessInfo','directorInfos','clientServices','contactInfos'])->find($id);
         $clientTypes = ClientType::orderby('id','DESC')->get();
         $managers = User::where('type', '2')->orderby('id','DESC')->get();
         $businessInfo = BusinessInfo::where('client_id', $id)->first();

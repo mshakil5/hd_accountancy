@@ -76,9 +76,9 @@
                             <a href="" class="p-2 border-theme text-center fs-6 d-block rounded-3 border-3 txt-theme fw-bold my-1">Take Break</a>
                         </div>
                     </div>
-                    <div class="row mt-3">
+                   <div class="row mt-3">
                         <div class="col-lg-12">
-                            <a href="#" onclick="event.preventDefault(); $('#noteModal').modal('show');" class="p-2 border-theme bg-theme text-center fs-6 d-block rounded-3 border-3 text-light fw-bold">Clock out</a>
+                            <a href="#" onclick="checkWorkTimeStatus();" class="p-2 border-theme bg-theme text-center fs-6 d-block rounded-3 border-3 text-light fw-bold">Clock out</a>
                             <form id="logout-form" action="{{ route('customLogout') }}" method="POST" class="d-none">
                                 @csrf
                             </form>
@@ -347,10 +347,9 @@
     var authId = @json(auth()->id());
 </script>
 
-
 <!-- Assigned Work List -->
 <script>
-  $(document).ready(function() {
+    $(document).ready(function() {
       $('#serviceStaffTable').DataTable({
           processing: true,
           serverSide: true,
@@ -781,6 +780,33 @@
         }); 
   });
 </script>
+
+<!-- Task Check before loggin out start -->
+<script>
+    function checkWorkTimeStatus() {
+        $.ajax({
+            url: '/staff/check-work-time-status', 
+            type: 'GET',
+            success: function(response) {
+                if (response.status === 'ongoing') {
+                     swal({
+                        title: "Warning!",
+                        text: "Please stop your break or work time before logging out.",
+                        icon: "warning",
+                        button: "OK",
+                    });
+                } else {
+                    $('#noteModal').modal('show');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error(error);
+            }
+        });
+    }
+</script>
+<!-- Task Check before loggin out end -->
+
 <!-- Assigned Work List -->
 
 <!-- Completed Work List -->
@@ -902,7 +928,6 @@
         });
     });
 </script>
-
 <!-- Completed Work List -->
 
 <!-- Note before logout start -->

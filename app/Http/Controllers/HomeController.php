@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use App\Models\ProrotaDetail;
 use Illuminate\Support\Carbon;
 use App\Models\UserAttendanceLog;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
   
 class HomeController extends Controller
@@ -62,7 +63,7 @@ class HomeController extends Controller
             ->get()
             ->map(function ($log) {
                 $startTime = Carbon::parse($log->start_time);
-                $endTime = $log->end_time? Carbon::parse($log->end_time) : Carbon::now();
+                $endTime = $log->end_time ? Carbon::parse($log->end_time) : Carbon::now();
                 $duration = $endTime->diff($startTime)->format('%H:%I:%S');
                 $log->duration = $duration;
 
@@ -82,12 +83,11 @@ class HomeController extends Controller
             })
             ->values(); 
 
-           $lateStaff = UserAttendanceLog::with('user')
+            $today = now()->toDateString();
+            $lateStaff = UserAttendanceLog::with('user')
             ->orderBy('id', 'desc')
             ->get()
-            ->groupBy('user_id')
-            ->map(function ($logs) {
-                $log = $logs->first();
+            ->filter(function ($log) {
                 $startTime = Carbon::parse($log->start_time);
                 $currentDayOfWeek = Carbon::now()->format('l');
                 $prorotaDetail = ProrotaDetail::where('staff_id', $log->user_id)
@@ -95,16 +95,14 @@ class HomeController extends Controller
                     ->first();
 
                 if ($prorotaDetail) {
-                    $log->isLate = $startTime->gt(Carbon::parse($prorotaDetail->start_time));
+                    $log->is_late = $startTime->gt(Carbon::parse($prorotaDetail->start_time));
                 } else {
-                    $log->isLate = true;
+                    $log->is_late = true;
                 }
 
-                return $log;
-            });
-
-
-            $today = now()->toDateString();
+                return $log->is_late;
+            })
+            ->pluck('user');
 
             $absentStaff = User::whereIn('type', [2, 3])
                 ->whereNotIn('id', function ($query) use ($today) {
@@ -118,6 +116,13 @@ class HomeController extends Controller
                         ->where('status', 1)
                         ->whereDate('start_date', '<=', $today)
                         ->whereDate('end_date', '>=', $today);
+                })
+                ->whereNotIn('id', function ($query) use ($today) {
+                    $currentDayOfWeek = Carbon::now()->format('l');
+                    $query->select('staff_id')
+                        ->from('prorota_details')
+                        ->where('day', $currentDayOfWeek)
+                        ->whereTime('start_time', '>', now());
                 })
                 ->with('logComments')
                 ->orderBy('id', 'desc')

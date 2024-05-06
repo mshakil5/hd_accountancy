@@ -136,7 +136,6 @@ class ServiceController extends Controller
         }
     }
 
-
     public function serviceAssign(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -377,55 +376,59 @@ class ServiceController extends Controller
         return response()->json($subServices);
     }
 
-public function saveService(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'clientId' => 'required|integer',
-        'services' => 'required|array',
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json(['status' => 422, 'errors' => $validator->errors()->toArray()], 422);
-    }
-
-    foreach ($request->services as $serviceData) {
-        $validator = Validator::make($serviceData, [
-            'serviceId' => 'required|integer',
-            'managerId' => 'required|integer',
-            'service_frequency' => 'required',
-            'service_deadline' => 'required',
-            'subServices' => 'nullable|array',
+    public function saveService(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'clientId' => 'required|integer',
+            'services' => 'required|array',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['status' => 422, 'errors' => $validator->errors()->toArray()], 422);
         }
 
-        $clientService = new ClientService();
-        $clientService->client_id = $request->clientId;
-        $clientService->service_id = $serviceData['serviceId'];
-        $clientService->manager_id = $serviceData['managerId'];
-        $clientService->service_frequency = $serviceData['service_frequency'];
-        $clientService->service_deadline = $serviceData['service_deadline'];
-        $clientService->save();
+        foreach ($request->services as $serviceData) {
+            $validator = Validator::make($serviceData, [
+                'serviceId' => 'required|integer',
+                'managerId' => 'required|integer',
+                'service_frequency' => 'required',
+                'service_deadline' => 'required',
+                'subServices' => 'nullable|array',
+            ]);
 
-        if (isset($serviceData['subServices'])) {
-            foreach ($serviceData['subServices'] as $key => $subServiceData) {
-                $clientSubService = new ClientSubService();
-                $clientSubService->client_service_id = $clientService->id;
-                $clientSubService->client_id = $request->clientId;
-                $clientSubService->sequence_id = $key + 1;
-                $clientSubService->sub_service_id = $subServiceData['subServiceId'];
-                $clientSubService->deadline = $subServiceData['deadline'];
-                $clientSubService->note = $subServiceData['note'];
-                $clientSubService->staff_id = $subServiceData['staffId'];
-                $clientSubService->save();
+            if ($validator->fails()) {
+                return response()->json(['status' => 422, 'errors' => $validator->errors()->toArray()], 422);
+            }
+
+            $clientService = new ClientService();
+            $clientService->client_id = $request->clientId;
+            $clientService->service_id = $serviceData['serviceId'];
+            $clientService->manager_id = $serviceData['managerId'];
+            $clientService->service_frequency = $serviceData['service_frequency'];
+            $clientService->service_deadline = $serviceData['service_deadline'];
+            $clientService->save();
+
+            if (isset($serviceData['subServices'])) {
+                foreach ($serviceData['subServices'] as $key => $subServiceData) {
+                    $clientSubService = new ClientSubService();
+                    $clientSubService->client_service_id = $clientService->id;
+                    $clientSubService->client_id = $request->clientId;
+                    $clientSubService->sequence_id = $key + 1;
+                    $clientSubService->sub_service_id = $subServiceData['subServiceId'];
+                    $clientSubService->deadline = $subServiceData['deadline'];
+                    $clientSubService->note = $subServiceData['note'];
+                    $clientSubService->staff_id = $subServiceData['staffId'];
+
+                    if ($key === 0) {
+                        $clientSubService->sequence_status = 0;
+                    }
+                    $clientSubService->save();
+                }
             }
         }
-    }
 
-    return response()->json(['status' => 200, 'message' => 'Data saved successfully']);
-}
+        return response()->json(['status' => 200, 'message' => 'Data saved successfully']);
+    }
 
     public function updateService(Request $request)
     {

@@ -377,10 +377,10 @@
                             @foreach ($lateStaff as $staff)
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
-                                <td>{{ $staff->user->first_name }} {{ $staff->user->last_name }}</td>
+                                <td>{{ $staff->first_name }} {{ $staff->last_name }}</td>
                                 <td>{{ \Carbon\Carbon::parse($staff->start_time)->format('H:i . d/m/Y') }}</td>
                             </tr>
-                          @endforeach
+                            @endforeach
                         </tbody>
                     </table>
                 </div>
@@ -851,7 +851,7 @@
         type: 'POST',
         data: data,
         success: function(response) {
-          console.log(response);
+          // console.log(response);
           swal({
               title: "Success!",
               text: "Task updated successfully",
