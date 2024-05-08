@@ -47,4 +47,9 @@ class ClientSubService extends Model
     {
         return $this->hasMany(WorkTime::class);
     }
+
+    public function client()
+    {
+        return $this->belongsTo(Client::class);
+    }
 }

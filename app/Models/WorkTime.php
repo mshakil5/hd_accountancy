@@ -8,4 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class WorkTime extends Model
 {
     use HasFactory;
+    
+    protected $fillable = [
+        'client_sub_service_id',
+    ];
+
 }

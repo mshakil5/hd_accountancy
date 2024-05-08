@@ -336,8 +336,9 @@
                 var startBreakButton = '';
                 var stopBreakButton = '';
                 var duration = '';
-
-                    var firstWorkTime = subService.work_times[0];
+                var firstWorkTime = subService.work_times[0];
+                
+                if (subService.sequence_status === 2) {
                     if (firstWorkTime) {
                         var durationInSeconds = firstWorkTime.duration;
                         var hours = Math.floor(durationInSeconds / 3600);
@@ -345,6 +346,7 @@
                         var seconds = durationInSeconds % 60;
                         duration = `<div>${hours}h ${minutes}m ${seconds}s</div>`;
                     }
+                }
 
                 if (isAuthUserStaff && subService.sequence_status === 0) {
                     if (subService.status === 2) {

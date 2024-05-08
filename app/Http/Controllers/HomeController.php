@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Client;
 use App\Models\Service;
 use Illuminate\View\View;
+use App\Models\SubService;
 use Illuminate\Http\Request;
 use App\Models\ProrotaDetail;
 use Illuminate\Support\Carbon;
@@ -155,15 +156,13 @@ class HomeController extends Controller
      *
      * @return \Illuminate\Contracts\Support\Renderable
      */
-    // public function staffHome(): View
-    // {
-    //     return view('staff.dashboard');
-    // }
 
     public function staffHome(): View
     {
         $staffs = User::whereIn('type', ['3','2'])->orderby('id','DESC')->get();
         $managers = User::whereIn('type', ['3','2'])->orderby('id','DESC')->get();
+        $clients = Client::orderby('id','DESC')->get();
+        $subServices = SubService::orderby('id','DESC')->get();
         $user = Auth::user();
         $attendanceLog = UserAttendanceLog::where('user_id', $user->id)
             ->orderBy('start_time', 'desc')
@@ -177,7 +176,7 @@ class HomeController extends Controller
             $activeTime = $timeDifference->format('%H:%I:%S');
             $breakTime = $activeTime;
         }
-        return view('staff.dashboard', compact('activeTime', 'breakTime','staffs','managers'));
+        return view('staff.dashboard', compact('activeTime', 'breakTime','staffs','managers','clients','subServices'));
     }
     /**
      * Show the application dashboard.

@@ -117,7 +117,16 @@ Route::middleware(['auth', 'user-access:staff'])->group(function () {
 
      Route::get('/staff/check-work-time-status', [StaffServiceController::class,'checkWorkTimeStatus']);
 
-     
+     //  Take Break and Break Out 
+     Route::post('/staff/take-break',  [StaffServiceController::class,'takeBreak']);
+     Route::get('/staff/check-break-status',  [StaffServiceController::class,'checkBreakStatus']);
+     Route::post('/staff/break-out', [StaffServiceController::class,'breakOut']);
+
+     //  Data showing in modal
+     Route::get('/staff/get-completed-services-modal', [StaffServiceController::class, 'getCompetedServicesModal']);
+
+     // Note and additional work
+     Route::post('/staff/save-notes', [StaffServiceController::class, 'saveNotes'])->name('saveNotes');
     
 });
 
