@@ -100,6 +100,13 @@
         </a>
       </li>
 
+      <li class="nav-item {{ request()->routeIs('allHolidayType') ? 'active' : '' }}">
+        <a class="nav-link collapsed" href="{{ route('allHolidayType') }}">
+          <i class="bi bi-list"></i>
+          <span>Holiday Types</span>
+        </a>
+      </li>
+
       <li class="nav-item {{ request()->routeIs('prorota') ? 'active' : '' }}">
         <a class="nav-link collapsed" href="{{ route('prorota') }}">
           <i class="bi bi-box-arrow-in-right"></i>

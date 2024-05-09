@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\DepartmentController;
 use App\Http\Controllers\Admin\SubServiceController;
 use App\Http\Controllers\Admin\WebServiceController;
 use App\Http\Controllers\Admin\ContactInfoController;
+use App\Http\Controllers\Admin\HolidayTypeController;
 use App\Http\Controllers\Admin\BusinessInfoController;
 use App\Http\Controllers\Admin\DirectorInfoController;
 use App\Http\Controllers\Admin\ContactMessageController;
@@ -252,6 +253,13 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
 
     // User absent log
     Route::post('/add-comment', [LogController::class, 'addComment'])->name('add.comment');
+
+    //holiday types
+    Route::get('/holiday-type', [HolidayTypeController::class, 'index'])->name('allHolidayType');
+    Route::post('/holiday-type', [HolidayTypeController::class, 'store']);
+    Route::get('/holiday-type/{id}/edit', [HolidayTypeController::class, 'edit']);
+    Route::post('/holiday-type-update', [HolidayTypeController::class, 'update']);
+    Route::get('/holiday-type/{id}', [HolidayTypeController::class, 'delete']);
 
 
 });
