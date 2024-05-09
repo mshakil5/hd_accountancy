@@ -52,7 +52,7 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     //Staff crud
     Route::get('/staff', [StaffController::class, 'index'])->name('allStaff');
     Route::get('/staff-list', [StaffController::class, 'getStuffs'])->name('get.Stuffs');
-    Route::get('/create-staff', [StaffController::class, 'create'])->name('createStuff');
+    Route::get('/create-staff', [StaffController::class, 'create'])->name('createStaff');
     Route::post('/staff', [StaffController::class, 'store']);
     Route::get('/staff/{id}/edit', [StaffController::class, 'edit']);
     Route::post('/staff-update', [StaffController::class, 'update']);
@@ -69,6 +69,12 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
 
     // Update staff details
     Route::post('/staff/{id}', [StaffController::class,'updateStaff'])->name('staff.update');
+
+    //Get staff details
+    Route::get('/get-staff-details/{id}', [StaffController::class,'getStaffDetails'])->name('get.staff.details');
+
+    // Update staff's personal Information
+    Route::post('/staff-personal-update', [StaffController::class,'updateStaffPersonal'])->name('staff.update.persoanl');
 
     //Department crud
     Route::get('/department', [DepartmentController::class, 'index'])->name('allDepartment');

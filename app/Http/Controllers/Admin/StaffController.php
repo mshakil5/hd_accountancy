@@ -17,7 +17,9 @@ class StaffController extends Controller
 {
     public function index()
     {
-        return view('admin.staff.index');
+        $departments = Department::orderby('id','DESC')->get();
+        $managers = User::where('type', '2')->orderby('id','DESC')->get();
+        return view('admin.staff.index', compact('managers','departments'));
     }
 
     public function getStuffs(Request $request)
@@ -477,6 +479,48 @@ class StaffController extends Controller
             return response()->json(['status' => 200, 'message' => 'Staff updated successfully']);
         } else {
             return response()->json(['status' => 500, 'message' => 'Server Error']);
+        }
+
+    }
+
+    public function getStaffDetails($id)
+    {
+        $staff = User::with('department','reportingUser')->findOrFail($id);
+        return response()->json($staff);
+    }
+
+    public function updateStaffPersonal(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'staff_id' => 'required',
+            'first_name' => 'required|string',
+            'last_name' => 'required|string',
+            'phone' => 'required|numeric|digits:11',
+            'email' => 'required|email|unique:users,email,'. $request->input('staff_id'),
+            'ni_number' => 'required|regex:/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]+$/',
+            'date_of_birth' => 'required',
+            'address_1' => 'required',
+            'address_2' => 'required',
+        ]);
+
+         if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+        $user = User::find($request->staff_id);
+
+        if ($user) {
+            $user->first_name = $request->first_name;
+            $user->last_name = $request->last_name;
+            $user->phone = $request->phone;
+            $user->email = $request->email;
+            $user->ni_number = $request->ni_number;
+            $user->date_of_birth = $request->date_of_birth;
+            $user->address_line1 = $request->address_1;
+            $user->address_line2 = $request->address_2;
+            $user->save();
+
+            return response()->json(['message' => 'User details updated successfully.']);
         }
 
     }

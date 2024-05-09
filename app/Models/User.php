@@ -80,6 +80,11 @@ class User extends Authenticatable
         return $this->hasMany(LogComment::class);
     }
 
+    public function reportingUser()
+    {
+        return $this->belongsTo(User::class, 'reporting_to');
+    }
+
     protected function type(): Attribute
     {
         return new Attribute(

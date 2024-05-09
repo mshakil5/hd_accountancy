@@ -30,7 +30,7 @@
         </a>
     </li>
 
-  <li class="nav-item {{ request()->routeIs('allStaff', 'createStuff', 'staff.details') ? 'active' : '' }}">
+  <li class="nav-item {{ request()->routeIs('allStaff', 'createStaff', 'staff.details') ? 'active' : '' }}">
       <a class="nav-link collapsed" href="{{ route('allStaff') }}">
           <i class="bi bi-person-badge"></i>
           <span>Staff</span>
