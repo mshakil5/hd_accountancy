@@ -174,61 +174,60 @@
 
 <!-- Staff update -->
 <script>
-$(document).ready(function () {
-    function updateReportingId() {
-        var selectedManager = $('#reporting_to option:selected');
-        $('#reporting_employee_id').val(selectedManager.data('id-number'));
-    }
-    updateReportingId();
-    $('#reporting_to').change(updateReportingId);
-
-    $('#saveButton').click(function (event) {
-        event.preventDefault();
-
-        var formData = new FormData($('#myForm')[0]);
-        var staffId = "{{ $staff->id ?? '' }}";
-
-        if (staffId) {
-            $.ajax({
-                url: "/admin/staff/" + staffId,
-                type: 'POST',
-                data: formData,
-                async: false,
-                success: function (response) {
-                    swal({
-                        title: "Success!",
-                        text: "Staff updated successfully",
-                        icon: "success",
-                        button: "OK",
-                    });
-
-                    setTimeout(function() {
-                        window.location.href = "{{ route('allStaff') }}";
-                    }, 2000);
-                },
-                error: function (xhr, status, error) {
-                    var errorMessage = "";
-                    if (xhr.responseJSON && xhr.responseJSON.errors) {
-                        $.each(xhr.responseJSON.errors, function (key, value) {
-                            errorMessage += key + ": " + value.join(", ") + "<br>";
-                        });
-                    } else {
-                        errorMessage = "An error occurred. Please try again later.";
-                    }
-                    $('#errorMessage').html(errorMessage);
-                    $('#errorMessage').show();
-                    $('#successMessage').hide();
-                },
-                cache: false,
-                contentType: false,
-                processData: false
-            });
+    $(document).ready(function () {
+        function updateReportingId() {
+            var selectedManager = $('#reporting_to option:selected');
+            $('#reporting_employee_id').val(selectedManager.data('id-number'));
         }
-        return false;
+        updateReportingId();
+        $('#reporting_to').change(updateReportingId);
+
+        $('#saveButton').click(function (event) {
+            event.preventDefault();
+
+            var formData = new FormData($('#myForm')[0]);
+            var staffId = "{{ $staff->id ?? '' }}";
+
+            if (staffId) {
+                $.ajax({
+                    url: "/admin/staff/" + staffId,
+                    type: 'POST',
+                    data: formData,
+                    async: false,
+                    success: function (response) {
+                        swal({
+                            title: "Success!",
+                            text: "Staff updated successfully",
+                            icon: "success",
+                            button: "OK",
+                        });
+
+                        setTimeout(function() {
+                            window.location.href = "{{ route('allStaff') }}";
+                        }, 2000);
+                    },
+                    error: function (xhr, status, error) {
+                        var errorMessage = "";
+                        if (xhr.responseJSON && xhr.responseJSON.errors) {
+                            $.each(xhr.responseJSON.errors, function (key, value) {
+                                errorMessage += key + ": " + value.join(", ") + "<br>";
+                            });
+                        } else {
+                            errorMessage = "An error occurred. Please try again later.";
+                        }
+                        $('#errorMessage').html(errorMessage);
+                        $('#errorMessage').show();
+                        $('#successMessage').hide();
+                    },
+                    cache: false,
+                    contentType: false,
+                    processData: false
+                });
+            }
+            return false;
+        });
+
     });
-
-});
-
 </script>
 <!-- Staff Update -->
 

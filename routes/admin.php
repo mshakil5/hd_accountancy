@@ -73,8 +73,19 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     //Get staff details
     Route::get('/get-staff-details/{id}', [StaffController::class,'getStaffDetails'])->name('get.staff.details');
 
-    // Update staff's personal Information
+    // Update staff's personal and job Information
     Route::post('/staff-personal-update', [StaffController::class,'updateStaffPersonal'])->name('staff.update.persoanl');
+    Route::post('/staff-job-update', [StaffController::class,'updateStaffJob'])->name('staff.update.job');
+
+    // completed, in progress, due tasks list
+    Route::get('/completed-tasks', [ServiceController::class,'completedTasks'])->name('completed.tasks');
+    Route::get('/tasks-in-progress',  [ServiceController::class,'tasksInProgress'])->name('tasks.in_progress');
+    Route::get('/due-tasks',  [ServiceController::class,'dueTasks'])->name('due.tasks');
+
+    Route::get('/due-tasks', [ServiceController::class,'dueTasks'])->name('due.tasks');
+
+    Route::get('/holidays', [HolidayController::class,'getHolidaysForStaff']);
+    Route::post('/holidays/update', [HolidayController::class,'updateDay']);
 
     //Department crud
     Route::get('/department', [DepartmentController::class, 'index'])->name('allDepartment');

@@ -418,6 +418,7 @@ class ServiceController extends Controller
                     $clientSubService->deadline = $subServiceData['deadline'];
                     $clientSubService->note = $subServiceData['note'];
                     $clientSubService->staff_id = $subServiceData['staffId'];
+                    $clientSubService->created_by = auth()->id();
 
                     if ($key === 0) {
                         $clientSubService->sequence_status = 0;
@@ -591,5 +592,43 @@ class ServiceController extends Controller
 
         return response()->json(['status' => 200, 'message' => 'Sub-services updated successfully']);
     }
+
+    public function completedTasks(Request $request)
+    {
+        $staffId = $request->input('staff_id');
+        $completedTasks = ClientSubService::where('staff_id', $staffId)
+            ->where('sequence_status', 2)
+            ->whereNotNull('deadline')
+            ->with('subService','createdBy')
+            ->get();
+
+        return response()->json(['completedTasks' => $completedTasks]);
+    }
+
+    public function tasksInProgress(Request $request)
+    {
+        $staffId = $request->input('staff_id');
+        $inProgressTasks = ClientSubService::where('staff_id', $staffId)
+            ->where('sequence_status', 0)
+            ->whereNotNull('deadline')
+            ->with('subService','createdBy')
+            ->get();
+
+        return response()->json(['inProgressTasks' => $inProgressTasks]);
+    }
+
+    public function dueTasks(Request $request)
+    {
+        $staffId = $request->input('staff_id');
+        $dueTasks = ClientSubService::where('staff_id', $staffId)
+            ->where('sequence_status', 1)
+            ->whereNotNull('deadline')
+            ->with('subService','createdBy')
+            ->get();
+
+        return response()->json(['dueTasks' => $dueTasks]);
+    }
+
+
 
 }

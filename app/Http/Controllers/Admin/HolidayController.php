@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\User;
+use App\Models\HolidayType;
 use Illuminate\Http\Request;
 use App\Models\HolidayRequest;
+use App\Models\StaffHolidayType;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\Facades\DataTables;
@@ -67,5 +69,55 @@ class HolidayController extends Controller
         }
     }
 
-    
+    public function getHolidaysForStaff(Request $request)
+    {
+        $staffId = $request->input('staff_id');
+        $holidays = StaffHolidayType::where('staff_id', $staffId)
+            ->with('holidayType')
+            ->get(['id', 'holiday_type_id', 'day']); 
+
+        $holidayTypes = HolidayType::all();
+
+        $holidaysWithDays = [];
+
+        foreach ($holidayTypes as $holidayType) {
+            $holiday = $holidays->firstWhere('holiday_type_id', $holidayType->id);
+            $holidaysWithDays[] = [
+                'staff_holiday_type_id' => $holiday ? $holiday->id : null,
+                'holiday_type_id' => $holidayType->id,
+                'day' => $holiday ? $holiday->day : 0,
+                'holiday_type_name' => $holidayType->type,
+            ];
+        }
+
+        return response()->json($holidaysWithDays);
+    }
+
+    public function updateDay(Request $request)
+    {
+        $request->validate([
+            'staff_id' => 'required',
+            'staffHolidayTypeId' => 'integer',
+            'day' => 'required',
+        ]);
+
+        $staffHolidayType = StaffHolidayType::find($request->input('staffHolidayTypeId'));
+
+        if ($staffHolidayType) {
+            $staffHolidayType->day = $request->input('day');
+            $staffHolidayType->save();
+
+            return response()->json(['success' => true, 'message' => 'Day updated successfully']);
+        } else {
+            $newStaffHolidayType = new StaffHolidayType;
+            $newStaffHolidayType->staff_id = $request->input('staff_id');
+            $newStaffHolidayType->day = $request->input('day');
+            $newStaffHolidayType->holiday_type_id = $request->input('holiday_type_id');
+            $newStaffHolidayType->save();
+
+            return response()->json(['success' => true, 'message' => 'New StaffHolidayType created successfully']);
+        }
+    }
+
+
 }

@@ -76,6 +76,11 @@
                         data-bs-target="#profile" type="button" role="tab" aria-controls="profile"
                         aria-selected="false">other Information</button>
                     </li>
+                    <li class="nav-item flex-fill" role="presentation">
+                        <button class="nav-link w-100 text-capitalize" id="holiday-tab" data-bs-toggle="tab"
+                        data-bs-target="#holiday" type="button" role="tab" aria-controls="holiday"
+                        aria-selected="false">Holiday Types</button>
+                    </li>
                 </ul>
 
                 <div class="tab-content pt-2" id="myTabjustifiedContent">
@@ -84,102 +89,111 @@
                     <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
                         <form action="">
                             <div class="row my-4">
-                            <div class="col-lg-6 ">
-                                <div class="px-2">
-                                <h2 class="txt-theme" id="fullname"></h2>
-                                    <h4 class="txt-theme" id="departmentname"></h4>
-                                    <h5 class="txt-theme" id="phoneNumber"></h5>
+                                <div class="col-lg-6">
+                                    <div class="px-2">
+                                        <h2 class="txt-theme" id="fullname"></h2>
+                                        <h4 class="txt-theme" id="departmentname"></h4>
+                                        <h5 class="txt-theme" id="phoneNumber"></h5>
                                         <h6 class="txt-theme fw-bold" id="emailNumber"></h6>
-                                </div>
-                            </div>
-                            <div class="col-lg-6 text-end">
-                                <div>
-                                <!-- <img width="160" src="https://picsum.photos/seed/picsum/200/200"
-                                    class="border-theme border-2 rounded-3 me-2 mb-3"> -->
-                                    <img width="160" src="" class="border-theme border-2 rounded-3" id="user_image">
-                                </div>
-                                <div class="col-12">
-                                <div class="row px-3">
-                                    <div class="col-lg-4 d-flex align-items-center justify-content-end">
-                                    <small>sort by: </small>
-                                    </div>
-                                    <div class="col-lg-8">
-                                    <select name="" id="" class="form-control">
-                                        <option value="">last 7 days</option>
-                                    </select>
                                     </div>
                                 </div>
-
+                                <div class="col-lg-6 text-end">
+                                    <div style="margin-right: 10px; margin-bottom: 10px; padding-right: 10px;">
+                                        <img width="160" src="" class="border-theme border-2 rounded-3 user_image" id="user_image">
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="row px-3">
+                                            <div class="col-lg-4 d-flex align-items-center justify-content-end">
+                                                <small>sort by:</small>
+                                            </div>
+                                            <div class="col-lg-8">
+                                                <select name="" id="" class="form-control">
+                                                    <option value="">last 7 days</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            </div>
                             <div class="sub-box-header txt-theme">
-                            <div class="row w-100">
-                                <div class="col-lg-6 d-flex">
-                                <span>Task completed</span>
-                                </div>
-                                <div class="col-lg-6 text-end">
-                                count:3
+                                <div class="row w-100">
+                                    <div class="col-lg-6 d-flex">
+                                        <span>Task completed</span>
+                                    </div>
+                                    <div class="col-lg-6 text-end">
+                                        <span id="completedTaskCount">count:</span>
+                                    </div>
                                 </div>
                             </div>
-                            </div>      
-                            <div class="row offset-1 my-2 txt-theme">
-                            <div class="col-lg-3">job 1</div>
-                            <div class="col-lg-3">assign by</div>
-                            <div class="col-lg-3">assign date</div>
-                            <div class="col-lg-3">due date</div>
-                            </div>      
-                            <div class="row offset-1 my-2 txt-theme">
-                            <div class="col-lg-3">job 2</div>
-                            <div class="col-lg-3">assign by</div>
-                            <div class="col-lg-3">assign date</div>
-                            <div class="col-lg-3">due date</div>
-                            </div>      
-                            <div class="row offset-1 my-2 txt-theme">
-                            <div class="col-lg-3">job 3</div>
-                            <div class="col-lg-3">assign by</div>
-                            <div class="col-lg-3">assign date</div>
-                            <div class="col-lg-3">due date</div>
+
+                            <div class="col-lg-12 d-flex" id="completedTasksContainer">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Service Name</th>
+                                            <th>Created By</th>
+                                            <th>Assign Date</th>
+                                            <th>Due Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
                             </div>
+
+
                             <div class="sub-box-header txt-theme">
-                            <div class="row w-100">
-                                <div class="col-lg-6 d-flex">
-                                <span>Work in Process</span>
-                                </div>
-                                <div class="col-lg-6 text-end">
-                                count:2
+                                <div class="row w-100">
+                                    <div class="col-lg-6 d-flex">
+                                        <span>Task completed</span>
+                                    </div>
+                                    <div class="col-lg-6 text-end">
+                                        <span id="inProgressTaskCount">count:</span>
+                                    </div>
                                 </div>
                             </div>
-                            </div>      
-                            <div class="row offset-1 my-2 txt-theme">
-                            <div class="col-lg-3">job 1</div>
-                            <div class="col-lg-3">assign by</div>
-                            <div class="col-lg-3">assign date</div>
-                            <div class="col-lg-3">due date</div>
-                            </div>      
-                            <div class="row offset-1 my-2 txt-theme">
-                            <div class="col-lg-3">job 2</div>
-                            <div class="col-lg-3">assign by</div>
-                            <div class="col-lg-3">assign date</div>
-                            <div class="col-lg-3">due date</div>
-                            </div>      
+
+                            <div class="col-lg-12 d-flex" id="inProgressTasksContainer">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Service Name</th>
+                                            <th>Created By</th>
+                                            <th>Assign Date</th>
+                                            <th>Due Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+
+
                             <div class="sub-box-header txt-theme">
-                            <div class="row w-100">
-                                <div class="col-lg-6 d-flex">
-                                <span>Due task</span>
-                                </div>
-                                <div class="col-lg-6 text-end">
-                                count:1
+                                <div class="row w-100">
+                                    <div class="col-lg-6 d-flex">
+                                        <span>Task completed</span>
+                                    </div>
+                                    <div class="col-lg-6 text-end">
+                                        <span id="dueTaskCount">count:</span>
+                                    </div>
                                 </div>
                             </div>
-                            </div>      
-                            <div class="row offset-1 my-2 txt-theme">
-                            <div class="col-lg-3">job 1</div>
-                            <div class="col-lg-3">assign by</div>
-                            <div class="col-lg-3">assign date</div>
-                            <div class="col-lg-3">due date</div>
+
+                            <div class="col-lg-12 d-flex" id="dueTasksContainer">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Service Name</th>
+                                            <th>Created By</th>
+                                            <th>Assign Date</th>
+                                            <th>Due Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
                             </div>
+
+
                         </form>
                     </div>
                     <!-- Job  Tab end -->
@@ -193,17 +207,18 @@
                                     <div class="col-lg-6"></div>
                                     <div class="col-lg-6 text-center">
                                         <div class="img mb-2">
-                                            <img width="160" src="" class="border-theme border-2 rounded-3" id="user_image">
+                                            <img width="160" src="" class="border-theme border-2 rounded-3 user_image" id="imagePreview">              
                                         </div>
-                                        <i class="bi bi-cloud-upload"></i>
-                                        <label for="pic">
-                                            <big class="txt-theme">Upload Logo / Photo</big>
+                                        <label for="pic" class="mb-0" style="cursor: pointer;">
+                                            <i class="bi bi-cloud-upload"></i>
+                                            <big>Update Image</big>
                                         </label>
                                         <input type="file" name="" id="pic" class="invisible">
                                     </div>
                                 </div>
+                                <input type="hidden" id="hiddenStaffId" name="hiddenStaffId">
 
-                                <!-- Personal Information  Start -->
+                                <!-- Personal Information Start -->
                                 <div class="sub-box-header">
                                     <div class="row w-100">
                                         <div class="col-lg-6 d-flex txt-theme">
@@ -211,6 +226,7 @@
                                         </div>
                                         <div class="col-lg-6 text-end">
                                             <a href="#" class="txt-theme edit-personal-info" onclick="toggleEdit()"><i class="bi bi-pencil-square"></i> Edit</a>
+                                            <a href="#" class="txt-theme update-personal-info" style="display: none;"><i class="bi bi-check-square"></i> Update</a>
                                         </div>
                                     </div>
                                 </div>
@@ -218,23 +234,23 @@
                                     <div class="col-lg-6">
                                         <table class="w-100 text-capitalize">
                                             <tr>
-                                                <td><b>First name</b></td>
+                                                <td><b>First Name:</b></td>
                                                 <td><input type="text" id="first_name" readonly></td>
                                             </tr>
                                             <tr>
-                                                <td><b>Last name</b></td>
+                                                <td><b>Last Name:</b></td>
                                                 <td><input type="text" id="last_name" readonly></td>
                                             </tr>
                                             <tr>
-                                                <td><b>Phone</b></td>
+                                                <td><b>Phone:</b></td>
                                                 <td><input type="number" id="phone" readonly></td>
                                             </tr>
                                             <tr>
-                                                <td><b>Email</b></td>
+                                                <td><b>Email:</b></td>
                                                 <td><input type="email" id="email" readonly></td>
                                             </tr>
                                             <tr>
-                                                <td><b>NI number</b></td>
+                                                <td><b>NI Number:</b></td>
                                                 <td><input type="text" id="ni_number" readonly></td>
                                             </tr>
                                         </table>
@@ -242,23 +258,24 @@
                                     <div class="col-lg-6">
                                         <table class="w-100 txt-theme text-capitalize">
                                             <tr>
-                                                <td><b>Date of birth</b></td>
+                                                <td><b>Date Of Birth:</b></td>
                                                 <td><input type="date" id="date_of_birth" readonly></td>
                                             </tr>
                                             <tr>
-                                                <td><b>Address 1</b></td>
+                                                <td><b>Address 1:</b></td>
                                                 <td><input type="text" id="address_1" readonly></td>
                                             </tr>
                                             <tr>
-                                                <td><b>Address 2</b></td>
+                                                <td><b>Address 2:</b></td>
                                                 <td><input type="text" id="address_2" readonly></td>
                                             </tr>
                                         </table>
                                     </div>
                                 </div>
-                                 <!-- Personal Information  End -->
+                                <!-- Personal Information End -->
 
-                                <!-- Job Information start -->
+
+                                 <!-- Job Information start -->
                                 <div class="sub-box-header">
                                     <div class="row w-100">
                                         <div class="col-lg-6 d-flex txt-theme">
@@ -266,6 +283,7 @@
                                         </div>
                                         <div class="col-lg-6 text-end">
                                             <a href="#" class="txt-theme edit-job-info" onclick="toggleEditJobInfo()"><i class="bi bi-pencil-square"></i> Edit</a>
+                                             <a href="#" class="txt-theme update-job-info" style="display: none;"><i class="bi bi-check-square"></i> Update</a>
                                         </div>
                                     </div>
                                 </div>
@@ -273,7 +291,7 @@
                                     <div class="col-lg-6">
                                         <table class="w-100 text-capitalize">
                                             <tr>
-                                                <td><b>Department</b></td>
+                                                <td><b>Department:</b></td>
                                                 <td>
                                                     <select id="department" name="department" class="department-select" readonly>
                                                         <option value="">Select Department</option>
@@ -283,13 +301,12 @@
                                                     </select>
                                                 </td>
                                             </tr>
-
                                             <tr>
-                                                <td><b>Job title</b></td>
+                                                <td><b>Job title:</b></td>
                                                 <td><input type="text" id="job_title" readonly></td>
                                             </tr>
                                             <tr>
-                                                <td><b>Employment Status</b></td>
+                                                <td><b>Employment Status:</b></td>
                                                 <td><input type="text" id="employment_status" readonly></td>
                                             </tr>
                                         </table>
@@ -297,20 +314,20 @@
                                     <div class="col-lg-6">
                                         <table class="w-100 txt-theme text-capitalize">
                                             <tr>
-                                                <td><b>Reporting ID</b></td>
+                                                <td><b>Reporting ID:</b></td>
                                                 <td><input type="number" id="reporting_id" readonly></td>
                                             </tr>
                                             <tr>
-                                                <td><b>Joining Date</b></td>
+                                                <td><b>Joining Date:</b></td>
                                                 <td><input type="date" id="joining_date" readonly></td>
                                             </tr>
                                             <tr>
-                                                <td><b>Reporting to</b></td>
+                                                <td><b>Reporting To:</b></td>
                                                 <td>
                                                     <select id="reporting_to" readonly>
                                                         <option value="">Select Manager</option>
                                                         @foreach($managers as $manager)
-                                                            <option value="{{ $manager->id }}">{{ $manager->first_name }}</option>
+                                                             <option value="{{ $manager->id }}" data-id-number="{{ $manager->id_number }}">{{ $manager->first_name }}</option>
                                                         @endforeach
                                                     </select>
                                                 </td>
@@ -325,6 +342,23 @@
                     </div>
                     <!-- profile Tab end -->
 
+                    <!-- Holiday  Tab start -->
+                    <div class="tab-pane fade show active" id="holiday-tab" role="tabpanel" aria-labelledby="holiday-tab">
+                        <table class="table" id="holidayTable">
+                            <thead>
+                                <tr>
+                                    <th>Holiday Type</th>
+                                    <th>Day</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                              
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Holiday  Tab end -->
+
                 </div>
                 <!-- End Default Tabs -->
             </div>
@@ -332,12 +366,236 @@
         </div>
     </div>
 </section>
+
+<!-- <style>
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    input[type="date"],
+    select {
+        border: 0.3px solid #ccc;
+        background-color: rgba(255, 255, 255, 0.5);
+        width: 100%; 
+        padding: 5px; 
+        margin: 0;
+        box-shadow: none; 
+        outline: none;
+    }
+</style> -->
+
+<style>
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    input[type="date"],
+    select {
+        border: none;
+        background-color: transparent; 
+        width: 100%; 
+        padding: 0; 
+        margin: 0; 
+        box-shadow: none;
+        outline: none; 
+    }
+    
+</style>
+
+
 @endsection
 
 @section('script')
 
 <script>
     $(document).ready(function() {
+
+        function populateCompletedTasks(tasks) {
+            var container = $('#completedTasksContainer').find('tbody');
+            container.empty();
+            if (tasks.length === 0) {
+                container.append('<tr><td colspan="4">No completed tasks found</td></tr>');
+                $('#completedTaskCount').text('count: 0');
+            } else {
+                $('#completedTaskCount').text('count: ' + tasks.length);
+                tasks.forEach(function(task, index) {
+                    var assignDate = moment(task.created_at).format('DD.MM.YYYY');
+                    var dueDate = moment(task.deadline).format('DD.MM.YYYY');
+                    var taskRow = `
+                        <tr>
+                            <td>${task.sub_service.name}</td>
+                            <td>${task.created_by.first_name}</td>
+                            <td>${assignDate}</td>
+                            <td>${dueDate}</td>
+                        </tr>
+                    `;
+                    container.append(taskRow);
+                });
+            }
+        }
+
+        function populateInProgressTasks(tasks) {
+            var container = $('#inProgressTasksContainer').find('tbody');
+            container.empty();
+            if (tasks.length === 0) {
+                container.append('<tr><td colspan="4">No tasks in progress found</td></tr>');
+                $('#inProgressTaskCount').text('count: 0');
+            } else {
+                $('#inProgressTaskCount').text('count: ' + tasks.length);
+                tasks.forEach(function(task, index) {
+                    var assignDate = moment(task.created_at).format('DD.MM.YYYY');
+                    var dueDate = moment(task.deadline).format('DD.MM.YYYY');
+                    var taskRow = `
+                        <tr>
+                            <td>${task.sub_service.name}</td>
+                            <td>${task.created_by.first_name}</td>
+                            <td>${assignDate}</td>
+                            <td>${dueDate}</td>
+                        </tr>
+                    `;
+                    container.append(taskRow);
+                });
+            }
+        }
+
+        function populateDueTasks(tasks) {
+            var container = $('#dueTasksContainer').find('tbody');
+            container.empty();
+            if (tasks.length === 0) {
+                container.append('<tr><td colspan="4">No due tasks found</td></tr>');
+                $('#dueTaskCount').text('count: 0');
+            } else {
+                $('#dueTaskCount').text('count: ' + tasks.length);
+                tasks.forEach(function(task, index) {
+                    var assignDate = moment(task.created_at).format('DD.MM.YYYY');
+                    var dueDate = moment(task.deadline).format('DD.MM.YYYY');
+                    var taskRow = `
+                        <tr>
+                            <td>${task.sub_service.name}</td>
+                            <td>${task.created_by.first_name}</td>
+                            <td>${assignDate}</td>
+                            <td>${dueDate}</td>
+                        </tr>
+                    `;
+                    container.append(taskRow);
+                });
+            }
+        }
+
+        function fetchCompletedTasks(staffId) {
+            $.ajax({
+                url: "/admin/completed-tasks",
+                method: "GET",
+                data: { staff_id: staffId },
+                success: function(response) {
+                    console.log("Completed Tasks:", response);
+                    populateCompletedTasks(response.completedTasks);
+                },
+                error: function(xhr, status, error) {
+                     console.error(xhr.responseText);
+                }
+            });
+        }
+
+        function fetchInProgressTasks(staffId) {
+            $.ajax({
+                url: "/admin/tasks-in-progress",
+                method: "GET",
+                data: { staff_id: staffId },
+                success: function(response) {
+                    console.log("Tasks in Progress:", response);
+                    populateInProgressTasks(response.inProgressTasks);
+                },
+                error: function(xhr, status, error) {
+                     console.error(xhr.responseText);
+                }
+            });
+        }
+
+        function fetchCanceledTasks(staffId) {
+            $.ajax({
+                url: "/admin/due-tasks",
+                method: "GET",
+                data: { staff_id: staffId },
+                success: function(response) {
+                    console.log("Canceled Tasks:", response);
+                     populateDueTasks(response.dueTasks);
+                },
+                error: function(xhr, status, error) {
+                     console.error(xhr.responseText);
+                }
+            });
+        }
+
+        function fetchAndDisplayHolidays(staffId) {
+            $.ajax({
+                url: '/admin/holidays', 
+                method: 'GET',
+                data: { staff_id: staffId },
+                success: function(response) {
+                    var tableBody = $('#holidayTable tbody');
+                    tableBody.empty();
+
+                    response.forEach(function(holiday) {
+                        var row = `
+                            <tr>
+                                <td>${holiday.holiday_type_name}</td>
+                                <td>${holiday.day}</td>
+                                <td>
+                                    <button class="edit-day-btn" data-holiday-id="${holiday.holiday_type_id}" data-staff-holiday-type-id="${holiday.staff_holiday_type_id}">Edit Day</button>
+                                </td>
+                            </tr>
+                        `;
+                        tableBody.append(row);
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.error(xhr.responseText);
+                }
+            });
+        }
+
+        $(document).on('click', '.edit-day-btn', function() {
+             var staffHolidayTypeId = $(this).data('staff-holiday-type-id');
+             var staffId = $('#hiddenStaffId').val();
+             var holidayTypeId = $(this).data('holiday-id');
+             var newDay = prompt('Enter the new day:');
+             if (newDay) {
+                var token = $('meta[name="csrf-token"]').attr('content');
+                $.ajax({
+                    url: '/admin/holidays/update',
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': token
+                    },
+                    data: {
+                        staff_holiday_type_id: staffHolidayTypeId,
+                        day: newDay,
+                        staff_id: staffId,
+                        holiday_type_id: holidayTypeId  
+                    },
+                    success: function(response) {
+                        swal({
+                        title: "Success!",
+                        text: "Day updated successfully",
+                        icon: "success",
+                        button: "OK",
+                    });
+                        fetchAndDisplayHolidays(staffId);
+                    },
+                    error: function(xhr, status, error) {
+                         console.error(xhr.responseText);
+                    }
+                });
+            }
+        });
+
+        $('#staffsTable').on('click', '.edit-staff', function() {
+            var staffId = $(this).data('staff-id');
+            fetchCompletedTasks(staffId);
+            fetchInProgressTasks(staffId);
+            fetchCanceledTasks(staffId);
+            fetchAndDisplayHolidays(staffId);
+        });
+
         var table = $('#staffsTable').DataTable({
             serverSide: true,
             ajax: "{{ route('get.Stuffs') }}",
@@ -382,21 +640,54 @@
         });
     });
 
+    function toggleEdit(staffId) {
+        var editButton = document.querySelector('.edit-personal-info');
+        var updateButton = document.querySelector('.update-personal-info');
+
+        if (editButton.innerHTML.includes('Edit')) {
+            $('input[type="text"], input[type="number"], input[type="email"], input[type="date"]').prop('readonly', false);
+            editButton.innerHTML = '<i class="bi bi-x-square"></i> Cancel';
+            updateButton.style.display = 'inline-block';
+        } else {
+            $('input[type="text"], input[type="number"], input[type="email"], input[type="date"]').prop('readonly', true);
+            editButton.innerHTML = '<i class="bi bi-pencil-square"></i> Edit';
+            updateButton.style.display = 'none';
+        }
+    }
+
+    function toggleEditJobInfo(staffId) {
+        var editButton = document.querySelector('.edit-job-info');
+        var updateButton = document.querySelector('.update-job-info');
+
+        if (editButton.innerHTML.includes('Edit')) {
+            $('select, input[type="text"], input[type="number"], input[type="date"]').prop('readonly', false);
+            editButton.innerHTML = '<i class="bi bi-x-square"></i> Cancel';
+            updateButton.style.display = 'inline-block';
+        } else {
+            $('select, input[type="text"], input[type="number"], input[type="date"]').prop('readonly', true);
+            editButton.innerHTML = '<i class="bi bi-pencil-square"></i> Edit';
+            updateButton.style.display = 'none';
+        }
+    }
+
     $(document).on('click', '.edit-staff', function(e) {
         e.preventDefault();
         var staffId = $(this).data('staff-id');
+        $('#hiddenStaffId').val(staffId);
         toggleEdit(staffId);
+        toggleEditJobInfo(staffId);
         
         $.ajax({
             url: '/admin/get-staff-details/' + staffId,
             method: 'GET',
             success: function(response) {
-                console.log(response);
+                // console.log(response);
                 $('#first_name').val(response.first_name);
                 $('#last_name').val(response.last_name);
                 var fullName = response.first_name + ' ' + response.last_name;
                 $('#fullname').text(fullName);
-                $('#departmentname').text(response.department.name);
+                var departmentName = response.department ? response.department.name : '';
+                $('#departmentname').text(departmentName);
                 $('#phoneNumber').text(response.phone);
                 $('#emailNumber').text(response.email);
                 $('#phone').val(response.phone);
@@ -407,9 +698,10 @@
                 $('#address_2').val(response.address_line2);
                 $('#job_title').val(response.job_title);
                 $('#employment_status').val(response.employment_status); 
-                $('#reporting_id').val(response.reporting_user.id_number);
+                $('#reporting_id').val(response.reporting_user ? response.reporting_user.id_number : '');
                 $('#joining_date').val(response.joining_date); 
-                $('#reporting_to').val(response.reporting_user.first_name); 
+                $('#reporting_to').val(response.reporting_user ? response.reporting_user.first_name : '');
+
 
                 var departmentId = response.department.id; 
 
@@ -425,8 +717,14 @@
                     managerOption.prop('selected', true);
                 }
 
-                var imageUrl = "{{ asset('images/staff') }}/" + response.image;
-                $('#user_image').attr('src', imageUrl); 
+                var imageUrl = "{{ asset('images/staff') }}/";
+                if (response.image) {
+                    imageUrl += response.image;
+                } else {
+                    imageUrl = "{{ asset('assets/img/human-placeholder.jpg') }}";
+                }
+                $('.user_image').attr('src', imageUrl);
+
             },
             error: function(xhr, status, error) {
                 console.error(xhr.responseText);
@@ -434,55 +732,90 @@
         });
     });
 
-    function toggleEdit(staffId) {
-        var inputs = document.querySelectorAll('input[type="text"], input[type="number"], input[type="email"], input[type="date"]');
-        var editButton = document.querySelector('.edit-personal-info');
+    $(document).on('click', '.update-personal-info', function(e) {
+        e.preventDefault();
+        sendUpdateRequest();
+    });
 
-        if (inputs[0].readOnly) {
-            inputs.forEach(function(input) {
-                input.readOnly = false;
-            });
-            editButton.innerHTML = '<i class="bi bi-pencil-square"></i> Update';
-            editButton.onclick = function() {
-                sendUpdateRequest(staffId);
-            };
-        } else {
-            inputs.forEach(function(input) {
-                input.readOnly = true;
-            });
-            editButton.innerHTML = '<i class="bi bi-pencil-square"></i> Edit';
-            editButton.onclick = function() {
-                toggleEdit(staffId);
-            };
+    $(document).on('click', '.update-job-info', function(e) {
+        e.preventDefault();
+        sendUpdateRequestJobInfo();
+    });
+
+    function sendUpdateRequest() {
+        var staffId = $('#hiddenStaffId').val();
+        console.log(staffId);
+        var formData = new FormData();
+        formData.append('staff_id', staffId);
+        formData.append('first_name', $('#first_name').val());
+        formData.append('last_name', $('#last_name').val());
+        formData.append('phone', $('#phone').val());
+        formData.append('email', $('#email').val());
+        formData.append('ni_number', $('#ni_number').val());
+        formData.append('date_of_birth', $('#date_of_birth').val());
+        formData.append('address_1', $('#address_1').val());
+        formData.append('address_2', $('#address_2').val());
+
+        var imageFile = $('#pic')[0].files[0];
+        if (imageFile) {
+            formData.append('image', imageFile);
         }
-    }
-
-    function sendUpdateRequest(staffId) {
-        var data = {
-            staff_id: staffId,
-            first_name: document.getElementById('first_name').value,
-            last_name: document.getElementById('last_name').value,
-            phone: document.getElementById('phone').value,
-            email: document.getElementById('email').value,
-            ni_number: document.getElementById('ni_number').value,
-            date_of_birth: document.getElementById('date_of_birth').value,
-            address_1: document.getElementById('address_1').value,
-            address_2: document.getElementById('address_2').value
-        };
-
-        console.log(data);
 
         $.ajax({
             url: '/admin/staff-personal-update', 
             type: 'POST',
-            data: data,
+            data: formData, 
+            processData: false,
+            contentType: false, 
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             },
             success: function(response) {
                 swal({
                     title: "Success!",
-                    text: "Task updated successfully",
+                    text: "Staff personal information updated successfully",
+                    icon: "success",
+                    button: "OK",
+                });
+                setTimeout(function() {
+                    location.reload();
+                }, 2000);
+            },
+            error: function(xhr, status, error) {
+                console.error(xhr.responseText);
+            }
+        });
+    }
+
+    $('#reporting_to').change(function() {
+        var selectedManagerId = $(this).val();
+        var selectedManagerIdNumber = $('#reporting_to option:selected').data('id-number');
+        $('#reporting_id').val(selectedManagerIdNumber);
+    });
+
+    function sendUpdateRequestJobInfo() {
+        var staffId = $('#hiddenStaffId').val();
+        var data = {
+            staff_id: staffId,
+            department: $('#department').val(),
+            job_title: $('#job_title').val(),
+            employment_status: $('#employment_status').val(),
+            reporting_id: $('#reporting_id').val(),
+            joining_date: $('#joining_date').val(),
+            reporting_to: $('#reporting_to').val(),
+        };
+
+        $.ajax({
+            url: '/admin/staff-job-update', 
+            type: 'POST',
+            data: data, 
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(response) {
+                swal({
+                    title: "Success!",
+                    text: "Staff job details updated successfully",
                     icon: "success",
                     button: "OK",
                 });
@@ -497,53 +830,64 @@
     }
 </script>
 
-
-
-<!-- Job Information start -->
+<!-- Image preview start -->
 <script>
-    function toggleEditJobInfo() {
-        var inputs = document.querySelectorAll('input[type="text"], input[type="number"], input[type="date"]');
-        var editButton = document.querySelector('.edit-job-info');
-        var departmentSelect = document.querySelector('select.department-select');
+    document.getElementById('pic').addEventListener('change', function(event) {
+        var file = event.target.files[0];
+        var reader = new FileReader();
 
-        if (inputs[0].readOnly) {
-            inputs.forEach(function(input) {
-                input.readOnly = false;
-            });
-            departmentSelect.disabled = false;
-            editButton.innerHTML = '<i class="bi bi-pencil-square"></i> Update';
-            editButton.onclick = function() {
-                var staffId = $('.edit-staff').data('staff-id');
-                sendUpdateRequestJobInfo(staffId);
-            };
-        } else {
-            inputs.forEach(function(input) {
-                input.readOnly = true;
-            });
-            departmentSelect.disabled = true;
-            editButton.innerHTML = '<i class="bi bi-pencil-square"></i> Edit';
-            editButton.onclick = toggleEditJobInfo;
-        }
-    }
-
-    function sendUpdateRequestJobInfo(staffId) {
-        var data = {
-            staff_id: staffId,
-            department: document.getElementById('department').value,
-            job_title: document.getElementById('job_title').value,
-            employment_status: document.getElementById('employment_status').value,
-            reporting_id: document.getElementById('reporting_id').value,
-            joining_date: document.getElementById('joining_date').value,
+        reader.onload = function(e) {
+            document.getElementById('imagePreview').src = e.target.result;
         };
 
-        console.log(data);
-
-        // Ajax
-    }
+        reader.readAsDataURL(file);
+    });
 </script>
-<!-- Job Information end -->
+<!-- Image preview end -->
 
+<!-- <script>
+    // Fetch completed tasks
+    $.ajax({
+        url: "{{ route('completed.tasks') }}",
+        type: "GET",
+        dataType: "json",
+        success: function(response) {
+            // Handle the response here, update HTML content with completed tasks
+            console.log(response); // Example: Log the response to the console
+        },
+        error: function(xhr, status, error) {
+            console.error(xhr.responseText); // Log any errors
+        }
+    });
 
+    // Fetch tasks in progress
+    $.ajax({
+        url: "{{ route('tasks.in_progress') }}",
+        type: "GET",
+        dataType: "json",
+        success: function(response) {
+            // Handle the response here, update HTML content with tasks in progress
+            console.log(response); // Example: Log the response to the console
+        },
+        error: function(xhr, status, error) {
+            console.error(xhr.responseText); // Log any errors
+        }
+    });
+
+    // Fetch due tasks
+    $.ajax({
+        url: "{{ route('due.tasks') }}",
+        type: "GET",
+        dataType: "json",
+        success: function(response) {
+            // Handle the response here, update HTML content with due tasks
+            console.log(response); // Example: Log the response to the console
+        },
+        error: function(xhr, status, error) {
+            console.error(xhr.responseText); // Log any errors
+        }
+    });
+</script> -->
 
 {{-- Delete staff start --}}
 <script>

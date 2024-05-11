@@ -518,11 +518,49 @@ class StaffController extends Controller
             $user->date_of_birth = $request->date_of_birth;
             $user->address_line1 = $request->address_1;
             $user->address_line2 = $request->address_2;
+
+            if ($request->hasFile('image')) {
+                $image = $request->file('image');
+                $imageName = time() . '.' . $image->getClientOriginalExtension();
+                $image->move(public_path('images/staff'), $imageName);
+                $user->image = $imageName;
+            }
+
             $user->save();
 
             return response()->json(['message' => 'User details updated successfully.']);
         }
 
+    }
+
+    public function updateStaffJob(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'staff_id' => 'required',
+            'job_title' => 'required',
+            'employment_status' => 'required',
+            'reporting_id' => 'required',
+            'joining_date' => 'required|date',
+            'reporting_to' => 'required',
+        ]);
+
+         if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+        $user = User::find($request->staff_id);
+
+        if ($user) {
+            $user->department_id = $request->department;
+            $user->job_title = $request->job_title;
+            $user->employment_status = $request->employment_status;
+            $user->joining_date = $request->joining_date;
+            $user->reporting_to = $request->reporting_to;
+            $user->reporting_employee_id = $request->reporting_id;
+            $user->save();
+
+            return response()->json(['message' => 'User details updated successfully.']);
+        }
     }
 
 }

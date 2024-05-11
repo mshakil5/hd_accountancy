@@ -8,4 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class StaffHolidayType extends Model
 {
     use HasFactory;
+
+    public function holidayType()
+    {
+        return $this->belongsTo(HolidayType::class);
+    }
 }
