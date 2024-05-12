@@ -254,18 +254,32 @@ class StaffController extends Controller
     public function prevLogStaffs()
     {
         $previouslyLoggedStaff = UserAttendanceLog::with('user')
-            ->where('status', 1)
             ->where('start_time', '>=', now()->subHours(12))
+            ->whereNotNull('end_time') 
             ->orderBy('id', 'desc')
             ->get()
             ->map(function ($log) {
-                $duration = Carbon::now()->diff($log->start_time);
+                $duration = Carbon::parse($log->start_time)->diff($log->end_time);
                 $log->duration = $duration->format('%H:%I:%S');
                 return $log;
             });
         
         return view('admin.staff.previous_logged', compact('previouslyLoggedStaff'));
 
+    }
+
+    public function updateLogs(Request $request, $id)
+    {
+        $staff = UserAttendanceLog::find($id);
+
+        $startTime = Carbon::parse($request->input('start_time'));
+        $endTime = Carbon::parse($request->input('end_time'));
+
+        $staff->start_time = $startTime;
+        $staff->end_time = $endTime;
+        $staff->note = $request->input('note');
+        $staff->save();
+        return response()->json(['success' => true, 'message' => 'Staff record updated successfully']);
     }
 
     public function changeStatus(Request $request)

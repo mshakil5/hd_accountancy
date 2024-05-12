@@ -410,7 +410,7 @@
             <div style="margin-bottom: 10px;"></div>
             <div class="row mt-10">
                 <div class="col-lg-12">
-                    <a id="breakOutBtn" class="p-2 border-theme bg-theme text-center fs-6 d-block rounded-3 border-3 text-light fw-bold" style="display: none; cursor: pointer;">Clock Out</a>
+                    <a id="breakOutBtn" class="p-2 border-theme bg-theme text-center fs-6 d-block rounded-3 border-3 text-light fw-bold" style="display: none; cursor: pointer;">Break Out</a>
                 </div>
             </div>
         </div>

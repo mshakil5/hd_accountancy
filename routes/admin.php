@@ -248,6 +248,8 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     //Previously logged in staffs
     Route::get('/prev-staffs', [StaffController::class, 'prevLogStaffs'])->name('prevLogStaffs');
 
+    Route::post('/prev-staffs/update/{id}', [StaffController::class, 'updateLogs']);
+
     // prorota make
     Route::get('/prorota', [ProrotaController::class, 'index'])->name('prorota');
     Route::get('/prorota-list', [ProrotaController::class, 'getprorota'])->name('get.prorota');
