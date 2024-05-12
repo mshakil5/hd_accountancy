@@ -19,6 +19,7 @@ class UserAttendanceLog extends Model
         'note',
         'status',
         'is_late',
+        'session_id',
         'created_by',
         'updated_by',
     ];

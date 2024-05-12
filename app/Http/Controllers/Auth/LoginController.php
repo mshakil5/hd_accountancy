@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\RedirectResponse;
 use App\Providers\RouteServiceProvider;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
   
 class LoginController extends Controller
@@ -72,6 +73,7 @@ class LoginController extends Controller
                 $attendanceLog->user_id = $user->id;
                 $attendanceLog->start_time = now();
                 $attendanceLog->status = 0;
+                $attendanceLog->session_id = Session::getId();
                 $attendanceLog->created_by = Auth::user()->id;
                 $attendanceLog->save();
             }

@@ -97,7 +97,6 @@ class HolidayController extends Controller
     {
         $request->validate([
             'staff_id' => 'required',
-            'staffHolidayTypeId' => 'integer',
             'day' => 'required',
         ]);
 
@@ -105,6 +104,7 @@ class HolidayController extends Controller
 
         if ($staffHolidayType) {
             $staffHolidayType->day = $request->input('day');
+            $staffHolidayType->updated_by = Auth::id();
             $staffHolidayType->save();
 
             return response()->json(['success' => true, 'message' => 'Day updated successfully']);
@@ -113,6 +113,7 @@ class HolidayController extends Controller
             $newStaffHolidayType->staff_id = $request->input('staff_id');
             $newStaffHolidayType->day = $request->input('day');
             $newStaffHolidayType->holiday_type_id = $request->input('holiday_type_id');
+            $newStaffHolidayType->created_by = Auth::id();
             $newStaffHolidayType->save();
 
             return response()->json(['success' => true, 'message' => 'New StaffHolidayType created successfully']);

@@ -78,7 +78,7 @@
                     </li>
                     <li class="nav-item flex-fill" role="presentation">
                         <button class="nav-link w-100 text-capitalize" id="holiday-tab" data-bs-toggle="tab"
-                        data-bs-target="#holiday" type="button" role="tab" aria-controls="holiday"
+                        data-bs-target="#holiday-tab-content" type="button" role="tab" aria-controls="holiday-tab-content"
                         aria-selected="false">Holiday Types</button>
                     </li>
                 </ul>
@@ -342,8 +342,8 @@
                     </div>
                     <!-- profile Tab end -->
 
-                    <!-- Holiday  Tab start -->
-                    <div class="tab-pane fade show active" id="holiday-tab" role="tabpanel" aria-labelledby="holiday-tab">
+                    <!-- Holiday Tab start -->
+                    <div class="tab-pane fade" id="holiday-tab-content" role="tabpanel" aria-labelledby="holiday-tab">
                         <table class="table" id="holidayTable">
                             <thead>
                                 <tr>
@@ -353,12 +353,11 @@
                                 </tr>
                             </thead>
                             <tbody>
-                              
+                                <!-- Content will be dynamically added here by JavaScript -->
                             </tbody>
                         </table>
                     </div>
-                    <!-- Holiday  Tab end -->
-
+                    <!-- Holiday Tab end -->
                 </div>
                 <!-- End Default Tabs -->
             </div>
@@ -486,7 +485,7 @@
                 method: "GET",
                 data: { staff_id: staffId },
                 success: function(response) {
-                    console.log("Completed Tasks:", response);
+                    // console.log("Completed Tasks:", response);
                     populateCompletedTasks(response.completedTasks);
                 },
                 error: function(xhr, status, error) {
@@ -501,7 +500,7 @@
                 method: "GET",
                 data: { staff_id: staffId },
                 success: function(response) {
-                    console.log("Tasks in Progress:", response);
+                    // console.log("Tasks in Progress:", response);
                     populateInProgressTasks(response.inProgressTasks);
                 },
                 error: function(xhr, status, error) {
@@ -516,7 +515,7 @@
                 method: "GET",
                 data: { staff_id: staffId },
                 success: function(response) {
-                    console.log("Canceled Tasks:", response);
+                    // console.log("Canceled Tasks:", response);
                      populateDueTasks(response.dueTasks);
                 },
                 error: function(xhr, status, error) {
@@ -555,6 +554,7 @@
 
         $(document).on('click', '.edit-day-btn', function() {
              var staffHolidayTypeId = $(this).data('staff-holiday-type-id');
+            //  console.log(staffHolidayTypeId);
              var staffId = $('#hiddenStaffId').val();
              var holidayTypeId = $(this).data('holiday-id');
              var newDay = prompt('Enter the new day:');
@@ -567,7 +567,7 @@
                         'X-CSRF-TOKEN': token
                     },
                     data: {
-                        staff_holiday_type_id: staffHolidayTypeId,
+                        staffHolidayTypeId: staffHolidayTypeId,
                         day: newDay,
                         staff_id: staffId,
                         holiday_type_id: holidayTypeId  
@@ -744,7 +744,7 @@
 
     function sendUpdateRequest() {
         var staffId = $('#hiddenStaffId').val();
-        console.log(staffId);
+        // console.log(staffId);
         var formData = new FormData();
         formData.append('staff_id', staffId);
         formData.append('first_name', $('#first_name').val());
@@ -844,50 +844,6 @@
     });
 </script>
 <!-- Image preview end -->
-
-<!-- <script>
-    // Fetch completed tasks
-    $.ajax({
-        url: "{{ route('completed.tasks') }}",
-        type: "GET",
-        dataType: "json",
-        success: function(response) {
-            // Handle the response here, update HTML content with completed tasks
-            console.log(response); // Example: Log the response to the console
-        },
-        error: function(xhr, status, error) {
-            console.error(xhr.responseText); // Log any errors
-        }
-    });
-
-    // Fetch tasks in progress
-    $.ajax({
-        url: "{{ route('tasks.in_progress') }}",
-        type: "GET",
-        dataType: "json",
-        success: function(response) {
-            // Handle the response here, update HTML content with tasks in progress
-            console.log(response); // Example: Log the response to the console
-        },
-        error: function(xhr, status, error) {
-            console.error(xhr.responseText); // Log any errors
-        }
-    });
-
-    // Fetch due tasks
-    $.ajax({
-        url: "{{ route('due.tasks') }}",
-        type: "GET",
-        dataType: "json",
-        success: function(response) {
-            // Handle the response here, update HTML content with due tasks
-            console.log(response); // Example: Log the response to the console
-        },
-        error: function(xhr, status, error) {
-            console.error(xhr.responseText); // Log any errors
-        }
-    });
-</script> -->
 
 {{-- Delete staff start --}}
 <script>

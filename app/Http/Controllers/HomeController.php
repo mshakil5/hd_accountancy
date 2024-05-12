@@ -60,6 +60,7 @@ class HomeController extends Controller
     {
         $loggedStaff = UserAttendanceLog::with('user')
             ->where('status', 0)
+            ->whereNull('end_time')
             ->orderBy('id', 'desc')
             ->get()
             ->map(function ($log) {
@@ -208,52 +209,34 @@ class HomeController extends Controller
         return redirect()->route('home');
     }
 
-    // public function sessionClearByAdmin(Request $request)
-    // {
-    //     $staffId = $request->input('staffId');
-    //     $user = User::find($staffId);
-
-    //     // dd($user);
-    //     if ($user) {
-    //         $attendanceLog = UserAttendanceLog::where('user_id', $user->id)
-    //             ->where('status', 0)
-    //             ->latest()
-    //             ->first();
-
-    //         if ($attendanceLog) {
-    //             $attendanceLog->end_time = now();
-    //             $attendanceLog->status = 1;
-    //             $attendanceLog->note = $request->input('note');
-    //             $attendanceLog->save();
-    //         }
-
-    //         // Auth::logoutOtherDevices($user->id);
-
-    //         return response()->json(['success' => true]);
-    //     }
-
-    //     return response()->json(['success' => false]);
-    // }
-
     public function sessionClearByAdmin($userId)
     {
 
         $user = User::find($userId);
 
         if ($user ) {
-            // Auth::logoutOtherDevices($user->id);
-            // Auth::logout($user);
-            // $user->session()->delete();
-
             return response()->json(['message' => 'Staff member logged out successfully'], 200);
         } else {
             return response()->json(['error' => 'Staff member not found'], 404);
         }
     }
 
+    public function customlogout(Request $request, $attendenceId)
+    {
+        $attendanceLog = UserAttendanceLog::find($attendenceId);
+        if ($attendanceLog) {
+            if ($request->has('note')) {
+                $attendanceLog->note = $request->note;
+            }
+            $attendanceLog->end_time = Carbon::now();
+            \Session::getHandler()->destroy($attendanceLog->session_id);
+            $attendanceLog->session_id = null;
+            $attendanceLog->save();
 
-    // Optionally, you can update the logged_in_at column to null
-            // $user->update(['logged_in_at' => null]);
-
+            return response()->json(['message' => 'Logout successful'], 200);
+        } else {
+            return response()->json(['error' => 'User attendance log not found'], 404);
+        }
+    }
 
 }

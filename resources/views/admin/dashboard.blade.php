@@ -970,5 +970,38 @@
 </script>
 <!-- Data table initialize -->
 
+<!-- Logout staff start -->
+<script>
+    $(document).ready(function () {
+        $('.logout-btn').click(function () {
+            const attendenceId = $(this).data('staff-id');
+            const note = $(this).closest('tr').find('textarea[name="note"]').val();
+
+            $.ajax({
+                url: '/admin/staff-logout/' + attendenceId,
+                type: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                },
+                data: {
+                    note: note
+                },
+                success: function (response) {
+                  swal({
+                        title: "Success!",
+                        text: "Staff logged out successfully",
+                        icon: "success",
+                        button: "OK",
+                    });
+                    window.setTimeout(function(){location.reload()},2000);
+                },
+                error: function(xhr, status, error) {
+                     console.error(xhr.responseText);
+                }
+            });
+        });
+    });
+</script>
+<!-- Logout staff end -->
 
 @endsection

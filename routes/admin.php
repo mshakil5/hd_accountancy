@@ -82,10 +82,12 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/tasks-in-progress',  [ServiceController::class,'tasksInProgress'])->name('tasks.in_progress');
     Route::get('/due-tasks',  [ServiceController::class,'dueTasks'])->name('due.tasks');
 
-    Route::get('/due-tasks', [ServiceController::class,'dueTasks'])->name('due.tasks');
-
+    // Holiday's list and edit holiday
     Route::get('/holidays', [HolidayController::class,'getHolidaysForStaff']);
     Route::post('/holidays/update', [HolidayController::class,'updateDay']);
+
+    // Staff log out by admin
+    Route::post('/staff-logout/{attendenceId}', [HomeController::class, 'customlogout']);
 
     //Department crud
     Route::get('/department', [DepartmentController::class, 'index'])->name('allDepartment');
