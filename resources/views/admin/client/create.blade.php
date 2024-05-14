@@ -726,6 +726,7 @@
                           <th>Deadline</th>
                           <th>Staff</th>
                           <th>Note</th>
+                          <th>Action</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -763,7 +764,7 @@
                     <div class="col-md-3 text-center">
                     <h5 class="mb-3">Frequency</h5>
                     <div class="form-check">
-                        <select class="form-control mt-2 select2 serviceFrequency" name="service_frequency">
+                        <select class="form-control mt-2 select2 serviceFrequency" id="serviceFrequency" name="service_frequency">
                         <option value="">Select</option>
                         <option>Daily</option>
                         <option>Weekly</option>
@@ -776,7 +777,7 @@
                     <div class="col-md-3 text-center">
                     <h5 class="mb-3">Deadline</h5>
                     <div class="form-check">
-                        <input type="date" class="form-control serviceDeadline" name="service_deadline">
+                        <input type="date" class="form-control serviceDeadline" id="serviceDeadline" name="service_deadline">
                     </div>
                     </div>
                     <div class="col-md-1">
@@ -795,16 +796,17 @@
               var newRow = `
                 <tr>
                   <td>${value.name}</td>
-                  <td><input type="date" name="deadline" class="form-control"></td>
+                  <td><input type="date" id="deadline" name="deadline" class="form-control"></td>
                   <td>
-                    <select class="form-control select2 staffDropdown" name="staff_id">
+                    <select class="form-control select2 staffDropdown" id="selectedStaff" name="staff_id">
                       <option value="">Select Staff</option>
                       @foreach($staffs as $staff)
                       <option value="{{ $staff->id }}">{{ $staff->first_name }}</option>
                       @endforeach
                     </select>
                   </td>
-                  <td><textarea name="note" rows="1" class="form-control" placeholder="Note for this task"></textarea></td>
+                  <td><textarea name="note" id="note" rows="1" class="form-control" placeholder="Note for this task"></textarea></td>
+                   <td><span class="removeSubServiceRow" style="cursor: pointer; font-size: 24px; color: red;">&#10006;</span></td>
                    <input type="hidden" class="sub-service-id" data-sub-service-id="${value.id}">
                 </tr>
               `;
@@ -813,6 +815,10 @@
           }
         });
       }
+    });
+    
+    $(document).on('click', '.removeSubServiceRow', function() {
+        $(this).closest('tr').remove();
     });
 
     $(document).on('click', '.removeSubServiceDetails', function() {
@@ -920,16 +926,16 @@
                 var serviceId = $(this).find('input[name="service_id"]').val();
                 var clientServiceId = $(this).find('input[name="client_service_id[]"]').val();
                 var managerId = $(this).find('.managerDropdown').val();
-                var service_frequency = $(this).find('#service_frequency').val();
-                var service_deadline = $(this).find('.serviceDeadline').val();
+                var service_frequency = $(this).find('#serviceFrequency').val();
+                var service_deadline = $(this).find('#serviceDeadline').val();
                 var subServices = [];
 
                 $(this).find('tbody tr').each(function() {
                     var subServiceId = $(this).find('input[name="sub_service_id[]"]').val();
                     var clientSubServiceId = $(this).find('input[name="client_sub_service_id[]"]').val();
-                    var deadline = $(this).find('input[type="date"]').val();
-                    var note = $(this).find('textarea').val();
-                    var staffId = $(this).find('.select2').val();
+                    var deadline = $(this).find('#deadline').val();
+                    var note = $(this).find('#note').val();
+                    var staffId = $(this).find('#selectedStaff').val();
 
                     subServices.push({
                         subServiceId: subServiceId,
@@ -954,8 +960,47 @@
                 clientId: clientId,
                 services: services
             };
-
             console.log(data);
+
+            var newclientId = "{{ $id }}";
+            var newservices = [];
+
+            $('.subServiceDetails').each(function() {
+                var newserviceId = $('#serviceDropdown').val();
+                var newmanagerId = $(this).find('.managerDropdown').val();
+                var newservice_frequency = $(this).find('#serviceFrequency').val();
+                var newservice_deadline = $(this).find('#serviceDeadline').val();
+                var newsubServices = [];
+
+                $(this).find('tbody tr').each(function() {
+                    var newsubServiceId = $(this).find('.sub-service-id').attr('data-sub-service-id'); 
+                    var newdeadline = $(this).find('#deadline').val();
+                    var newnote = $(this).find('#note').val();
+                    var newstaffId = $(this).find('#selectedStaff').val();
+
+                    newsubServices.push({
+                        newsubServiceId: newsubServiceId,
+                        newdeadline: newdeadline,
+                        newnote: newnote,
+                        newstaffId: newstaffId
+                    });
+                });
+
+                newservices.push({
+                    newserviceId: newserviceId,
+                    newmanagerId: newmanagerId,
+                    newservice_frequency: newservice_frequency,
+                    newservice_deadline: newservice_deadline,
+                    newsubServices: newsubServices
+                });
+            });
+
+            var newdata = {
+                clientId: clientId,
+                newservices: newservices
+            };
+
+            console.log(newdata);
 
             // $.ajax({
             //     url: '/admin/update-service',

@@ -51,7 +51,7 @@
                                     <div class="col-md-3 text-center">
                                         <h5 class="mb-3">Frequency</h5>
                                         <div class="form-check">
-                                            <select id="service_frequency" class="form-control" name="service_frequency">
+                                            <select id="serviceFrequency" class="form-control serviceFrequency" name="service_frequency">
                                                 <option value="">Select Frequency</option>
                                                 <option {{ isset($clientService) && $clientService->service_frequency == 'Daily' ? 'selected' : '' }}>Daily</option>
                                                 <option {{ isset($clientService) && $clientService->service_frequency == 'Weekly' ? 'selected' : '' }}>Weekly</option>
@@ -64,7 +64,7 @@
                                     <div class="col-md-3 text-center">
                                         <h5 class="mb-3">Deadline</h5>
                                         <div class="form-check">
-                                            <input type="date" class="form-control serviceDeadline" name="service_deadline" value="{{ isset($clientService) ? $clientService->service_deadline : '' }}">
+                                            <input type="date" class="form-control serviceDeadline" name="service_deadline" id="serviceDeadline" value="{{ isset($clientService) ? $clientService->service_deadline : '' }}">
                                         </div>
                                     </div>
                                     <div class="col-md-1">
@@ -81,6 +81,7 @@
                                     <th>Deadline</th>
                                     <th>Staff</th>
                                     <th>Note</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -91,10 +92,10 @@
                                         <td>{{ isset($clientSubService->subService->name) ? $clientSubService->subService->name : '' }}</td>
         
                                         <td>
-                                            <input type="date" name="deadline" class="form-control" value="{{ isset($clientSubService->deadline) ? $clientSubService->deadline : '' }}">
+                                            <input type="date" id="deadline" name="deadline" class="form-control" value="{{ isset($clientSubService->deadline) ? $clientSubService->deadline : '' }}">
                                         </td>
                                         <td>
-                                            <select class="form-control select2" name="staff_id" style="width:100%">
+                                            <select class="form-control select2 staffDropdown" id="selectedStaff"name="staff_id" style="width:100%">
                                                 <option value="">Select Staff</option>
                                                 @foreach($staffs as $staff)
                                                     <option value="{{ $staff->id }}" {{ isset($clientSubService->staff_id) && $clientSubService->staff_id == $staff->id ? 'selected' : '' }}>
@@ -104,8 +105,9 @@
                                             </select>
                                         </td>
                                         <td>
-                                            <textarea name="note" rows="1" class="form-control" placeholder="Note for this task">{{ isset($clientSubService->note) ? $clientSubService->note : '' }}</textarea>
+                                            <textarea name="note" id="note" rows="1" class="form-control" placeholder="Note for this task">{{ isset($clientSubService->note) ? $clientSubService->note : '' }}</textarea>
                                         </td>
+                                        <td><span class="removeSubServiceRow" style="cursor: pointer; font-size: 24px; color: red;">&#10006;</span></td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -120,11 +122,9 @@
 
 <div class="row mt-3">
     @if(isset($client->clientServices) && count($client->clientServices) > 0)
-        @foreach($client->clientServices as $clientService)
-            <div class="col-lg-4 mx-auto text-center">
-                <button id="service-updateButton" class="btn btn-sm bg-theme text-light btn-outline-dark">Update</button>
-            </div>
-        @endforeach
+        <div class="col-lg-4 mx-auto text-center">
+            <button id="service-updateButton" class="btn btn-sm bg-theme text-light btn-outline-dark">Update</button>
+        </div>
     @else
         <div class="col-lg-4 mx-auto text-center">
             <button id="service-saveButton" class="btn btn-sm bg-theme text-light btn-outline-dark">Save</button>
