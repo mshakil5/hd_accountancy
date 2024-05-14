@@ -2,7 +2,7 @@
 
 @section('content')
 
-<section class="section dashboard">
+<section class="section dashboard" id="breakSection">
         <div class="row">
 
           <!-- Assigned service details section start -->
@@ -76,6 +76,7 @@
           </div>
           <!-- Assigned service details section start -->
 
+         {{--
         <div class="col-lg-4 mb-3">
             <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
                 <div class="card-body px-0">
@@ -88,6 +89,141 @@
                 </div>
             </div>
         </div>
+        --}}
+
+
+        <!-- Login Time and button -->
+        <div class="col-lg-4 mb-3">
+            <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100">
+                <div class="card-body p-0">
+                    <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                        Your Time
+                    </div>
+                    <div class="d-flex gap-3 my-5">
+                        <div class="text-center flex-fill">
+                            <div class="fs-6 txt-theme fw-bold">Active Time</div>
+                            <div class="text-center fs-2 txt-theme fw-bold">
+                                {{ $activeTime ?? 'N/A' }}
+                            </div>
+                        </div>
+                        <div class="text-center border-start border-3 ps-3 flex-fill">
+                            <div class="fs-6 txt-theme fw-bold">Break Time</div>
+                            <div class="text-center fs-2 txt-theme fw-bold">
+                                   {{ $breakTime ?? 'N/A' }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-lg-6">
+                            <a href="" class="p-2 border-theme text-center fs-6 d-block rounded-3 border-3 txt-theme fw-bold my-1">Clock in</a>
+                        </div>
+                        <div class="col-lg-6">
+                            <a id="takeBreakBtn" class="p-2 border-theme text-center fs-6 d-block rounded-3 border-3 txt-theme fw-bold my-1" style="cursor: pointer;">Take Break</a>
+                        </div>
+                    </div>
+                   <div class="row mt-3">
+                        <div class="col-lg-12">
+                            <a href="#" onclick="checkWorkTimeStatus();" class="p-2 border-theme bg-theme text-center fs-6 d-block rounded-3 border-3 text-light fw-bold">Clock out</a>
+                            <form id="logout-form" action="{{ route('customLogout') }}" method="POST" class="d-none">
+                                @csrf
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Login Time and button -->
+
+        <!-- Note modal start -->
+        <div class="modal fade" id="noteModal" tabindex="-1" aria-labelledby="noteModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl mt-2">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <div class="row">
+                            <!-- Left Side Section -->
+                            <div class="col-lg-4">
+                                <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+                                    <div class="card-body px-0">
+                                        <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                                            Your tasks
+                                        </div>
+                                    
+                                        <div class="mt-3">
+                                            <table class="table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Login Time:</th>
+                                                        <th>Break Time:</th>
+                                                        <th>Total Work Time:</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td><span id="loginTime"></span></td>
+                                                        <td><span id="totalBreakTime"></span></td>
+                                                        <td><span id="totalDuration"></span></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        <div id="completedServices">
+                                            <table id="completedServicesTable" class="table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Client Name</th>
+                                                        <th>Sub Service Name</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <!--  -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right Side Section -->
+                            <div class="col-lg-8">
+                                <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+                                    <div class="card-body px-0">
+                                        <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                                            Add Note
+                                        </div>
+                                        <form id="noteForm" method="" action="#">
+                                            @csrf
+                                            <div class="form-group mt-4">
+                                                <label class="fw-bold mr-2">Note:</label>
+                                                <textarea class="form-control" id="noteInput" rows="3" name="note" placeholder="Your notes..."></textarea>
+                                            </div>
+
+                                            <div class="form-group row mt-3 align-items-center">
+                                                <div class="col">
+                                                    <label class="fw-bold mr-2">Additional Work:</label>
+                                                </div>
+                                                <div class="col-auto">
+                                                    <button type="button" class="btn btn-primary" id="addNoteRowBtn">+</button>
+                                                </div>
+                                            </div>
+
+                                            <div id="additionalWorkRows">
+                                                <!-- Rows -->
+                                            </div>
+
+                                            <div class="text-right mt-3">
+                                                <button type="button" class="btn btn-primary bg-theme-light fs-4 border-theme border-2 fw-bold txt-theme" id="saveNoteBtn">Save Note And Log Out</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Note modal end -->
 
         <!-- Service message modal start -->
         <div class="modal fade" id="messageModal" tabindex="-1" role="dialog" aria-labelledby="messageModalLabel" aria-hidden="true">
@@ -211,7 +347,7 @@
                   </div>
               </div>
          </div>
-         <!-- Completed service details section end -->
+        <!-- Completed service details section end -->
 
         <!-- Completed tasks table start-->
         <div class="col-lg-8 mb-3">
@@ -239,6 +375,25 @@
         <!-- Completed tasks table end-->
     </div>
 </section>
+
+<div class="col-lg-4 mb-3" id="breakOutSection" style="display: none;">
+    <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100">
+        <div class="card-body p-0">
+            <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold" style="margin-bottom: 35px;">
+            Clock Out to Start Work 
+        </div>
+
+            <!-- Add some blank space -->
+            <div style="margin-bottom: 10px;"></div>
+            <div class="row mt-10">
+                <div class="col-lg-12">
+                    <a id="breakOutBtn" class="p-2 border-theme bg-theme text-center fs-6 d-block rounded-3 border-3 text-light fw-bold" style="display: none; cursor: pointer;">Break Out</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<input type="hidden" id="workTimeId" value="">
 
 @endsection
 
@@ -749,5 +904,273 @@
     });
 </script>
 <!-- Completed tasks list end -->
+
+<!-- Task Check before loggin out start -->
+<script>
+    function checkWorkTimeStatus() {
+        $.ajax({
+            url: '/manager/check-work-time-status', 
+            type: 'GET',
+            success: function(response) {
+                if (response.status === 'ongoing') {
+                     swal({
+                        title: "Warning!",
+                        text: "Please stop your break or work time before logging out.",
+                        icon: "warning",
+                        button: "OK",
+                    });
+                } else {
+                    $('#noteModal').modal('show');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error(error);
+            }
+        });
+    }
+</script>
+<!-- Task Check before loggin out end -->
+
+<!-- Take Break Start -->
+<script>
+    $(document).ready(function() {
+        checkBreakStatus($('#workTimeId').val());
+
+        $('#takeBreakBtn').click(function(event) {
+            event.preventDefault();
+            // console.log('clicked');
+
+            $.ajax({
+                url: '/manager/take-break',
+                type: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                data: {},
+                success: function(response) {
+                    $('#workTimeId').val(response.workTimeId);
+                    localStorage.setItem('workTimeId', response.workTimeId);
+                    checkBreakStatus(response.workTimeId);
+                },
+                error: function(xhr, status, error) {
+                    console.error(xhr.responseText);
+                }
+            });
+        });
+
+        $('#breakOutBtn').click(function(event) {
+            event.preventDefault();
+
+            var workTimeId = localStorage.getItem('workTimeId');
+            if (workTimeId) {
+                $.ajax({
+                    url: '/manager/break-out',
+                    type: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    data: { workTimeId: workTimeId },
+                    success: function(response) {
+                        localStorage.setItem('isBreak', false);
+                        $('#breakOutSection').hide();
+                        $('#breakSection').show();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', xhr.responseText);
+                    }
+                });
+            }
+        });
+    });
+
+    function checkBreakStatus(workTimeId) {
+        if (workTimeId) {
+            $.ajax({
+                url: '/manager/check-break-status',
+                type: 'GET',
+                data: { workTimeId: workTimeId },
+                success: function(response) {
+                    if (response.isBreak) {
+                        localStorage.setItem('isBreak', true);
+                        $('#breakSection').hide();
+                        $('#breakOutSection').show();
+                    } else {
+                        localStorage.setItem('isBreak', false);
+                        $('#breakSection').show();
+                        $('#breakOutSection').hide();
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error(xhr.responseText);
+                }
+            });
+        }
+    }
+
+    $(window).on('load', function() {
+        var isBreak = localStorage.getItem('isBreak');
+        if (isBreak === 'true') {
+            $('#breakSection').hide();
+            $('#breakOutSection').show();
+        } else {
+            $('#breakSection').show();
+            $('#breakOutSection').hide();
+        }
+    });
+</script>
+<!-- Take Break End -->
+
+<!-- Data showing in modal start  -->
+<script>
+    function fetchClientSubServices() {
+        var csrfToken = "{{ csrf_token() }}";
+
+        $.ajax({
+            url: '/manager/get-completed-services-modal',
+            method: 'GET',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken
+            },
+            success: function(response) {
+
+                function formatDuration(seconds) {
+                    var hours = Math.floor(seconds / 3600);
+                    var minutes = Math.floor((seconds % 3600) / 60);
+                    var remainingSeconds = seconds % 60;
+                    
+                    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+                }
+                $('#loginTime').text(moment(response.login_time).format('HH:mm:ss'));
+                $('#totalBreakTime').text(formatDuration(response.total_break_duration));
+                $('#totalDuration').text(formatDuration(response.total_duration));
+
+
+                var completedServicesHtml = '';
+                    $.each(response.completed_services, function(index, item) {
+                        completedServicesHtml += '<tr>';
+                        completedServicesHtml += '<td>' + item.client_name + '</td>';
+                        completedServicesHtml += '<td>' + item.sub_service_name + '</td>';
+                        completedServicesHtml += '</tr>';
+                    });
+                    $('#completedServicesTable tbody').html(completedServicesHtml);
+            },
+            error: function(xhr, status, error) {
+                console.error(xhr.responseText);
+            }
+        });
+    }
+
+    $(document).ready(function() {
+        fetchClientSubServices();
+    });
+</script>
+<!-- Data showing in modal end  -->
+
+<!-- Note and additional work start -->
+<script>
+    $(document).ready(function() {
+        $('#addNoteRowBtn').click(function() {
+            var newRowHtml = `
+                <div class="mt-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex flex-column">
+                            <label>Client:</label>
+                            <select class="form-control px-3 py-2 client-name select2" style="width: 115px;">
+                                @foreach($clients as $client)
+                                    <option value="{{ $client->id }}">{{ $client->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="d-flex flex-column">
+                            <label>Sub Service:</label>
+                            <select class="form-control px-3 py-2 sub-service-name select2" style="width: 115px;">
+                                @foreach($subServices as $subService)
+                                    <option value="{{ $subService->id }}">{{ $subService->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="d-flex flex-column">
+                            <label>Note:</label>
+                            <textarea class="form-control px-3 py-2 note" rows="1" style="width: 115px;" id="subServiceNote" placeholder="Note"></textarea>
+                        </div>
+                        <div class="d-flex flex-column">
+                            <label>Start Time:</label>
+                            <input type="time" class="form-control px-3 py-2 start-time" style="width: 130px;">
+                        </div>
+                        <div class="d-flex flex-column">
+                            <label>End Time:</label>
+                            <input type="time" class="form-control px-3 py-2 end-time" style="width: 130px;">
+                        </div>
+                        <button type="button" class="btn btn-danger btn-remove-note-row">-</button>
+                    </div>
+                </div>`;
+                
+            $('#additionalWorkRows').append(newRowHtml);
+            $('.select2').select2();
+        });
+
+        $(document).on('click', '.btn-remove-note-row', function() {
+            $(this).closest('.mt-3').remove();
+        });
+
+        $('#saveNoteBtn').click(function(e) {
+            e.preventDefault();
+
+            var formData = {
+                _token: '{{ csrf_token() }}',
+                client_ids: [],
+                sub_service_ids: [],
+                notes: [],
+                noteInput: '', 
+                start_times: [],
+                end_times: []
+            };
+
+            $('#additionalWorkRows .client-name').each(function() {
+                formData.client_ids.push($(this).val());
+            });
+
+            $('#additionalWorkRows .sub-service-name').each(function() {
+                formData.sub_service_ids.push($(this).val());
+            });
+
+            $('#additionalWorkRows .note').each(function() {
+                formData.notes.push($(this).val());
+            });
+
+            $('#additionalWorkRows .start-time').each(function() {
+                formData.start_times.push($(this).val());
+            });
+
+            $('#additionalWorkRows .end-time').each(function() {
+                formData.end_times.push($(this).val());
+            });
+
+            var noteValue = $('#noteInput').val();
+            formData.noteInput = noteValue;
+
+            $.ajax({
+                url: '/manager/save-notes',
+                type: 'POST',
+                data: formData,
+                success: function(response) {
+                    swal({
+                        title: "Success!",
+                        text: "Record saved and you will be logged out now",
+                        icon: "success",
+                        button: "OK",
+                    });
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                },
+                error: function(xhr, status, error) {
+                    console.error(xhr.responseText);
+                }
+            });
+        });
+    });
+</script>
+<!-- Note and additional work end -->
 
 @endsection

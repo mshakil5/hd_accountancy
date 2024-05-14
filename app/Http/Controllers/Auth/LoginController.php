@@ -68,7 +68,7 @@ class LoginController extends Controller
                     ->withInput($request->except('password'));
             }
 
-            if($user->type == 'staff'){
+            if($user->type == 'staff' || $user->type == 'manager'){
                 $attendanceLog = new UserAttendanceLog();
                 $attendanceLog->user_id = $user->id;
                 $attendanceLog->start_time = now();

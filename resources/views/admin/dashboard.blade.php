@@ -466,6 +466,61 @@
         </div>
         <!-- AAssigned Work List -->
 
+        <!-- Completed service details section start -->
+        <div class="col-lg-12">
+            <div class="report-box border-theme sales-card p-4 mb-3 rounded-4 border-3" id="completedTaskSection" style="display: none;">
+                <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                Completed Work Details
+                </div>
+
+                <div class="container-fluid">
+                    <div class="row mt-3">
+                        <div class="col-md-3 text-center">
+                            <h5 class="mb-3">Service</h5>
+                            <input type="text" id="service_name1" class="form-control mt-2" readonly>
+                        </div>    
+                        <div class="col-md-3 text-center">
+                            <h5 class="mb-3">Manager</h5>
+                            <input type="text" id="manager_name1" class="form-control mt-2" value="" readonly>
+                        </div>  
+                        <div class="col-md-3 text-center">
+                            <h5 class="mb-3">Frequency</h5>
+                            <input type="text" id="service_frequency1" class="form-control mt-2" readonly>
+                        </div>   
+                        <div class="col-md-3 text-center">
+                            <h5 class="mb-3">Deadline</h5>
+                            <input type="date" id="service_deadline1" class="form-control mt-2" readonly>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Sub Service Name</th>
+                                        <th>Deadline</th>
+                                        <th>Staff</th>
+                                        <th>Note</th>
+                                        <th>Status</th>
+                                        <th>Timer</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="completedServiceDetailsTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3 mb-3">
+                        <div class="col-lg-4 mx-auto text-center">
+                            <button id="completed-cancelButton" class="btn btn-sm btn-outline-dark">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Completed service details section start -->
+
         <!-- Completed Work List -->
         <div class="col-lg-12">
           <div class="col-lg-12 px-0 border shadow-sm mb-3">
@@ -478,11 +533,11 @@
               <table id="completedServices" class="table cell-border table-striped" style="width:100%">
                   <thead>
                       <tr>
-                          <th scope="col">Sl</th>
+                          <th scope="col">Client Name</th>
+                          <th scope="col">Service Name</th>
                           <th scope="col">Deadline</th>
-                          <th scope="col">Client</th>
-                          <th scope="col">Tasks</th>
-                          <th scope="col">Staff</th>
+                          <th scope="col">Frequency</th>
+                          <th scope="col">Action</th>
                       </tr>
                   </thead>
                   <tbody>
@@ -653,26 +708,108 @@
               url: '/admin/get-completed-services',
               type: 'GET',
           },
-          columns: [
-              { 
-                  data: null, 
-                  name: 'id', 
-                  render: function (data, type, row, meta) {
-                      return meta.row + 1;
+          columns: 
+            [
+                { data: 'clientname', name: 'clientname' },
+                  { data: 'servicename', name: 'servicename' },
+                  { 
+                      data: 'service_deadline', 
+                      name: 'service_deadline',
+                      render: function(data, type, row) {
+                          return moment(data).format('DD.MM.YY');
+                      }
+                  },
+                  { data: 'service_frequency', name: 'service_frequency' },
+                  { 
+                      data: 'action', 
+                      name: 'action',
+                      orderable: false, 
+                      searchable: false 
                   }
-              },
-              { 
-                  data: 'deadline', 
-                  name: 'deadline', 
-                  render: function(data, type, row) {
-                      return moment(data).format('DD.MM.YY');
-                  }
-              },
-              { data: 'client_name', name: 'client_name' },
-              { data: 'tasks', name: 'tasks' },
-              { data: 'staff_name', name: 'staff_name' }
-          ]
+            ]
       });
+
+      $(document).on('click', '.task-details', function() {
+            var clientserviceId = $(this).data('id');
+            var managerFirstName = $(this).data('manager-firstname');
+            var rowData = $('#completedServices').DataTable().row($(this).closest('tr')).data();
+            var serviceName = rowData.servicename;
+            var frequency = rowData.service_frequency;
+            var deadline = rowData.service_deadline;
+
+            $('#service_name1').val(serviceName);
+            $('#manager_name1').val(managerFirstName);
+            $('#service_frequency1').val(frequency);
+            $('#service_deadline1').val(deadline);
+
+            $.ajax({
+                url: '/admin/getClientSubServices/' + clientserviceId,
+                type: "GET",
+                dataType: "json",
+                success: function(data) {
+                    populateCompletedForm(data);
+                    console.log(data);
+                },
+                error: function(xhr, error, thrown) {
+                    console.error('Error fetching sub-services:', error, thrown);
+                }
+            });
+        });
+
+        function populateCompletedForm(subServices) {
+            var completedServiceDetailsTable = $('#completedServiceDetailsTable');
+            completedServiceDetailsTable.empty();
+
+            var staffs = @json($staffs);
+
+            $.each(subServices, function(index, subService) {
+                var staff = staffs.find(function(staff) {
+                    return staff.id === subService.staff_id;
+                });
+
+                var staffName = staff ? staff.first_name : 'N/A';
+                var duration = '';
+
+                if (subService.sequence_status === 2 && Array.isArray(subService.work_times) && subService.work_times.length > 0) {
+                    var firstWorkTime = subService.work_times[0];
+                    if (firstWorkTime) {
+                        var durationInSeconds = firstWorkTime.duration;
+                        var hours = Math.floor(durationInSeconds / 3600);
+                        var minutes = Math.floor((durationInSeconds % 3600) / 60);
+                        var seconds = durationInSeconds % 60;
+                        duration = `<div>${hours}h ${minutes}m ${seconds}s</div>`;
+                    }
+                }
+
+                var newRow = `
+                    <tr>
+                        <td>${subService.sub_service.name}</td>
+                        <td>${moment(subService.deadline).format('DD.MM.YYYY')}</td>
+                        <td>${staffName}</td>
+                        <td>${subService.note ? subService.note : ''}</td>
+                        <td>
+                            ${  subService.sequence_status === 2 ? 'Work is completed' 
+                                : subService.sequence_status === 1 ? 'Not Started' 
+                                : subService.sequence_status === 0 ? 'Processing'
+                                : 'N/A'
+                            }
+                        </td>
+                        <td>
+                            <span class="timer-duration">${duration}</span>
+                        </td>
+                    </tr>
+                `;
+                completedServiceDetailsTable.append(newRow);
+            });
+
+            $('#completedTaskSection').show();
+        }
+
+
+        $('#completed-cancelButton').click(function() {
+            $('#completedTaskSection').hide();
+        });
+
   });
 </script>
 <!-- Completed Work List -->

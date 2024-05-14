@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Department;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use App\Models\ClientSubService;
 use App\Models\UserAttendanceLog;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -86,6 +87,7 @@ class StaffController extends Controller
         $data->employment_status  = $request->employment_status;
         $data->joining_date  = $request->joining_date;
         $data->reporting_to  = $request->reporting_to;
+        $data->id_number = mt_rand(10000000, 99999999);
 
         $data->type = "3";
         $data->total_holiday = "20";
@@ -270,15 +272,22 @@ class StaffController extends Controller
 
     public function updateLogs(Request $request, $id)
     {
+        $request->validate([
+            'start_time' => 'required|date_format:d-m-Y H:i:s',
+            'end_time' => 'required|date_format:d-m-Y H:i:s',
+            'note' => 'nullable|string'
+        ]);
+
         $staff = UserAttendanceLog::find($id);
 
-        $startTime = Carbon::parse($request->input('start_time'));
-        $endTime = Carbon::parse($request->input('end_time'));
+        $startTime = Carbon::createFromFormat('d-m-Y H:i:s', $request->input('start_time'));
+        $endTime = Carbon::createFromFormat('d-m-Y H:i:s', $request->input('end_time'));
 
         $staff->start_time = $startTime;
         $staff->end_time = $endTime;
         $staff->note = $request->input('note');
         $staff->save();
+        
         return response()->json(['success' => true, 'message' => 'Staff record updated successfully']);
     }
 
@@ -575,6 +584,36 @@ class StaffController extends Controller
 
             return response()->json(['message' => 'User details updated successfully.']);
         }
+    }
+
+    public function staffTaskDetails($staffId)
+    {
+        $user = User::findOrFail($staffId);
+        $staffName = $user->first_name. ' '. $user->last_name;
+        $today = now()->startOfDay();
+        $clientSubServices = ClientSubService::with(['workTimes', 'client', 'subService'])
+            ->where('staff_id', $staffId)
+            ->whereDate('updated_at', $today)
+            ->get();
+
+        return view('admin.staff.task_details', compact('clientSubServices','staffName'));
+    }
+
+    public function updateClientService(Request $request)
+    {
+        $request->validate([
+            'clientSubServiceId' => 'required',
+        ]);
+
+        $clientSubService = ClientSubService::find($request->clientSubServiceId);
+        if ($clientSubService) {
+            $clientSubService->sequence_status = $request->sequence_status;
+            $clientSubService->save();
+
+            return response()->json(['status' => 'success', 'message' => 'Sequence status updated successfully']);
+        }
+
+        return response()->json(['status' => 'error', 'message' => 'Client Sub Service not found'], 404);
     }
 
 }

@@ -14,6 +14,11 @@
                     <div class="card-header">
                         <h3 class="card-title">Previously logged-in staffs (within the last 12 hours)</h3>
                     </div>
+
+                    <!-- Success and Error message -->
+                    <div id="error-message" style="color: red; display: none;"></div>
+                    <!-- Success and Error message -->
+
                     <!-- /.card-header -->
                     <div class="card-body">
                         <table id="example1" class="table table-bordered table-striped">
@@ -25,6 +30,7 @@
                                     <th style="text-align: center">Logout Time</th>
                                     <th style="text-align: center">Duration</th>
                                     <th style="text-align: center">Note</th>
+                                    <th style="text-align: center">Today's Task</th>
                                     <th style="text-align: center">Action</th>
                                 </tr>
                             </thead>
@@ -34,16 +40,21 @@
                                     <td style="text-align: center">{{ $key + 1 }}</td>
                                     <td style="text-align: center">{{ $staff->user->first_name }} {{ $staff->user->last_name }}</td>
                                     <td style="text-align: center">
-                                        <input type="text" class="form-control" value="{{ \Carbon\Carbon::parse($staff->start_time)->format('H:i:s . d/m/Y') }}" id="start_time_{{ $staff->id }}" disabled>
+                                        <input type="text" class="form-control" value="{{ \Carbon\Carbon::parse($staff->start_time)->format('d-m-Y H:i:s') }}" id="start_time_{{ $staff->id }}" disabled>
                                     </td>
                                     <td style="text-align: center">
-                                        <input type="text" class="form-control" value="{{ \Carbon\Carbon::parse($staff->end_time)->format('H:i:s . d/m/Y') }}" id="end_time_{{ $staff->id }}" disabled>
+                                        <input type="text" class="form-control" value="{{ \Carbon\Carbon::parse($staff->end_time)->format('d-m-Y H:i:s') }}" id="end_time_{{ $staff->id }}" disabled>
                                     </td>
                                     <td style="text-align: center">
                                         <input type="text" class="form-control" value="{{ \Carbon\Carbon::parse($staff->start_time)->diffInHours($staff->end_time) }} hours {{ \Carbon\Carbon::parse($staff->start_time)->diffInMinutes($staff->end_time) % 60 }} minutes" id="duration_{{ $staff->id }}" disabled>
                                     </td>
                                     <td style="text-align: center">
                                         <input type="text" class="form-control" value="{{ $staff->note }}" id="note_{{ $staff->id }}" disabled>
+                                    </td>
+                                   <td style="text-align: center">
+                                        <a class="btn btn-link" href="{{ route('task.details.staff', ['user_id' => $staff->user->id]) }}">
+                                            <i class="fa fa-eye" style="font-size: 20px;"></i>
+                                        </a>
                                     </td>
                                     <td style="text-align: center">
                                         <a class="btn btn-link edit-btn" rid="{{ $staff->id }}"><i class="fa fa-edit" style="font-size: 20px;"></i></a>
@@ -143,9 +154,19 @@
                     button: "OK",
                 });
               },
-              error: function(xhr, status, error) {
-                  console.error(xhr.responseText);
-              }
+                error: function(xhr, status, error) {
+                    var response = JSON.parse(xhr.responseText);
+                    var errorMessage = response.message;
+                    var errors = response.errors; 
+
+                    swal({
+                        title: "Error!",
+                        text: errorMessage,
+                        icon: "error",
+                        footer: '<strong>Errors:</strong><br>' + JSON.stringify(errors),
+                        button: "OK",
+                    });
+                }
           });
       });
   });

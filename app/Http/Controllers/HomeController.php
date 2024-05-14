@@ -147,9 +147,24 @@ class HomeController extends Controller
      */
     public function managerHome(): View
     {
+        $clients = Client::orderBy('id', 'DESC')->get();
+        $subServices = SubService::orderby('id','DESC')->get();
         $staffs = User::whereIn('type', ['3','2'])->orderby('id','DESC')->get();
         $managers = User::whereIn('type', ['3','2'])->orderby('id','DESC')->get();
-        return view('manager.dashboard',compact('staffs','managers'));
+        $user = Auth::user();
+        $attendanceLog = UserAttendanceLog::where('user_id', $user->id)
+            ->orderBy('start_time', 'desc')
+            ->first();
+
+        $activeTime = $breakTime = null;
+        if ($attendanceLog) {
+            $startTime = Carbon::parse($attendanceLog->start_time);
+            $endTime = Carbon::parse($attendanceLog->end_time);
+            $timeDifference = $startTime->diff($endTime);
+            $activeTime = $timeDifference->format('%H:%I:%S');
+            $breakTime = $activeTime;
+        }
+        return view('manager.dashboard',compact('staffs','managers','activeTime','breakTime','clients','subServices'));
     }
 
     /**

@@ -13,4 +13,9 @@ class WorkTime extends Model
         'client_sub_service_id',
     ];
 
+    public function clientSubService()
+    {
+        return $this->belongsTo(ClientSubService::class);
+    }
+
 }

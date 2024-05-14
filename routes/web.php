@@ -73,6 +73,20 @@ Route::middleware(['auth', 'user-access:manager'])->group(function () {
     // Manager holiday
     Route::get('/manager/holiday', [HolidayController::class, 'indexManager'])->name('manager.holiday');
     Route::post('/manager/holiday-request', [HolidayController::class, 'holidayRequestManager'])->name('manager.holidayRequest');
+
+    // work time check
+    Route::get('/manager/check-work-time-status', [ServiceController::class,'checkWorkTimeStatus']);
+
+     //  Take Break and Break Out 
+     Route::post('/manager/take-break',  [ServiceController::class,'takeBreak']);
+     Route::get('/manager/check-break-status',  [ServiceController::class,'checkBreakStatus']);
+     Route::post('/manager/break-out', [ServiceController::class,'breakOut']);
+
+     //  Data showing in modal
+     Route::get('/manager/get-completed-services-modal', [ServiceController::class, 'getCompetedServicesModal']);
+
+     // Note and additional work
+     Route::post('/manager/save-notes', [ServiceController::class, 'saveNotes'])->name('saveNotes');
 });
 
 //Staff

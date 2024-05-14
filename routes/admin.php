@@ -172,6 +172,9 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
 
      //  Fetch completed services
      Route::get('/get-completed-services', [ServiceController::class, 'getCompletedServices']);
+     
+     // Fetch Sub Services
+     Route::get('/getClientSubServices/{clientserviceId}', [ServiceController::class, 'getClientSubService']);
 
      //Change status of assigned services + staff
      Route::post('/update-service-status', [ServiceController::class, 'updateServiceStatus'])->name('update-service-status');
@@ -249,6 +252,11 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/prev-staffs', [StaffController::class, 'prevLogStaffs'])->name('prevLogStaffs');
 
     Route::post('/prev-staffs/update/{id}', [StaffController::class, 'updateLogs']);
+
+    // Today's staff's task details and edit by admin
+    Route::get('/task-details/{user_id}', [StaffController::class, 'staffTaskDetails'])->name('task.details.staff');
+
+    Route::post('/update-client-service', [StaffController::class, 'updateClientService']);
 
     // prorota make
     Route::get('/prorota', [ProrotaController::class, 'index'])->name('prorota');

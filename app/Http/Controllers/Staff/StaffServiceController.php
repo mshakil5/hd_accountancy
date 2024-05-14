@@ -49,7 +49,7 @@ class StaffServiceController extends Controller
 
     public function getCompetedServices(Request $request)
     {
-            if ($request->ajax()) {
+        if ($request->ajax()) {
             $data = ClientService::with('clientSubServices')
                 ->whereDate('service_deadline', '<=', now()->addDays(30))
                 ->whereHas('clientSubServices', function ($query) {

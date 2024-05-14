@@ -9,6 +9,7 @@ use App\Models\ClientService;
 use App\Models\ServiceMessage;
 use Illuminate\Support\Carbon;
 use App\Models\ClientSubService;
+use App\Models\UserAttendanceLog;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -267,5 +268,151 @@ class ServiceController extends Controller
         } else {
             return response()->json(['error' => 'Failed to start work time.'], 422);
         }
+    }
+
+    public function checkWorkTimeStatus()
+    {
+        $managerId = Auth::id();
+        $ongoingWorkTime = WorkTime::where('manager_id', $managerId)
+            ->whereNull('end_time')
+            ->exists();
+        if ($ongoingWorkTime) {
+            return response()->json(['status' => 'ongoing']);
+        } else {
+            return response()->json(['status' => 'completed']);
+        }
+    }
+
+    public function takeBreak(Request $request)
+    {
+        $workTime = new WorkTime();
+        $workTime->manager_id = Auth::id();
+        $workTime->start_time = Carbon::now();
+        $workTime->start_date = Carbon::today()->format('d-m-Y');
+        $workTime->is_break = 1;
+        $workTime->created_by = Auth::id();
+        $workTime->save();
+        return response()->json(['message' => 'Break started successfully', 'workTimeId' => $workTime->id], 200);
+    }
+
+    public function checkBreakStatus(Request $request)
+    {
+        $workTimeId = $request->input('workTimeId');
+        $workTime = WorkTime::find($workTimeId);
+
+        if ($workTime && $workTime->is_break == 1) {
+            return response()->json(['isBreak' => true]);
+        } else {
+            return response()->json(['isBreak' => false]);
+        }
+    }
+
+    public function breakOut(Request $request)
+    {
+        $workTimeId = $request->input('workTimeId');
+        $workTime = WorkTime::find($workTimeId);
+        if ($workTime) {
+            $startTime = $workTime->start_time;
+            $endTime = Carbon::now();
+            $duration = $endTime->diffInSeconds($startTime);
+            $workTime->end_time = $endTime;
+            $workTime->duration = $duration;
+            $workTime->save();
+            return response()->json(['success' => true, 'message' => 'Break Out successful']);
+        } else {
+            return response()->json(['success' => false, 'message' => 'WorkTime not found'], 404);
+        }
+    }
+
+    public function getCompetedServicesModal(Request $request)
+    {
+        $staffId = Auth::id();
+        $today = now()->startOfDay();
+
+        $loginTime = UserAttendanceLog::where('user_id', $staffId)
+            ->whereDate('start_time', $today)
+            ->orderBy('created_at', 'asc')
+            ->value('start_time');
+
+        $clientSubServices = ClientSubService::where('staff_id', $staffId)
+            ->where('sequence_status', 2)
+            ->whereDate('updated_at', $today)
+            ->with(['workTimes', 'client', 'subService'])
+            ->get();
+
+        $completedServices = [];
+        $totalDuration = 0;
+
+        foreach ($clientSubServices as $clientSubService) {
+            $workTime = $clientSubService->workTimes->first();
+
+            if ($workTime) {
+                $completedServices[] = [
+                    'client_name' => $clientSubService->client->name,
+                    'client_id' => $clientSubService->client_id,
+                    'sub_service_name' => $clientSubService->subService->name,
+                    'sub_service_id' => $clientSubService->sub_service_id,
+                    'note' => $clientSubService->note,
+                    'start_time' => $workTime->start_time,
+                    'end_time' => $workTime->end_time,
+                ];
+
+                $durationInSeconds = strtotime($workTime->end_time) - strtotime($workTime->start_time);
+                $totalDuration += $durationInSeconds;
+            }
+        }
+
+         $totalBreakDuration = WorkTime::where('staff_id', $staffId)
+            ->whereDate('start_time', $today)
+            ->where('is_break', true)
+            ->sum('duration');
+
+        return response()->json([
+            'login_time' => $loginTime,
+            'total_duration' => $totalDuration,
+            'total_break_duration' => $totalBreakDuration,
+            'completed_services' => $completedServices,
+        ]);
+    }
+
+    public function saveNotes(Request $request)
+    {
+        $staffId = auth()->id();
+
+        if ($request->filled(['client_ids', 'sub_service_ids', 'notes', 'start_times', 'end_times'])) {
+            for ($i = 0; $i < count($request->client_ids); $i++) {
+                $clientSubService = new ClientSubService();
+                $clientSubService->client_id = $request->client_ids[$i];
+                $clientSubService->sub_service_id = $request->sub_service_ids[$i];
+                $clientSubService->note = $request->notes[$i];
+                $clientSubService->staff_id = $staffId;
+                $clientSubService->save();
+
+                $workTime = new WorkTime();
+                $workTime->client_sub_service_id = $clientSubService->id;
+                $workTime->start_time = $request->start_times[$i];
+                $workTime->end_time = $request->end_times[$i];
+                $workTime->staff_id = $staffId;
+                $workTime->save();
+            }
+        }
+
+        $attendanceLog = UserAttendanceLog::where('user_id', $staffId)
+            ->where('status', 0)
+            ->latest()
+            ->first();
+
+        if ($attendanceLog) {
+            $attendanceLog->end_time = now();
+            $attendanceLog->status = 1;
+            $noteInput = $request->input('noteInput');
+            $attendanceLog->note = $noteInput; 
+            $attendanceLog->save();
+        }
+        
+        session()->flush();
+        session()->regenerate();
+        
+        return redirect()->route('login')->with('success', 'Notes saved successfully');
     }
 }

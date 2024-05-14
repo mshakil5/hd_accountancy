@@ -332,41 +332,35 @@ class ServiceController extends Controller
     public function getCompletedServices(Request $request)
     {
         if ($request->ajax()) {
-            $data = ServiceStaff::with(['client', 'staff'])->where('status', 2)->orderBy('id', 'desc')->get();
-
-            $data->transform(function ($item, $key) {
-                $assigned_services = $item->assigned_services;
-                $services_names = [];
-
-                foreach ($assigned_services as $service_id) {
-                    $service = Service::find($service_id);
-                    if ($service) {
-                        $services_names[] = $service->name;
-                    }
-                }
-                $item->assigned_services = implode(', ', $services_names);
-
-                return $item;
-            });
+            $data = ClientService::with('clientSubServices')
+                ->whereDate('service_deadline', '<=', now()->addDays(30))
+                ->whereHas('clientSubServices', function ($query) {
+                    $query->where('sequence_status', 2);
+                })
+                ->orderBy('id', 'desc')
+                ->get();
 
             return DataTables::of($data)
-                ->addIndexColumn()
-                ->addColumn('client_name', function($row) {
-                    return $row->client ? $row->client->name : '';
+            
+                ->addColumn('clientname', function(ClientService $clientservice) {
+                    return $clientservice->client->name;
                 })
-                ->addColumn('tasks', function($row) {
-                    return $row->assigned_services;
+                ->addColumn('servicename', function(ClientService $clientservice) {
+                    return $clientservice->service->name;
                 })
-                ->addColumn('staff_name', function($row) {
-                    return $row->staff ? $row->staff->first_name : '';
+                ->addColumn('action', function(ClientService $clientservice) {
+                    $managerFirstName = $clientservice->manager->first_name;
+                    return '<button class="btn btn-secondary task-details" data-id="'. $clientservice->id. '" data-manager-firstname="'. $managerFirstName. '">Details</button>';
                 })
-                    ->addColumn('deadline', function($row) {
-                    return $row->deadline;
-                })
-                ->rawColumns(['client_name', 'tasks', 'staff_name'])
                 ->make(true);
         }
 
+    }
+
+    public function getClientSubService($clientserviceId)
+    {
+        $clientSubServices = ClientSubService::with('subService','serviceMessage','workTimes')->where('client_service_id', $clientserviceId)->get();
+        return response()->json($clientSubServices);
     }
 
     public function getSubServices($serviceId)

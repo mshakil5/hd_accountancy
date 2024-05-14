@@ -274,7 +274,6 @@
                 async: false,
                 success: function (response) {
                     if (response.status === 200) {
-                        // $('#successMessage b').text(response.message);
                         swal({
                             title: "Success!",
                             text: "Client details created successfully",
