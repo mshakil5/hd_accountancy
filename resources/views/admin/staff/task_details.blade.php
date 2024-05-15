@@ -6,46 +6,51 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-12">
-                <h2>Today's Task Details for {{ $staffName }}</h2>
-                <table class="table">
-                   <thead>
-                        <tr>
-                            <th>SL</th>
-                            <th>Client Name</th>
-                            <th>Sub Service Name</th>
-                            <th>Note</th>
-                            <th>Sequence Status</th>
-                            <th>Start Time</th>
-                            <th>End Time</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($clientSubServices as $service)
-                        <tr>
-                            <td>{{ $loop->index + 1 }}</td>
-                            <td>{{ optional($service->client)->name }}</td>
-                            <td>{{ optional($service->subService)->name }}</td>
-                            <td>
-                                <span>{!! $service->note !!}</span>
-                            </td>
-
-                            <td>
-                                <select class="form-control" id="sequence_status">
-                                    <option value="0" {{ $service->sequence_status == 0 ? 'selected' : '' }}>Processing</option>
-                                    <option value="1" {{ $service->sequence_status == 1 ? 'selected' : '' }}>Work Not Started</option>
-                                    <option value="2" {{ $service->sequence_status == 2 ? 'selected' : '' }}>Work Completed</option>
-                                </select>
-                            </td>
-                            <td>{{ optional($service->workTimes->first())->start_time ? \Carbon\Carbon::parse($service->workTimes->first()->start_time)->format('d. m. Y - H:i:s') : '' }}</td>
-                            <td>{{ optional($service->workTimes->first())->end_time ? \Carbon\Carbon::parse($service->workTimes->first()->end_time)->format('d. m. Y - H:i:s') : '' }}</td>
-                            <td>
-                                <button class="btn btn-primary update-btn" data-service-id="{{ $service->id }}">Update</button>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                <div class="card card-secondary">
+                    <div class="card-header">
+                        <h2>Today's Task Details for {{ $staffName }}</h2>
+                    </div>
+                    <div class="card-body">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>SL</th>
+                                    <th>Client Name</th>
+                                    <th>Sub Service Name</th>
+                                    <th>Note</th>
+                                    <th>Sequence Status</th>
+                                    <th>Start Time</th>
+                                    <th>End Time</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($clientSubServices as $service)
+                                <tr>
+                                    <td>{{ $loop->index + 1 }}</td>
+                                    <td>{{ optional($service->client)->name }}</td>
+                                    <td>{{ optional($service->subService)->name }}</td>
+                                    <td>
+                                        <span>{!! $service->note !!}</span>
+                                    </td>
+                                    <td>
+                                        <select class="form-control" id="sequence_status">
+                                            <option value="0" {{ $service->sequence_status == 0 ? 'selected' : '' }}>Processing</option>
+                                            <option value="1" {{ $service->sequence_status == 1 ? 'selected' : '' }}>Work Not Started</option>
+                                            <option value="2" {{ $service->sequence_status == 2 ? 'selected' : '' }}>Work Completed</option>
+                                        </select>
+                                    </td>
+                                    <td>{{ optional($service->workTimes->first())->start_time ? \Carbon\Carbon::parse($service->workTimes->first()->start_time)->format('d. m. Y - H:i:s') : '' }}</td>
+                                    <td>{{ optional($service->workTimes->first())->end_time ? \Carbon\Carbon::parse($service->workTimes->first()->end_time)->format('d. m. Y - H:i:s') : '' }}</td>
+                                    <td>
+                                        <button class="btn btn-primary update-btn" data-service-id="{{ $service->id }}">Update</button>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

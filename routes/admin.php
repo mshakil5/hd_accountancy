@@ -172,9 +172,12 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
 
      //  Fetch completed services
      Route::get('/get-completed-services', [ServiceController::class, 'getCompletedServices']);
+
+     //  Fetch assigned services
+     Route::get('/get-assigned-service', [ServiceController::class, 'getAssignedService']);
      
      // Fetch Sub Services
-     Route::get('/getClientSubServices/{clientserviceId}', [ServiceController::class, 'getClientSubService']);
+     Route::get('/getClientSubService/{clientserviceId}', [ServiceController::class, 'getClientSubService']);
 
      //Change status of assigned services + staff
      Route::post('/update-service-status', [ServiceController::class, 'updateServiceStatus'])->name('update-service-status');
@@ -250,6 +253,8 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
 
     //Previously logged in staffs
     Route::get('/prev-staffs', [StaffController::class, 'prevLogStaffs'])->name('prevLogStaffs');
+
+    Route::get('/all-prev-staffs', [StaffController::class, 'allPrevLogStaffs'])->name('allPrevLogStaffs');
 
     Route::post('/prev-staffs/update/{id}', [StaffController::class, 'updateLogs']);
 

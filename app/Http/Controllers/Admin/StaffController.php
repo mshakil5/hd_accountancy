@@ -256,7 +256,7 @@ class StaffController extends Controller
     public function prevLogStaffs()
     {
         $previouslyLoggedStaff = UserAttendanceLog::with('user')
-            ->where('start_time', '>=', now()->subHours(12))
+            ->where('start_time', '>=', now()->subDays(30))
             ->whereNotNull('end_time') 
             ->orderBy('id', 'desc')
             ->get()
@@ -267,6 +267,22 @@ class StaffController extends Controller
             });
         
         return view('admin.staff.previous_logged', compact('previouslyLoggedStaff'));
+
+    }
+
+    public function allPrevLogStaffs()
+    {
+        $previouslyLoggedStaff = UserAttendanceLog::with('user')
+            ->whereNotNull('end_time') 
+            ->orderBy('id', 'desc')
+            ->get()
+            ->map(function ($log) {
+                $duration = Carbon::parse($log->start_time)->diff($log->end_time);
+                $log->duration = $duration->format('%H:%I:%S');
+                return $log;
+            });
+        
+        return view('admin.staff.all_previous_logged', compact('previouslyLoggedStaff'));
 
     }
 

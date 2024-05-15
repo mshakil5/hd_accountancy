@@ -14,10 +14,7 @@
                     <div class="card-header">
                         <div class="col d-flex justify-content-between">
                             <div>
-                                <h3 class="card-title">Previously logged-in staffs (within the last 30 days)</h3>
-                            </div>
-                            <div>
-                                <a href="{{ route('allPrevLogStaffs') }}" class="btn btn-sm bg-theme text-light btn-outline-dark mt-3">View All Records</a>
+                                <h3 class="card-title">All Records</h3>
                             </div>
                         </div>
                     </div>
@@ -34,7 +31,6 @@
                                     <th style="text-align: center">Logout Time</th>
                                     <th style="text-align: center">Duration</th>
                                     <th style="text-align: center">Note</th>
-                                    <th style="text-align: center">Today's Task</th>
                                     <th style="text-align: center">Action</th>
                                 </tr>
                             </thead>
@@ -54,11 +50,6 @@
                                     </td>
                                     <td style="text-align: center">
                                         <input type="text" class="form-control" value="{{ $staff->note }}" id="note_{{ $staff->id }}" disabled>
-                                    </td>
-                                   <td style="text-align: center">
-                                        <a class="btn btn-link" href="{{ route('task.details.staff', ['user_id' => $staff->user->id]) }}">
-                                            <i class="fa fa-eye" style="font-size: 20px;"></i>
-                                        </a>
                                     </td>
                                     <td style="text-align: center">
                                         <a class="btn btn-link edit-btn" rid="{{ $staff->id }}"><i class="fa fa-edit" style="font-size: 20px;"></i></a>

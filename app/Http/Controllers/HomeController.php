@@ -131,12 +131,53 @@ class HomeController extends Controller
                 ->get();
                 // dd($absentStaff);
 
+                $today = now()->toDateString();
+                $currentDayOfWeek = Carbon::now()->format('l');
+
+                $prorotaDetails = ProrotaDetail::where('day', $currentDayOfWeek)->get();
+
+                $filteredLogs = UserAttendanceLog::with('user')
+                    ->whereHas('user', function ($query) use ($prorotaDetails) {
+                        $query->whereIn('id', $prorotaDetails->pluck('staff_id'));
+                    })
+                    ->get()
+                    ->map(function ($log) use ($prorotaDetails) {
+                        $prorotaDetail = $prorotaDetails->firstWhere('staff_id', $log->user_id);
+
+                        if (!$prorotaDetail) {
+                            return null;
+                        }
+
+                        $startTime = Carbon::parse($log->start_time);
+                        $endTime = Carbon::parse($log->end_time); 
+                        $scheduledStartTime = Carbon::parse($prorotaDetail->start_time);
+                        $scheduledEndTime = Carbon::parse($prorotaDetail->end_time);
+
+                        $departureStatus = '';
+                       if ($endTime->lte($scheduledEndTime)) {
+                            $departureStatus = 'On-Time';
+                        } elseif ($startTime->lt($scheduledEndTime)) {
+                            $departureStatus = 'Early Leave';
+                        } else {
+                            $departureStatus = 'Late Leave';
+                        }
+
+
+                        $log->departure_status = $departureStatus;
+
+                        return $log;
+                    })
+                    ->reject(function ($log) {
+                        return $log === null; 
+                    });
+                    // dd($filteredLogs);
+
         $clients = Client::orderBy('id', 'DESC')->get();
         $staffs = User::whereIn('type', ['3', '2'])->orderBy('id', 'DESC')->get();
         $managers = User::whereIn('type', ['3', '2'])->orderBy('id', 'DESC')->get();
         $services = Service::orderBy('id', 'DESC')->get();
 
-        return view('admin.dashboard', compact('clients', 'staffs', 'loggedStaff', 'managers', 'services', 'lateStaff', 'absentStaff'));
+        return view('admin.dashboard', compact('clients', 'staffs', 'loggedStaff', 'managers', 'services', 'lateStaff', 'absentStaff','filteredLogs'));
     }
 
   

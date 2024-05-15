@@ -623,6 +623,33 @@ class ServiceController extends Controller
         return response()->json(['dueTasks' => $dueTasks]);
     }
 
+    public function getAssignedService(Request $request)
+    {
+        if ($request->ajax()) {
+            $data = ClientService::with('clientSubServices')
+                ->whereDate('service_deadline', '<=', now()->addDays(30))
+                ->whereHas('clientSubServices', function ($query) {
+                    $query->whereNotNull('staff_id');
+                })
+                ->orderBy('id', 'desc')
+                ->get();
+
+            return DataTables::of($data)
+            
+                ->addColumn('clientname', function(ClientService $clientservice) {
+                    return $clientservice->client->name;
+                })
+                ->addColumn('servicename', function(ClientService $clientservice) {
+                    return $clientservice->service->name;
+                })
+                ->addColumn('action', function(ClientService $clientservice) {
+                    $managerFirstName = $clientservice->manager->first_name;
+                    return '<button class="btn btn-secondary task-detail" data-id="'. $clientservice->id. '" data-manager-firstname="'. $managerFirstName. '">Details</button>';
+                })
+                ->make(true);
+        }
+
+    }
 
 
 }
