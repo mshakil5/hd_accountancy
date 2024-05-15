@@ -17,7 +17,7 @@
                                 <h3 class="card-title">Previously logged-in staffs (within the last 30 days)</h3>
                             </div>
                             <div>
-                                <a href="{{ route('allPrevLogStaffs') }}" class="btn btn-sm bg-theme text-light btn-outline-dark mt-3">View All Records</a>
+                                <a href="{{ route('allPrevLogStaffs') }}" class="btn btn-sm bg-theme text-light btn-outline-dark mt-3">View All Attendence Records</a>
                             </div>
                         </div>
                     </div>
@@ -153,10 +153,14 @@
               success: function(response) {
                   swal({
                     title: "Success!",
-                    text: "Client details created successfully",
+                    text: "Updated successfully",
                     icon: "success",
                     button: "OK",
                 });
+
+                setTimeout(function() {
+                    location.reload();
+                }, 2000);
               },
                 error: function(xhr, status, error) {
                     var response = JSON.parse(xhr.responseText);

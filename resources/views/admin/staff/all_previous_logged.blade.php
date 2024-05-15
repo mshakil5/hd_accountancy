@@ -14,7 +14,7 @@
                     <div class="card-header">
                         <div class="col d-flex justify-content-between">
                             <div>
-                                <h3 class="card-title">All Records</h3>
+                                <h3 class="card-title">All Attendence Records</h3>
                             </div>
                         </div>
                     </div>
@@ -144,10 +144,14 @@
               success: function(response) {
                   swal({
                     title: "Success!",
-                    text: "Client details created successfully",
+                    text: "Updated successfully",
                     icon: "success",
                     button: "OK",
                 });
+
+                setTimeout(function() {
+                    location.reload();
+                }, 2000);
               },
                 error: function(xhr, status, error) {
                     var response = JSON.parse(xhr.responseText);

@@ -252,9 +252,9 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/we-work-image/{id}', [WeWorkWithImageController::class, 'delete']);
 
     //Previously logged in staffs
-    Route::get('/prev-staffs', [StaffController::class, 'prevLogStaffs'])->name('prevLogStaffs');
+    Route::get('/attendence-records', [StaffController::class, 'prevLogStaffs'])->name('prevLogStaffs');
 
-    Route::get('/all-prev-staffs', [StaffController::class, 'allPrevLogStaffs'])->name('allPrevLogStaffs');
+    Route::get('/all-attendence-records', [StaffController::class, 'allPrevLogStaffs'])->name('allPrevLogStaffs');
 
     Route::post('/prev-staffs/update/{id}', [StaffController::class, 'updateLogs']);
 

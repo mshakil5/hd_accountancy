@@ -81,17 +81,17 @@
 
     <li class="nav-item {{ request()->routeIs('prevLogStaffs') ? 'active' : '' }}">
         <a class="nav-link collapsed" href="{{ route('prevLogStaffs') }}">
-            <i class="bi bi-clock-history"></i>
-            <span>Previously logged staffs</span>
+            <i class="bi bi-calendar-check"></i>
+            <span>Attendence Records</span>
         </a>
     </li>
 
-      <li class="nav-item">
+      {{-- <li class="nav-item">
         <a class="nav-link collapsed" href="">
           <i class="bi bi-clock"></i>
           <span>Attendence</span>
         </a>
-      </li>
+      </li> --}}
 
       <li class="nav-item {{ request()->routeIs('holiday') ? 'active' : '' }}">
         <a class="nav-link collapsed" href="{{ route('holiday') }}">
