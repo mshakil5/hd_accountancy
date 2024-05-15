@@ -154,9 +154,9 @@ class HomeController extends Controller
                         $scheduledEndTime = Carbon::parse($prorotaDetail->end_time);
 
                         $departureStatus = '';
-                       if ($endTime->lte($scheduledEndTime)) {
+                        if ($endTime->eq($scheduledEndTime)) {
                             $departureStatus = 'On-Time';
-                        } elseif ($startTime->lt($scheduledEndTime)) {
+                        } elseif ($endTime->lt($scheduledEndTime)) {
                             $departureStatus = 'Early Leave';
                         } else {
                             $departureStatus = 'Late Leave';
