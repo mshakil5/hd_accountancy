@@ -263,6 +263,9 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
 
     Route::post('/update-client-service', [StaffController::class, 'updateClientService']);
 
+    // Change Status of sub service
+    Route::post('/update-sub-service-status', [ServiceController::class,'updateSubServiceStatus']);
+
     // prorota make
     Route::get('/prorota', [ProrotaController::class, 'index'])->name('prorota');
     Route::get('/prorota-list', [ProrotaController::class, 'getprorota'])->name('get.prorota');

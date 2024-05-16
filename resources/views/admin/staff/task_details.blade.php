@@ -68,7 +68,8 @@
     $(document).ready(function() {
         $('.update-btn').click(function() {
             var clientSubServiceId = $(this).data('service-id');
-            var sequenceStatus = $('#sequence_status').val();
+             var sequenceStatus = $('#sequence_status').val();
+             console.log(sequenceStatus); 
 
             $.ajax({
                 url: '/admin/update-client-service/',
@@ -81,7 +82,7 @@
                 success: function(response) {
                     swal({
                         title: "Success!",
-                        text: "Staff logged out successfully",
+                        text: "Updated successfully",
                         icon: "success",
                         button: "OK",
                     });

@@ -8,6 +8,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\Admin\StaffController;
+use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Staff\HolidayController;
 use App\Http\Controllers\Manager\ManagerController;
 use App\Http\Controllers\Manager\ServiceController;
@@ -114,7 +115,7 @@ Route::middleware(['auth', 'user-access:staff'])->group(function () {
     Route::post('/staff/store-message', [StaffServiceController::class,'storeMessage']);
 
      // Change Status of sub service
-    Route::post('/staff/update-sub-service-status', [StaffServiceController::class,'updateSubServiceStatus']);
+    Route::post('/staff/change-sub-service-status', [StaffServiceController::class,'changeSubServiceStatus']);
 
     // Start, Stop, Start Break, Stop Break by Staff
     Route::post('/staff/start-work-time', [StaffServiceController::class,'startWorkTime']);
@@ -141,6 +142,13 @@ Route::middleware(['auth', 'user-access:staff'])->group(function () {
 
      // Note and additional work
      Route::post('/staff/save-notes', [StaffServiceController::class, 'saveNotes'])->name('saveNotes');
+
+    //  Client list
+    Route::get('/staff/client', [ClientController::class, 'indexStaff'])->name('allClientStaff');
+    Route::get('/staff/client-list', [ClientController::class, 'getClientsStaff'])->name('get.Clients.staff');
+
+    // Task list
+    Route::get('/staff/task-list', [StaffServiceController::class, 'allTaskList'])->name('allTaskList');
     
 });
 

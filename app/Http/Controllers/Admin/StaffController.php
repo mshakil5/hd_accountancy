@@ -624,6 +624,7 @@ class StaffController extends Controller
         $clientSubService = ClientSubService::find($request->clientSubServiceId);
         if ($clientSubService) {
             $clientSubService->sequence_status = $request->sequence_status;
+            $clientSubService->status = 1;
             $clientSubService->save();
 
             return response()->json(['status' => 'success', 'message' => 'Sequence status updated successfully']);

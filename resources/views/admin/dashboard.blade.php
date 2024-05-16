@@ -867,19 +867,20 @@
                     }
                 }
 
+                var statusDropdown = `
+                  <select class="form-select change-service-status" data-sub-service-id="${subService.id}">
+                      <option value="0" ${subService.sequence_status === 0 ? 'selected' : ''}>Processing</option>
+                      <option value="1" ${subService.sequence_status === 1 ? 'selected' : ''}>Not Started</option>
+                      <option value="2" ${subService.sequence_status === 2 ? 'selected' : ''}>Work is completed</option>
+                  </select>`;
+
                 var newRow = `
                     <tr>
                         <td>${subService.sub_service.name}</td>
                         <td>${moment(subService.deadline).format('DD.MM.YYYY')}</td>
                         <td>${staffName}</td>
                         <td>${subService.note ? subService.note : ''}</td>
-                        <td>
-                            ${  subService.sequence_status === 2 ? 'Work is completed' 
-                                : subService.sequence_status === 1 ? 'Not Started' 
-                                : subService.sequence_status === 0 ? 'Processing'
-                                : 'N/A'
-                            }
-                        </td>
+                         <td>${statusDropdown}</td>
                         <td>
                             <span class="timer-duration">${duration}</span>
                         </td>
@@ -891,6 +892,50 @@
             $('#completedTaskSection').show();
         }
 
+        $(document).on('change', '.change-service-status', function() {
+            var clientSubServiceId = $(this).data('sub-service-id');
+            var newStatus = $(this).val();
+            // console.log(clientSubServiceId,newStatus)
+            $.ajax({
+                url: '/admin/update-sub-service-status',
+                type: 'POST',
+                dataType: 'json',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                data: {
+                    clientSubServiceId: clientSubServiceId,
+                    newStatus: newStatus
+                },
+                success: function(response) {
+                    swal({
+                        title: "Success!",
+                        text: "Status chnaged successfully",
+                        icon: "success",
+                        button: "OK",
+                    });
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                },
+                error: function(xhr, status, error) {
+                    console.error(error);
+                    var errorMessage = "";
+                    if (xhr.responseJSON && xhr.responseJSON.errors){
+                        $.each(xhr.responseJSON.errors, function (key, value) {
+                            errorMessage += key + ": " + value.join(", ") + "<br>";
+                        });
+                    } else {
+                        errorMessage = "An error occurred. Please try again later.";
+                    }
+                    $('#errorMessage').html(errorMessage);
+                    $('#errorMessage').show();
+                    $('#successMessage').hide();
+                    console.error("Error occurred: " + error);
+                    console.error(xhr.responseText);
+                }
+            });
+        });
 
         $('#completed-cancelButton').click(function() {
             $('#completedTaskSection').hide();

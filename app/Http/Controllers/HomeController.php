@@ -224,15 +224,14 @@ class HomeController extends Controller
             ->orderBy('start_time', 'desc')
             ->first();
 
-        $activeTime = $breakTime = null;
+        $activeTime =  null;
         if ($attendanceLog) {
             $startTime = Carbon::parse($attendanceLog->start_time);
             $endTime = Carbon::parse($attendanceLog->end_time);
             $timeDifference = $startTime->diff($endTime);
             $activeTime = $timeDifference->format('%H:%I:%S');
-            $breakTime = $activeTime;
         }
-        return view('staff.dashboard', compact('activeTime', 'breakTime','staffs','managers','clients','subServices'));
+        return view('staff.dashboard', compact('activeTime','staffs','managers','clients','subServices'));
     }
     /**
      * Show the application dashboard.

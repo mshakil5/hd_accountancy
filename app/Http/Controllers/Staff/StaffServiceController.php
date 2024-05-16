@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Staff;
 
 use DataTables;
+use App\Models\User;
 use App\Models\Client;
 use App\Models\Service;
 use App\Models\WorkTime;
+use App\Models\SubService;
 use Illuminate\Http\Request;
 use App\Models\ClientService;
 use App\Models\ServiceMessage;
@@ -285,12 +287,20 @@ class StaffServiceController extends Controller
 
     public function takeBreak(Request $request)
     {
+
+        $chkProcessingWork = WorkTime::whereNull('end_time')->where('staff_id', Auth::user()->id)->where('is_break', 0)->orderby('id', 'DESC')->first();
+        
         $workTime = new WorkTime();
         $workTime->staff_id = Auth::id();
         $workTime->start_time = Carbon::now();
         $workTime->start_date = Carbon::today()->format('d-m-Y');
         $workTime->is_break = 1;
         $workTime->created_by = Auth::id();
+
+        if(isset($chkProcessingWork)){
+            $workTime->client_sub_service_id = $chkProcessingWork->client_sub_service_id;
+        }
+
         $workTime->save();
         return response()->json(['message' => 'Break started successfully', 'workTimeId' => $workTime->id], 200);
     }
@@ -357,14 +367,17 @@ class StaffServiceController extends Controller
                     'end_time' => $workTime->end_time,
                 ];
 
-                $durationInSeconds = strtotime($workTime->end_time) - strtotime($workTime->start_time);
-                $totalDuration += $durationInSeconds;
             }
         }
 
          $totalBreakDuration = WorkTime::where('staff_id', $staffId)
             ->whereDate('start_time', $today)
             ->where('is_break', true)
+            ->sum('duration');
+
+         $totalDuration = WorkTime::where('staff_id', $staffId)
+            ->whereDate('start_time', $today)
+            ->where('is_break', false)
             ->sum('duration');
 
         return response()->json([
@@ -416,6 +429,32 @@ class StaffServiceController extends Controller
         return redirect()->route('login')->with('success', 'Notes saved successfully');
     }
 
+    public function allTaskList()
+    {
+        $staffs = User::whereIn('type', ['3','2'])->orderby('id','DESC')->get();
+        $managers = User::whereIn('type', ['3','2'])->orderby('id','DESC')->get();
+        $clients = Client::orderby('id','DESC')->get();
+        $subServices = SubService::orderby('id','DESC')->get();
+        return view('staff.task.index',compact('staffs','managers','clients','subServices'));
+    }
+
+    public function changeSubServiceStatus(Request $request)
+    {
+        $clientSubServiceId = $request->input('clientSubServiceId');
+        $newStatus = $request->input('newStatus');
+        $clientSubService = ClientSubService::find($clientSubServiceId);
+
+        if ($clientSubService) {
+            $clientSubService->sequence_status = $newStatus;
+            $clientSubService->status = 1;
+            $clientSubService->updated_by = Auth::id();
+            $clientSubService->save();
+
+            return response()->json(['message' => 'Status updated successfully']);
+        } else {
+            return response()->json(['error' => 'Client sub-service not found'], 404);
+        }
+    }
 
 
 }
