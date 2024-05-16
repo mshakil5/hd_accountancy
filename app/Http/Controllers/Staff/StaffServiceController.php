@@ -69,7 +69,7 @@ class StaffServiceController extends Controller
                 })
                 ->addColumn('action', function(ClientService $clientservice) {
                     $managerFirstName = $clientservice->manager->first_name;
-                    return '<button class="btn btn-secondary task-details" data-id="'. $clientservice->id. '" data-manager-firstname="'. $managerFirstName. '">Change Status</button>';
+                    return '<button class="btn btn-secondary task-details" data-id="'. $clientservice->id. '" data-manager-firstname="'. $managerFirstName. '">Details</button>';
                 })
                 ->make(true);
         }

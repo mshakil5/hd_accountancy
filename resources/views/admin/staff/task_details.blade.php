@@ -49,6 +49,11 @@
                                 @endforeach
                             </tbody>
                         </table>
+                        <div class="row">
+                            <div class="col-lg-4 mx-auto text-center">
+                                <a href="{{route('prevLogStaffs')}}" class="btn btn-sm btn-outline-dark">Back</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

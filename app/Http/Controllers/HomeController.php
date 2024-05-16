@@ -131,46 +131,45 @@ class HomeController extends Controller
                 ->get();
                 // dd($absentStaff);
 
-                $today = now()->toDateString();
                 $currentDayOfWeek = Carbon::now()->format('l');
-
                 $prorotaDetails = ProrotaDetail::where('day', $currentDayOfWeek)->get();
 
-                $filteredLogs = UserAttendanceLog::with('user')
-                    ->whereHas('user', function ($query) use ($prorotaDetails) {
-                        $query->whereIn('id', $prorotaDetails->pluck('staff_id'));
-                    })
-                    ->get()
-                    ->map(function ($log) use ($prorotaDetails) {
-                        $prorotaDetail = $prorotaDetails->firstWhere('staff_id', $log->user_id);
+                    $allLogs = UserAttendanceLog::with('user')
+                        ->whereHas('user', function ($query) use ($prorotaDetails) {
+                            $query->whereIn('id', $prorotaDetails->pluck('staff_id'));
+                        })
+                        ->orderBy('end_time', 'desc')
+                        ->get();
 
-                        if (!$prorotaDetail) {
-                            return null;
+                    $latestLogs = [];
+                    foreach ($allLogs as $attendanceLog) {
+                        if (!isset($latestLogs[$attendanceLog->user_id])) {
+                            $latestLogs[$attendanceLog->user_id] = $attendanceLog;
                         }
+                    }
 
-                        $startTime = Carbon::parse($log->start_time);
-                        $endTime = Carbon::parse($log->end_time); 
-                        $scheduledStartTime = Carbon::parse($prorotaDetail->start_time);
-                        $scheduledEndTime = Carbon::parse($prorotaDetail->end_time);
+                    $filteredLogs = [];
+                    foreach ($latestLogs as $latestLog) {
+                        $prorotaDetail = $prorotaDetails->firstWhere('staff_id', $latestLog->user_id);
 
-                        $departureStatus = '';
-                        if ($endTime->eq($scheduledEndTime)) {
-                            $departureStatus = 'On-Time';
-                        } elseif ($endTime->lt($scheduledEndTime)) {
-                            $departureStatus = 'Early Leave';
-                        } else {
-                            $departureStatus = 'Late Leave';
+                        if ($prorotaDetail) {
+                            $endTime = Carbon::parse($latestLog->end_time);
+                            $scheduledEndTime = Carbon::parse($prorotaDetail->end_time);
+
+                            $departureStatus = '';
+                            if ($endTime->eq($scheduledEndTime)) {
+                                $departureStatus = 'On-Time';
+                            } elseif ($endTime->lt($scheduledEndTime)) {
+                                $departureStatus = 'Early Leave';
+                            } else {
+                                $departureStatus = 'Late Leave';
+                            }
+
+                            $latestLog->departure_status = $departureStatus;
+
+                            $filteredLogs[] = $latestLog;
                         }
-
-
-                        $log->departure_status = $departureStatus;
-
-                        return $log;
-                    })
-                    ->reject(function ($log) {
-                        return $log === null; 
-                    });
-                    // dd($filteredLogs);
+                    }
 
         $clients = Client::orderBy('id', 'DESC')->get();
         $staffs = User::whereIn('type', ['3', '2'])->orderBy('id', 'DESC')->get();

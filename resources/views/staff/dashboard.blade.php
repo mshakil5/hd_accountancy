@@ -536,7 +536,7 @@
                 if (isAuthUserStaff && subService.sequence_status === 0) {
                     if (subService.status === 2) {
                         startBreakButton = `<button type="button" class="btn btn-secondary start-break" data-sub-service-id="${subService.id}">Start Break</button>`;
-                        stopButton = `<button type="button" class="btn btn-secondary stop-timer" data-sub-service-id="${subService.id}">Stop</button>`;
+                        stopButton = `<button type="button" class="btn btn-danger stop-timer" data-sub-service-id="${subService.id}">Stop</button>`;
                         
                     } else if (subService.status === 3) {
                         if (subService.work_times) {
@@ -887,8 +887,6 @@
     }
 </script>
 <!-- Task Check before loggin out end -->
-
-<!-- Assigned Work List -->
 
 <!-- Completed Work List -->
 <script>
