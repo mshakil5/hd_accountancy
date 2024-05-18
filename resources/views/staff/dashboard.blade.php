@@ -484,7 +484,6 @@
                 type: "GET",
                 dataType: "json",
                 success: function(data) {
-                    //  console.log(data);
                     populateSubServiceForm(data);
                 },
                 error: function(xhr, error, thrown) {
@@ -711,51 +710,6 @@
             });
         });
 
-        $(document).on('change', '.change-service-status', function() {
-            var clientSubServiceId = $(this).data('sub-service-id');
-            var newStatus = $(this).val();
-
-            $.ajax({
-                url: '/staff/update-sub-service-status',
-                type: 'POST',
-                dataType: 'json',
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                data: {
-                    clientSubServiceId: clientSubServiceId,
-                    newStatus: newStatus
-                },
-                success: function(response) {
-                    swal({
-                        title: "Success!",
-                        text: "Status chnaged successfully",
-                        icon: "success",
-                        button: "OK",
-                    });
-                    setTimeout(function() {
-                        location.reload();
-                    }, 2000);
-                },
-                error: function(xhr, status, error) {
-                    console.error(error);
-                    var errorMessage = "";
-                    if (xhr.responseJSON && xhr.responseJSON.errors){
-                        $.each(xhr.responseJSON.errors, function (key, value) {
-                            errorMessage += key + ": " + value.join(", ") + "<br>";
-                        });
-                    } else {
-                        errorMessage = "An error occurred. Please try again later.";
-                    }
-                    $('#errorMessage').html(errorMessage);
-                    $('#errorMessage').show();
-                    $('#successMessage').hide();
-                    console.error("Error occurred: " + error);
-                    console.error(xhr.responseText);
-                }
-            });
-        });
-
         $('#sub-service-cancelButton').click(function() {
             $('#assignTaskSection').hide();
         });
@@ -814,7 +768,6 @@
 
         $(document).on('click', '.start-break', function() {
             var clientSubServiceId = $(this).data('sub-service-id');
-            console.log(clientSubServiceId);
             $.ajax({
                 type: 'POST',
                 url: '/staff/start-break',
@@ -842,7 +795,6 @@
         $(document).on('click', '.stop-break', function() {
             var clientSubServiceId = $(this).data('sub-service-id');
             var workTimesId = $(this).data('work-times-id');
-            console.log(workTimesId);
             $.ajax({
                 type: 'POST',
                 url: '/staff/stop-break',
@@ -852,7 +804,6 @@
                     _token: "{{ csrf_token() }}"
                 },
                 success: function(response) {
-                    console.log(response);
                     swal({
                         title: "Success!",
                         text: "Break time has stopped successfully",
@@ -950,7 +901,6 @@
                 type: "GET",
                 dataType: "json",
                 success: function(data) {
-                    // console.log(data);
                     populateCompletedForm(data);
                 },
                 error: function(xhr, error, thrown) {
@@ -1021,7 +971,6 @@
         $(document).on('change', '.change-service', function() {
             var clientSubServiceId = $(this).data('sub-service-id');
             var newStatus = $(this).val();
-            // console.log(clientSubServiceId,newStatus)
             $.ajax({
                 url: '/staff/change-sub-service-status',
                 type: 'POST',
@@ -1040,9 +989,9 @@
                         icon: "success",
                         button: "OK",
                     });
-                    // setTimeout(function() {
-                    //     location.reload();
-                    // }, 2000);
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
                 },
                 error: function(xhr, status, error) {
                     console.error(error);
@@ -1086,7 +1035,6 @@
                 },
                 data: {},
                 success: function(response) {
-                    console.log(response);
                     $('#workTimeId').val(response.workTimeId);
                     localStorage.setItem('workTimeId', response.workTimeId);
                     checkBreakStatus(response.workTimeId);

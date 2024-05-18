@@ -939,7 +939,6 @@
 
         $('#takeBreakBtn').click(function(event) {
             event.preventDefault();
-            // console.log('clicked');
 
             $.ajax({
                 url: '/manager/take-break',
