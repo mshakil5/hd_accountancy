@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Manager;
 
 use DataTables;
+use App\Models\User;
+use App\Models\Client;
 use App\Models\WorkTime;
+use App\Models\SubService;
 use Illuminate\Http\Request;
 use App\Models\ClientService;
 use App\Models\ServiceMessage;
@@ -22,7 +25,8 @@ class ServiceController extends Controller
             if ($request->ajax()) {
             $data = ClientService::with('clientSubServices')
                 ->where('manager_id', $currentUserId)
-                ->whereDate('service_deadline', '<=', now()->addDays(30))
+                ->where('service_deadline', '>=', now()->startOfDay())
+                ->where('service_deadline', '<=', now()->addDays(30)->endOfDay())
                 ->whereHas('clientSubServices', function ($query) {
                     $query->whereIn('sequence_status', [0, 1]);
                 })
@@ -112,12 +116,17 @@ class ServiceController extends Controller
     {
         $currentUserId = Auth::id();
         $managerName = Auth::user()->first_name;
-            if ($request->ajax()) {
+        $startOfDay = Carbon::today()->startOfDay();
+        $endOfDay = Carbon::today()->endOfDay();
+
+        if ($request->ajax()) {
             $data = ClientService::with('clientSubServices')
-                ->where('manager_id', $currentUserId)
-                ->whereDate('service_deadline', '<=', now()->addDays(30))
-                ->whereDoesntHave('clientSubServices', function ($query) {
-                    $query->where('sequence_status', '!=', 2);
+                ->where('service_deadline', '>=', now()->startOfDay())
+                ->where('service_deadline', '<=', now()->addDays(30)->endOfDay())
+                ->whereHas('clientSubServices', function ($query) use ($startOfDay, $endOfDay) {
+                    $query->where('sequence_status', 2)
+                        ->where('staff_id', Auth::id())
+                        ->whereBetween('updated_at', [$startOfDay, $endOfDay]);
                 })
                 ->orderBy('id', 'desc')
                 ->get();
@@ -148,14 +157,14 @@ class ServiceController extends Controller
         }
 
         $clientSubServiceId = $request->clientSubServiceId;
-        $managerId = Auth::id();
+        $staffId = Auth::id();
 
         $workTime = new WorkTime();
-        $workTime->manager_id = $managerId;
+        $workTime->staff_id = $staffId;
         $workTime->client_sub_service_id = $clientSubServiceId;
         $workTime->start_time = Carbon::now();
         $workTime->start_date = Carbon::today()->format('d-m-Y');
-        $workTime->created_by = $managerId;
+        $workTime->created_by = $staffId;
 
         if ($workTime->save()) {
             $changests = ClientSubService::find($clientSubServiceId);
@@ -219,16 +228,16 @@ class ServiceController extends Controller
         }
 
         $clientSubServiceId = $request->clientSubServiceId;
-        $managerId = Auth::id();
+        $staffId = Auth::id();
         $workTime = new WorkTime();
         
         
-        $workTime->manager_id = $managerId;
+        $workTime->staff_id = $staffId;
         $workTime->client_sub_service_id = $clientSubServiceId;
         $workTime->start_time = Carbon::now();
         $workTime->start_date = Carbon::today()->format('d-m-Y');
         $workTime->is_break = 1;
-        $workTime->created_by = $managerId;
+        $workTime->created_by = $staffId;
 
         if ($workTime->save()) {
             $changests = ClientSubService::find($clientSubServiceId);
@@ -272,9 +281,13 @@ class ServiceController extends Controller
 
     public function checkWorkTimeStatus()
     {
-        $managerId = Auth::id();
-        $ongoingWorkTime = WorkTime::where('manager_id', $managerId)
+        $staffId = Auth::id();
+        $startOfDay = Carbon::today()->startOfDay();
+        $endOfDay = Carbon::today()->endOfDay();
+
+        $ongoingWorkTime = WorkTime::where('staff_id', $staffId)
             ->whereNull('end_time')
+            ->whereBetween('created_at', [$startOfDay, $endOfDay])
             ->exists();
         if ($ongoingWorkTime) {
             return response()->json(['status' => 'ongoing']);
@@ -334,9 +347,12 @@ class ServiceController extends Controller
             ->orderBy('created_at', 'asc')
             ->value('start_time');
 
+        $startOfDay = Carbon::today()->startOfDay();
+        $endOfDay = Carbon::today()->endOfDay();
+
         $clientSubServices = ClientSubService::where('staff_id', $staffId)
             ->where('sequence_status', 2)
-            ->whereDate('updated_at', $today)
+            ->whereBetween('updated_at', [$startOfDay, $endOfDay])
             ->with(['workTimes', 'client', 'subService'])
             ->get();
 
@@ -357,14 +373,17 @@ class ServiceController extends Controller
                     'end_time' => $workTime->end_time,
                 ];
 
-                $durationInSeconds = strtotime($workTime->end_time) - strtotime($workTime->start_time);
-                $totalDuration += $durationInSeconds;
             }
         }
 
          $totalBreakDuration = WorkTime::where('staff_id', $staffId)
             ->whereDate('start_time', $today)
             ->where('is_break', true)
+            ->sum('duration');
+
+         $totalDuration = WorkTime::where('staff_id', $staffId)
+            ->whereDate('start_time', $today)
+            ->where('is_break', false)
             ->sum('duration');
 
         return response()->json([
@@ -414,5 +433,14 @@ class ServiceController extends Controller
         session()->regenerate();
         
         return redirect()->route('login')->with('success', 'Notes saved successfully');
+    }
+
+    public function allTaskList()
+    {
+        $staffs = User::whereIn('type', ['3','2'])->orderby('id','DESC')->get();
+        $managers = User::whereIn('type', ['3','2'])->orderby('id','DESC')->get();
+        $clients = Client::orderby('id','DESC')->get();
+        $subServices = SubService::orderby('id','DESC')->get();
+        return view('manager.task.index',compact('staffs','managers','clients','subServices'));
     }
 }

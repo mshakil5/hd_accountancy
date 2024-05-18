@@ -51,6 +51,21 @@ class ClientController extends Controller
         }
     }
 
+    public function indexManager()
+    {
+        return view('manager.client.index');
+    }
+
+    public function getClientsManager(Request $request)
+    {
+        if ($request->ajax()) {
+            $data = Client::with(['clientType', 'manager'])->orderBy('id', 'desc')->get();
+            return Datatables::of($data)
+                ->addIndexColumn()
+                ->make(true);
+        }
+    }
+
     public function create()
     {
         $managers = User::where('type', '2')->orderby('id','DESC')->get();

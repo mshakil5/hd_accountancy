@@ -21,15 +21,17 @@
         <div class="col-lg-6 d-flex justify-content-between align-items-center">
           <i class="bi bi-list toggle-sidebar-btn curp text-black fs-4" onclick="toggleSidebar();"></i>
           <div class="ms-5">
-            <a href="#" class="fw-bold me-5 txt-theme">Home</a>
-            <a href="#" class="fw-bold me-5 txt-theme">Client List</a>
-            <a href="#" class="fw-bold me-5 txt-theme">Client List</a>
-            <a href="#" class="fw-bold me-5 txt-theme">Task List</a>
-            <a href="#" class="fw-bold me-5 txt-theme">Live talk</a>
+            <a href="{{ route('manager.home') }}" class="fw-bold me-5 txt-theme">Home</a>
+            <a href="{{ route('allClientManager') }}" class="fw-bold me-5 txt-theme">Client List</a>
+            <a href="{{ route('allTaskListManager') }}" class="fw-bold me-5 txt-theme">Task List</a>
+            <a href="{{ route('manager.holiday') }}" class="fw-bold me-5 txt-theme">Holiday</a>
           </div>
         </div>
         <div class="col-lg-6 justify-content-end d-flex align-items-center pe-3">
-          <i class="bi bi-person fs-4 txt-theme mx-2"></i> <span class="fw-bold txt-theme fs-6">{{ auth()->user()->first_name }}</span>
+          <a href="{{ route('manager.profile.edit') }}">
+            <i class="bi bi-person fs-4 txt-theme mx-2"></i> 
+            <span class="fw-bold txt-theme fs-6">{{ auth()->user()->first_name }} {{ auth()->user()->last_name }}</span>
+          </a>
         </div>
       </div>
     </div>

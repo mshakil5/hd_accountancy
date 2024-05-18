@@ -990,7 +990,6 @@
                 var statusDropdown = `
                     <select class="form-select change-service" data-sub-service-id="${subService.id}" ${isAuthUserStaff? '' : 'disabled'}>
                         <option value="0" ${subService.sequence_status === 0? 'selected' : ''}>Processing</option>
-                        <option value="1" ${subService.sequence_status === 1? 'selected' : ''}>Not Started</option>
                         <option value="2" ${subService.sequence_status === 2? 'selected' : ''}>Work is completed</option>
                     </select>`;
 

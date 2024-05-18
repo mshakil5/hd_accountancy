@@ -1,4 +1,4 @@
-@extends('staff.layouts.staff')
+@extends('manager.layouts.manager')
 
 @section('content')
 
@@ -207,7 +207,7 @@
           processing: true,
           serverSide: true,
           ajax: {
-              url: '/staff/get-all-services',
+              url: '/manager/get-all-services',
               type: 'GET',
               dataSrc: 'data',
               error: function(xhr, error, thrown) {
@@ -243,7 +243,7 @@
             $('#service_deadline').val(deadline);
 
             $.ajax({
-                url: '/staff/getClientSubServices/' + clientserviceId,
+                url: '/manager/getClientSubServices/' + clientserviceId,
                 type: "GET",
                 dataType: "json",
                 success: function(data) {
@@ -352,38 +352,12 @@
             $('#messageModal').modal('show');
         });
 
-        function populateMessage(clientSubServiceId) {
-            $.ajax({
-                url: '/staff/getServiceMessage/' + clientSubServiceId,
-                type: "GET",
-                dataType: "json",
-                success: function(data) {
-                    var managers = @json($managers);
-                    function getManagerName(managerId) {
-                        var manager = managers.find(manager => String(manager.id) === String(managerId));
-                        return manager ? manager.first_name : '';
-                    }
-                    $('#previousMessages').empty();
-                    data.forEach(function(message) {
-                        var messageDiv = $('<div>').addClass('message');
-                        var managerName = getManagerName(message.created_by);
-                        var messageContent = message.message ? message.message : ''; 
-                        messageDiv.html('<span style="font-weight: bold;">' + managerName + ': </span>' + messageContent); 
-                        $('#previousMessages').append(messageDiv);
-                    });
-                },
-                error: function(xhr, error, thrown) {
-                    console.error('Error fetching previous messages:', error, thrown);
-                }
-            });
-        }
-
         $(document).on('change', '.change-service-status', function() {
             var clientSubServiceId = $(this).data('sub-service-id');
             var newStatus = $(this).val();
 
             $.ajax({
-                url: '/staff/update-sub-service-status',
+                url: '/manager/update-sub-service-status',
                 type: 'POST',
                 dataType: 'json',
                 headers: {
@@ -431,7 +405,7 @@
             var clientSubServiceId = $(this).data('sub-service-id');
             $.ajax({
                     type: 'POST',
-                    url: '/staff/start-work-time',
+                    url: '/manager/start-work-time',
                     data: {
                         clientSubServiceId: clientSubServiceId,
                         _token: "{{ csrf_token() }}"
@@ -457,7 +431,7 @@
             var clientSubServiceId = $(this).data('sub-service-id');
             $.ajax({
                 type: 'POST',
-                url: '/staff/stop-work-time',
+                url: '/manager/stop-work-time',
                 data: {
                     clientSubServiceId: clientSubServiceId,
                     _token: "{{ csrf_token() }}" 
@@ -483,7 +457,7 @@
             var clientSubServiceId = $(this).data('sub-service-id');
             $.ajax({
                 type: 'POST',
-                url: '/staff/start-break',
+                url: '/manager/start-break',
                 data: {
                     clientSubServiceId: clientSubServiceId,
                     _token: "{{ csrf_token() }}"
@@ -510,7 +484,7 @@
             var workTimesId = $(this).data('work-times-id');
             $.ajax({
                 type: 'POST',
-                url: '/staff/stop-break',
+                url: '/manager/stop-break',
                 data: {
                     clientSubServiceId: clientSubServiceId,
                      workTimesId: workTimesId,
@@ -543,7 +517,7 @@
             processing: true,
             serverSide: true,
             ajax: {
-                url: '/staff/get-completed-services',
+                url: '/manager/get-completed-services',
                 type: 'GET',
                 dataSrc: 'data',
                 error: function(xhr, error, thrown) {
@@ -584,7 +558,7 @@
             $('#service_deadline1').val(deadline);
 
             $.ajax({
-                url: '/staff/getClientSubServices/' + clientserviceId,
+                url: '/manager/getClientSubServices/' + clientserviceId,
                 type: "GET",
                 dataType: "json",
                 success: function(data) {

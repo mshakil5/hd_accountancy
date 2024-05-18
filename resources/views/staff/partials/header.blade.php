@@ -24,7 +24,7 @@
             <a href="{{ route('staff.home') }}" class="fw-bold me-5 txt-theme">Home</a>
             <a href="{{ route('allClientStaff') }}" class="fw-bold me-5 txt-theme">Client List</a>
             <a href="{{ route('allTaskList') }}" class="fw-bold me-5 txt-theme">Task List</a>
-            <!-- <a href="#" class="fw-bold me-5 txt-theme">Live talk</a> -->
+            <a href="{{ route('staff.holiday') }}" class="fw-bold me-5 txt-theme">Holiday</a>
           </div>
         </div>
         <div class="col-lg-6 justify-content-end d-flex align-items-center pe-3">

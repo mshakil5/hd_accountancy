@@ -24,11 +24,12 @@ class StaffServiceController extends Controller
     public function getServicesClientStaff(Request $request)
     {
             if ($request->ajax()) {
-            $data = ClientService::with('clientSubServices')
-                ->whereDate('service_deadline', '<=', now()->addDays(30))
+                $data = ClientService::with('clientSubServices')
+                ->where('service_deadline', '>=', now()->startOfDay())
+                ->where('service_deadline', '<=', now()->addDays(30)->endOfDay())
                 ->whereHas('clientSubServices', function ($query) {
                     $query->whereIn('sequence_status', [0, 1])
-                          ->where('staff_id', Auth::id());
+                        ->where('staff_id', Auth::id());
                 })
                 ->orderBy('id', 'desc')
                 ->get();
@@ -51,12 +52,17 @@ class StaffServiceController extends Controller
 
     public function getCompetedServices(Request $request)
     {
+        $startOfDay = Carbon::today()->startOfDay();
+        $endOfDay = Carbon::today()->endOfDay();
+
         if ($request->ajax()) {
             $data = ClientService::with('clientSubServices')
-                ->whereDate('service_deadline', '<=', now()->addDays(30))
-                ->whereHas('clientSubServices', function ($query) {
+                ->where('service_deadline', '>=', now()->startOfDay())
+                ->where('service_deadline', '<=', now()->addDays(30)->endOfDay())
+                ->whereHas('clientSubServices', function ($query) use ($startOfDay, $endOfDay) {
                     $query->where('sequence_status', 2)
-                          ->where('staff_id', Auth::id());
+                        ->where('staff_id', Auth::id())
+                        ->whereBetween('updated_at', [$startOfDay, $endOfDay]);
                 })
                 ->orderBy('id', 'desc')
                 ->get();
@@ -275,8 +281,12 @@ class StaffServiceController extends Controller
     public function checkWorkTimeStatus()
     {
         $staffId = Auth::id();
+        $startOfDay = Carbon::today()->startOfDay();
+        $endOfDay = Carbon::today()->endOfDay();
+
         $ongoingWorkTime = WorkTime::where('staff_id', $staffId)
             ->whereNull('end_time')
+            ->whereBetween('created_at', [$startOfDay, $endOfDay])
             ->exists();
         if ($ongoingWorkTime) {
             return response()->json(['status' => 'ongoing']);
@@ -344,9 +354,12 @@ class StaffServiceController extends Controller
             ->orderBy('created_at', 'asc')
             ->value('start_time');
 
+        $startOfDay = Carbon::today()->startOfDay();
+        $endOfDay = Carbon::today()->endOfDay();
+
         $clientSubServices = ClientSubService::where('staff_id', $staffId)
             ->where('sequence_status', 2)
-            ->whereDate('updated_at', $today)
+            ->whereBetween('updated_at', [$startOfDay, $endOfDay])
             ->with(['workTimes', 'client', 'subService'])
             ->get();
 

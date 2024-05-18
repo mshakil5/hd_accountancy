@@ -88,6 +88,13 @@ Route::middleware(['auth', 'user-access:manager'])->group(function () {
 
      // Note and additional work
      Route::post('/manager/save-notes', [ServiceController::class, 'saveNotes'])->name('saveNotes');
+
+     //  Client list
+    Route::get('/manager/client', [ClientController::class, 'indexManager'])->name('allClientManager');
+    Route::get('/manager/client-list', [ClientController::class, 'getClientsManager'])->name('get.Clients.manager');
+
+    // Task list
+    Route::get('/manager/task-list', [ServiceController::class, 'allTaskList'])->name('allTaskListManager');
 });
 
 //Staff
@@ -114,8 +121,11 @@ Route::middleware(['auth', 'user-access:staff'])->group(function () {
     //Store message to staff
     Route::post('/staff/store-message', [StaffServiceController::class,'storeMessage']);
 
-     // Change Status of sub service
+     // Change Status of completed sub service 
     Route::post('/staff/change-sub-service-status', [StaffServiceController::class,'changeSubServiceStatus']);
+    
+    // Update Status of assigned sub service 
+    Route::post('/staff/update-sub-service-status', [StaffServiceController::class,'updateSubServiceStatus']);
 
     // Start, Stop, Start Break, Stop Break by Staff
     Route::post('/staff/start-work-time', [StaffServiceController::class,'startWorkTime']);
