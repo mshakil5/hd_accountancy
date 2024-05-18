@@ -106,19 +106,19 @@
                                 {{ $activeTime ?? 'N/A' }}
                             </div>
                         </div>
-                        <div class="text-center border-start border-3 ps-3 flex-fill">
+                        {{-- <div class="text-center border-start border-3 ps-3 flex-fill">
                             <div class="fs-6 txt-theme fw-bold">Break Time</div>
                             <div class="text-center fs-2 txt-theme fw-bold">
                                    {{ $breakTime ?? 'N/A' }}
                             </div>
-                        </div>
+                        </div> --}}
                     </div>
-                    <div class="row mt-3">
-                        <div class="col-lg-6">
+                    <div class="row mt-3 align-items-center justify-content-center">
+                        {{--  <div class="col-lg-6">
                             <a href="" class="p-2 border-theme text-center fs-6 d-block rounded-3 border-3 txt-theme fw-bold my-1">Clock in</a>
-                        </div>
-                        <div class="col-lg-6">
-                            <a id="takeBreakBtn" class="p-2 border-theme text-center fs-6 d-block rounded-3 border-3 txt-theme fw-bold my-1" style="cursor: pointer;">Take Break</a>
+                        </div> --}}
+                        <div class="col-lg-12">
+                            <a id="takeBreakBtn" class="p-2 border-theme bg-theme text-center fs-6 d-block rounded-3 border-3 text-light fw-bold" style="cursor: pointer;">Take Break</a>
                         </div>
                     </div>
                    <div class="row mt-3">
