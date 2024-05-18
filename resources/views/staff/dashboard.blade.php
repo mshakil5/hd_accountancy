@@ -58,8 +58,10 @@
                     <div class="d-flex gap-3 my-5">
                         <div class="text-center flex-fill">
                             <div class="fs-6 txt-theme fw-bold">Active Time</div>
-                            <div class="text-center fs-2 txt-theme fw-bold">
-                                {{ $activeTime ?? 'N/A' }}
+                            <div class="container">
+                                <div class="text-center fs-2 txt-theme fw-bold" id="activeTime">
+                                    {{ $activeTimeFormatted ?? 'N/A' }}
+                                </div>
                             </div>
                         </div>
                          {{-- <div class="text-center border-start border-3 ps-3 flex-fill">
@@ -80,8 +82,7 @@
                    <div class="row mt-3">
                         <div class="col-lg-12">
                             <a href="#" onclick="checkWorkTimeStatus();" class="p-2 border-theme bg-theme text-center fs-6 d-block rounded-3 border-3 text-light fw-bold">Clock out</a>
-                            <form id="logout-form" action="{{ route('customLogout') }}" method="POST" class="d-none">
-                                @csrf
+                            <form id="logout-form" class="d-none">
                             </form>
                         </div>
                     </div>
@@ -108,7 +109,7 @@
                                             <table class="table">
                                                 <thead>
                                                     <tr>
-                                                        <th>Login Time:</th>
+                                                        <th>Active Time:</th>
                                                         <th>Break Time:</th>
                                                         <th>Total Work Time:</th>
                                                     </tr>
@@ -200,76 +201,76 @@
         <!-- Whats happening end -->
     </div>
 
-        <!-- Assigned service details section start -->
-        <div class="col-lg-12">
-            <div class="report-box border-theme sales-card p-4 mb-3 rounded-4 border-3" id="assignTaskSection" style="display: none;">
-                <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                    Work Details
-                </div>
+    <!-- Assigned service details section start -->
+    <div class="col-lg-12">
+        <div class="report-box border-theme sales-card p-4 mb-3 rounded-4 border-3" id="assignTaskSection" style="display: none;">
+            <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                Work Details
+            </div>
 
-                <!-- Success and Error message -->
-                <div class="row my-4 px-3">
-                    <div class="col-lg-12">
-                        <div id="successMessage" class="alert alert-success" style="display: none;">
-                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                            <b></b>
-                        </div>
-                        <div id="errorMessage" class="alert alert-danger" style="display: none;">
-                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                            <b></b>
-                        </div>
+            <!-- Success and Error message -->
+            <div class="row my-4 px-3">
+                <div class="col-lg-12">
+                    <div id="successMessage" class="alert alert-success" style="display: none;">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <b></b>
+                    </div>
+                    <div id="errorMessage" class="alert alert-danger" style="display: none;">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <b></b>
                     </div>
                 </div>
-                <!-- Success and Error message -->
+            </div>
+            <!-- Success and Error message -->
 
-                <div class="container-fluid">
-                    <div class="row mt-3">
-                        <div class="col-md-3 text-center">
-                            <h5 class="mb-3">Service</h5>
-                            <input type="text" id="service_name" class="form-control mt-2" readonly>
-                        </div>    
-                        <div class="col-md-3 text-center">
-                            <h5 class="mb-3">Manager</h5>
-                            <input type="text" id="manager_name" class="form-control mt-2" value="" readonly>
-                        </div>  
-                        <div class="col-md-3 text-center">
-                            <h5 class="mb-3">Frequency</h5>
-                            <input type="text" id="service_frequency" class="form-control mt-2" readonly>
-                        </div>   
-                        <div class="col-md-3 text-center">
-                            <h5 class="mb-3">Deadline</h5>
-                            <input type="date" id="service_deadline" class="form-control mt-2" readonly>
-                        </div>
+            <div class="container-fluid">
+                <div class="row mt-3">
+                    <div class="col-md-3 text-center">
+                        <h5 class="mb-3">Service</h5>
+                        <input type="text" id="service_name" class="form-control mt-2" readonly>
+                    </div>    
+                    <div class="col-md-3 text-center">
+                        <h5 class="mb-3">Manager</h5>
+                        <input type="text" id="manager_name" class="form-control mt-2" value="" readonly>
+                    </div>  
+                    <div class="col-md-3 text-center">
+                        <h5 class="mb-3">Frequency</h5>
+                        <input type="text" id="service_frequency" class="form-control mt-2" readonly>
+                    </div>   
+                    <div class="col-md-3 text-center">
+                        <h5 class="mb-3">Deadline</h5>
+                        <input type="date" id="service_deadline" class="form-control mt-2" readonly>
                     </div>
+                </div>
 
-                    <div class="row mt-3">
-                        <div class="col-md-12">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Sub Service Name</th>
-                                        <th>Deadline</th>
-                                        <th>Staff</th>
-                                        <th>Note</th>
-                                        <th>Status</th>
-                                        <th>Comment</th>
-                                        <th>Timer</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="serviceDetailsTable"></tbody>
-                            </table>
-                        </div>
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Sub Service Name</th>
+                                    <th>Deadline</th>
+                                    <th>Staff</th>
+                                    <th>Note</th>
+                                    <th>Status</th>
+                                    <th>Comment</th>
+                                    <th>Timer</th>
+                                </tr>
+                            </thead>
+                            <tbody id="serviceDetailsTable"></tbody>
+                        </table>
                     </div>
+                </div>
 
-                    <div class="row mt-3 mb-3">
-                        <div class="col-lg-4 mx-auto text-center">
-                            <button id="sub-service-cancelButton" class="btn btn-sm btn-outline-dark">Cancel</button>
-                        </div>
+                <div class="row mt-3 mb-3">
+                    <div class="col-lg-4 mx-auto text-center">
+                        <button id="sub-service-cancelButton" class="btn btn-sm btn-outline-dark">Cancel</button>
                     </div>
                 </div>
             </div>
         </div>
-        <!-- Assigned service details section start -->
+    </div>
+    <!-- Assigned service details section start -->
 
     <div class="row">
 
@@ -1178,7 +1179,11 @@
                     
                     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
                 }
-                $('#loginTime').text(moment(response.login_time).format('HH:mm:ss'));
+                var duration = moment.duration(response.login_time, 'seconds');
+                var formattedLoginTime = moment.utc(duration.asMilliseconds()).format('HH:mm:ss');
+
+                $('#loginTime').text(formattedLoginTime);
+
                 $('#totalBreakTime').text(formatDuration(response.total_break_duration));
                 $('#totalDuration').text(formatDuration(response.total_duration));
 
@@ -1310,5 +1315,85 @@
     });
 </script>
 <!-- Note and additional work end -->
+
+<!-- Idle time count start -->
+  <script>
+      let idleTimer;
+      let idleStartTime;
+      let totalIdleTime = 0;
+
+      function startIdleTimer() {
+          idleStartTime = Date.now();
+          idleTimer = setTimeout(checkIdleStatus, 10 * 1000); 
+      }
+
+      function checkIdleStatus() {
+          const idleDuration = Date.now() - idleStartTime;
+          totalIdleTime += idleDuration;
+
+          logIdleTime(totalIdleTime);
+          startIdleTimer();
+      }
+
+      function resetIdleTimer() {
+          clearTimeout(idleTimer);
+          idleStartTime = Date.now();
+          totalIdleTime = 0;
+          startIdleTimer();
+      }
+
+      function logIdleTime(idleTime) {
+          $.ajax({
+              url: '{{ route('staff.idle.time') }}',
+              type: 'POST',
+              data: {
+                  idle_time: idleTime
+              },
+              headers: {
+                  'X-CSRF-TOKEN': '{{ csrf_token() }}'
+              },
+              success: function(response) {
+                  console.log('Idle time logged successfully.');
+              },
+              error: function(xhr, status, error) {
+                  console.error('Error logging idle time:', error);
+              }
+          });
+      }
+
+      document.addEventListener('mousemove', resetIdleTimer);
+      document.addEventListener('keypress', resetIdleTimer);
+
+      startIdleTimer();
+  </script>
+<!-- Idle time count end -->
+
+<!-- Active Time start -->
+<script>
+    function updateActiveTime() {
+        var activeTimeElement = document.getElementById('activeTime');
+        var currentTime = activeTimeElement.textContent;
+        
+        var timeArray = currentTime.split(':');
+        var hours = parseInt(timeArray[0], 10);
+        var minutes = parseInt(timeArray[1], 10);
+        var seconds = parseInt(timeArray[2], 10);
+
+        seconds++;
+        if (seconds >= 60) {
+            seconds = 0;
+            minutes++;
+        }
+        if (minutes >= 60) {
+            minutes = 0;
+            hours++;
+        }
+        var formattedTime = ('0' + hours).slice(-2) + ':' + ('0' + minutes).slice(-2) + ':' + ('0' + seconds).slice(-2);
+        activeTimeElement.textContent = formattedTime;
+    }
+
+    setInterval(updateActiveTime, 1000);
+</script>
+<!-- Active Time end -->
 
 @endsection

@@ -179,7 +179,6 @@ class HomeController extends Controller
         return view('admin.dashboard', compact('clients', 'staffs', 'loggedStaff', 'managers', 'services', 'lateStaff', 'absentStaff','filteredLogs'));
     }
 
-  
     /**
      * Show the application dashboard.
      *
@@ -192,19 +191,27 @@ class HomeController extends Controller
         $staffs = User::whereIn('type', ['3','2'])->orderby('id','DESC')->get();
         $managers = User::whereIn('type', ['3','2'])->orderby('id','DESC')->get();
         $user = Auth::user();
-        $attendanceLog = UserAttendanceLog::where('user_id', $user->id)
-            ->orderBy('start_time', 'desc')
-            ->first();
+        $userId = auth()->id();
+        $startOfDay = Carbon::today()->startOfDay();
 
-        $activeTime = $breakTime = null;
-        if ($attendanceLog) {
-            $startTime = Carbon::parse($attendanceLog->start_time);
-            $endTime = Carbon::parse($attendanceLog->end_time);
-            $timeDifference = $startTime->diff($endTime);
-            $activeTime = $timeDifference->format('%H:%I:%S');
-            $breakTime = $activeTime;
+        $activeTimeInSeconds = UserAttendanceLog::where('user_id', $userId)
+            ->whereNotNull('end_time')
+            ->whereBetween('created_at', [$startOfDay, now()])
+            ->sum('duration');
+
+        $ongoingSessions = UserAttendanceLog::where('user_id', $userId)
+            ->whereNull('end_time')
+            ->where('created_at', '>=', $startOfDay)
+            ->get();
+
+        $currentTime = now();
+        foreach ($ongoingSessions as $session) {
+            $startTime = Carbon::parse($session->start_time);
+            $activeTimeInSeconds += $startTime->diffInSeconds($currentTime);
         }
-        return view('manager.dashboard',compact('staffs','managers','activeTime','breakTime','clients','subServices'));
+
+        $activeTimeFormatted = gmdate('H:i:s', $activeTimeInSeconds);
+        return view('manager.dashboard',compact('staffs','managers','activeTimeFormatted','clients','subServices'));
     }
 
     /**
@@ -220,19 +227,32 @@ class HomeController extends Controller
         $clients = Client::orderby('id','DESC')->get();
         $subServices = SubService::orderby('id','DESC')->get();
         $user = Auth::user();
-        $attendanceLog = UserAttendanceLog::where('user_id', $user->id)
-            ->orderBy('start_time', 'desc')
-            ->first();
+        
+        $userId = auth()->id();
+        $startOfDay = Carbon::today()->startOfDay();
 
-        $activeTime =  null;
-        if ($attendanceLog) {
-            $startTime = Carbon::parse($attendanceLog->start_time);
-            $endTime = Carbon::parse($attendanceLog->end_time);
-            $timeDifference = $startTime->diff($endTime);
-            $activeTime = $timeDifference->format('%H:%I:%S');
+        $activeTimeInSeconds = UserAttendanceLog::where('user_id', $userId)
+            ->whereNotNull('end_time')
+            ->whereBetween('created_at', [$startOfDay, now()])
+            ->sum('duration');
+
+        $ongoingSessions = UserAttendanceLog::where('user_id', $userId)
+            ->whereNull('end_time')
+            ->where('created_at', '>=', $startOfDay)
+            ->get();
+
+        $currentTime = now();
+        foreach ($ongoingSessions as $session) {
+            $startTime = Carbon::parse($session->start_time);
+            $activeTimeInSeconds += $startTime->diffInSeconds($currentTime);
         }
-        return view('staff.dashboard', compact('activeTime','staffs','managers','clients','subServices'));
+
+        $activeTimeFormatted = gmdate('H:i:s', $activeTimeInSeconds);
+
+
+        return view('staff.dashboard', compact('activeTimeFormatted','staffs','managers','clients','subServices'));
     }
+
     /**
      * Show the application dashboard.
      *
@@ -243,38 +263,6 @@ class HomeController extends Controller
         return view('user.dashboard');
     }
 
-    public function sessionClear()
-    {
-        $user = Auth::user();
-        $attendanceLog = UserAttendanceLog::where('user_id', $user->id)
-            ->where('status', 0)
-            ->latest()
-            ->first();
-
-        if ($attendanceLog) {
-            $attendanceLog->end_time = now();
-            $attendanceLog->status = 1;
-            $attendanceLog->note = request()->input('note');
-            $attendanceLog->save();
-        }
-
-        session()->flush();
-        session()->regenerate();
-        return redirect()->route('home');
-    }
-
-    public function sessionClearByAdmin($userId)
-    {
-
-        $user = User::find($userId);
-
-        if ($user ) {
-            return response()->json(['message' => 'Staff member logged out successfully'], 200);
-        } else {
-            return response()->json(['error' => 'Staff member not found'], 404);
-        }
-    }
-
     public function customlogout(Request $request, $attendenceId)
     {
         $attendanceLog = UserAttendanceLog::find($attendenceId);
@@ -283,14 +271,14 @@ class HomeController extends Controller
                 $attendanceLog->note = $request->note;
             }
             $attendanceLog->end_time = Carbon::now();
+            $startTime = Carbon::parse($attendanceLog->start_time);
+            $endTime = Carbon::parse($attendanceLog->end_time);
+            $attendanceLog->duration = $endTime->diffInSeconds($startTime);
             \Session::getHandler()->destroy($attendanceLog->session_id);
             $attendanceLog->session_id = null;
+            $attendanceLog->status = 1;
             $attendanceLog->save();
-
-            return response()->json(['message' => 'Logout successful'], 200);
-        } else {
-            return response()->json(['error' => 'User attendance log not found'], 404);
-        }
+        } 
     }
 
 }

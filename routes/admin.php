@@ -32,9 +32,6 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
 
     Route::get('/home', [HomeController::class, 'adminHome'])->name('admin.home');
 
-    // Admin logs out staff
-    Route::post('/custom-logout-admin/{userId}', [HomeController::class, 'sessionClearByAdmin'])->name('customLogoutByAdmin');
-
     //Admin crud
     Route::get('/new-admin', [AdminController::class, 'getAdmin'])->name('allAdmin');
     Route::post('/new-admin', [AdminController::class, 'adminStore']);

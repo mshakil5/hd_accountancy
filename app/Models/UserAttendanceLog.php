@@ -20,6 +20,8 @@ class UserAttendanceLog extends Model
         'status',
         'is_late',
         'session_id',
+        'idle_time',
+        'duration',
         'created_by',
         'updated_by',
     ];

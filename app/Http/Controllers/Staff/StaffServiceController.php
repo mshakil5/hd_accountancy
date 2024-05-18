@@ -349,10 +349,25 @@ class StaffServiceController extends Controller
         $staffId = Auth::id();
         $today = now()->startOfDay();
 
-        $loginTime = UserAttendanceLog::where('user_id', $staffId)
-            ->whereDate('start_time', $today)
-            ->orderBy('created_at', 'asc')
-            ->value('start_time');
+        $userId = auth()->id();
+        $startOfDay = Carbon::today()->startOfDay();
+
+        $activeTimeInSeconds = UserAttendanceLog::where('user_id', $userId)
+            ->whereNotNull('end_time')
+            ->whereBetween('created_at', [$startOfDay, now()])
+            ->sum('duration');
+
+        $ongoingSessions = UserAttendanceLog::where('user_id', $userId)
+            ->whereNull('end_time')
+            ->where('created_at', '>=', $startOfDay)
+            ->get();
+
+        $currentTime = now();
+        foreach ($ongoingSessions as $session) {
+            $startTime = Carbon::parse($session->start_time);
+            $activeTimeInSeconds += $startTime->diffInSeconds($currentTime);
+        }
+
 
         $startOfDay = Carbon::today()->startOfDay();
         $endOfDay = Carbon::today()->endOfDay();
@@ -394,7 +409,7 @@ class StaffServiceController extends Controller
             ->sum('duration');
 
         return response()->json([
-            'login_time' => $loginTime,
+            'login_time' => $activeTimeInSeconds,
             'total_duration' => $totalDuration,
             'total_break_duration' => $totalBreakDuration,
             'completed_services' => $completedServices,
@@ -430,6 +445,10 @@ class StaffServiceController extends Controller
 
         if ($attendanceLog) {
             $attendanceLog->end_time = now();
+            $startTime = Carbon::parse($attendanceLog->start_time);
+            $endTime = Carbon::parse($attendanceLog->end_time);
+            $attendanceLog->duration = $endTime->diffInSeconds($startTime);
+            $attendanceLog->session_id = null;
             $attendanceLog->status = 1;
             $noteInput = $request->input('noteInput');
             $attendanceLog->note = $noteInput; 
@@ -467,6 +486,28 @@ class StaffServiceController extends Controller
         } else {
             return response()->json(['error' => 'Client sub-service not found'], 404);
         }
+    }
+
+    public function logIdleTime(Request $request)
+    {
+        $request->validate([
+            'idle_time' => 'required',
+        ]);
+
+        $userId = auth()->id();
+        $startOfDay = Carbon::today()->startOfDay();
+        $endOfDay = Carbon::today()->endOfDay();
+
+        $existingLog = UserAttendanceLog::where('user_id', $userId)
+            ->whereDate('created_at', Carbon::today())
+            ->first();
+
+        if ($existingLog) {
+            $existingLog->idle_time += $request->idle_time / 1000;
+            $existingLog->save();
+        }
+
+        return response()->json(['message' => 'Idle time logged successfully'], 200);
     }
 
 

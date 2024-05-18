@@ -74,7 +74,6 @@ class LoginController extends Controller
                 $attendanceLog->start_time = now();
                 $attendanceLog->status = 0;
                 $attendanceLog->session_id = Session::getId();
-                $attendanceLog->created_by = Auth::user()->id;
                 $attendanceLog->save();
             }
 

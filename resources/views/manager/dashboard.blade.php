@@ -102,8 +102,10 @@
                     <div class="d-flex gap-3 my-5">
                         <div class="text-center flex-fill">
                             <div class="fs-6 txt-theme fw-bold">Active Time</div>
-                            <div class="text-center fs-2 txt-theme fw-bold">
-                                {{ $activeTime ?? 'N/A' }}
+                            <div class="container">
+                                <div class="text-center fs-2 txt-theme fw-bold" id="activeTime">
+                                    {{ $activeTimeFormatted ?? 'N/A' }}
+                                </div>
                             </div>
                         </div>
                         {{-- <div class="text-center border-start border-3 ps-3 flex-fill">
@@ -124,8 +126,7 @@
                    <div class="row mt-3">
                         <div class="col-lg-12">
                             <a href="#" onclick="checkWorkTimeStatus();" class="p-2 border-theme bg-theme text-center fs-6 d-block rounded-3 border-3 text-light fw-bold">Clock out</a>
-                            <form id="logout-form" action="{{ route('customLogout') }}" method="POST" class="d-none">
-                                @csrf
+                            <form id="logout-form" class="d-none">
                             </form>
                         </div>
                     </div>
@@ -152,7 +153,7 @@
                                             <table class="table">
                                                 <thead>
                                                     <tr>
-                                                        <th>Login Time:</th>
+                                                        <th>Active Time:</th>
                                                         <th>Break Time:</th>
                                                         <th>Total Work Time:</th>
                                                     </tr>
@@ -1040,7 +1041,10 @@
                     
                     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
                 }
-                $('#loginTime').text(moment(response.login_time).format('HH:mm:ss'));
+                var duration = moment.duration(response.login_time, 'seconds');
+                var formattedLoginTime = moment.utc(duration.asMilliseconds()).format('HH:mm:ss');
+
+                $('#loginTime').text(formattedLoginTime);
                 $('#totalBreakTime').text(formatDuration(response.total_break_duration));
                 $('#totalDuration').text(formatDuration(response.total_duration));
 
@@ -1172,5 +1176,33 @@
     });
 </script>
 <!-- Note and additional work end -->
+
+<!-- Active Time start -->
+<script>
+    function updateActiveTime() {
+        var activeTimeElement = document.getElementById('activeTime');
+        var currentTime = activeTimeElement.textContent;
+        
+        var timeArray = currentTime.split(':');
+        var hours = parseInt(timeArray[0], 10);
+        var minutes = parseInt(timeArray[1], 10);
+        var seconds = parseInt(timeArray[2], 10);
+
+        seconds++;
+        if (seconds >= 60) {
+            seconds = 0;
+            minutes++;
+        }
+        if (minutes >= 60) {
+            minutes = 0;
+            hours++;
+        }
+        var formattedTime = ('0' + hours).slice(-2) + ':' + ('0' + minutes).slice(-2) + ':' + ('0' + seconds).slice(-2);
+        activeTimeElement.textContent = formattedTime;
+    }
+
+    setInterval(updateActiveTime, 1000);
+</script>
+<!-- Active Time end -->
 
 @endsection

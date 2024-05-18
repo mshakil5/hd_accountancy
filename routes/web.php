@@ -95,6 +95,7 @@ Route::middleware(['auth', 'user-access:manager'])->group(function () {
 
     // Task list
     Route::get('/manager/task-list', [ServiceController::class, 'allTaskList'])->name('allTaskListManager');
+    
 });
 
 //Staff
@@ -133,9 +134,6 @@ Route::middleware(['auth', 'user-access:staff'])->group(function () {
     Route::post('/staff/start-break', [StaffServiceController::class,'startBreak']);
     Route::post('/staff/stop-break', [StaffServiceController::class,'stopBreak']);
 
-     //Custom logout
-     Route::post('/custom-logout', [HomeController::class, 'sessionClear'])->name('customLogout');
-
      // staff holiday
      Route::get('/staff/holiday', [HolidayController::class, 'index'])->name('staff.holiday');
      Route::post('/staff/holiday-request', [HolidayController::class, 'holidayRequest'])->name('staff.holidayRequest');
@@ -159,6 +157,9 @@ Route::middleware(['auth', 'user-access:staff'])->group(function () {
 
     // Task list
     Route::get('/staff/task-list', [StaffServiceController::class, 'allTaskList'])->name('allTaskList');
+
+    //Idle time count 
+    Route::post('/staff-idle-time', [StaffServiceController::class, 'logIdleTime'])->name('staff.idle.time');
     
 });
 

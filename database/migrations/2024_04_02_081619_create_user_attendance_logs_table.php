@@ -21,6 +21,8 @@ return new class extends Migration
             $table->boolean('status')->default(1);
             $table->boolean('is_late')->default(0); // Default 0 == Not late , 1 == late
             $table->string('session_id')->nullable();
+            $table->string('idle_time')->nullable();
+            $table->string('duration')->nullable();
             $table->string('created_by')->nullable();
             $table->string('updated_by')->nullable();
             $table->timestamps();
