@@ -14,7 +14,7 @@
                     <div class="card-header">
                         <div class="col d-flex justify-content-between">
                             <div>
-                                <h3 class="card-title">Previously logged-in staffs (within the last 30 days)</h3>
+                                <h3 class="card-title">Attendence Record (within the last 30 days)</h3>
                             </div>
                             <div>
                                 <a href="{{ route('allPrevLogStaffs') }}" class="btn btn-sm bg-theme text-light btn-outline-dark mt-3">View All Attendence Records</a>

@@ -9,7 +9,7 @@
     <div class="col-lg-12">
       <div class="row">
 
-
+        <!-- Top 4 start -->
         <div class="col-lg-3">
           <div class="report-box py-1 sales-card">
             <div class="card-body d-flex flex-column align-items-center">
@@ -52,7 +52,7 @@
               </div>
 
               <h5 class="card-title text-capitalize py-1 mb-3">Today's absent</h5>
-              <h3 class="fw-bold txt-theme mb-0">1</h3>
+              <h3 class="fw-bold txt-theme mb-0">{{$totalAbsentStaffCount}}</h3>
 
             </div>
 
@@ -73,7 +73,9 @@
 
           </div>
         </div>
+        <!-- Top 4 end -->
 
+        <!-- Task to be assigned details start -->
         <div class="col-lg-12">
           <div class="report-box border-theme sales-card p-4 mb-3 rounded-4 border-3" id="assignTaskSection" style="display: none;">
             <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
@@ -165,8 +167,60 @@
             </div>
           </div>
         </div>
+       <!-- Task to be assigned details start -->
+
+        <!-- Todays deadline service details section start -->
+        <div class="col-lg-12">
+            <div class="report-box border-theme sales-card p-4 mb-3 rounded-4 border-3" id="todaysdeadlineSection" style="display: none;">
+                <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                Today's Deadline Work Details
+                </div>
+
+                <div class="container-fluid">
+                    <div class="row mt-3">
+                        <div class="col-md-4 text-center">
+                            <h5 class="mb-3">Service</h5>
+                            <input type="text" id="service_name3" class="form-control mt-2 text-center" readonly>
+                        </div>    
+                        <div class="col-md-4 text-center">
+                            <h5 class="mb-3">Manager</h5>
+                            <input type="text" id="manager_name3" class="form-control mt-2 text-center" value="" readonly>
+                        </div>  
+                        <div class="col-md-4 text-center">
+                            <h5 class="mb-3">Frequency</h5>
+                            <input type="text" id="service_frequency3" class="form-control mt-2 text-center" readonly>
+                        </div>   
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Sub Service Name</th>
+                                        <th>Staff</th>
+                                        <th>Note</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="todaysDeadlineServiceDetailsTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3 mb-3">
+                        <div class="col-lg-4 mx-auto text-center">
+                            <button id="todaysDeadline-cancelButton" class="btn btn-sm btn-outline-dark">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Todays deadline service details section start -->
 
         <div class="row px-0 mx-auto">
+
+          <!-- Today's Deadline Start -->
           <div class="col-lg-5">
             <div class="col-lg-12 px-0 border shadow-sm mb-3">
 
@@ -174,52 +228,20 @@
                 <i class="bx bxs-user-plus fs-4 me-2"></i>Todays Deadline
               </p>
 
-
-              <table class="table table-striped">
-                <thead>
-                  <tr>
-                    <th scope="col">Sl</th>
-                    <th scope="col">Task</th>
-                    <th scope="col">Client</th>
-                    <th scope="col">Stuff</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <th scope="row">1</th>
-                    <td>Eating</td>
-                    <td>Designer</td>
-                    <td>Abul</td>
-                  </tr>
-                  <tr>
-                    <th scope="row">1</th>
-                    <td>Eating</td>
-                    <td>Designer</td>
-                    <td>Abul</td>
-                  </tr>
-                  <tr>
-                    <th scope="row">1</th>
-                    <td>Eating</td>
-                    <td>Designer</td>
-                    <td>Abul</td>
-                  </tr>
-                  <tr>
-                    <th scope="row">1</th>
-                    <td>Eating</td>
-                    <td>Designer</td>
-                    <td>Abul</td>
-                  </tr>
-                  <tr>
-                    <th scope="row">1</th>
-                    <td>Eating</td>
-                    <td>Designer</td>
-                    <td>Abul</td>
-                  </tr>
-
-                </tbody>
-              </table>
+              <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
+                <table table id="todaysDeadlineTable" class="table cell-border table-striped" style="width:100%">
+                  <thead>
+                    <tr>
+                        <th scope="col">Service Name</th>
+                        <th scope="col">Client Name</th>
+                        <th scope="col">Action</th>
+                    </tr>
+                  </thead>
+                </table>
+              </div>
             </div>
           </div>
+          <!-- Today's Deadline Start -->
 
           <!-- Task to be asssigned -->
           <div class="col-lg-7">
@@ -248,59 +270,6 @@
         </div>
         </div>
 
-        <div class="col-lg-12" style="display: none;">
-          <div class="col-lg-12 px-0 border shadow-sm mb-3">
-
-            <p class="p-2 bg-theme-light txt-theme px-3 mb-0 text-capitalize d-flex align-items-center">
-              <i class="bx bxs-user-plus fs-4 me-2"></i>All work status
-            </p>
-
-            <table class="table table-striped">
-              <thead>
-                <tr>
-                  <th scope="col">Sl</th>
-                  <th scope="col">Task</th>
-                  <th scope="col">Client</th>
-                  <th scope="col">Stuff</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <th scope="row">1</th>
-                  <td>Eating</td>
-                  <td>Designer</td>
-                  <td>Abul</td>
-                </tr>
-                <tr>
-                  <th scope="row">1</th>
-                  <td>Eating</td>
-                  <td>Designer</td>
-                  <td>Abul</td>
-                </tr>
-                <tr>
-                  <th scope="row">1</th>
-                  <td>Eating</td>
-                  <td>Designer</td>
-                  <td>Abul</td>
-                </tr>
-                <tr>
-                  <th scope="row">1</th>
-                  <td>Eating</td>
-                  <td>Designer</td>
-                  <td>Abul</td>
-                </tr>
-                <tr>
-                  <th scope="row">1</th>
-                  <td>Eating</td>
-                  <td>Designer</td>
-                  <td>Abul</td>
-                </tr>
-
-              </tbody>
-            </table>
-
-          </div>
-        </div>
         <!-- Currently Active Staffs Start-->
         <div class="col-lg-12">
           <div class="col-lg-12 px-0 border shadow-sm mb-3">
@@ -313,7 +282,6 @@
               <table class="table cell-border table-striped" id="active-staff">
               <thead>
                   <tr>
-                      <th scope="col">Sl</th>
                       <th scope="col">Name</th>
                       <th scope="col">Login Time</th>
                       <th scope="col">Attendence Status</th>
@@ -325,7 +293,6 @@
               <tbody>
               @foreach ($loggedStaff as $staff)
                   <tr>
-                      <td>{{ $loop->iteration }}</td>
                       <td>{{ $staff->user->first_name }} {{ $staff->user->last_name }}</td>
                       <td>{{ \Carbon\Carbon::parse($staff->start_time)->format('H:i. d/m/Y') }}</td>
                       <td>
@@ -368,7 +335,6 @@
                     <table class="table cell-border table-striped" id="late-staff-prorota">
                         <thead>
                             <tr>
-                                <th scope="col">Sl</th>
                                 <th scope="col">Name</th>
                                 <th scope="col">Login Time</th>
                             </tr>
@@ -376,7 +342,6 @@
                         <tbody>
                             @foreach ($lateStaff as $staff)
                             <tr>
-                                <td>{{ $loop->iteration }}</td>
                                 <td>{{ $staff->first_name }} {{ $staff->last_name }}</td>
                                 <td>{{ \Carbon\Carbon::parse($staff->start_time)->format('H:i . d/m/Y') }}</td>
                             </tr>
@@ -398,7 +363,6 @@
                     <table class="table cell-border table-striped" id="shift-deviation-staff">
                         <thead>
                             <tr>
-                                <th scope="col">Sl</th>
                                 <th scope="col">Name</th>
                                 <th scope="col">Log Out Time</th>
                                 <th scope="col">Departure Status</th>
@@ -407,7 +371,6 @@
                         <tbody>
                             @foreach ($filteredLogs as $index => $log)
                             <tr>
-                                <td>{{ $index + 1 }}</td>
                                 <td>{{ $log->user->first_name }} {{ $log->user->last_name }}</td>
                                 <td>{{ \Carbon\Carbon::parse($log->end_time)->format('H:i. d/m/Y') }}</td>
                                 <td>{{ $log->departure_status }}</td>
@@ -431,7 +394,6 @@
                     <table class="table cell-border table-striped" id="absent-staff">
                         <thead>
                             <tr>
-                                <th scope="col">Sl</th>
                                 <th scope="col">Name</th>
                                 <th scope="col">Comment</th>
                                 <th scope="col">Action</th>
@@ -440,7 +402,6 @@
                         <tbody>
                             @foreach ($absentStaff as $index => $staff)
                             <tr>
-                                <td>{{ $index + 1 }}</td>
                                 <td>{{ $staff->first_name }} {{ $staff->last_name }}</td>
                                 <td>
                                     @if ($staff->logComments->isNotEmpty())
@@ -474,19 +435,19 @@
                     <div class="row mt-3">
                         <div class="col-md-3 text-center">
                             <h5 class="mb-3">Service</h5>
-                            <input type="text" id="service_name2" class="form-control mt-2" readonly>
+                            <input type="text" id="service_name2" class="form-control mt-2 text-center" readonly>
                         </div>    
                         <div class="col-md-3 text-center">
                             <h5 class="mb-3">Manager</h5>
-                            <input type="text" id="manager_name2" class="form-control mt-2" value="" readonly>
+                            <input type="text" id="manager_name2" class="form-control mt-2 text-center" value="" readonly>
                         </div>  
                         <div class="col-md-3 text-center">
                             <h5 class="mb-3">Frequency</h5>
-                            <input type="text" id="service_frequency2" class="form-control mt-2" readonly>
+                            <input type="text" id="service_frequency2" class="form-control mt-2 text-center" readonly>
                         </div>   
                         <div class="col-md-3 text-center">
                             <h5 class="mb-3">Deadline</h5>
-                            <input type="date" id="service_deadline2" class="form-control mt-2" readonly>
+                            <input type="date" id="service_deadline2" class="form-control mt-2 text-center" readonly>
                         </div>
                     </div>
 
@@ -562,19 +523,19 @@
                     <div class="row mt-3">
                         <div class="col-md-3 text-center">
                             <h5 class="mb-3">Service</h5>
-                            <input type="text" id="service_name1" class="form-control mt-2" readonly>
+                            <input type="text" id="service_name1" class="form-control mt-2 text-center" readonly>
                         </div>    
                         <div class="col-md-3 text-center">
                             <h5 class="mb-3">Manager</h5>
-                            <input type="text" id="manager_name1" class="form-control mt-2" value="" readonly>
+                            <input type="text" id="manager_name1" class="form-control mt-2 text-center" value="" readonly>
                         </div>  
                         <div class="col-md-3 text-center">
                             <h5 class="mb-3">Frequency</h5>
-                            <input type="text" id="service_frequency1" class="form-control mt-2" readonly>
+                            <input type="text" id="service_frequency1" class="form-control mt-2 text-center" readonly>
                         </div>   
                         <div class="col-md-3 text-center">
                             <h5 class="mb-3">Deadline</h5>
-                            <input type="date" id="service_deadline1" class="form-control mt-2" readonly>
+                            <input type="date" id="service_deadline1" class="form-control mt-2 text-center" readonly>
                         </div>
                     </div>
 
@@ -1049,6 +1010,99 @@
   });
 </script>
 <!-- Assigned Work List -->
+
+<!-- Todays Deadline Work List  -->
+<script>
+  $(document).ready(function() {
+      $('#todaysDeadlineTable').DataTable({
+          processing: true,
+          serverSide: true,
+          ajax: {
+              url: '/admin/get-todays-deadline-service',
+              type: 'GET',
+          },
+          columns: [
+              { data: 'clientname', name: 'clientname' },
+              { data: 'servicename', name: 'servicename' },
+              {
+                  data: 'action',
+                  name: 'action',
+                  orderable: false,
+                  searchable: false
+              }
+          ]
+      });
+
+      $(document).on('click', '.task', function() {
+          var clientserviceId = $(this).data('id');
+          var managerFirstName = $(this).data('manager-firstname');
+          var rowData = $('#todaysDeadlineTable').DataTable().row($(this).closest('tr')).data();
+          
+          if (rowData) {
+              var serviceName = rowData.servicename;
+              var frequency = rowData.service_frequency;
+              var deadline = rowData.service_deadline;
+
+              $('#service_name3').val(serviceName);
+              $('#manager_name3').val(managerFirstName);
+              $('#service_frequency3').val(frequency);
+
+              $.ajax({
+                  url: '/admin/getClientSubService/' + clientserviceId,
+                  type: "GET",
+                  dataType: "json",
+                  success: function(data) {
+                      populateCompletedForm(data);
+                    //   console.log(data);
+                  },
+                  error: function(xhr, error, thrown) {
+                      console.error('Error fetching sub-services:', error, thrown);
+                  }
+              });
+
+              $('#todaysdeadlineSection').show();
+          } else {
+              console.error('Row data is undefined');
+          }
+      });
+
+      function populateCompletedForm(subServices) {
+          var todaysDeadlineServiceDetailsTable = $('#todaysDeadlineServiceDetailsTable');
+          todaysDeadlineServiceDetailsTable.empty();
+
+          var staffs = @json($staffs);
+
+          $.each(subServices, function(index, subService) {
+              var staff = staffs.find(function(staff) {
+                  return staff.id === subService.staff_id;
+              });
+
+              var staffName = staff ? staff.first_name : 'N/A';
+
+              var newRow = `
+                  <tr>
+                      <td>${subService.sub_service.name}</td>
+                      <td>${staffName}</td>
+                      <td>${subService.note ? subService.note : ''}</td>
+                      <td>
+                          ${  subService.sequence_status === 2 ? 'Work is completed' 
+                              : subService.sequence_status === 1 ? 'Not Started' 
+                              : subService.sequence_status === 0 ? 'Processing'
+                              : 'N/A'
+                          }
+                      </td>
+                  </tr>
+              `;
+              todaysDeadlineServiceDetailsTable.append(newRow);
+          });
+      }
+
+      $('#todaysDeadline-cancelButton').click(function() {
+          $('#todaysdeadlineSection').hide();
+      });
+  });
+</script>
+<!-- Todays Deadline Work List -->
 
 <!-- Task need to be assigned -->
 <script>

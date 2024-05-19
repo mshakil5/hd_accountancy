@@ -23,19 +23,19 @@
         </a>
     </li>
       
+    <li class="nav-item {{ request()->routeIs('allStaff', 'createStaff', 'staff.details') ? 'active' : '' }}">
+        <a class="nav-link collapsed" href="{{ route('allStaff') }}">
+            <i class="bi bi-person-badge"></i>
+            <span>Staff</span>
+        </a>
+    </li>
+    
       <li class="nav-item {{ request()->routeIs('allDepartment') ? 'active' : '' }}">
         <a class="nav-link collapsed" href="{{ route('allDepartment') }}">
             <i class="bi bi-building"></i>
             <span>Department</span>
         </a>
     </li>
-
-  <li class="nav-item {{ request()->routeIs('allStaff', 'createStaff', 'staff.details') ? 'active' : '' }}">
-      <a class="nav-link collapsed" href="{{ route('allStaff') }}">
-          <i class="bi bi-person-badge"></i>
-          <span>Staff</span>
-      </a>
-  </li>
 
       <li class="nav-item {{ request()->routeIs('allClient','createClient','client.update.form') ? 'active' : '' }}">
         <a class="nav-link collapsed" href="{{ route('allClient') }}">
@@ -114,7 +114,7 @@
         </a>
       </li>
 
-      <li class="nav-item">
+      {{--  <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#icons-nav" data-bs-toggle="collapse" href="#">
           <i class="bi bi-gem"></i><span>Reports</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
@@ -125,8 +125,7 @@
             </a>
           </li>
         </ul>
-        
-      </li>
+       </li> --}}
 
       <li class="nav-item">
         <a class="nav-link collapsed" href="{{ route('logout') }}"  onclick="event.preventDefault(); document.getElementById('logout-form').submit();">

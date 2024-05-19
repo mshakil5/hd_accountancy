@@ -39,7 +39,7 @@
                                             </div>
                                             <div class="col-lg-3 text-center">
                                                 <div class="img mb-2">
-                                                    <img src="{{ asset('assets/img/human-placeholder.jpg') }} " id="imagePreview" width="100" class="border-theme border-2 rounded-3">
+                                                    <img src="{{ asset('assets/img/human-placeholder.jpg') }} " id="imagePreview" width="150" class="border-theme border-2 rounded-3">
                                                 </div>
                                                 <label for="pic" class="mb-0" style="cursor: pointer;">
                                                     <i class="bi bi-cloud-upload"></i>

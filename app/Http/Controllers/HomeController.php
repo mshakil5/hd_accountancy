@@ -130,6 +130,7 @@ class HomeController extends Controller
                 ->orderBy('id', 'desc')
                 ->get();
                 // dd($absentStaff);
+                $totalAbsentStaffCount = $absentStaff->count();
 
                 $currentDayOfWeek = Carbon::now()->format('l');
                 $prorotaDetails = ProrotaDetail::where('day', $currentDayOfWeek)->get();
@@ -178,7 +179,7 @@ class HomeController extends Controller
         $managers = User::whereIn('type', ['3', '2'])->orderBy('id', 'DESC')->get();
         $services = Service::orderBy('id', 'DESC')->get();
 
-        return view('admin.dashboard', compact('clients', 'staffs', 'loggedStaff', 'managers', 'services', 'lateStaff', 'absentStaff','filteredLogs'));
+        return view('admin.dashboard', compact('clients', 'staffs', 'loggedStaff', 'managers', 'services', 'lateStaff', 'absentStaff','filteredLogs','totalAbsentStaffCount'));
     }
 
     /**
