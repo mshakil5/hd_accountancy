@@ -148,8 +148,9 @@ class HomeController extends Controller
                         }
                     }
 
-                    $filteredLogs = [];
-                    foreach ($latestLogs as $latestLog) {
+                $filteredLogs = [];
+                foreach ($latestLogs as $latestLog) {
+                    if (isset($latestLog->end_time)) {
                         $prorotaDetail = $prorotaDetails->firstWhere('staff_id', $latestLog->user_id);
 
                         if ($prorotaDetail) {
@@ -170,6 +171,7 @@ class HomeController extends Controller
                             $filteredLogs[] = $latestLog;
                         }
                     }
+                }
 
         $clients = Client::orderBy('id', 'DESC')->get();
         $staffs = User::whereIn('type', ['3', '2'])->orderBy('id', 'DESC')->get();

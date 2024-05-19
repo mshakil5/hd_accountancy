@@ -26,7 +26,7 @@ class StaffController extends Controller
     public function getStuffs(Request $request)
     {
         if ($request->ajax()) {
-            $data = User::where('type', '3')->orderBy('id', 'DESC')->get();
+            $data = User::whereIn('type', ['2', '3'])->orderBy('id', 'DESC')->get();
             return Datatables::of($data)
                 ->addIndexColumn()
                 ->make(true);

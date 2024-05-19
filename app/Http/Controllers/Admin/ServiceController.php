@@ -395,11 +395,13 @@ class ServiceController extends Controller
             }
 
             $clientService = new ClientService();
+            $uniqueId = date("His") . '-' . $request->clientId;
             $clientService->client_id = $request->clientId;
             $clientService->service_id = $serviceData['serviceId'];
             $clientService->manager_id = $serviceData['managerId'];
             $clientService->service_frequency = $serviceData['service_frequency'];
             $clientService->service_deadline = $serviceData['service_deadline'];
+            $clientService->unique_id = $uniqueId;
             $clientService->save();
 
             if (isset($serviceData['subServices'])) {

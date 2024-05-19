@@ -880,7 +880,7 @@
                 data: JSON.stringify(data), 
                 contentType: 'application/json', 
                 success: function(response) {
-                    console.log(response)
+                    // console.log(response)
                     swal({
                         title: "Success!",
                         text: "Tasks assigned successfully",
@@ -959,7 +959,7 @@
                 clientId: clientId,
                 services: services
             };
-            console.log(data);
+            // console.log(data);
 
             var newclientId = "{{ $id }}";
             var newservices = [];
@@ -999,7 +999,7 @@
                 newservices: newservices
             };
 
-            console.log(newdata);
+            // console.log(newdata);
 
             // $.ajax({
             //     url: '/admin/update-service',
@@ -1167,7 +1167,7 @@
     $(document).ready(function() {
         $('#contactTable').on('click', '.delete-contact', function() {
             var contactId = $(this).closest('tr').data('contact-id');
-            console.log(contactId);
+            // console.log(contactId);
         
             if (confirm("Are you sure you want to delete this conatct?")) {
                 $.ajax({

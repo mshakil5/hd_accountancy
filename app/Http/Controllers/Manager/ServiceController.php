@@ -188,24 +188,21 @@ class ServiceController extends Controller
 
         $clientSubServiceId = $request->clientSubServiceId;
         $workTime = WorkTime::where('client_sub_service_id', $clientSubServiceId)
-                    ->orderBy('created_at')
+                    ->where('is_break', 0)
+                    ->orderBy('id', 'DESC')
                     ->first();
-        $workTime->end_time = Carbon::now();
-        $workTime->start_time = Carbon::parse($workTime->start_time);
-        $workTime->end_time = Carbon::parse($workTime->end_time);
-        $workTime->duration = $workTime->start_time->diffInSeconds($workTime->end_time);
+        $startDateTime = Carbon::parse($workTime->start_time);
+        $endDateTime = Carbon::parse($workTime->end_time);
 
-         $breaks = WorkTime::where('client_sub_service_id', $clientSubServiceId)
+        $totalDurationExcludingBreaks = $startDateTime->diffInSeconds($endDateTime);
+
+        $breaks = WorkTime::where('client_sub_service_id', $clientSubServiceId)
                     ->where('is_break', 1)
-                    ->whereBetween('start_time', [$workTime->start_time, $workTime->end_time])
-                    ->get();
-        $breakDuration = $breaks->sum(function ($break) {
-            $break->start_time = Carbon::parse($break->start_time);
-            $break->end_time = Carbon::parse($break->end_time);
-            return $break->end_time->diffInSeconds($break->start_time);
-        });
+                    ->sum('duration');
 
-        $workTime->duration -= $breakDuration;
+        $adjustedDuration = $totalDurationExcludingBreaks - $breaks;
+        $workTime->duration = $adjustedDuration;
+        $workTime->end_time = Carbon::now(); 
 
         if ($workTime->save()) {
             $changests = ClientSubService::find($clientSubServiceId);

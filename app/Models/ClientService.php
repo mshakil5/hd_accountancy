@@ -16,6 +16,7 @@ class ClientService extends Model
      protected $fillable = [
         'client_id',
         'service_id',
+        'unique_id',
         'manager_id',
         'service_frequency',
         'service_deadline',

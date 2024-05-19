@@ -484,6 +484,7 @@
                 type: "GET",
                 dataType: "json",
                 success: function(data) {
+                    console.log(data);
                     populateSubServiceForm(data);
                 },
                 error: function(xhr, error, thrown) {
@@ -529,12 +530,14 @@
                 var startBreakButton = '';
                 var stopBreakButton = '';
                 var duration = '';
-                var firstWorkTime = subService.work_times[0];
+                var firstWorkTime = subService.work_times.filter(workTime => workTime.is_break === 0)
+                    .reduce(function(acc, workTime) {
+                            return acc + parseInt(workTime.duration);
+                        }, 0);
 
                   if (subService.sequence_status === 2) {
-                    var firstWorkTime = subService.work_times[0];
                     if (firstWorkTime) {
-                        var durationInSeconds = firstWorkTime.duration;
+                        var durationInSeconds = firstWorkTime;
                         var hours = Math.floor(durationInSeconds / 3600);
                         var minutes = Math.floor((durationInSeconds % 3600) / 60);
                         var seconds = durationInSeconds % 60;
@@ -926,11 +929,14 @@
 
                 var staffName = staff ? staff.first_name : 'N/A';
                 var duration = '';
-                var firstWorkTime = subService.work_times[0];
+                var firstWorkTime = subService.work_times.filter(workTime => workTime.is_break === 0)
+                    .reduce(function(acc, workTime) {
+                            return acc + parseInt(workTime.duration);
+                        }, 0);
 
                 if (subService.sequence_status === 2) {
                     if (firstWorkTime) {
-                        var durationInSeconds = firstWorkTime.duration;
+                        var durationInSeconds = firstWorkTime;
                         var hours = Math.floor(durationInSeconds / 3600);
                         var minutes = Math.floor((durationInSeconds % 3600) / 60);
                         var seconds = durationInSeconds % 60;
@@ -943,7 +949,6 @@
                         <option value="0" ${subService.sequence_status === 0? 'selected' : ''}>Processing</option>
                         <option value="2" ${subService.sequence_status === 2? 'selected' : ''}>Work is completed</option>
                     </select>`;
-
 
                 var newRow = `
                     <tr>

@@ -145,7 +145,7 @@
                             <div class="sub-box-header txt-theme">
                                 <div class="row w-100">
                                     <div class="col-lg-6 d-flex">
-                                        <span>Task completed</span>
+                                        <span>Work In Progress</span>
                                     </div>
                                     <div class="col-lg-6 text-end">
                                         <span id="inProgressTaskCount">count:</span>
@@ -171,7 +171,7 @@
                             <div class="sub-box-header txt-theme">
                                 <div class="row w-100">
                                     <div class="col-lg-6 d-flex">
-                                        <span>Task completed</span>
+                                        <span>Due Tasks</span>
                                     </div>
                                     <div class="col-lg-6 text-end">
                                         <span id="dueTaskCount">count:</span>
