@@ -205,7 +205,7 @@
     <div class="col-lg-12">
         <div class="report-box border-theme sales-card p-4 mb-3 rounded-4 border-3" id="assignTaskSection" style="display: none;">
             <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                Work Details
+                Assigned Task Details
             </div>
 
             <!-- Success and Error message -->
@@ -227,19 +227,19 @@
                 <div class="row mt-3">
                     <div class="col-md-3 text-center">
                         <h5 class="mb-3">Service</h5>
-                        <input type="text" id="service_name" class="form-control mt-2" readonly>
+                        <input type="text" id="service_name" class="form-control mt-2 text-center" readonly>
                     </div>    
                     <div class="col-md-3 text-center">
                         <h5 class="mb-3">Manager</h5>
-                        <input type="text" id="manager_name" class="form-control mt-2" value="" readonly>
+                        <input type="text" id="manager_name" class="form-control mt-2 text-center" value="" readonly>
                     </div>  
                     <div class="col-md-3 text-center">
                         <h5 class="mb-3">Frequency</h5>
-                        <input type="text" id="service_frequency" class="form-control mt-2" readonly>
+                        <input type="text" id="service_frequency" class="form-control mt-2 text-center" readonly>
                     </div>   
                     <div class="col-md-3 text-center">
                         <h5 class="mb-3">Deadline</h5>
-                        <input type="date" id="service_deadline" class="form-control mt-2" readonly>
+                        <input type="date" id="service_deadline" class="form-control mt-2 text-center" readonly>
                     </div>
                 </div>
 
@@ -329,26 +329,26 @@
         <div class="col-lg-12">
             <div class="report-box border-theme sales-card p-4 mb-3 rounded-4 border-3" id="completedTaskSection" style="display: none;">
                 <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                Completed Work Details
+                Today's Completed Task Details
                 </div>
 
                 <div class="container-fluid">
                     <div class="row mt-3">
                         <div class="col-md-3 text-center">
                             <h5 class="mb-3">Service</h5>
-                            <input type="text" id="service_name1" class="form-control mt-2" readonly>
+                            <input type="text" id="service_name1" class="form-control mt-2 text-center" readonly>
                         </div>    
                         <div class="col-md-3 text-center">
                             <h5 class="mb-3">Manager</h5>
-                            <input type="text" id="manager_name1" class="form-control mt-2" value="" readonly>
+                            <input type="text" id="manager_name1" class="form-control mt-2 text-center" value="" readonly>
                         </div>  
                         <div class="col-md-3 text-center">
                             <h5 class="mb-3">Frequency</h5>
-                            <input type="text" id="service_frequency1" class="form-control mt-2" readonly>
+                            <input type="text" id="service_frequency1" class="form-control mt-2 text-center" readonly>
                         </div>   
                         <div class="col-md-3 text-center">
                             <h5 class="mb-3">Deadline</h5>
-                            <input type="date" id="service_deadline1" class="form-control mt-2" readonly>
+                            <input type="date" id="service_deadline1" class="form-control mt-2 text-center" readonly>
                         </div>
                     </div>
 
@@ -386,7 +386,7 @@
             <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
                 <div class="card-body px-0">
                     <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                        Completed Tasks
+                        Today's Completed Tasks
                     </div>
                         <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
                         <table id="completedTasksTable" class="table cell-border table-striped" style="width:100%">

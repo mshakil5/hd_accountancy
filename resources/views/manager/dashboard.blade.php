@@ -31,19 +31,19 @@
                       <div class="row mt-3">
                           <div class="col-md-3 text-center">
                               <h5 class="mb-3">Service</h5>
-                              <input type="text" id="service_name" class="form-control mt-2" readonly>
+                              <input type="text" id="service_name" class="form-control mt-2 text-center" readonly>
                           </div>    
                           <div class="col-md-3 text-center">
                               <h5 class="mb-3">Manager</h5>
-                              <input type="text" id="manager_name" class="form-control mt-2" value="" readonly>
+                              <input type="text" id="manager_name" class="form-control mt-2 text-center" value="" readonly>
                           </div>  
                           <div class="col-md-3 text-center">
                               <h5 class="mb-3">Frequency</h5>
-                              <input type="text" id="service_frequency" class="form-control mt-2" readonly>
+                              <input type="text" id="service_frequency" class="form-control mt-2 text-center" readonly>
                           </div>   
                           <div class="col-md-3 text-center">
                               <h5 class="mb-3">Deadline</h5>
-                              <input type="date" id="service_deadline" class="form-control mt-2" readonly>
+                              <input type="date" id="service_deadline" class="form-control mt-2 text-center" readonly>
                           </div>
                       </div>
 
@@ -305,19 +305,19 @@
                       <div class="row mt-3">
                           <div class="col-md-3 text-center">
                               <h5 class="mb-3">Service</h5>
-                              <input type="text" id="service_name1" class="form-control mt-2" readonly>
+                              <input type="text" id="service_name1" class="form-control mt-2 text-center" readonly>
                           </div>    
                           <div class="col-md-3 text-center">
                               <h5 class="mb-3">Manager</h5>
-                              <input type="text" id="manager_name1" class="form-control mt-2" value="" readonly>
+                              <input type="text" id="manager_name1" class="form-control mt-2 text-center" readonly>
                           </div>  
                           <div class="col-md-3 text-center">
                               <h5 class="mb-3">Frequency</h5>
-                              <input type="text" id="service_frequency1" class="form-control mt-2" readonly>
+                              <input type="text" id="service_frequency1" class="form-control mt-2 text-center" readonly>
                           </div>   
                           <div class="col-md-3 text-center">
                               <h5 class="mb-3">Deadline</h5>
-                              <input type="date" id="service_deadline1" class="form-control mt-2" readonly>
+                              <input type="date" id="service_deadline1" class="form-control mt-2 text-center" readonly>
                           </div>
                       </div>
 
