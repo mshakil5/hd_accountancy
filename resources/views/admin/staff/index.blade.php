@@ -539,7 +539,7 @@
                                 <td>${holiday.holiday_type_name}</td>
                                 <td>${holiday.day}</td>
                                 <td>
-                                    <button class="edit-day-btn" data-holiday-id="${holiday.holiday_type_id}" data-staff-holiday-type-id="${holiday.staff_holiday_type_id}">Edit Day</button>
+                                    <button class="edit-day-btn btn btn-sm bg-theme text-light btn-outline-dark" data-holiday-id="${holiday.holiday_type_id}" data-staff-holiday-type-id="${holiday.staff_holiday_type_id}">Edit Day</button>
                                 </td>
                             </tr>
                         `;

@@ -961,58 +961,66 @@
             };
             // console.log(data);
 
-            var newclientId = "{{ $id }}";
-            var newservices = [];
+            // var newclientId = "{{ $id }}";
+            // var newservices = [];
 
-            $('.subServiceDetails').each(function() {
-                var newserviceId = $('#serviceDropdown').val();
-                var newmanagerId = $(this).find('.managerDropdown').val();
-                var newservice_frequency = $(this).find('#serviceFrequency').val();
-                var newservice_deadline = $(this).find('#serviceDeadline').val();
-                var newsubServices = [];
+            // $('.subServiceDetails').each(function() {
+            //     var newserviceId = $('#serviceDropdown').val();
+            //     var newmanagerId = $(this).find('.managerDropdown').val();
+            //     var newservice_frequency = $(this).find('#serviceFrequency').val();
+            //     var newservice_deadline = $(this).find('#serviceDeadline').val();
+            //     var newsubServices = [];
 
-                $(this).find('tbody tr').each(function() {
-                    var newsubServiceId = $(this).find('.sub-service-id').attr('data-sub-service-id'); 
-                    var newdeadline = $(this).find('#deadline').val();
-                    var newnote = $(this).find('#note').val();
-                    var newstaffId = $(this).find('#selectedStaff').val();
+            //     $(this).find('tbody tr').each(function() {
+            //         var newsubServiceId = $(this).find('.sub-service-id').attr('data-sub-service-id'); 
+            //         var newdeadline = $(this).find('#deadline').val();
+            //         var newnote = $(this).find('#note').val();
+            //         var newstaffId = $(this).find('#selectedStaff').val();
 
-                    newsubServices.push({
-                        newsubServiceId: newsubServiceId,
-                        newdeadline: newdeadline,
-                        newnote: newnote,
-                        newstaffId: newstaffId
-                    });
-                });
+            //         newsubServices.push({
+            //             newsubServiceId: newsubServiceId,
+            //             newdeadline: newdeadline,
+            //             newnote: newnote,
+            //             newstaffId: newstaffId
+            //         });
+            //     });
 
-                newservices.push({
-                    newserviceId: newserviceId,
-                    newmanagerId: newmanagerId,
-                    newservice_frequency: newservice_frequency,
-                    newservice_deadline: newservice_deadline,
-                    newsubServices: newsubServices
-                });
-            });
+            //     newservices.push({
+            //         newserviceId: newserviceId,
+            //         newmanagerId: newmanagerId,
+            //         newservice_frequency: newservice_frequency,
+            //         newservice_deadline: newservice_deadline,
+            //         newsubServices: newsubServices
+            //     });
+            // });
 
-            var newdata = {
-                clientId: clientId,
-                newservices: newservices
-            };
+            // var newdata = {
+            //     clientId: clientId,
+            //     newservices: newservices
+            // };
 
             // console.log(newdata);
 
-            // $.ajax({
-            //     url: '/admin/update-service',
-            //     type: 'POST',
-            //     data: JSON.stringify(data),
-            //     contentType: 'application/json',
-            //     success: function(response) {
-            //         console.log(response);
-            //     },
-            //     error: function(xhr, status, error) {
-            //         console.error(xhr.responseText);
-            //     }
-            // });
+            $.ajax({
+                url: '/admin/update-service',
+                type: 'POST',
+                data: JSON.stringify(data),
+                contentType: 'application/json',
+                success: function(response) {
+                    swal({
+                        title: "Success!",
+                        text: "Tasks assigned successfully",
+                        icon: "success",
+                        button: "OK",
+                    });
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                },
+                error: function(xhr, status, error) {
+                    console.error(xhr.responseText);
+                }
+            });
         });
     });
 
