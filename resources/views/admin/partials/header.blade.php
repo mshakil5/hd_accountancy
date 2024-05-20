@@ -223,7 +223,7 @@
       </ul>
     </nav> 
 
-  </header> -->
+</header> -->
 
 <header id="header" class=" site-main-header">
     <div class="container-fluid">
@@ -233,7 +233,7 @@
         </div>
         <div class="col-lg-4">
           <div class="brand-box text-center bg-light py-2 rounded-4">
-            <img src="{{ asset('/assets/img/logo.png')}}" width="150" alt="" class="img-fluid">
+            <img src="{{ asset('/assets/img/logo.png')}}" width="100" alt="" class="img-fluid">
           </div>
         </div>
         <div class="col-lg-4  d-flex align-items-end justify-content-end">
@@ -242,7 +242,7 @@
       </div>
     </div>
 
-    <div class="menuBar p-2 ps-4">
+    <div class="menuBar p-1 ps-4">
       <i class="bi bi-list toggle-sidebar-btn curp text-black fs-4" onclick="toggleSidebar();"></i>
     </div>
 </header>

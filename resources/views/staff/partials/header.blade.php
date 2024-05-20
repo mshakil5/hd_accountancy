@@ -6,7 +6,7 @@
         </div>
         <div class="col-lg-4">
           <div class="brand-box text-center bg-light py-2 rounded-4">
-            <img src="{{ asset('/assets/img/logo.png')}}" width="150" alt="" class="img-fluid">
+            <img src="{{ asset('/assets/img/logo.png')}}" width="100" alt="" class="img-fluid">
           </div>
         </div>
         <div class="col-lg-4  d-flex align-items-end justify-content-end">
