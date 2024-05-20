@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\User;
+use App\Models\Client;
 use App\Models\HolidayType;
 use Illuminate\Http\Request;
 use App\Models\HolidayRequest;
+use Illuminate\Support\Carbon;
 use App\Models\StaffHolidayType;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -22,7 +24,6 @@ class HolidayController extends Controller
     public function create()
     {
         $staffs = User::whereIn('type', ['2','3'])->select('id','first_name','last_name','email')->orderby('id','DESC')->get();
-        // dd($staffs);
         return view('admin.holiday.create', compact('staffs'));
     }
 
@@ -119,6 +120,46 @@ class HolidayController extends Controller
             return response()->json(['success' => true, 'message' => 'New StaffHolidayType created successfully']);
         }
     }
+
+    public function editHoliday($id)
+    {
+        $holiday = HolidayRequest::findOrFail($id); 
+        $clientName = Client::findOrFail($holiday->staff_id)->name;
+        return view('admin.holiday.edit_holiday', compact('holiday','clientName'));
+    }
+
+    public function updateHoliday(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'holiday_type' => 'required',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date',
+            'comment' => 'nullable|string|max:255',
+            'status' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $holiday = HolidayRequest::findOrFail($id);
+
+        $startDate = Carbon::parse($request->start_date);
+        $endDate = Carbon::parse($request->end_date);
+        $totalDays = $startDate->diffInDays($endDate) + 1; 
+
+        $holiday->holiday_type = $request->holiday_type;
+        $holiday->start_date = $request->start_date;
+        $holiday->end_date = $request->end_date;
+        $holiday->comment = $request->comment;
+        $holiday->status = $request->status;
+        $holiday->total_day = $totalDays;
+
+        $holiday->save();
+
+        return response()->json(['message' => 'Holiday request updated successfully']);
+    }
+
 
 
 }

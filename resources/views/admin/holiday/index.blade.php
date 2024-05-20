@@ -63,7 +63,8 @@
                             <th scope="col">End Date</th>
                             <th scope="col">Comment</th>
                             <th scope="col">Total Days</th>
-                            <th scope="col">Action</th> 
+                            <th scope="col">Change Status</th> 
+                            <th scope="col">Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -115,6 +116,14 @@
                         return dropdown;
                     }
                 },
+                {
+                    data: null,
+                    render: function(data, type, row) {
+                        return `<a href="/admin/edit-holiday/${row.id}" class="btn btn-primary">
+                                    <i class="fa fa-edit" style="font-size: 20px;"></i>
+                                </a>`;
+                    }
+                }
             ]
         });
 
