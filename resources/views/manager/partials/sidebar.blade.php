@@ -2,19 +2,19 @@
 
     <ul class="sidebar-nav" id="sidebar-nav">
 
-      <li class="nav-item {{ request()->routeIs('manager.profile.edit') ? 'active' : '' }}">
-          <a class="nav-link collapsed" href="{{ route('manager.profile.edit') }}">
-            <i class="bi bi-person"></i>
-            <span>Profile</span>
-          </a>
-      </li>
-
         <li class="nav-item {{ request()->routeIs('manager.home') ? 'active' : '' }}">
           <a class="nav-link collapsed" href="{{ route('manager.home') }}">
             <i class="bi bi-grid"></i>
             <span>Dashboard</span>
           </a>
         </li>
+
+      <li class="nav-item {{ request()->routeIs('manager.profile.edit') ? 'active' : '' }}">
+          <a class="nav-link collapsed" href="{{ route('manager.profile.edit') }}">
+            <i class="bi bi-person"></i>
+            <span>Profile</span>
+          </a>
+      </li>
 
         <li class="nav-item {{ request()->routeIs('allClientManager') ? 'active' : '' }}">
           <a class="nav-link collapsed" href="{{ route('allClientManager') }}">
