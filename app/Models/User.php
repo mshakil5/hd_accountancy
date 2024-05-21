@@ -85,6 +85,11 @@ class User extends Authenticatable
         return $this->belongsTo(User::class, 'reporting_to');
     }
 
+    public function holidayRecord()
+    {
+        return $this->hasOne(HolidayRecord::class);
+    }
+
     protected function type(): Attribute
     {
         return new Attribute(
