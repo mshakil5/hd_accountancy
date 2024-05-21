@@ -27,13 +27,11 @@ class HolidayController extends Controller
     public function holidayRequest(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'holiday_type' => 'max:255',
             'comment' => 'required|string|max:255',
             'start_date' => 'required',
             'start_date' => ['required_with:end_date'],
             'end_date' => ['required_with:start_date'],
         ],[
-            'holiday_type' => 'Please select holiday type.',
             'start_date' => 'Date field required',
             'start_date.required_with' => 'Start date is required when end date is provided.',
             'end_date.required_with' => 'End date is required when start date is provided.',
@@ -52,7 +50,6 @@ class HolidayController extends Controller
 
         $data = new HolidayRequest();
         $data->staff_id = Auth::user()->id;
-        $data->holiday_type = $request->holiday_type;
         $data->start_date = $request->start_date;
         $data->end_date = $request->end_date;
         $data->total_day = $differenceInDays+1;

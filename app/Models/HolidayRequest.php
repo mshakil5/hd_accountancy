@@ -11,7 +11,7 @@ class HolidayRequest extends Model
 
     protected $fillable = [
         'staff_id',
-        'holiday_type',
+        'holiday_type_id',
         'start_date',
         'end_date',
         'comment',

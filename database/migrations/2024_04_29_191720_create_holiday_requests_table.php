@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('staff_id');
             $table->foreign('staff_id')->references('id')->on('users')->whereIn('type', ['2','3'])->onDelete('cascade');
-            $table->string('holiday_type')->nullable();
+            $table->unsignedBigInteger('holiday_type_id')->nullable();
+            $table->foreign('holiday_type_id')->references('id')->on('holiday_types')->onDelete('cascade'); 
             $table->string('start_date')->nullable();
             $table->string('end_date')->nullable();
             $table->longText('comment')->nullable();

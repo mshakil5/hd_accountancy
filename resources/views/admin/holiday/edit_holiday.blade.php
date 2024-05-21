@@ -16,7 +16,13 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label for="holiday_type" class="form-label fw-bold">Holiday Type</label>
-                                <input type="text" id="holiday_type" name="holiday_type" class="form-control border-theme text-center fs-6 rounded-3 border-3 txt-theme " value="{{ $holiday->holiday_type }}">
+                                <select class="form-select rounded-3 border-3 border-theme" id="holidayTypeId" name="holidayTypeId">
+                                    @foreach($holidayTypes as $holidayType)
+                                        <option value="{{ $holidayType->id }}" {{ $holidayType->id == $holiday->holiday_type_id ? 'selected' : '' }}>
+                                            {{ $holidayType->type }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
                             <div class="col-md-6">
                                 <label for="status" class="form-label fw-bold">Status</label>
@@ -73,14 +79,14 @@
         $("#saveButton").click(function(e) {
             e.preventDefault(); 
 
-            let holidayType = $("#holiday_type").val();
+            let holidayTypeId = $("#holidayTypeId").val();
             let startDate = $("#start_date").val();
             let endDate = $("#end_date").val();
             let comment = $("#comment").val();
             let status = $("#status").val();
 
             let data = {
-                holiday_type: holidayType,
+                holiday_type_id: holidayTypeId,
                 start_date: startDate,
                 end_date: endDate,
                 comment: comment,

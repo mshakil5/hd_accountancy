@@ -17,8 +17,9 @@ use Illuminate\Support\Facades\Validator;
 class HolidayController extends Controller
 {
     public function index()
-    {   
-        return view('admin.holiday.index');
+    {  
+        $holidayTypes = HolidayType::orderBy('id', 'desc')->get();
+        return view('admin.holiday.index',compact('holidayTypes'));
     }
 
     public function create()
@@ -47,7 +48,7 @@ class HolidayController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'holiday_id' => 'required',
-            'holiday_id' => 'required',
+            'holiday_type_id' => 'required',
             'admin_note' => 'required',
             'status' => 'required',  
         ]);
@@ -60,7 +61,7 @@ class HolidayController extends Controller
 
         if ($holiday) {
             $holiday->update([
-                'holiday_type' => $request->holiday_type,
+                'holiday_type_id' => $request->holiday_type_id,
                 'admin_note' => $request->admin_note,
                 'status' => $request->status,
             ]);
@@ -125,13 +126,14 @@ class HolidayController extends Controller
     {
         $holiday = HolidayRequest::findOrFail($id); 
         $clientName = Client::findOrFail($holiday->staff_id)->name;
-        return view('admin.holiday.edit_holiday', compact('holiday','clientName'));
+        $holidayTypes = HolidayType::orderBy('id', 'desc')->get();
+        return view('admin.holiday.edit_holiday', compact('holiday','clientName','holidayTypes'));
     }
 
     public function updateHoliday(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'holiday_type' => 'required',
+            'holiday_type_id' => 'required',
             'start_date' => 'required|date',
             'end_date' => 'required|date',
             'comment' => 'nullable|string|max:255',
@@ -148,7 +150,7 @@ class HolidayController extends Controller
         $endDate = Carbon::parse($request->end_date);
         $totalDays = $startDate->diffInDays($endDate) + 1; 
 
-        $holiday->holiday_type = $request->holiday_type;
+        $holiday->holiday_type_id = $request->holiday_type_id;
         $holiday->start_date = $request->start_date;
         $holiday->end_date = $request->end_date;
         $holiday->comment = $request->comment;

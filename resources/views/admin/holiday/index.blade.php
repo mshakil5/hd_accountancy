@@ -19,10 +19,16 @@
                                                Note
                                             </div>
                                              <div class="form-group mt-4">
-                                                <label for="holidayType" class="txt-theme fw-bold">Holiday Type</label>
-                                                <input type="text" class="form-control mt-2" id="holidayType" name="holidayType" placeholder="Enter holiday type">
+                                                <label for="holidayTypeId" class="txt-theme fw-bold">Holiday Type</label>
+                                                <select class="form-control mt-2" id="holidayTypeId">
+                                                    <option value="" selected disabled>Select holiday type</option>
+                                                    @foreach($holidayTypes as $holidayType)
+                                                        <option value="{{ $holidayType->id }}">{{ $holidayType->type }}</option>
+                                                    @endforeach
+                                                </select>
                                             </div>
                                             <div class="form-group mt-4">
+                                                <label for="" class="txt-theme fw-bold">Note</label>
                                                 <textarea class="form-control" id="note" rows="7" name="" placeholder="Note..."></textarea>
                                             </div>
                                             <div class="text-center">
@@ -119,7 +125,8 @@
                 {
                     data: null,
                     render: function(data, type, row) {
-                        return `<a href="/admin/edit-holiday/${row.id}" class="btn btn-primary">
+                        var editUrl = "{{ url('/admin/edit-holiday') }}/" + row.id;
+                        return `<a href="${editUrl}" class="btn btn-primary">
                                     <i class="fa fa-edit" style="font-size: 20px;"></i>
                                 </a>`;
                     }
@@ -128,13 +135,13 @@
         });
 
         $(document).on('click', '#saveNote', function() {
-            var holidayType = $('#holidayType').val();
+            var holidayTypeId = $('#holidayTypeId').val();
             var note = $('#note').val();
             var holidayId = window.selectedHolidayId;
             var status = window.selectedStatus;
 
             var data = {
-                holiday_type: holidayType,
+                holiday_type_id: holidayTypeId,
                 admin_note: note,
                 status: status,
                 holiday_id: holidayId,
