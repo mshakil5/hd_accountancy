@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Client;
 use App\Models\HolidayType;
 use Illuminate\Http\Request;
+use App\Models\HolidayRecord;
 use App\Models\HolidayRequest;
 use Illuminate\Support\Carbon;
 use App\Models\StaffHolidayType;
@@ -37,6 +38,9 @@ class HolidayController extends Controller
                 ->addColumn('staff_name', function($row) {
                     return $row->staff ? $row->staff->first_name : '';
                 })
+                ->addColumn('staff_id', function($row) {
+                    return $row->staff ? $row->staff->id : null;
+                })
                 ->addColumn('DT_RowId', function($row) {
                     return $row->id;
                 })
@@ -58,16 +62,35 @@ class HolidayController extends Controller
         }
 
         $holiday = HolidayRequest::find($request->holiday_id);
-
         if ($holiday) {
-            $holiday->update([
-                'holiday_type_id' => $request->holiday_type_id,
-                'admin_note' => $request->admin_note,
-                'status' => $request->status,
-            ]);
+            $holiday->holiday_type_id = $request->holiday_type_id;
+            $holiday->admin_note = $request->admin_note;
+            $holiday->status = $request->status;
+            $holiday->save();
+
+            if ($holiday->status == 1) {
+                $holidayRecord = HolidayRecord::where('staff_id', $request->staff_id)->first();
+                $startDate = Carbon::parse($request->start_date);
+                $endDate = Carbon::parse($request->end_date);
+                $differenceInDays = $startDate->diffInDays($endDate) + 1;
+
+                if (!$holidayRecord) {
+                    $holidayRecord = new HolidayRecord();
+                    $holidayRecord->staff_id = $request->staff_id;
+                    $holidayRecord->booked_holidays = $differenceInDays;
+                    $holidayRecord->year = now()->year;
+                    $holidayRecord->pending_holidays = 0;
+                    $holidayRecord->created_by = auth()->user()->id;
+                    $holidayRecord->save();
+                }  else {
+                    $holidayRecord->booked_holidays = $holidayRecord->booked_holidays + $differenceInDays; 
+                    $holidayRecord->pending_holidays = 0;
+                    $holidayRecord->updated_by = auth()->user()->id;
+                    $holidayRecord->save();
+                }
+            }
+
             return response()->json(['success' => true]);
-        } else {
-            return response()->json(['error' => 'Holiday not found'], 404);
         }
     }
 
@@ -125,9 +148,10 @@ class HolidayController extends Controller
     public function editHoliday($id)
     {
         $holiday = HolidayRequest::findOrFail($id); 
-        $clientName = Client::findOrFail($holiday->staff_id)->name;
+        $staff_id = $holiday->staff_id;
+        $clientName = USer::findOrFail($staff_id)->first_name;
         $holidayTypes = HolidayType::orderBy('id', 'desc')->get();
-        return view('admin.holiday.edit_holiday', compact('holiday','clientName','holidayTypes'));
+        return view('admin.holiday.edit_holiday', compact('holiday','clientName','holidayTypes','staff_id'));
     }
 
     public function updateHoliday(Request $request, $id)
@@ -154,14 +178,36 @@ class HolidayController extends Controller
         $holiday->start_date = $request->start_date;
         $holiday->end_date = $request->end_date;
         $holiday->comment = $request->comment;
+        $holiday->admin_note = $request->admin_note;
         $holiday->status = $request->status;
         $holiday->total_day = $totalDays;
 
         $holiday->save();
 
+        if ($holiday->status == 1) {
+            $holidayRecord = HolidayRecord::where('staff_id', $request->staff_id)->first();
+            $startDate = Carbon::parse($request->start_date);
+            $endDate = Carbon::parse($request->end_date);
+            $differenceInDays = $startDate->diffInDays($endDate) + 1;
+
+            if (!$holidayRecord) {
+                $holidayRecord = new HolidayRecord();
+                $holidayRecord->staff_id = $request->staff_id;
+                $holidayRecord->booked_holidays = $differenceInDays;
+                $holidayRecord->year = now()->year;
+                $holidayRecord->pending_holidays = 0;
+                $holidayRecord->created_by = auth()->user()->id;
+                $holidayRecord->save();
+            } else {
+                $holidayRecord->booked_holidays = $holidayRecord->booked_holidays + $differenceInDays; 
+                $holidayRecord->pending_holidays = 0;
+                $holidayRecord->updated_by = auth()->user()->id;
+                $holidayRecord->save();
+            }
+            $holidayRecord->save();
+        }
+
         return response()->json(['message' => 'Holiday request updated successfully']);
     }
-
-
 
 }

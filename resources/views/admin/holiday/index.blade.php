@@ -114,7 +114,7 @@
                     name: 'status',
                     render: function(data, type, row) {
                         var dropdown = `
-                            <select class="form-select change-status" data-status-id="${row.DT_RowId}">
+                            <select class="form-select change-status" data-status-id="${row.DT_RowId}" data-staff-id="${row.staff_id}" data-start-date="${row.start_date}" data-end-date="${row.end_date}">
                                 <option value="0" ${data === 0 ? 'selected' : ''}>Processing</option>
                                 <option value="1" ${data === 1 ? 'selected' : ''}>Approved</option>
                                 <option value="2" ${data === 2 ? 'selected' : ''}>Declined</option>
@@ -127,7 +127,7 @@
                     render: function(data, type, row) {
                         var editUrl = "{{ url('/admin/edit-holiday') }}/" + row.id;
                         return `<a href="${editUrl}" class="btn btn-primary">
-                                    <i class="fa fa-edit" style="font-size: 20px;"></i>
+                                    <i class="fa fa-edit" style="font-size: 20px; id="edit-btn"></i>
                                 </a>`;
                     }
                 }
@@ -139,12 +139,18 @@
             var note = $('#note').val();
             var holidayId = window.selectedHolidayId;
             var status = window.selectedStatus;
+            var staffId = window.selectedStaffId;
+            var startDate = window.selectedStartDate;
+            var endDate = window.selectedEndDate;
 
             var data = {
                 holiday_type_id: holidayTypeId,
                 admin_note: note,
                 status: status,
                 holiday_id: holidayId,
+                staff_id: staffId,
+                start_date: startDate,
+                end_date: endDate,
                 _token: '{{ csrf_token() }}'
             };
 
@@ -178,6 +184,12 @@
             window.selectedStatus = selectedStatus;
             var selectedHolidayId = $(this).data('status-id');
             window.selectedHolidayId = selectedHolidayId;
+            var selectedStaffId = $(this).data('staff-id');
+            window.selectedStaffId = selectedStaffId;
+            var selectedStartDate = $(this).data('start-date');
+            window.selectedStartDate = selectedStartDate;
+            var selectedEndDate = $(this).data('end-date');
+            window.selectedEndDate = selectedEndDate;
         });
     });
 </script>

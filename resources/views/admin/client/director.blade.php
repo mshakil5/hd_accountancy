@@ -75,21 +75,23 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($client->directorInfos as $directorInfo)
-                            <tr data-director-id="{{ $directorInfo->id }}"
-                                data-client-id="{{ $directorInfo->client_id }}"
-                                data-director-info='@json($directorInfo)'>
-                                <td>{{ $directorInfo->name }}</td>
-                                <td>{{ $directorInfo->phone }}</td>
-                                <td>{{ $directorInfo->email }}</td>
-                                <td>{{ $directorInfo->ni_number }}</td>
-                                <td>{{ $directorInfo->utr_number }}</td>
-                                <td>
-                                    <a type="button" class="fa fa-edit edit-director" style="font-size: 20px;"></a>
-                                    <a type="button" class="fas fa-trash delete-director" style="color: red; font-size: 20px;"></a>
-                                </td>
-                            </tr>
-                        @endforeach
+                        @if(isset($client->directorInfos))
+                            @foreach($client->directorInfos as $directorInfo)
+                                <tr data-director-id="{{ $directorInfo->id }}"
+                                    data-client-id="{{ $directorInfo->client_id }}"
+                                    data-director-info='@json($directorInfo)'>
+                                    <td>{{ $directorInfo->name }}</td>
+                                    <td>{{ $directorInfo->phone }}</td>
+                                    <td>{{ $directorInfo->email }}</td>
+                                    <td>{{ $directorInfo->ni_number }}</td>
+                                    <td>{{ $directorInfo->utr_number }}</td>
+                                    <td>
+                                        <a type="button" class="fa fa-edit edit-director" style="font-size: 20px;"></a>
+                                        <a type="button" class="fas fa-trash delete-director" style="color: red; font-size: 20px;"></a>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        @endif
                     </tbody>
                 </table>
             </div>

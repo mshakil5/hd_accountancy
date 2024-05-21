@@ -6,6 +6,7 @@ use session;
 use App\Models\User;
 use App\Models\Client;
 use App\Models\Service;
+use App\Models\WorkTime;
 use Illuminate\View\View;
 use App\Models\SubService;
 use Illuminate\Http\Request;
@@ -79,6 +80,23 @@ class HomeController extends Controller
                 } else {
                     $log->is_late = false;
                     $log->prorotaNotFound = true;
+                }
+
+                $today = Carbon::today()->toDateString();
+                   $workTime = WorkTime::where('staff_id', $log->user_id)
+                    ->whereNotNull('start_time')
+                    ->whereNull('end_time')
+                    ->latest()
+                    ->first();
+
+                if ($workTime) {
+                    if ($workTime->client_sub_service_id) {
+                        $log->current_status = 'Working';
+                    } elseif ($workTime->is_break == 1) {
+                        $log->current_status = 'On Break';
+                    }
+                } else {
+                    $log->current_status = 'Idle';
                 }
 
                 return $log;

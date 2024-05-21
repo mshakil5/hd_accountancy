@@ -286,6 +286,7 @@
                       <th scope="col">Login Time</th>
                       <th scope="col">Attendence Status</th>
                       <th scope="col">Duration</th>
+                      <th scope="col">Current Status</th>
                       <th scope="col">Note</th>
                        <th scope="col">Action</th>
                   </tr>
@@ -309,6 +310,13 @@
                       <td>
                           <div id="duration_{{ $staff->id }}">{{ $staff->duration }}</div>
                       </td>
+                      <td>
+                            @if (isset($staff->current_status))
+                                {{ $staff->current_status }}
+                            @else
+                                Working
+                            @endif
+                        </td>
                       <td>
                           <textarea rows="2" name="note" placeholder="Add a note here..." style="border-radius: 5px;"></textarea>
                       </td>

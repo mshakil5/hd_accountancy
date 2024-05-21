@@ -87,7 +87,7 @@ class User extends Authenticatable
 
     public function holidayRecord()
     {
-        return $this->hasOne(HolidayRecord::class);
+        return $this->hasOne(HolidayRecord::class, 'staff_id');
     }
 
     protected function type(): Attribute

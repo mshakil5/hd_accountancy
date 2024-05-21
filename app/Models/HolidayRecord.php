@@ -9,9 +9,9 @@ class HolidayRecord extends Model
 {
     use HasFactory;
 
-    public function user()
+    public function staff()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'staff_id');
     }
 
 }

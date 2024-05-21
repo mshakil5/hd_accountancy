@@ -15,6 +15,7 @@
                     <div class="card-body">
                         <div class="row mb-3">
                             <div class="col-md-6">
+                                <input type="hidden" value="{{$staff_id}}" id="staffId">
                                 <label for="holiday_type" class="form-label fw-bold">Holiday Type</label>
                                 <select class="form-select rounded-3 border-3 border-theme" id="holidayTypeId" name="holidayTypeId">
                                     @foreach($holidayTypes as $holidayType)
@@ -50,13 +51,18 @@
                             <input type="text" id="comment" name="comment" class="form-control rounded-3 border-3 border-theme" placeholder="Leave a comment" value="{{ $holiday->comment }}">
                         </div>
 
-                        <button id="saveButton" class="btn btn-primary btn-lg rounded-3 border-theme bg-theme text-light fw-bold">Save</button>
-                    </div>
-                    <div class="row mb-4">
-                            <div class="col-lg-4 mx-auto text-center">
-                                <a href="{{route('holiday')}}" class="btn btn-sm btn-outline-dark">Back</a>
-                            </div>
+                        <div class="mb-3">
+                            <label for="comment" class="form-label fw-bold">Admin Note</label>
+                            <input type="text" id="admin_note" name="admin_note" class="form-control rounded-3 border-3 border-theme" placeholder="Leave a note" value="{{ $holiday->admin_note }}">
                         </div>
+
+                        <div class="mb-3 mt-3 d-flex justify-content-center align-items-center">
+                            <a href="{{route('holiday')}}" class="btn btn-lg btn-outline-dark">Cancel</a>
+                             <span class="me-3"></span>
+                             <button id="saveButton" class="btn btn-primary btn-lg rounded-3 border-theme bg-theme text-light fw-bold">Update</button>
+                        </div>
+
+                    </div>
                 </div>
             </div>
         </div>
@@ -84,14 +90,19 @@
             let endDate = $("#end_date").val();
             let comment = $("#comment").val();
             let status = $("#status").val();
+            let staff_id = $("#staffId").val();
+            let admin_note = $("#admin_note").val();
 
             let data = {
                 holiday_type_id: holidayTypeId,
                 start_date: startDate,
                 end_date: endDate,
                 comment: comment,
-                status: status
+                status: status,
+                staff_id: staff_id,
+                admin_note: admin_note
             };
+            console.log(data);
 
             $.ajax({
                 url: "{{ url('/admin/holiday-update/' . $holiday->id) }}",

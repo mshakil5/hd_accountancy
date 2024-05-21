@@ -67,21 +67,23 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($client->contactInfos as $contactInfo)
-                            <tr data-contact-id="{{ $contactInfo->id }}"
-                                data-client-id="{{ $contactInfo->client_id }}"
-                                data-contact-info='@json($contactInfo)'>
-                                <td>{{ $contactInfo->greeting }}</td>
-                                <td>{{ $contactInfo->first_name }} {{ $contactInfo->last_name }}</td>
-                                <td>{{ $contactInfo->job_title }}</td>
-                                <td>{{ $contactInfo->phone }}</td>
-                                <td>{{ $contactInfo->email }}</td>
-                                <td>
-                                    <a type="button" class="fa fa-edit edit-contact" style="font-size: 20px;"></a>
-                                    <a type="button" class="fas fa-trash delete-contact" style="color: red; font-size: 20px;"></a>
-                                </td>
-                            </tr>
-                        @endforeach
+                        @if(isset($client->contactInfos))
+                            @foreach($client->contactInfos as $contactInfo)
+                                <tr data-contact-id="{{ $contactInfo->id }}"
+                                    data-client-id="{{ $contactInfo->client_id }}"
+                                    data-contact-info='@json($contactInfo)'>
+                                    <td>{{ $contactInfo->greeting }}</td>
+                                    <td>{{ $contactInfo->first_name }} {{ $contactInfo->last_name }}</td>
+                                    <td>{{ $contactInfo->job_title }}</td>
+                                    <td>{{ $contactInfo->phone }}</td>
+                                    <td>{{ $contactInfo->email }}</td>
+                                    <td>
+                                        <a type="button" class="fa fa-edit edit-contact" style="font-size: 20px;"></a>
+                                        <a type="button" class="fas fa-trash delete-contact" style="color: red; font-size: 20px;"></a>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        @endif
                     </tbody>
                 </table>
             </div>
