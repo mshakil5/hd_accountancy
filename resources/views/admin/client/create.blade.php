@@ -498,9 +498,18 @@
 <!-- Populating director info and update start-->
 <script>
     $(document).ready(function() {
-        $('#directorTable').on('click', '.edit-director', function() {
+        $('#createNewButton').click(function(event) {
+            event.preventDefault();
+            $('#directorFormContainer').toggle();
+            $('html, body').animate({
+                scrollTop: $('#directorFormContainer').offset().top - 200
+            }, 500);
+        });
+
+        $('#directorTable').on('click', '.edit-director', function(event) {
+            event.preventDefault(); 
             var directorInfo = JSON.parse($(this).closest('tr').attr('data-director-info'));
-            
+
             $('#dir-name').val(directorInfo.name);
             $('#dir-phone').val(directorInfo.phone);
             $('#dir-email').val(directorInfo.email);
@@ -515,20 +524,22 @@
 
             $('#director-saveButton, #director-clearButton').hide();
             $('#director-updateButton, #director-cancelButton').show();
+            $('#directorFormContainer').show();
 
             $('html, body').animate({
                 scrollTop: $('#directorForm').offset().top - 200
             }, 500);
         });
 
-        $('#director-updateButton').click(function() {
-            $('#directorForm').submit(); 
-        });
-
-        $('#director-cancelButton').click(function() {
+        $('#director-cancelButton').click(function(event) {
+            event.preventDefault();
             $('#directorForm input').val('');
-            $('#director-updateButton, #director-cancelButton').hide();
+            $('#director-updateButton').hide();
             $('#director-saveButton, #director-clearButton').show();
+            $('#directorFormContainer').hide();
+            $('html, body').animate({
+                scrollTop: 0
+            }, 500);
         });
 
         $('#directorForm').submit(function(event) {
@@ -542,18 +553,15 @@
                 type: 'POST',
                 data: formData,
                 success: function(response) {
-                    // $('#successMessage b').text(response.message);
-                    // $('#successMessage').show();
-                    // $('#errorMessage').hide();
                     swal({
-                            title: "Success!",
-                            text: "Director Info updated successfully",
-                            icon: "success",
-                            button: "OK",
-                        });
-                        setTimeout(function() {
-                            location.reload();
-                        }, 2000);
+                        title: "Success!",
+                        text: "Director Info updated successfully",
+                        icon: "success",
+                        button: "OK",
+                    });
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
                 },
                 error: function(xhr, status, error) {
                     var errorMessage = "";
@@ -1027,6 +1035,15 @@
 </script>
 <!-- Updating services and sub services end -->
 
+<!-- Contact data table -->
+<script>
+    $(document).ready(function() {
+         $('#contactTable').DataTable({
+        });
+    });
+</script>
+<!-- Contact data table -->
+
 <!-- Contact Info create Start -->
 <script>
     $(document).ready(function () {
@@ -1092,9 +1109,18 @@
 <!-- Populating contact info and update start-->
 <script>
     $(document).ready(function() {
-        $('#contactTable').on('click', '.edit-contact', function() {
-            var contactInfo = JSON.parse($(this).closest('tr').attr('data-director-info'));
-            
+        $('#createNewButton1').click(function(event) {
+            event.preventDefault();
+            $('#contactFormContainer').toggle();
+            $('html, body').animate({
+                scrollTop: $('#contactFormContainer').offset().top - 200
+            }, 500);
+        });
+
+        $('#contactTable').on('click', '.edit-contact', function(event) {
+            event.preventDefault();
+            var contactInfo = JSON.parse($(this).closest('tr').attr('data-contact-info'));
+
             $('#greeting').val(contactInfo.greeting);
             $('#first_name').val(contactInfo.first_name);
             $('#last_name').val(contactInfo.last_name);
@@ -1106,20 +1132,22 @@
 
             $('#contact-saveButton, #contact-clearButton').hide();
             $('#contact-updateButton, #contact-cancelButton').show();
+            $('#contactFormContainer').show();
 
             $('html, body').animate({
                 scrollTop: $('#contactForm').offset().top - 200
             }, 500);
         });
 
-        $('#contact-updateButton').click(function() {
-            $('#contactForm').submit(); 
-        });
-
-        $('#contact-cancelButton').click(function() {
+        $('#contact-cancelButton').click(function(event) {
+            event.preventDefault();
             $('#contactForm input').val('');
-            $('#contact-updateButton, #contact-cancelButton').hide();
+            $('#contact-updateButton').hide();
             $('#contact-saveButton, #contact-clearButton').show();
+            $('#contactFormContainer').hide();
+            $('html, body').animate({
+                scrollTop: 0
+            }, 500);
         });
 
         $('#contactForm').submit(function(event) {
@@ -1133,9 +1161,6 @@
                 type: 'POST',
                 data: formData,
                 success: function(response) {
-                    // $('#successMessage b').text(response.message);
-                    // $('#successMessage').show();
-                    // $('#errorMessage').hide();
                     swal({
                         title: "Success!",
                         text: "Contact Info updated successfully",
