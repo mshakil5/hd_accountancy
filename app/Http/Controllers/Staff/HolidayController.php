@@ -15,9 +15,9 @@ class HolidayController extends Controller
 {
     public function index()
     {
-        $pending = HolidayRecord::where('staff_id', auth()->user()->id)->first()->pending_holidays;
-        $booked = HolidayRecord::where('staff_id', auth()->user()->id)->first()->booked_holidays;
-        $entitled = HolidayRecord::where('staff_id', auth()->user()->id)->first()->entitled_holidays;
+        $pending = HolidayRecord::where('staff_id', auth()->user()->id)->first()->pending_holidays ?? 0;
+        $booked = HolidayRecord::where('staff_id', auth()->user()->id)->first()->booked_holidays ?? 0;
+        $entitled = HolidayRecord::where('staff_id', auth()->user()->id)->first()->entitled_holidays ?? 0;
 
         $holidayRequests = HolidayRequest::where('staff_id', Auth::user()->id)
                                         ->orderBy('id', 'desc')
