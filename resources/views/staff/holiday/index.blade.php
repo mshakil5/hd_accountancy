@@ -132,7 +132,6 @@
                                 <tr>
                                     <th scope="col">Start Date</th>
                                     <th scope="col">End Date</th>
-                                    <th scope="col">Comment</th>
                                     <th scope="col">Admin Note</th>
                                     <th scope="col">Total Days</th>
                                     <th scope="col">Status</th>
@@ -143,7 +142,6 @@
                                 <tr>
                                     <td>{{ \Carbon\Carbon::parse($request->start_date)->format('d F Y') }}</td>
                                     <td>{{ \Carbon\Carbon::parse($request->end_date)->format('d F Y') }}</td>
-                                    <td>{!! $request->comment !!}</td>
                                     <td>{!! $request->admin_note !!}</td>
                                     <td>{{ $request->total_day }}</td>
                                     <td>
