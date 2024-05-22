@@ -59,7 +59,11 @@
                         <div class="mb-3 mt-3 d-flex justify-content-center align-items-center">
                             <a href="{{route('holiday')}}" class="btn btn-lg btn-outline-dark">Cancel</a>
                              <span class="me-3"></span>
-                             <button id="saveButton" class="btn btn-primary btn-lg rounded-3 border-theme bg-theme text-light fw-bold">Update</button>
+                             @php
+                                if ($holiday->status!= 1 && $holiday->status!= 2) {
+                                    echo '<button id="saveButton" class="btn btn-primary btn-lg rounded-3 border-theme bg-theme text-light fw-bold">Update</button>';
+                                }
+                              @endphp
                         </div>
 
                     </div>
