@@ -94,6 +94,8 @@ class HomeController extends Controller
                         $log->current_status = 'Working';
                     } elseif ($workTime->is_break == 1) {
                         $log->current_status = 'On Break';
+                    } else {
+                        $log->current_status = 'Idle';
                     }
                 } else {
                     $log->current_status = 'Idle';

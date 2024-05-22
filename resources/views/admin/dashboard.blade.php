@@ -1439,4 +1439,43 @@
 </script>
 <!-- Logout staff end -->
 
+<!-- Duration Time start -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        function updateActiveTime(element) {
+            var currentTime = element.textContent.trim();
+            
+            var timeArray = currentTime.split(':');
+            var hours = parseInt(timeArray[0], 10);
+            var minutes = parseInt(timeArray[1], 10);
+            var seconds = parseInt(timeArray[2], 10);
+
+            seconds++;
+            if (seconds >= 60) {
+                seconds = 0;
+                minutes++;
+            }
+            if (minutes >= 60) {
+                minutes = 0;
+                hours++;
+            }
+            var formattedTime = ('0' + hours).slice(-2) + ':' + ('0' + minutes).slice(-2) + ':' + ('0' + seconds).slice(-2);
+            element.textContent = formattedTime;
+        }
+
+        function startUpdatingTimes() {
+            var elements = document.querySelectorAll('[id^="duration_"]');
+
+            elements.forEach(function(element) {
+                setInterval(function() {
+                    updateActiveTime(element);
+                }, 1000);
+            });
+        }
+
+        startUpdatingTimes();
+    });
+</script>
+<!-- Duration Time end -->
+
 @endsection

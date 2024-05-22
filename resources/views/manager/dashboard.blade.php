@@ -538,8 +538,8 @@
                         <td>
                             ${startButton}
                             ${stopButton}
-                            ${startBreakButton}
-                            ${stopBreakButton}
+                            {{--${startBreakButton}
+                            ${stopBreakButton}--}}
                             ${duration}
                         </td>
                     </tr>

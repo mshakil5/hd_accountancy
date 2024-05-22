@@ -576,8 +576,8 @@
                         <td>
                             ${startButton}
                             ${stopButton}
-                            ${startBreakButton}
-                            ${stopBreakButton}
+                            {{--${startBreakButton}
+                            ${stopBreakButton}--}}
                             ${duration}
                         </td>
                     </tr>
@@ -1171,7 +1171,7 @@
                     <div class="d-flex align-items-center justify-content-between">
                         <div class="d-flex flex-column">
                             <label>Client:</label>
-                            <select class="form-control px-3 py-2 client-name select2" style="width: 115px;">
+                            <select class="form-control px-3 py-2 client-name" style="width: 115px;">
                                 @foreach($clients as $client)
                                     <option value="{{ $client->id }}">{{ $client->name }}</option>
                                 @endforeach
@@ -1179,7 +1179,7 @@
                         </div>
                         <div class="d-flex flex-column">
                             <label>Sub Service:</label>
-                            <select class="form-control px-3 py-2 sub-service-name select2" style="width: 115px;">
+                            <select class="form-control px-3 py-2 sub-service-name" style="width: 115px;">
                                 @foreach($subServices as $subService)
                                     <option value="{{ $subService->id }}">{{ $subService->name }}</option>
                                 @endforeach
@@ -1270,55 +1270,55 @@
 <!-- Note and additional work end -->
 
 <!-- Idle time count start -->
-  <script>
-      let idleTimer;
-      let idleStartTime;
-      let totalIdleTime = 0;
+<script>
+    let idleTimer;
+    let idleStartTime;
+    let totalIdleTime = 0;
 
-      function startIdleTimer() {
-          idleStartTime = Date.now();
-          idleTimer = setTimeout(checkIdleStatus, 10 * 1000); 
-      }
+    function startIdleTimer() {
+        idleStartTime = Date.now();
+        idleTimer = setTimeout(checkIdleStatus, 10 * 1000); 
+    }
 
-      function checkIdleStatus() {
-          const idleDuration = Date.now() - idleStartTime;
-          totalIdleTime += idleDuration;
+    function checkIdleStatus() {
+        const idleDuration = Date.now() - idleStartTime;
+        totalIdleTime += idleDuration;
 
-          logIdleTime(totalIdleTime);
-          startIdleTimer();
-      }
+        logIdleTime(totalIdleTime);
+        startIdleTimer();
+    }
 
-      function resetIdleTimer() {
-          clearTimeout(idleTimer);
-          idleStartTime = Date.now();
-          totalIdleTime = 0;
-          startIdleTimer();
-      }
+    function resetIdleTimer() {
+        clearTimeout(idleTimer);
+        idleStartTime = Date.now();
+        totalIdleTime = 0;
+        startIdleTimer();
+    }
 
-      function logIdleTime(idleTime) {
-          $.ajax({
-              url: '{{ route('staff.idle.time') }}',
-              type: 'POST',
-              data: {
-                  idle_time: idleTime
-              },
-              headers: {
-                  'X-CSRF-TOKEN': '{{ csrf_token() }}'
-              },
-              success: function(response) {
-                  console.log('Idle time logged successfully.');
-              },
-              error: function(xhr, status, error) {
-                  console.error('Error logging idle time:', error);
-              }
-          });
-      }
+    function logIdleTime(idleTime) {
+        $.ajax({
+            url: '{{ route('staff.idle.time') }}',
+            type: 'POST',
+            data: {
+                idle_time: idleTime
+            },
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            success: function(response) {
+                console.log('Idle time logged successfully.');
+            },
+            error: function(xhr, status, error) {
+                console.error('Error logging idle time:', error);
+            }
+        });
+    }
 
-      document.addEventListener('mousemove', resetIdleTimer);
-      document.addEventListener('keypress', resetIdleTimer);
+    document.addEventListener('mousemove', resetIdleTimer);
+    document.addEventListener('keypress', resetIdleTimer);
 
-      startIdleTimer();
-  </script>
+    startIdleTimer();
+</script>
 <!-- Idle time count end -->
 
 <!-- Active Time start -->
