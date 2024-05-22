@@ -28,14 +28,14 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="row">
-                                    <div class="col-md-2">
-                                        <h5 class="mb-3">Service Name</h5>
+                                    <div class="col-md-1 text-center">
+                                        <h5 class="mb-3">Service</h5>
                                         <p><b>{{ isset($clientService->service->name) ? $clientService->service->name : '' }}</b></p>
                                         <input type="hidden" name="service_id" value="{{ optional($clientService->service)->id }}">
                                         <input type="hidden" name="client_service_id[]" value="{{ optional($clientService)->id }}">
                                         
                                     </div>
-                                    <div class="col-md-3 text-center">
+                                    <div class="col-md-2 text-center">
                                         <h5 class="mb-3">Manager</h5>
                                         <div class="form-check">
                                             <select class="form-control mt-2 select2 managerDropdown" name="manager_id" style="width:100%">
@@ -48,7 +48,7 @@
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="col-md-3 text-center">
+                                    <div class="col-md-2 text-center">
                                         <h5 class="mb-3">Frequency</h5>
                                         <div class="form-check">
                                             <select id="serviceFrequency" class="form-control serviceFrequency" name="service_frequency">
@@ -61,13 +61,25 @@
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="col-md-3 text-center">
+                                    <div class="col-md-2 text-center">
+                                        <h5 class="mb-3">Due Date</h5>
+                                        <div class="form-check">
+                                            <input type="date" class="form-control dueDate" name="dueDate" id="dueDate" value="{{ isset($clientService) ? $clientService->due_date : '' }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 text-center">
+                                        <h5 class="mb-3">Legal Deadline</h5>
+                                        <div class="form-check">
+                                            <input type="date" class="form-control legalDeadline" name="legalDeadline" id="legalDeadline" value="{{ isset($clientService) ? $clientService->legal_deadline : '' }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 text-center">
                                         <h5 class="mb-3">Deadline</h5>
                                         <div class="form-check">
                                             <input type="date" class="form-control serviceDeadline" name="service_deadline" id="serviceDeadline" value="{{ isset($clientService) ? $clientService->service_deadline : '' }}">
                                         </div>
                                     </div>
-                                    <div class="col-md-1">
+                                    <div class="col-md-1 text-center">
                                         <h5 class="mb-3">Action</h5>
                                         <span class="removeSubServiceDetails" style="cursor: pointer; font-size: 24px; color: red;">&#10006;</span>
                                     </div>
@@ -77,11 +89,11 @@
                         <table class="table mt-3">
                             <thead>
                                 <tr>
-                                    <th>Sub Service Name</th>
+                                    <th>Sub Service</th>
                                     <th>Deadline</th>
                                     <th>Staff</th>
                                     <th>Note</th>
-                                    <th>Action</th>
+                                    <th class="text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -107,7 +119,7 @@
                                         <td>
                                             <textarea name="note" id="note" rows="1" class="form-control" placeholder="Note for this task">{{ isset($clientSubService->note) ? $clientSubService->note : '' }}</textarea>
                                         </td>
-                                        <td><span class="removeSubServiceRow" style="cursor: pointer; font-size: 24px; color: red;">&#10006;</span></td>
+                                        <td class="text-center"><span class="removeSubServiceRow" style="cursor: pointer; font-size: 24px; color: red;">&#10006;</span></td>
                                     </tr>
                                 @endforeach
                             </tbody>

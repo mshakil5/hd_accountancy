@@ -729,7 +729,7 @@
                     <table class="table mt-3">
                       <thead>
                         <tr>
-                          <th>Sub Service Name</th>
+                          <th>Sub Service</th>
                           <th>Deadline</th>
                           <th>Staff</th>
                           <th>Note</th>
@@ -753,44 +753,55 @@
               <div class="row">
                 <div class="col-md-12">
                   <div class="row">
-                    <div class="col-md-2">
-                      <h5 class="mb-3">Service Name</h5>
+                    <div class="col-md-1 text-center">
+                      <h5 class="mb-3">Service</h5>
                       <p> <b>${serviceName}</b> </p>
                     </div>
-                    <div class="col-md-3 text-center">
-                    <h5 class="mb-3">Manager</h5>
-                    <div class="form-check">
-                        <select class="form-control mt-2 select2 managerDropdown" name="manager_id">
-                        <option value="">Select</option>
-                        @foreach($managers as $manager)
-                        <option value="{{ $manager->id }}">{{ $manager->first_name }}</option>
-                        @endforeach
-                        </select>
+                    <div class="col-md-2 text-center">
+                        <h5 class="mb-3">Manager</h5>
+                        <div class="form-check">
+                            <select class="form-control mt-2 select2 managerDropdown" name="manager_id">
+                            <option value="">Select</option>
+                            @foreach($managers as $manager)
+                            <option value="{{ $manager->id }}">{{ $manager->first_name }}</option>
+                            @endforeach
+                            </select>
+                        </div>
                     </div>
+                    <div class="col-md-2 text-center">
+                        <h5 class="mb-3">Frequency</h5>
+                        <div class="form-check">
+                            <select class="form-control mt-2 select2 serviceFrequency" id="serviceFrequency" name="service_frequency">
+                            <option value="">Select</option>
+                            <option>Daily</option>
+                            <option>Weekly</option>
+                            <option>Monthly</option>
+                            <option>Quarterly</option>
+                            <option>Yearly</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="col-md-3 text-center">
-                    <h5 class="mb-3">Frequency</h5>
-                    <div class="form-check">
-                        <select class="form-control mt-2 select2 serviceFrequency" id="serviceFrequency" name="service_frequency">
-                        <option value="">Select</option>
-                        <option>Daily</option>
-                        <option>Weekly</option>
-                        <option>Monthly</option>
-                        <option>Quarterly</option>
-                        <option>Yearly</option>
-                        </select>
+                    <div class="col-md-2 text-center">
+                        <h5 class="mb-3">Due Date</h5>
+                        <div class="form-check">
+                            <input type="date" class="form-control dueDate" id="dueDate" name="dueDate">
+                        </div>
                     </div>
+                    <div class="col-md-2 text-center">
+                        <h5 class="mb-3">Legal Deadline</h5>
+                        <div class="form-check">
+                            <input type="date" class="form-control legalDeadline" id="legalDeadline" name="legalDeadline">
+                        </div>
                     </div>
-                    <div class="col-md-3 text-center">
-                    <h5 class="mb-3">Deadline</h5>
-                    <div class="form-check">
-                        <input type="date" class="form-control serviceDeadline" id="serviceDeadline" name="service_deadline">
+                    <div class="col-md-2 text-center">
+                        <h5 class="mb-3">Deadline</h5>
+                        <div class="form-check">
+                            <input type="date" class="form-control serviceDeadline" id="serviceDeadline" name="service_deadline">
+                        </div>
                     </div>
-                    </div>
-                    <div class="col-md-1">
-                      <h5 class="mb-3">Action</h5>
+                    <div class="col-md-1 text-center">
+                      <h5 class="mb-1">Action</h5>
                       <span class="removeSubServiceDetails" style="cursor: pointer; font-size: 24px; color: red;">&#10006;</span>
-                      
                     </div>
                   </div>
                 </div>
@@ -850,6 +861,8 @@
                 var managerId = $(this).find('.managerDropdown').val();
                 var service_frequency = $(this).find('.serviceFrequency').val();
                 var service_deadline = $(this).find('.serviceDeadline').val();
+                var due_date = $(this).find('.dueDate').val();
+                var legal_deadline = $(this).find('.legalDeadline').val();
                 var subServices = [];
 
                 $(this).find('tbody tr').each(function() {
@@ -871,7 +884,9 @@
                     managerId: managerId,
                     service_frequency: service_frequency,
                     service_deadline: service_deadline,
-                    subServices: subServices
+                    subServices: subServices,
+                    due_date: due_date,
+                    legal_deadline: legal_deadline,
                 });
             });
 
@@ -935,6 +950,8 @@
                 var managerId = $(this).find('.managerDropdown').val();
                 var service_frequency = $(this).find('#serviceFrequency').val();
                 var service_deadline = $(this).find('#serviceDeadline').val();
+                var due_date = $(this).find('#dueDate').val();
+                var legal_deadline = $(this).find('#legalDeadline').val();
                 var subServices = [];
 
                 $(this).find('tbody tr').each(function() {
@@ -959,6 +976,8 @@
                     managerId: managerId,
                     service_frequency: service_frequency,
                     service_deadline: service_deadline,
+                    due_date: due_date,
+                    legal_deadline: legal_deadline,
                     subServices: subServices
                 });
             });

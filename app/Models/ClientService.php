@@ -20,6 +20,8 @@ class ClientService extends Model
         'manager_id',
         'service_frequency',
         'service_deadline',
+        'due_date',
+        'legal_deadline',
     ];
 
     public function client()

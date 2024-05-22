@@ -387,6 +387,8 @@ class ServiceController extends Controller
                 'managerId' => 'required|integer',
                 'service_frequency' => 'required',
                 'service_deadline' => 'required',
+                'due_date' => 'required',
+                'legal_deadline' => 'required',
                 'subServices' => 'nullable|array',
             ]);
 
@@ -401,6 +403,8 @@ class ServiceController extends Controller
             $clientService->manager_id = $serviceData['managerId'];
             $clientService->service_frequency = $serviceData['service_frequency'];
             $clientService->service_deadline = $serviceData['service_deadline'];
+            $clientService->due_date = $serviceData['due_date'];
+            $clientService->legal_deadline = $serviceData['legal_deadline'];
             $clientService->unique_id = $uniqueId;
             $clientService->save();
 
@@ -446,6 +450,8 @@ class ServiceController extends Controller
                 $clientService->manager_id = $serviceData['managerId'];
                 $clientService->service_frequency = $serviceData['service_frequency'];
                 $clientService->service_deadline = $serviceData['service_deadline'];
+                $clientService->due_date = $serviceData['due_date'];
+                $clientService->legal_deadline = $serviceData['legal_deadline'];
                 $clientService->save();
                 
                 $serviceData['client_service_id'] = $clientService->id;
@@ -456,6 +462,8 @@ class ServiceController extends Controller
                         'manager_id' => $serviceData['managerId'],
                         'service_frequency' => $serviceData['service_frequency'],
                         'service_deadline' => $serviceData['service_deadline'],
+                        'due_date' => $serviceData['due_date'],
+                        'legal_deadline' => $serviceData['legal_deadline'],
                     ]);
                 }
             }
