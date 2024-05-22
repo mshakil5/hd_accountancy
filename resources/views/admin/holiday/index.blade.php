@@ -113,22 +113,32 @@
                     data: 'status', 
                     name: 'status',
                     render: function(data, type, row) {
-                        var dropdown = `
-                            <select class="form-select change-status" data-status-id="${row.DT_RowId}" data-staff-id="${row.staff_id}" data-start-date="${row.start_date}" data-end-date="${row.end_date}">
-                                <option value="0" ${data === 0 ? 'selected' : ''}>Processing</option>
-                                <option value="1" ${data === 1 ? 'selected' : ''}>Approved</option>
-                                <option value="2" ${data === 2 ? 'selected' : ''}>Declined</option>
-                            </select>`;
-                        return dropdown;
-                    }
+                    var isDisabled = data === 1 || data === 2;
+                    var disabledAttr = isDisabled ? 'disabled' : '';
+                    var dropdown = `
+                        <select class="form-select change-status" ${disabledAttr} data-status-id="${row.DT_RowId}" data-staff-id="${row.staff_id}" data-start-date="${row.start_date}" data-end-date="${row.end_date}">
+                            <option value="0" ${data === 0 ? 'selected' : ''}>Processing</option>
+                            <option value="1" ${data === 1 ? 'selected' : ''}>Approved</option>
+                            <option value="2" ${data === 2 ? 'selected' : ''}>Declined</option>
+                        </select>`;
+                    return dropdown;
+                }
                 },
                 {
                     data: null,
                     render: function(data, type, row) {
+                        var isDisabled = row.status === 1 || row.status === 2;
                         var editUrl = "{{ url('/admin/edit-holiday') }}/" + row.id;
-                        return `<a href="${editUrl}" class="btn btn-primary">
-                                    <i class="fa fa-edit" style="font-size: 20px; id="edit-btn"></i>
-                                </a>`;
+                        
+                        if (isDisabled) {
+                            return `<button class="btn btn-primary" disabled>
+                                        <i class="fa fa-edit" style="font-size: 20px;" id="edit-btn"></i>
+                                    </button>`;
+                        } else {
+                            return `<a href="${editUrl}" class="btn btn-primary">
+                                        <i class="fa fa-edit" style="font-size: 20px;" id="edit-btn"></i>
+                                    </a>`;
+                        }
                     }
                 }
             ]
@@ -154,7 +164,7 @@
                 _token: '{{ csrf_token() }}'
             };
 
-            console.log(data);
+            // console.log(data);
             $.ajax({
                 url: "{{ route('store.holiday') }}",
                 type: "POST",
@@ -178,6 +188,7 @@
         });
 
         $(document).on('change', '.change-status', function() {
+            if ($(this).val()!== 1 && $(this).val()!== 2){
             var modal = $('#myModal');
             modal.modal('show');
             var selectedStatus = $(this).val();
@@ -190,6 +201,7 @@
             window.selectedStartDate = selectedStartDate;
             var selectedEndDate = $(this).data('end-date');
             window.selectedEndDate = selectedEndDate;
+            }
         });
     });
 </script>
