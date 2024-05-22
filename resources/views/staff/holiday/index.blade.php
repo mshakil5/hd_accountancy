@@ -184,7 +184,7 @@
             event.preventDefault();
 
             var formData = new FormData($('#myForm')[0]);
-            console.log(formData);
+            // console.log(formData);
             $.ajax({
                 url: "{{URL::to('/staff/holiday-request')}}",
                 type: 'POST',

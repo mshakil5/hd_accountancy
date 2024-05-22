@@ -106,7 +106,7 @@
                 staff_id: staff_id,
                 admin_note: admin_note
             };
-            console.log(data);
+            // console.log(data);
 
             $.ajax({
                 url: "{{ url('/admin/holiday-update/' . $holiday->id) }}",

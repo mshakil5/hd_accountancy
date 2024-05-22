@@ -29,6 +29,60 @@ class HolidayController extends Controller
         return view('admin.holiday.create', compact('staffs'));
     }
 
+    public function store(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'staff_id' => 'required',
+            'start_date' => 'required',
+            'start_date' => ['required_with:end_date'],
+            'end_date' => ['required_with:start_date'],
+        ],[
+            'start_date.required_with' => 'Start date is required when end date is provided.',
+            'end_date.required_with' => 'End date is required when start date is provided.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => 422, 'errors' => $validator->errors()], 422);
+        }
+        
+        $startDate = Carbon::parse($request->start_date);
+        $endDate = Carbon::parse($request->end_date);
+        $differenceInDays = $startDate->diffInDays($endDate);
+
+        $data = new HolidayRequest();
+        $data->staff_id = $request->staff_id;
+        $data->start_date = $request->start_date;
+        $data->end_date = $request->end_date;
+        $data->total_day = $differenceInDays+1;
+        if ($data->save()) {
+
+            if ($data->status == 0) {
+                $holidayRecord = HolidayRecord::where('staff_id', $request->staff_id)->first();
+                $startDate = Carbon::parse($request->start_date);
+                $endDate = Carbon::parse($request->end_date);
+                $differenceInDays = $startDate->diffInDays($endDate) + 1;
+
+                if (!$holidayRecord) {
+                    $holidayRecord = new HolidayRecord();
+                    $holidayRecord->staff_id = $request->staff_id;
+                    $holidayRecord->pending_holidays = $differenceInDays;
+                    $holidayRecord->year = now()->year;
+                    $holidayRecord->created_by = auth()->user()->id;
+                    $holidayRecord->save();
+                }  else {
+                    $holidayRecord->pending_holidays = $holidayRecord->pending_holidays + $differenceInDays; 
+                    $holidayRecord->updated_by = auth()->user()->id;
+                    $holidayRecord->save();
+                }
+            }
+
+            return response()->json(['status' => 200, 'message' => 'Holiday request send successfully']);
+        } else {
+            return response()->json(['status' => 500, 'message' => 'Server Error']);
+        }
+
+    }
+
     public function getholiday(Request $request)
     {
         if ($request->ajax()) {
