@@ -282,21 +282,21 @@
               <table class="table cell-border table-striped" id="active-staff">
               <thead>
                   <tr>
-                      <th scope="col">Name</th>
-                      <th scope="col">Login Time</th>
-                      <th scope="col">Attendence Status</th>
-                      <th scope="col">Duration</th>
-                      <th scope="col">Current Status</th>
-                      <th scope="col">Note</th>
-                       <th scope="col">Action</th>
+                      <th scope="col" class="text-center">Name</th>
+                      <th scope="col" class="text-center">Login Time</th>
+                      <th scope="col" class="text-center">Attendence Status</th>
+                      <th scope="col" class="text-center">Duration</th>
+                      <th scope="col" class="text-center">Current Status</th>
+                      <th scope="col" class="text-center">Note</th>
+                      <th scope="col" class="text-center">Action</th>
                   </tr>
               </thead>
               <tbody>
               @foreach ($loggedStaff as $staff)
                   <tr>
-                      <td>{{ $staff->user->first_name }} {{ $staff->user->last_name }}</td>
-                      <td>{{ \Carbon\Carbon::parse($staff->start_time)->format('H:i. d/m/Y') }}</td>
-                      <td>
+                      <td class="text-center">{{ $staff->user->first_name }} {{ $staff->user->last_name }}</td>
+                      <td class="text-center">{{ \Carbon\Carbon::parse($staff->start_time)->format('H:i. d/m/Y') }}</td>
+                      <td class="text-center">
                           @if ($staff->prorotaNotFound)
                               Prorota not found
                           @else
@@ -308,19 +308,23 @@
                           @endif
                       </td>
                       <td>
-                          <div id="duration_{{ $staff->id }}">{{ $staff->duration }}</div>
+                          <div class="text-center" id="duration_{{ $staff->id }}">{{ $staff->duration }}</div>
                       </td>
-                      <td>
-                            @if (isset($staff->current_status))
-                                {{ $staff->current_status }}
-                            @else
-                                Working
+                      <td class="text-center">
+                        @if (isset($staff->current_status))
+                            @if ($staff->current_status == 'Logged In')
+                                <span class="badge bg-info">{{ $staff->current_status }}</span>
+                            @elseif ($staff->current_status == 'On Break')
+                                <span class="badge bg-warning">{{ $staff->current_status }}</span>
+                            @elseif ($staff->current_status == 'Working')
+                                <span class="badge bg-success">{{ $staff->current_status }}</span>
                             @endif
-                        </td>
-                      <td>
+                        @endif
+                      </td>
+                      <td class="text-center">
                           <textarea rows="2" name="note" placeholder="Add a note here..." style="border-radius: 5px;"></textarea>
                       </td>
-                      <td>
+                      <td class="text-center">
                           <button class="btn btn-danger btn-sm logout-btn" data-staff-id="{{ $staff->id }}">Logout</button>
                       </td>
                   </tr>
