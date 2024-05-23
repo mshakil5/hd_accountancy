@@ -49,13 +49,9 @@
                 <i class="bx bxs-user-plus fs-4 me-2"></i> Holiday
             </p>
             <div class="row px-3">
-                {{-- <div class="col-lg-4 p-3">
-                    <input type="search" name="" placeholder="Search..." class="form-control" id="">
-                </div>
-                <div class="col-lg-4 p-3">
-                    <input type="search" name="" placeholder="Sort By" class="form-control" id="">
-                </div> --}}
                 <div class="col-lg-12 p-3 text-end">
+                    <a href="{{ route('holidayReport') }}" class="btn btn-sm bg-theme text-light btn-outline-dark"> Holiday Report</a>
+                    
                     <a href="{{ route('createholiday') }}" class="btn btn-sm bg-theme text-light btn-outline-dark">+ Add New</a>
                 </div>
             </div>
@@ -97,14 +93,14 @@
                     data: 'start_date',
                     name: 'start_date',
                     render: function(data, type, row) {
-                        return moment(data).format('DD.MM.YY');
+                        return moment(data).format('DD.MM.YYYY');
                     }
                 },
                 {
                     data: 'end_date',
                     name: 'end_date',
                     render: function(data, type, row) {
-                        return moment(data).format('DD.MM.YY');
+                        return moment(data).format('DD.MM.YYYY');
                     }
                 },
                 {data: 'comment', name: 'comment'},
@@ -205,47 +201,5 @@
         });
     });
 </script>
-
-
-{{-- Delete prorota start --}}
-<script>
-    $(document).ready(function() {
-        $(document).on('click', '.delete-prorota', function(e) {
-            e.preventDefault();
-            var prorotaId = $(this).data('prorota-id');
-
-            if (confirm("Are you sure you want to delete this data?")) {
-                $.ajax({
-                    url: '/admin/delete-prorota/' + prorotaId, 
-                    type: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') 
-                    },
-                    success: function(response) {
-                        if (response.status === 200) {
-                            swal({
-                                title: "Success!",
-                                text: "Data deleted successfully",
-                                icon: "success",
-                                button: "OK",
-                            });
-                            $('#thisTable').DataTable().ajax.reload();
-                        } else {
-                                Toastify({
-                                    text: "Failed to delete."
-                                }).showToast();
-                            }
-                    },
-                    error: function(xhr, status, error) {
-                    
-                    }
-                });
-            }
-        });
-    });
-</script>
-{{-- Delete prorota start --}}
-
-
 
 @endsection

@@ -290,6 +290,10 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/edit-holiday/{id}', [HolidayController::class,'editHoliday']);
     Route::post('/holiday-update/{id}', [HolidayController::class,'updateHoliday']);
 
+    //Holiday Report
+    Route::get('/holiday-report', [HolidayController::class, 'holidayReport'])->name('holidayReport');
+    Route::post('/get-holiday-data', [HolidayController::class, 'getHolidayData'])->name('getHolidayData');
+
     // User absent log
     Route::post('/add-comment', [LogController::class, 'addComment'])->name('add.comment');
 

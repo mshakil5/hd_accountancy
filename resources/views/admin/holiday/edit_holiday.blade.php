@@ -17,7 +17,7 @@
                             <div class="col-md-6">
                                 <input type="hidden" value="{{$staff_id}}" id="staffId">
                                 <label for="holiday_type" class="form-label fw-bold">Holiday Type</label>
-                                <select class="form-select rounded-3 border-3 border-theme" id="holidayTypeId" name="holidayTypeId">
+                                <select class="form-select rounded-2 border-1 border-theme" id="holidayTypeId" name="holidayTypeId">
                                     @foreach($holidayTypes as $holidayType)
                                         <option value="{{ $holidayType->id }}" {{ $holidayType->id == $holiday->holiday_type_id ? 'selected' : '' }}>
                                             {{ $holidayType->type }}
@@ -27,7 +27,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label for="status" class="form-label fw-bold">Status</label>
-                                <select name="status" id="status" class="form-select rounded-3 border-3 border-theme">
+                                <select name="status" id="status" class="form-select rounded-2 border-1 border-theme">
                                     <option value="0" {{ $holiday->status == 0 ? 'selected' : '' }}>Processing</option>
                                     <option value="1" {{ $holiday->status == 1 ? 'selected' : '' }}>Approved</option>
                                     <option value="2" {{ $holiday->status == 2 ? 'selected' : '' }}>Declined</option>
@@ -38,30 +38,30 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label for="start_date" class="form-label fw-bold">Start Date</label>
-                                <input type="date" id="start_date" name="start_date" class="form-control border-theme text-center fs-6 rounded-3 border-3 txt-theme fw-bold" value="{{ $holiday->start_date }}">
+                                <input type="date" id="start_date" name="start_date" class="form-control border-theme text-center fs-6 rounded-2 border-1 txt-theme fw-bold" value="{{ $holiday->start_date }}">
                             </div>
                             <div class="col-md-6">
                                 <label for="end_date" class="form-label fw-bold">End Date</label>
-                                <input type="date" id="end_date" name="end_date" class="form-control border-theme text-center fs-6 rounded-3 border-3 txt-theme fw-bold" value="{{ $holiday->end_date }}">
+                                <input type="date" id="end_date" name="end_date" class="form-control border-theme text-center fs-6 rounded-2 border-1 txt-theme fw-bold" value="{{ $holiday->end_date }}">
                             </div>
                         </div>
 
                         <div class="mb-3">
                             <label for="comment" class="form-label fw-bold">Comment</label>
-                            <input type="text" id="comment" name="comment" class="form-control rounded-3 border-3 border-theme" placeholder="Leave a comment" value="{{ $holiday->comment }}">
+                            <textarea id="comment" name="comment" class="form-control rounded-2 border-1 border-theme" placeholder="Leave a comment" rows="2">{!! $holiday->comment !!}</textarea>
                         </div>
 
                         <div class="mb-3">
-                            <label for="comment" class="form-label fw-bold">Admin Note</label>
-                            <input type="text" id="admin_note" name="admin_note" class="form-control rounded-3 border-3 border-theme" placeholder="Leave a note" value="{{ $holiday->admin_note }}">
+                            <label for="admin_note" class="form-label fw-bold">Admin Note</label>
+                            <textarea id="admin_note" name="admin_note" class="form-control rounded-2 border-1 border-theme" placeholder="Leave a note" rows="2">{!! $holiday->admin_note !!}</textarea>
                         </div>
 
                         <div class="mb-3 mt-3 d-flex justify-content-center align-items-center">
-                            <a href="{{route('holiday')}}" class="btn btn-lg btn-outline-dark">Cancel</a>
+                            <a href="{{route('holiday')}}" class="btn btn-sm btn-outline-dark">Cancel</a>
                              <span class="me-3"></span>
                              @php
                                 if ($holiday->status!= 1 && $holiday->status!= 2) {
-                                    echo '<button id="saveButton" class="btn btn-primary btn-lg rounded-3 border-theme bg-theme text-light fw-bold">Update</button>';
+                                    echo '<button id="saveButton" class="btn btn-primary btn-sm rounded-2 border-theme bg-theme text-light fw-bold">Update</button>';
                                 }
                               @endphp
                         </div>

@@ -89,7 +89,7 @@
 
                                 <div class="col-lg-12">
                                     <label for="comment" class="fw-bold">Comment</label>
-                                    <input type="text" id="comment" name="comment" class="rounded-3 border-2 border-theme form-control" placeholder="Leave a comment">
+                                    <textarea id="comment" name="comment" class="rounded-3 border-2 border-theme form-control" placeholder="Leave a comment" rows="2"></textarea>
                                 </div>
                                 <div class="col-lg-3">
                                     <button id="saveButton" type="button" class="p-2 border-theme bg-theme text-center fs-6 d-block rounded-3 border-3 text-light fw-bold my-1">Send</button>

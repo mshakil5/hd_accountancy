@@ -46,18 +46,18 @@
                                             <div class="row mb-3">
                                                 <div class="col-md-6">
                                                     <label for="start_date" class="form-label fw-bold">Start Date</label>
-                                                    <input type="date" id="start_date" name="start_date" class="form-control border-theme text-center fs-6 rounded-3 border-3 txt-theme fw-bold" value="">
+                                                    <input type="date" id="start_date" name="start_date" class="form-control border-theme text-center fs-6 rounded-2 border-1 txt-theme fw-bold" value="">
                                                 </div>
                                                 <div class="col-md-6">
                                                     <label for="end_date" class="form-label fw-bold">End Date</label>
-                                                    <input type="date" id="end_date" name="end_date" class="form-control border-theme text-center fs-6 rounded-3 border-3 txt-theme fw-bold" value="">
+                                                    <input type="date" id="end_date" name="end_date" class="form-control border-theme text-center fs-6 rounded-2 border-1 txt-theme fw-bold" value="">
                                                 </div>
                                             </div>
                                             
                                             <div class="mb-3 mt-3 d-flex justify-content-center align-items-center">
-                                                <a href="{{route('holiday')}}" class="btn btn-lg btn-outline-dark">Cancel</a>
+                                                <a href="{{route('holiday')}}" class="btn btn-sm btn-outline-dark">Cancel</a>
                                                 <span class="me-3"></span>
-                                                <button type="button" id="saveButton" class="btn btn-primary btn-lg rounded-3 border-theme bg-theme text-light fw-bold">Save</button>
+                                                <button type="button" id="saveButton" class="btn btn-primary btn-sm rounded-3 border-theme bg-theme text-light fw-bold">Save</button>
                                             </div>
                                         </form>
                                     </div>

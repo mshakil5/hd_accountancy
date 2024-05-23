@@ -252,4 +252,25 @@ class HolidayController extends Controller
          return response()->json(['success' => true]);
     }
 
+    public function holidayReport()
+    {  
+        $staffs = User::whereIn('type', ['2','3'])->select('id','first_name','last_name','email')->orderby('id','DESC')->get();
+        return view('admin.holiday.holiday_report',compact('staffs'));
+    }
+
+    public function getHolidayData(Request $request)
+    {
+        $staff_id = $request->input('staff_id');
+        $currentYear = date('Y');
+        
+        $holidayRequests = HolidayRequest::where('staff_id', $staff_id)
+                            ->whereYear('holiday_requests.created_at', $currentYear)
+                            ->join('users', 'holiday_requests.staff_id', '=', 'users.id')
+                            ->select('holiday_requests.start_date', 'holiday_requests.end_date', 'holiday_requests.status', 'holiday_requests.total_day', 'users.first_name', 'users.last_name')
+                            ->orderBy('holiday_requests.id', 'desc')
+                            ->get();
+
+        return response()->json($holidayRequests);
+    }
+
 }
