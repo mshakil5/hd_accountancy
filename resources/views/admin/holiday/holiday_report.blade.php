@@ -33,8 +33,8 @@
                                                         <th>Staff Name</th>
                                                         <th>Start Date</th>
                                                         <th>End Date</th>
-                                                        <th>Status</th>
                                                         <th>Total Days</th>
+                                                        <th>Status</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -66,7 +66,7 @@
     $(document).ready(function() {
         var holidayTable = $('#holidayTable').DataTable({
             "columnDefs": [
-                { "className": "text-center", "targets": 4 }
+                { "className": "text-center", "targets": 3 }
             ]
         });
 
@@ -89,8 +89,8 @@
                                     holiday.first_name + ' ' + holiday.last_name,
                                     startDateFormatted,
                                     endDateFormatted,
-                                    holiday.status === 0 ? 'Processing' : holiday.status === 1 ? 'Approved' : 'Declined',
-                                    holiday.total_day
+                                    holiday.total_day,
+                                    holiday.status === 0 ? 'Processing' : holiday.status === 1 ? 'Approved' : 'Declined' 
                                 ]).draw(false);
                             });
                         }

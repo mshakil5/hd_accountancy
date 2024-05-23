@@ -12,15 +12,15 @@
                     </div>
                     <div class="d-flex gap-3 my-5">
                         <div class="text-center flex-fill">
-                            <div class="fs-6 txt-theme fw-bold">Taken</div>
+                            <div class="fs-6 txt-theme fw-bold">Entitled</div>
                             <div class="text-center fs-2 txt-theme fw-bold">
-                                {{$taken}}
+                                 {{$entitled}}
                             </div>
                         </div>
                         <div class="text-center border-start border-3 ps-3 flex-fill">
                             <div class="fs-6 txt-theme fw-bold">Booked</div>
                             <div class="text-center fs-2 txt-theme fw-bold">
-                                   {{ Auth::user()->total_holiday }}
+                                    {{$booked}}
                             </div>
                         </div>
                         <div class="text-center border-start border-3 ps-3 flex-fill">
@@ -132,7 +132,7 @@
                                 <tr>
                                     <th scope="col">Start Date</th>
                                     <th scope="col">End Date</th>
-                                    <th scope="col">Comment</th>
+                                    <th scope="col">Admin Note</th>
                                     <th scope="col">Total Days</th>
                                     <th scope="col">Status</th>
                                 </tr>
@@ -142,7 +142,7 @@
                                 <tr>
                                     <td>{{ \Carbon\Carbon::parse($request->start_date)->format('d F Y') }}</td>
                                     <td>{{ \Carbon\Carbon::parse($request->end_date)->format('d F Y') }}</td>
-                                    <td>{!! $request->comment !!}</td>
+                                    <td>{!! $request->admin_note !!}</td>
                                     <td>{{ $request->total_day }}</td>
                                     <td>
                                         @if($request->status == 0)
