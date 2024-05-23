@@ -83,6 +83,8 @@
 
 <script>
     $(document).ready(function() {
+        var originalStatus = {};
+
         var table = $('#thisTable').DataTable({
             serverSide: true,
             ajax: "{{ route('get.holiday') }}",
@@ -138,6 +140,17 @@
                     }
                 }
             ]
+        });
+
+        function fetchOriginalStatus() {
+            $('#thisTable tbody').find('tr').each(function(index, row) {
+                var rowData = table.row(row).data();
+                originalStatus[rowData.DT_RowId] = rowData.status;
+            });
+        }
+
+        table.on('draw', function() {
+            fetchOriginalStatus();
         });
 
         $(document).on('click', '#saveNote', function() {
@@ -199,7 +212,6 @@
                 },
                 success: function(response) {
                     $('#holidayTypeId').val(response.holiday_type_id);
-
                     $('#note').val(response.admin_note);
 
                     window.selectedStatus = selectedStatus;
@@ -217,7 +229,16 @@
         });
 
         $('#myModal').on('hidden.bs.modal', function () {
-            $('.change-status').val(0);
+            window.selectedStatus = null;
+            window.selectedHolidayId = null;
+            window.selectedStaffId = null;
+            window.selectedStartDate = null;
+            window.selectedEndDate = null;
+
+            $('.change-status').each(function() {
+                var rowId = $(this).data('status-id');
+                $(this).val(originalStatus[rowId]);
+            });
         });
 
         $('#myModal').on('show.bs.modal', function () {
@@ -239,6 +260,8 @@
                 }
             });
         });
+
+        fetchOriginalStatus();
     });
 </script>
 
