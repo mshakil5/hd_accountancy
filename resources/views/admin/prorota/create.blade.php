@@ -79,33 +79,33 @@
                                                     <tbody>
                                                         <tr>
                                                             <td><input type="text" name="day[]" class="form-control" value="Monday" readonly></td>
-                                                            <td><input type="time" name="start_time[]" class="form-control" value="10:00"></td>
-                                                            <td><input type="time" name="end_time[]" class="form-control" value="18:00"></td>
+                                                            <td><input type="time" name="start_time[]" class="form-control" value="09:00"></td>
+                                                            <td><input type="time" name="end_time[]" class="form-control" value="17:00"></td>
                                                         </tr>
                                                         <tr>
                                                             <td><input type="text" name="day[]" class="form-control" value="Tuesday" readonly></td>
-                                                            <td><input type="time" name="start_time[]" class="form-control" value="10:00"></td>
-                                                            <td><input type="time" name="end_time[]" class="form-control" value="18:00"></td>
+                                                            <td><input type="time" name="start_time[]" class="form-control" value="09:00"></td>
+                                                            <td><input type="time" name="end_time[]" class="form-control" value="17:00"></td>
                                                         </tr>
                                                         <tr>
                                                             <td><input type="text" name="day[]" class="form-control" value="Wednesday" readonly></td>
-                                                            <td><input type="time" name="start_time[]" class="form-control" value="10:00"></td>
-                                                            <td><input type="time" name="end_time[]" class="form-control" value="18:00"></td>
+                                                            <td><input type="time" name="start_time[]" class="form-control" value="09:00"></td>
+                                                            <td><input type="time" name="end_time[]" class="form-control" value="17:00"></td>
                                                         </tr>
                                                         <tr>
                                                             <td><input type="text" name="day[]" class="form-control" value="Thursday" readonly></td>
-                                                            <td><input type="time" name="start_time[]" class="form-control" value="10:00"></td>
-                                                            <td><input type="time" name="end_time[]" class="form-control" value="18:00"></td>
+                                                            <td><input type="time" name="start_time[]" class="form-control" value="09:00"></td>
+                                                            <td><input type="time" name="end_time[]" class="form-control" value="17:00"></td>
                                                         </tr>
                                                         <tr>
                                                             <td><input type="text" name="day[]" class="form-control" value="Friday" readonly></td>
-                                                            <td><input type="time" name="start_time[]" class="form-control" value="10:00"></td>
-                                                            <td><input type="time" name="end_time[]" class="form-control" value="18:00"></td>
+                                                            <td><input type="time" name="start_time[]" class="form-control" value="09:00"></td>
+                                                            <td><input type="time" name="end_time[]" class="form-control" value="17:00"></td>
                                                         </tr>
                                                         <tr>
                                                             <td><input type="text" name="day[]" class="form-control" value="Saturday" readonly></td>
-                                                            <td><input type="time" name="start_time[]" class="form-control" value="10:00"></td>
-                                                            <td><input type="time" name="end_time[]" class="form-control" value="18:00"></td>
+                                                            <td><input type="time" name="start_time[]" class="form-control" value="09:00"></td>
+                                                            <td><input type="time" name="end_time[]" class="form-control" value="17:00"></td>
                                                         </tr>
                                                         <tr>
                                                             <td><input type="text" name="day[]" class="form-control" value="Sunday" readonly></td>
