@@ -65,6 +65,9 @@ Route::middleware(['auth', 'user-access:manager'])->group(function () {
     //Store message to staff
     Route::post('/manager/store-message', [ServiceController::class,'storeMessage']);
 
+    // Reassign staff by manager
+    Route::post('/manager/update-sub-service-staff', [ServiceController::class, 'updateSubServiceStaff'])->name('manager.updateSubServiceStaff');
+
     // Start, Stop, Start Break, Stop Break by Manager
     Route::post('/manager/start-work-time', [ServiceController::class,'startWorkTime']);
     Route::post('/manager/stop-work-time', [ServiceController::class,'stopWorkTime']);

@@ -459,4 +459,28 @@ class ServiceController extends Controller
         $subServices = SubService::orderby('id','DESC')->get();
         return view('manager.task.index',compact('staffs','managers','clients','subServices'));
     }
+
+    public function updateSubServiceStaff(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'clientSubServiceId' => 'required',
+            'newStaffId' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+            $clientSubService = ClientSubService::findOrFail($request->clientSubServiceId);
+
+            $clientSubService->staff_id = $request->newStaffId;
+            $clientSubService->save();
+
+            return response()->json([
+                'message' => 'Staff updated successfully'
+            ], 200);
+        
+    }
 }

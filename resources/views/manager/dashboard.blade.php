@@ -468,6 +468,16 @@
                     return staff.id === subService.staff_id;
                 });
 
+                if (subService.sequence_status === 0 || subService.sequence_status === 1) {
+                    staffDropdown = '<select class="form-select change-staff" data-sub-service-id="' + subService.id + '">';
+                    staffs.forEach(function(staffMember) {
+                        staffDropdown += '<option value="' + staffMember.id + '" ' + (staffMember.id === subService.staff_id ? 'selected' : '') + '>' + staffMember.first_name + '</option>';
+                    });
+                    staffDropdown += '</select>';
+                } else {
+                    staffDropdown = staff ? staff.first_name : 'N/A';
+                }
+
                 var staffName = staff ? staff.first_name : 'N/A';
                 var isAuthUserStaff = authUserId === subService.staff_id;
 
@@ -527,7 +537,7 @@
                     <tr>
                         <td>${subService.sub_service.name}</td>
                         <td>${moment(subService.deadline).format('DD.MM.YYYY')}</td>
-                        <td>${staffName}</td>
+                        <td>${staffDropdown}</td>
                         <td>${subService.note ? subService.note : ''}</td>
                         <td>${statusText} ${statusDropdown}</td>
                         <td>
@@ -549,6 +559,39 @@
 
             $('#assignTaskSection').show();
         }
+
+        $(document).on('change', '.change-staff', function() {
+            var clientSubServiceId = $(this).data('sub-service-id');
+            var newStaffId = $(this).val();
+
+            $.ajax({
+                url: '/manager/update-sub-service-staff',
+                type: 'POST',
+                dataType: 'json',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                data: {
+                    clientSubServiceId: clientSubServiceId,
+                    newStaffId: newStaffId
+                },
+                success: function(response) {
+                    swal({
+                        title: "Success!",
+                        text: "Staff changed successfully",
+                        icon: "success",
+                        button: "OK",
+                    });
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                },
+                error: function(xhr, status, error) {
+                    console.error(xhr.responseText);
+                }
+            });
+        });
+
 
         $(document).on('click', '.open-modal', function(){
             var staffId = $(this).data('staff-id');
