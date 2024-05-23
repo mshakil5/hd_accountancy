@@ -261,14 +261,35 @@ class HolidayController extends Controller
     public function getHolidayData(Request $request)
     {
         $staff_id = $request->input('staff_id');
-        $currentYear = date('Y');
+        $start_date = $request->input('start_date');
+        $end_date = $request->input('end_date');
+        $status = $request->input('status');
+
+        $query = HolidayRequest::query()
+            ->join('users', 'holiday_requests.staff_id', '=', 'users.id')
+            ->select(
+                'holiday_requests.start_date',
+                'holiday_requests.end_date',
+                'holiday_requests.status',
+                'holiday_requests.total_day',
+                'users.first_name',
+                'users.last_name'
+            )
+            ->where('holiday_requests.staff_id', $staff_id);
+
+        if ($start_date) {
+            $query->where('holiday_requests.start_date', '>=', $start_date);
+        }
         
-        $holidayRequests = HolidayRequest::where('staff_id', $staff_id)
-                            ->whereYear('holiday_requests.created_at', $currentYear)
-                            ->join('users', 'holiday_requests.staff_id', '=', 'users.id')
-                            ->select('holiday_requests.start_date', 'holiday_requests.end_date', 'holiday_requests.status', 'holiday_requests.total_day', 'users.first_name', 'users.last_name')
-                            ->orderBy('holiday_requests.id', 'desc')
-                            ->get();
+        if ($end_date) {
+            $query->where('holiday_requests.end_date', '<=', $end_date);
+        }
+        
+        if ($status !== null) {
+            $query->where('holiday_requests.status', $status);
+        }
+
+        $holidayRequests = $query->orderBy('holiday_requests.id', 'desc')->get();
 
         return response()->json($holidayRequests);
     }
