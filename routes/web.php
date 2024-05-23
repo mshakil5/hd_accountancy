@@ -68,6 +68,8 @@ Route::middleware(['auth', 'user-access:manager'])->group(function () {
     // Reassign staff by manager
     Route::post('/manager/update-sub-service-staff', [ServiceController::class, 'updateSubServiceStaff'])->name('manager.updateSubServiceStaff');
 
+    Route::post('/manager/change-sub-service-status', [ServiceController::class,'changeSubServiceStatus']);
+
     // Start, Stop, Start Break, Stop Break by Manager
     Route::post('/manager/start-work-time', [ServiceController::class,'startWorkTime']);
     Route::post('/manager/stop-work-time', [ServiceController::class,'stopWorkTime']);

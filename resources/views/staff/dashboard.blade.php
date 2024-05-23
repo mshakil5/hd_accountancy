@@ -508,9 +508,10 @@
 
                 var staffName = staff ? staff.first_name : 'N/A';
                 var isAuthUserStaff = authUserId === subService.staff_id;
+                var hasWorkTimes = subService.work_times && subService.work_times.length > 0;
 
                 if (subService.sequence_status === 0) {
-                    if (isAuthUserStaff) {
+                    if (isAuthUserStaff && hasWorkTimes) {
                         statusDropdown = `
                             <select class="form-select change-service-status" data-sub-service-id="${subService.id}">
                                 <option value="0" selected>Processing</option>
@@ -945,9 +946,9 @@
                 }
 
                 var statusDropdown = `
-                    <select class="form-select change-service" data-sub-service-id="${subService.id}" ${isAuthUserStaff? '' : 'disabled'}>
-                        <option value="0" ${subService.sequence_status === 0? 'selected' : ''}>Processing</option>
-                        <option value="2" ${subService.sequence_status === 2? 'selected' : ''}>Work is completed</option>
+                    <select class="form-select change-service" data-sub-service-id="${subService.id}" ${isAuthUserStaff && subService.sequence_status === 2 ? '' : 'disabled'}>
+                        <option value="0" ${subService.sequence_status === 0 ? 'selected' : ''}>Processing</option>
+                        <option value="2" ${subService.sequence_status === 2 ? 'selected' : ''}>Work is completed</option>
                     </select>`;
 
                 var newRow = `

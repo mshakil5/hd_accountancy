@@ -480,9 +480,10 @@
 
                 var staffName = staff ? staff.first_name : 'N/A';
                 var isAuthUserStaff = authUserId === subService.staff_id;
+                var hasWorkTimes = subService.work_times && subService.work_times.length > 0;
 
                 if (subService.sequence_status === 0) {
-                    if (isAuthUserStaff) {
+                    if (isAuthUserStaff && hasWorkTimes) {
                         statusDropdown = `
                             <select class="form-select change-service-status" data-sub-service-id="${subService.id}">
                                 <option value="0" selected>Processing</option>
@@ -902,6 +903,8 @@
                     return staff.id === subService.staff_id;
                 });
 
+                var authUserId = {{ auth()->user()->id }};
+                var isAuthUserStaff = authUserId === subService.staff_id;
                 var staffName = staff ? staff.first_name : 'N/A';
                 var duration = '';
                 var firstWorkTime = subService.work_times.filter(workTime => workTime.is_break === 0)
@@ -919,19 +922,19 @@
                     }
                 }
 
+                var statusDropdown = `
+                    <select class="form-select change-service" data-sub-service-id="${subService.id}" ${isAuthUserStaff && subService.sequence_status === 2 ? '' : 'disabled'}>
+                        <option value="0" ${subService.sequence_status === 0 ? 'selected' : ''}>Processing</option>
+                        <option value="2" ${subService.sequence_status === 2 ? 'selected' : ''}>Work is completed</option>
+                    </select>`;
+
                 var newRow = `
                     <tr>
                         <td>${subService.sub_service.name}</td>
                         <td>${moment(subService.deadline).format('DD.MM.YYYY')}</td>
                         <td>${staffName}</td>
                          <td>${subService.note ? subService.note : ''}</td>
-                        <td>
-                            ${  subService.sequence_status === 2 ? 'Work is completed' 
-                                : subService.sequence_status === 1 ? 'Not Started' 
-                                : subService.sequence_status === 0 ? 'Processing'
-                                : 'N/A'
-                             }
-                         </td>
+                        <td>${statusDropdown}</td>
                         <td>
                             <button type="button" class="btn btn-secondary open-modal" data-toggle="modal" data-target="#messageModal" data-staff-id="${subService.staff_id}" data-client-sub-service-id="${subService.id}">
                                 <i class="fas fa-plus-circle"></i>
@@ -947,6 +950,50 @@
 
             $('#completedTaskSection').show();
         }
+
+        $(document).on('change', '.change-service', function() {
+            var clientSubServiceId = $(this).data('sub-service-id');
+            var newStatus = $(this).val();
+            $.ajax({
+                url: '/manager/change-sub-service-status',
+                type: 'POST',
+                dataType: 'json',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                data: {
+                    clientSubServiceId: clientSubServiceId,
+                    newStatus: newStatus
+                },
+                success: function(response) {
+                    swal({
+                        title: "Success!",
+                        text: "Status chnaged successfully",
+                        icon: "success",
+                        button: "OK",
+                    });
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                },
+                error: function(xhr, status, error) {
+                    console.error(error);
+                    var errorMessage = "";
+                    if (xhr.responseJSON && xhr.responseJSON.errors){
+                        $.each(xhr.responseJSON.errors, function (key, value) {
+                            errorMessage += key + ": " + value.join(", ") + "<br>";
+                        });
+                    } else {
+                        errorMessage = "An error occurred. Please try again later.";
+                    }
+                    $('#errorMessage').html(errorMessage);
+                    $('#errorMessage').show();
+                    $('#successMessage').hide();
+                    console.error("Error occurred: " + error);
+                    console.error(xhr.responseText);
+                }
+            });
+        });
 
         $('#completed-service-cancelButton').click(function() {
             $('#completedTaskSection').hide();

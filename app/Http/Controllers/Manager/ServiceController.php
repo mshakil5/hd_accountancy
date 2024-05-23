@@ -483,4 +483,22 @@ class ServiceController extends Controller
             ], 200);
         
     }
+
+    public function changeSubServiceStatus(Request $request)
+    {
+        $clientSubServiceId = $request->input('clientSubServiceId');
+        $newStatus = $request->input('newStatus');
+        $clientSubService = ClientSubService::find($clientSubServiceId);
+
+        if ($clientSubService) {
+            $clientSubService->sequence_status = $newStatus;
+            $clientSubService->status = 1;
+            $clientSubService->updated_by = Auth::id();
+            $clientSubService->save();
+
+            return response()->json(['message' => 'Status updated successfully']);
+        } else {
+            return response()->json(['error' => 'Client sub-service not found'], 404);
+        }
+    }
 }
