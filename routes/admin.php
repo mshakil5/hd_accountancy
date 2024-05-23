@@ -290,6 +290,9 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/edit-holiday/{id}', [HolidayController::class,'editHoliday']);
     Route::post('/holiday-update/{id}', [HolidayController::class,'updateHoliday']);
 
+    // get holiday type
+    Route::post('/get-holiday-type', [HolidayController::class, 'getHolidayType'])->name('get.holiday.type');
+
     //Holiday Report
     Route::get('/holiday-report', [HolidayController::class, 'holidayReport'])->name('holidayReport');
     Route::post('/get-holiday-data', [HolidayController::class, 'getHolidayData'])->name('getHolidayData');

@@ -26,7 +26,8 @@ class HolidayController extends Controller
     public function create()
     {
         $staffs = User::whereIn('type', ['2','3'])->select('id','first_name','last_name','email')->orderby('id','DESC')->get();
-        return view('admin.holiday.create', compact('staffs'));
+        $holidayTypes = HolidayType::orderBy('id', 'desc')->get();
+        return view('admin.holiday.create', compact('staffs','holidayTypes'));
     }
 
     public function store(Request $request)
@@ -54,6 +55,8 @@ class HolidayController extends Controller
         $data->start_date = $request->start_date;
         $data->end_date = $request->end_date;
         $data->total_day = $differenceInDays+1;
+        $data->holiday_type_id  = $request->holiday_type;
+        $data->admin_note = $request->admin_note;
         if ($data->save()) {
 
             if ($data->status == 0) {
@@ -293,5 +296,26 @@ class HolidayController extends Controller
 
         return response()->json($holidayRequests);
     }
+
+    public function getHolidayType(Request $request)
+    {
+        if ($request->ajax()) {
+            $id = $request->input('id');
+            $holiday = HolidayRequest::find($id);
+
+            if ($holiday) {
+                return response()->json([
+                    'holiday_type_id' => $holiday->holiday_type_id,
+                    'admin_note' => $holiday->admin_note
+                ]);
+            }
+
+            return response()->json([
+                'holiday_type_id' => null,
+                'admin_note' => ''
+            ]);
+        }
+    }
+
 
 }

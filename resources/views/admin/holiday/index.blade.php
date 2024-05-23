@@ -19,7 +19,7 @@
                                                Note
                                             </div>
                                              <div class="form-group mt-4">
-                                                <label for="holidayTypeId" class="txt-theme fw-bold">Holiday Type</label>
+                                                <label for="holidayTypeId" class="txt-theme fw-bold">Holiday Type:</label>
                                                 <select class="form-control mt-2" id="holidayTypeId">
                                                     <option value="" selected disabled>Select holiday type</option>
                                                     @foreach($holidayTypes as $holidayType)
@@ -28,7 +28,7 @@
                                                 </select>
                                             </div>
                                             <div class="form-group mt-4">
-                                                <label for="" class="txt-theme fw-bold">Note</label>
+                                                <label for="" class="txt-theme fw-bold">Admin Note:</label>
                                                 <textarea class="form-control" id="note" rows="7" name="" placeholder="Note..."></textarea>
                                             </div>
                                             <div class="text-center">
@@ -109,16 +109,16 @@
                     data: 'status', 
                     name: 'status',
                     render: function(data, type, row) {
-                    var isDisabled = data === 1 || data === 2;
-                    var disabledAttr = isDisabled ? 'disabled' : '';
-                    var dropdown = `
-                        <select class="form-select change-status" ${disabledAttr} data-status-id="${row.DT_RowId}" data-staff-id="${row.staff_id}" data-start-date="${row.start_date}" data-end-date="${row.end_date}">
-                            <option value="0" ${data === 0 ? 'selected' : ''}>Processing</option>
-                            <option value="1" ${data === 1 ? 'selected' : ''}>Approved</option>
-                            <option value="2" ${data === 2 ? 'selected' : ''}>Declined</option>
-                        </select>`;
-                    return dropdown;
-                }
+                        var isDisabled = data === 1 || data === 2;
+                        var disabledAttr = isDisabled ? 'disabled' : '';
+                        var dropdown = `
+                            <select class="form-select change-status" ${disabledAttr} data-status-id="${row.DT_RowId}" data-staff-id="${row.staff_id}" data-start-date="${row.start_date}" data-end-date="${row.end_date}" data-holiday-request-id="${row.id}">
+                                <option value="0" ${data === 0 ? 'selected' : ''}>Processing</option>
+                                <option value="1" ${data === 1 ? 'selected' : ''}>Approved</option>
+                                <option value="2" ${data === 2 ? 'selected' : ''}>Declined</option>
+                            </select>`;
+                        return dropdown;
+                    }
                 },
                 {
                     data: null,
@@ -160,7 +160,6 @@
                 _token: '{{ csrf_token() }}'
             };
 
-            // console.log(data);
             $.ajax({
                 url: "{{ route('store.holiday') }}",
                 type: "POST",
@@ -168,7 +167,7 @@
                 success: function(response) {
                     swal({
                         title: "Success!",
-                        text: "Status chnaged successfully",
+                        text: "Status changed successfully",
                         icon: "success",
                         button: "OK",
                     });
@@ -178,26 +177,67 @@
                     $('#myModal').modal('hide');
                 },
                 error: function(xhr, status, error) {
-                     console.error(xhr.responseText);
+                    console.error(xhr.responseText);
                 }
             });
         });
 
         $(document).on('change', '.change-status', function() {
-            if ($(this).val()!== 1 && $(this).val()!== 2){
-            var modal = $('#myModal');
-            modal.modal('show');
             var selectedStatus = $(this).val();
-            window.selectedStatus = selectedStatus;
             var selectedHolidayId = $(this).data('status-id');
-            window.selectedHolidayId = selectedHolidayId;
             var selectedStaffId = $(this).data('staff-id');
-            window.selectedStaffId = selectedStaffId;
             var selectedStartDate = $(this).data('start-date');
-            window.selectedStartDate = selectedStartDate;
             var selectedEndDate = $(this).data('end-date');
-            window.selectedEndDate = selectedEndDate;
-            }
+            var holidayRequestId = $(this).data('holiday-request-id');
+
+            $.ajax({
+                url: "{{ route('get.holiday.type') }}",
+                type: "POST",
+                data: {
+                    id: holidayRequestId,
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    $('#holidayTypeId').val(response.holiday_type_id);
+
+                    $('#note').val(response.admin_note);
+
+                    window.selectedStatus = selectedStatus;
+                    window.selectedHolidayId = selectedHolidayId;
+                    window.selectedStaffId = selectedStaffId;
+                    window.selectedStartDate = selectedStartDate;
+                    window.selectedEndDate = selectedEndDate;
+
+                    $('#myModal').modal('show');
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error fetching holiday type:', error);
+                }
+            });
+        });
+
+        $('#myModal').on('hidden.bs.modal', function () {
+            $('.change-status').val(0);
+        });
+
+        $('#myModal').on('show.bs.modal', function () {
+            var holidayRequestId = window.selectedHolidayId;
+            
+            $.ajax({
+                url: "{{ route('get.holiday.type') }}",
+                type: "POST",
+                data: {
+                    id: holidayRequestId,
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    $('#holidayTypeId').val(response.holiday_type_id);
+                    $('#note').val(response.admin_note);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error fetching holiday type:', error);
+                }
+            });
         });
     });
 </script>

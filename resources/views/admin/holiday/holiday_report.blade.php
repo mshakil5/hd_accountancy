@@ -70,7 +70,7 @@
                         </table>
                         <div class="row">
                             <div class="col-lg-4 mx-auto text-center mb-3">
-                                <a href="{{ route('holiday') }}" class="btn btn-sm btn-outline-dark">Back</a>
+                                <a href="{{ route('holiday') }}" class="btn btn-primary rounded-2 border-theme bg-theme text-light">Back</a>
                             </div>
                         </div>
                     </div>

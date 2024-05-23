@@ -33,16 +33,27 @@
                                 <div class="tab-content pt-2" id="myTabjustifiedContent">
                                     <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
                                         <form>
-                                            <div class="mb-3">
-                                                <label for="staff_id" class="form-label fw-bold">Employee</label>
-                                                <select class="form-select rounded-3 border-3 border-theme select2" id="staff_id" name="staff_id">
-                                                    <option value="" selected disabled>Choose Employee</option>
-                                                    @foreach($staffs as $staff)
-                                                    <option value="{{ $staff->id }}">{{ $staff->first_name }} {{ $staff->last_name }}</option>
-                                                    @endforeach
-                                                </select>
+                                            <div class="row mb-3">
+                                                <div class="col-md-6">
+                                                    <label for="staff_id" class="form-label fw-bold">Employee</label>
+                                                    <select class="form-select rounded-2 border-1 select2" id="staff_id" name="staff_id">
+                                                        <option value="" selected disabled>Choose Employee</option>
+                                                        @foreach($staffs as $staff)
+                                                        <option value="{{ $staff->id }}">{{ $staff->first_name }} {{ $staff->last_name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label for="holiday_type" class="form-label fw-bold">Holiday Type</label>
+                                                    <select class="form-select rounded-2 border-1 select2" id="holiday_type" name="holiday_type">
+                                                        <option value="" selected disabled>Choose Holiday Type</option>
+                                                        @foreach($holidayTypes as $holidayType)
+                                                        <option value="{{ $holidayType->id }}">{{ $holidayType->type }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
                                             </div>
-                                            
+
                                             <div class="row mb-3">
                                                 <div class="col-md-6">
                                                     <label for="start_date" class="form-label fw-bold">Start Date</label>
@@ -53,11 +64,16 @@
                                                     <input type="date" id="end_date" name="end_date" class="form-control border-theme text-center fs-6 rounded-2 border-1 txt-theme fw-bold" value="">
                                                 </div>
                                             </div>
+
+                                            <div class="mb-3">
+                                                <label for="admin_note" class="form-label fw-bold">Admin Note</label>
+                                                <textarea id="admin_note" name="admin_note" class="form-control rounded-2 border-1 border-theme" placeholder="Leave a note" rows="2"></textarea>
+                                            </div>
                                             
                                             <div class="mb-3 mt-3 d-flex justify-content-center align-items-center">
                                                 <a href="{{route('holiday')}}" class="btn btn-sm btn-outline-dark">Cancel</a>
                                                 <span class="me-3"></span>
-                                                <button type="button" id="saveButton" class="btn btn-primary btn-sm rounded-3 border-theme bg-theme text-light fw-bold">Save</button>
+                                                <button type="button" id="saveButton" class="btn btn-primary btn-sm border-theme bg-theme text-light fw-bold">Save</button>
                                             </div>
                                         </form>
                                     </div>
@@ -86,9 +102,11 @@
             var data = {
                 staff_id: $('#staff_id').val(),
                 start_date: $('#start_date').val(),
-                end_date: $('#end_date').val()
+                end_date: $('#end_date').val(),
+                holiday_type: $('#holiday_type').val(),
+                admin_note: $('#admin_note').val()
             };
-            console.log(data);
+            // console.log(data);
 
             $.ajax({
                 url: "{{url('/admin/holiday')}}",
