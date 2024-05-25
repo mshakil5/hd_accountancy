@@ -34,7 +34,7 @@
                                         <span>{!! $service->note !!}</span>
                                     </td>
                                     <td>
-                                        <select class="form-control" id="sequence_status">
+                                        <select class="form-control" id="sequence_status" @if ($service->sequence_status == 1 || $service->sequence_status == 2) disabled @endif>
                                             <option value="0" {{ $service->sequence_status == 0 ? 'selected' : '' }}>Processing</option>
                                             <option value="1" {{ $service->sequence_status == 1 ? 'selected' : '' }}>Work Not Started</option>
                                             <option value="2" {{ $service->sequence_status == 2 ? 'selected' : '' }}>Work Completed</option>
@@ -43,7 +43,7 @@
                                     <td>{{ optional($service->workTimes->first())->start_time ? \Carbon\Carbon::parse($service->workTimes->first()->start_time)->format('d. m. Y - H:i:s') : '' }}</td>
                                     <td>{{ optional($service->workTimes->first())->end_time ? \Carbon\Carbon::parse($service->workTimes->first()->end_time)->format('d. m. Y - H:i:s') : '' }}</td>
                                     <td>
-                                        <button class="btn btn-primary update-btn" data-service-id="{{ $service->id }}">Update</button>
+                                        <button class="btn btn-primary update-btn" data-service-id="{{ $service->id }}" @if ($service->sequence_status == 1 || $service->sequence_status == 2) disabled @endif>Update</button>
                                     </td>
                                 </tr>
                                 @endforeach

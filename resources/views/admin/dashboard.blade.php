@@ -843,11 +843,11 @@
                 }
 
                 var statusDropdown = `
-                  <select class="form-select change-service-status" data-sub-service-id="${subService.id}">
-                      <option value="0" ${subService.sequence_status === 0 ? 'selected' : ''}>Processing</option>
-                      <option value="1" ${subService.sequence_status === 1 ? 'selected' : ''}>Not Started</option>
-                      <option value="2" ${subService.sequence_status === 2 ? 'selected' : ''}>Work is completed</option>
-                  </select>`;
+                    <select class="form-select change-service-status" data-sub-service-id="${subService.id}" ${subService.sequence_status === 0 || subService.sequence_status === 1 ? 'disabled' : ''}>
+                        <option value="0" ${subService.sequence_status === 0 ? 'selected' : ''}>Processing</option>
+                        <option value="1" ${subService.sequence_status === 1 ? 'selected' : ''}>Not Started</option>
+                        <option value="2" ${subService.sequence_status === 2 ? 'selected' : ''}>Work is completed</option>
+                    </select>`;
 
                 var newRow = `
                     <tr>
