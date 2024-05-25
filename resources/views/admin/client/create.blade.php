@@ -1260,6 +1260,6 @@
         });
     });
 </script>
-<!-- Delete director end-->
+<!-- Delete contact end-->
 
 @endsection

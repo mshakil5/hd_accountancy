@@ -352,13 +352,30 @@
 </script>
 <!-- Businessinfo update End-->
 
-<!-- Populating director info -->
+<!-- Director data table -->
 <script>
     $(document).ready(function() {
-        $('#director-updateButton, #director-cancelButton').hide();
-        $('#directorUpdateTable').on('click', '.edit-director', function() {
+         $('#directorTable').DataTable({
+        });
+    });
+</script>
+<!-- Director data table -->
+
+<!-- Populating director info and update start-->
+<script>
+    $(document).ready(function() {
+        $('#createNewButton').click(function(event) {
+            event.preventDefault();
+            $('#directorFormContainer').toggle();
+            $('html, body').animate({
+                scrollTop: $('#directorFormContainer').offset().top - 200
+            }, 500);
+        });
+
+        $('#directorTable').on('click', '.edit-director', function(event) {
+            event.preventDefault(); 
             var directorInfo = JSON.parse($(this).closest('tr').attr('data-director-info'));
-            
+
             $('#dir-name').val(directorInfo.name);
             $('#dir-phone').val(directorInfo.phone);
             $('#dir-email').val(directorInfo.email);
@@ -369,81 +386,30 @@
             $('#utr_authorization').val(directorInfo.utr_authorization);
             $('#nino').val(directorInfo.nino);
 
+            $('#directorIdInput').val(directorInfo.id);
+
             $('#director-saveButton, #director-clearButton').hide();
             $('#director-updateButton, #director-cancelButton').show();
+            $('#directorFormContainer').show();
 
             $('html, body').animate({
                 scrollTop: $('#directorForm').offset().top - 200
             }, 500);
-
-            $('#director-cancelButton').click(function() {
-                $('#directorForm input').val('');
-                $('#director-updateButton, #director-cancelButton').hide();
-                $('#director-saveButton, #director-clearButton').show();
-            });
         });
-    });
-</script>
-<!-- Populating director info -->
 
-<!-- Delete director -->
-<script>
-    $(document).ready(function() {
-        $('#directorUpdateTable').on('click', '.delete-director', function() {
-            var directorId = $(this).closest('tr').data('director-id');
-        
-            if (confirm("Are you sure you want to delete this director?")) {
-                $.ajax({
-                    url: '/admin/delete-director/' + directorId,
-                    type: 'DELETE',
-                    success: function(response) {
-                            // $('#successMessage b').text(response.message);
-                            // $('#successMessage').show();
-                            // $('#errorMessage').hide();
-                            swal({
-                                title: "Success!",
-                                text: "Directo info deleted successfully",
-                                icon: "success",
-                                button: "OK",
-                            });
-                            setTimeout(function() {
-                            location.reload();
-                        }, 2000);
-                    },
-                    error: function(xhr, status, error) {
-                        var errorMessage = "";
-                        if (xhr.responseJSON && xhr.responseJSON.errors) {
-                            $.each(xhr.responseJSON.errors, function (key, value) {
-                                errorMessage += key + ": " + value.join(", ") + "<br>";
-                            });
-                        } else {
-                            errorMessage = "An error occurred. Please try again later.";
-                        }
-                        $('#errorMessage').html(errorMessage);
-                        $('#errorMessage').show();
-                        $('#successMessage').hide();
-                    },
-                    cache: false,
-                    contentType: false,
-                    processData: false
-                });
-            }
-        });
-    });
-</script>
-<!-- Delete director -->
-
-<!-- Update Director -->
-<script>
-    $(document).ready(function() {
-        $('#directorUpdateTable').on('click', '.edit-director', function() {
-            var directorId = $(this).closest('tr').data('director-id');
-            $('#directorIdInput').val(directorId);
+        $('#director-cancelButton').click(function(event) {
+            event.preventDefault();
+            $('#directorForm input').val('');
+            $('#director-updateButton').hide();
+            $('#director-saveButton, #director-clearButton').show();
+            $('#directorFormContainer').hide();
+            $('html, body').animate({
+                scrollTop: 0
+            }, 500);
         });
 
         $('#directorForm').submit(function(event) {
             event.preventDefault();
-
             var directorId = $('#directorIdInput').val();
 
             var formData = new FormData($(this)[0]);
@@ -453,9 +419,6 @@
                 type: 'POST',
                 data: formData,
                 success: function(response) {
-                    // $('#successMessage b').text(response.message);
-                    // $('#successMessage').show();
-                    // $('#errorMessage').hide();
                     swal({
                         title: "Success!",
                         text: "Director Info updated successfully",
@@ -488,14 +451,62 @@
         });
     });
 </script>
-<!-- Update Director -->
+<!-- Populating director info and update end-->
+
+<!-- Delete director start-->
+<script>
+    $(document).ready(function() {
+        $('#directorTable').on('click', '.delete-director', function() {
+            var directorId = $(this).closest('tr').data('director-id');
+        
+            if (confirm("Are you sure you want to delete this director?")) {
+                $.ajax({
+                    url: '/admin/delete-director/' + directorId,
+                    type: 'DELETE',
+                    success: function(response) {
+                            // $('#successMessage b').text(response.message);
+                            // $('#successMessage').show();
+                            // $('#errorMessage').hide();
+                            swal({
+                                title: "Success!",
+                                text: "Director Info deleted successfully",
+                                icon: "success",
+                                button: "OK",
+                            });
+                            
+                            setTimeout(function() {
+                                location.reload();
+                            }, 2000);  
+                    },
+                    error: function(xhr, status, error) {
+                        var errorMessage = "";
+                        if (xhr.responseJSON && xhr.responseJSON.errors) {
+                            $.each(xhr.responseJSON.errors, function (key, value) {
+                                errorMessage += key + ": " + value.join(", ") + "<br>";
+                            });
+                        } else {
+                            errorMessage = "An error occurred. Please try again later.";
+                        }
+                        $('#errorMessage').html(errorMessage);
+                        $('#errorMessage').show();
+                        $('#successMessage').hide();
+                    },
+                    cache: false,
+                    contentType: false,
+                    processData: false
+                });
+            }
+        });
+    });
+</script>
+<!-- Delete director end-->
 
 <!-- Director Info create Start -->
 <script>
     $(document).ready(function () {
         $('#director-saveButton').click(function (event) {
             event.preventDefault();
-          var clientId = "{{ $client->id ?? '' }}";
+            var clientId = "{{ $client->id ?? '' }}";
 
             var formData = new FormData($('#directorForm')[0]);
             formData.append('client_id', clientId);
@@ -505,7 +516,8 @@
                 type: 'POST',
                 data: formData,
                 async: false,
-                success: function(response) {
+                success: function (response) {
+                    if (response.status === 200) {
                         // $('#successMessage b').text(response.message);
                         // $('#successMessage').show();
                         // $('#errorMessage').hide();
@@ -518,6 +530,11 @@
                         setTimeout(function() {
                             location.reload();
                         }, 2000);
+                    } else {
+                        $('#errorMessage b').text(response.message);
+                        $('#errorMessage').show();
+                        $('#successMessage').hide();
+                    }
                 },
                 error: function (xhr, status, error) {
                     var errorMessage = "";
@@ -674,49 +691,105 @@
 <!-- Updating services and sub services start -->
 <script>
     $(document).ready(function() {
-        $('#service-updateButton').click(function(e) {
-            e.preventDefault(); 
+        $(document).on('click', '#service-updateButton', function(e) { 
+            e.preventDefault();
 
             var clientId = "{{ $client->id ?? '' }}";
-            var serviceId = $('#serviceDropdown').val();
-            var managerId = $('#managerDropdown').val(); 
-            var service_frequency = $('#service_frequency').val(); 
-            var service_deadline = $('#service_deadline').val(); 
-            var subServices = [];
+            var services = [];
 
-            $('#serviceDetailsTable tr').each(function() {
-                var subServiceId = $(this).find('input[name="sub_service_id[]"]').val();
-                var deadline = $(this).find('input[type="date"]').val();
-                var note = $(this).find('textarea').val();
-                var staffId = $(this).find('select[name="staff_id"]').val();
-                
-                subServices.push({
-                    subServiceId: subServiceId,
-                    deadline: deadline,
-                    note: note,
-                    staffId: staffId
+            $('.subServiceDetails').each(function() {
+                var serviceId = $(this).find('input[name="service_id"]').val();
+                var clientServiceId = $(this).find('input[name="client_service_id[]"]').val();
+                var managerId = $(this).find('.managerDropdown').val();
+                var service_frequency = $(this).find('#serviceFrequency').val();
+                var service_deadline = $(this).find('#serviceDeadline').val();
+                var due_date = $(this).find('#dueDate').val();
+                var legal_deadline = $(this).find('#legalDeadline').val();
+                var subServices = [];
+
+                $(this).find('tbody tr').each(function() {
+                    var subServiceId = $(this).find('input[name="sub_service_id[]"]').val();
+                    var clientSubServiceId = $(this).find('input[name="client_sub_service_id[]"]').val();
+                    var deadline = $(this).find('#deadline').val();
+                    var note = $(this).find('#note').val();
+                    var staffId = $(this).find('#selectedStaff').val();
+
+                    subServices.push({
+                        subServiceId: subServiceId,
+                        client_sub_service_id: clientSubServiceId,
+                        deadline: deadline,
+                        note: note,
+                        staffId: staffId
+                    });
+                });
+
+                services.push({
+                    serviceId: serviceId,
+                    client_service_id: clientServiceId,
+                    managerId: managerId,
+                    service_frequency: service_frequency,
+                    service_deadline: service_deadline,
+                    due_date: due_date,
+                    legal_deadline: legal_deadline,
+                    subServices: subServices
                 });
             });
 
             var data = {
                 clientId: clientId,
-                serviceId: serviceId,
-                managerId: managerId,
-                service_frequency: service_frequency,
-                service_deadline: service_deadline,
-                subServices: subServices
+                services: services
             };
+            // console.log(data);
 
-            console.log(data);
+            
+            // var newservices = [];
+
+            // $('.subServiceDetails').each(function() {
+            //     var newserviceId = $('#serviceDropdown').val();
+            //     var newmanagerId = $(this).find('.managerDropdown').val();
+            //     var newservice_frequency = $(this).find('#serviceFrequency').val();
+            //     var newservice_deadline = $(this).find('#serviceDeadline').val();
+            //     var newsubServices = [];
+
+            //     $(this).find('tbody tr').each(function() {
+            //         var newsubServiceId = $(this).find('.sub-service-id').attr('data-sub-service-id'); 
+            //         var newdeadline = $(this).find('#deadline').val();
+            //         var newnote = $(this).find('#note').val();
+            //         var newstaffId = $(this).find('#selectedStaff').val();
+
+            //         newsubServices.push({
+            //             newsubServiceId: newsubServiceId,
+            //             newdeadline: newdeadline,
+            //             newnote: newnote,
+            //             newstaffId: newstaffId
+            //         });
+            //     });
+
+            //     newservices.push({
+            //         newserviceId: newserviceId,
+            //         newmanagerId: newmanagerId,
+            //         newservice_frequency: newservice_frequency,
+            //         newservice_deadline: newservice_deadline,
+            //         newsubServices: newsubServices
+            //     });
+            // });
+
+            // var newdata = {
+            //     clientId: clientId,
+            //     newservices: newservices
+            // };
+
+            // console.log(newdata);
 
             $.ajax({
                 url: '/admin/update-service',
                 type: 'POST',
-                data: data,
+                data: JSON.stringify(data),
+                contentType: 'application/json',
                 success: function(response) {
                     swal({
                         title: "Success!",
-                        text: "Task updated successfully",
+                        text: "Tasks assigned successfully",
                         icon: "success",
                         button: "OK",
                     });
@@ -725,18 +798,6 @@
                     }, 2000);
                 },
                 error: function(xhr, status, error) {
-                    var errorMessage = "";
-                    if (xhr.responseJSON && xhr.responseJSON.errors){
-                        $.each(xhr.responseJSON.errors, function (key, value) {
-                            errorMessage += key + ": " + value.join(", ") + "<br>";
-                        });
-                    } else {
-                        errorMessage = "An error occurred. Please try again later.";
-                    }
-                    $('#errorMessage').html(errorMessage);
-                    $('#errorMessage').show();
-                    $('#successMessage').hide();
-                    console.error("Error occurred: " + error);
                     console.error(xhr.responseText);
                 }
             });
@@ -745,162 +806,14 @@
 </script>
 <!-- Updating services and sub services end -->
 
-<!-- Service update Start -->
-<!-- <script>
-    $(document).ready(function () {
-        $('#service-saveButton').click(function (event) {
-            event.preventDefault();
-
-            var formData = new FormData($('#serviceForm')[0]);
-              var clientId = "{{ $client->id ?? '' }}";
-            //   console.log("Client ID:", clientId);
-            //  formData.append('client_id', clientId);
-
-            $.ajax({
-                url: "/admin/client-services-update/" + clientId,
-                type: 'POST',
-                data: formData,
-                async: false,
-                success: function (response) {
-                    if (response.status === 200) {
-                        $('#successMessage b').text(response.message);
-                        $('#successMessage').show();
-                        $('#errorMessage').hide();
-                    } else {
-                        $('#errorMessage b').text(response.message);
-                        $('#errorMessage').show();
-                        $('#successMessage').hide();
-                    }
-                },
-                error: function (xhr, status, error) {
-                    var errorMessage = "";
-                        if (xhr.responseJSON && xhr.responseJSON.errors) {
-                            $.each(xhr.responseJSON.errors, function (key, value) {
-                                errorMessage += key + ": " + value.join(", ") + "<br>";
-                            });
-                        } else {
-                            errorMessage = "An error occurred. Please try again later.";
-                        }
-                        $('#errorMessage').html(errorMessage);
-                        $('#errorMessage').show();
-                        $('#successMessage').hide();
-                },
-                cache: false,
-                contentType: false,
-                processData: false
-            });
-            return false;
-        });
-
-        $('#service-clearButton').click(function () {
-            event.preventDefault();
-            $('#serviceForm')[0].reset();
+<!-- Contact data table -->
+<script>
+    $(document).ready(function() {
+         $('#contactTable').DataTable({
         });
     });
-</script> -->
-<!-- Service update End -->
-
-<!-- New service add and dynamically update -->
-<!-- <script>
-    $(document).ready(function () {
-        var clientId = "{{ $client->id ?? '' }}";
-
-        function fetchAndRenderAllServices(clientId) {
-            $.ajax({
-                url: "/admin/client-services/" + clientId,
-                type: 'GET',
-                success: function (response) {
-                    if (response.status === 200) {
-                        var allServices = response.all_services;
-                        var assignedServices = response.assigned_services;
-                        var deadline = response.deadline;
-
-                        $('#deadline').val(deadline);
-                        $('.services-container').empty();
-                        allServices.forEach(function (service) {
-                            var isAssigned = assignedServices.some(function(assignedService) {
-                                return assignedService.id === service.id;
-                            });
-                            var checked = isAssigned ? 'checked' : '';
-
-                            var serviceHtml = `
-                                <div class="form-check form-check-inline" style="font-size: 1.2em;">
-                                    <input class="form-check-input" type="checkbox" id="service_${service.id}" name="services[]" value="${service.id}" ${checked}>
-                                    <label class="form-check-label ml-2" for="service_${service.id}">${service.name}</label>
-                                </div>
-                            `;
-                            $('.services-container').append(serviceHtml);
-                        });
-                    } else {
-                        // $('#errorMessage b').text('Failed to fetch services. Please try again.');
-                        // $('#errorMessage').show();
-                        $('#successMessage').hide();
-                    }
-                },
-                error: function (xhr, status, error) {
-                    var errorMessage = "An error occurred. Please try again later.";
-                    if (xhr.responseJSON && xhr.responseJSON.errors) {
-                        errorMessage = "";
-                        $.each(xhr.responseJSON.errors, function (key, value) {
-                            errorMessage += key + ": " + value.join(", ") + "<br>";
-                        });
-                    }
-                    $('#errorMessage').html(errorMessage);
-                    $('#errorMessage').show();
-                    $('#successMessage').hide();
-                }
-            });
-        }
-
-        fetchAndRenderAllServices(clientId);
-
-        $('#addServiceButton').click(function (event) {
-            event.preventDefault();
-
-            var newServiceName = $('#new_service_name').val();
-
-            if (newServiceName.trim() !== '') {
-                $.ajax({
-                    url: "/admin/create-specific-service",
-                    type: 'POST',
-                    data: {
-                        name: newServiceName
-                    },
-                    success: function (response) {
-                        if (response.status === 200) {
-                            $('#new_service_name').val('');
-                            $('#successMessage b').text('Service added successfully!');
-                            $('#successMessage').show();
-                            $('#errorMessage').hide();
-                            fetchAndRenderAllServices(clientId);
-                        } else {
-                            $('#errorMessage b').text('Failed to add service. Please try again.');
-                            $('#errorMessage').show();
-                            $('#successMessage').hide();
-                        }
-                    },
-                    error: function (xhr, status, error) {
-                        var errorMessage = "An error occurred. Please try again later.";
-                        if (xhr.responseJSON && xhr.responseJSON.errors) {
-                            errorMessage = "";
-                            $.each(xhr.responseJSON.errors, function (key, value) {
-                                errorMessage += key + ": " + value.join(", ") + "<br>";
-                            });
-                        }
-                        $('#errorMessage').html(errorMessage);
-                        $('#errorMessage').show();
-                        $('#successMessage').hide();
-                    }
-                });
-            } else {
-                $('#errorMessage b').text('Please enter a valid service name.');
-                $('#errorMessage').show();
-                $('#successMessage').hide();
-            }
-        });
-    });
-</script> -->
-<!-- New service add and dynamically update -->
+</script>
+<!-- Contact data table -->
 
 <!-- Contact Info create Start -->
 <script>
@@ -967,9 +880,18 @@
 <!-- Populating contact info and update start-->
 <script>
     $(document).ready(function() {
-        $('#contactTable').on('click', '.edit-contact', function() {
-            var contactInfo = JSON.parse($(this).closest('tr').attr('data-director-info'));
-            
+        $('#createNewButton1').click(function(event) {
+            event.preventDefault();
+            $('#contactFormContainer').toggle();
+            $('html, body').animate({
+                scrollTop: $('#contactFormContainer').offset().top - 200
+            }, 500);
+        });
+
+        $('#contactTable').on('click', '.edit-contact', function(event) {
+            event.preventDefault();
+            var contactInfo = JSON.parse($(this).closest('tr').attr('data-contact-info'));
+
             $('#greeting').val(contactInfo.greeting);
             $('#first_name').val(contactInfo.first_name);
             $('#last_name').val(contactInfo.last_name);
@@ -981,20 +903,22 @@
 
             $('#contact-saveButton, #contact-clearButton').hide();
             $('#contact-updateButton, #contact-cancelButton').show();
+            $('#contactFormContainer').show();
 
             $('html, body').animate({
                 scrollTop: $('#contactForm').offset().top - 200
             }, 500);
         });
 
-        $('#contact-updateButton').click(function() {
-            $('#contactForm').submit(); 
-        });
-
-        $('#contact-cancelButton').click(function() {
+        $('#contact-cancelButton').click(function(event) {
+            event.preventDefault();
             $('#contactForm input').val('');
-            $('#contact-updateButton, #contact-cancelButton').hide();
+            $('#contact-updateButton').hide();
             $('#contact-saveButton, #contact-clearButton').show();
+            $('#contactFormContainer').hide();
+            $('html, body').animate({
+                scrollTop: 0
+            }, 500);
         });
 
         $('#contactForm').submit(function(event) {
@@ -1008,9 +932,6 @@
                 type: 'POST',
                 data: formData,
                 success: function(response) {
-                    // $('#successMessage b').text(response.message);
-                    // $('#successMessage').show();
-                    // $('#errorMessage').hide();
                     swal({
                         title: "Success!",
                         text: "Contact Info updated successfully",
@@ -1050,7 +971,7 @@
     $(document).ready(function() {
         $('#contactTable').on('click', '.delete-contact', function() {
             var contactId = $(this).closest('tr').data('contact-id');
-            console.log(contactId);
+            // console.log(contactId);
         
             if (confirm("Are you sure you want to delete this conatct?")) {
                 $.ajax({
@@ -1068,7 +989,7 @@
                             });
                             setTimeout(function() {
                                 location.reload();
-                            }, 2000);   
+                            }, 2000); 
                     },
                     error: function(xhr, status, error) {
                         var errorMessage = "";
@@ -1091,6 +1012,6 @@
         });
     });
 </script>
-<!-- Delete director end-->
+<!-- Delete contact end-->
 
 @endsection

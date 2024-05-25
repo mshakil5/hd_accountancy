@@ -128,9 +128,9 @@
                                             <table id="completedServicesTable" class="table">
                                                 <thead>
                                                     <tr>
-                                                        <th>Client</th>
-                                                        <th>Task</th>
-                                                        <th>Duration</th>
+                                                        <th>Client:</th>
+                                                        <th>Task:</th>
+                                                        <th>Duration:</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -485,7 +485,6 @@
                 type: "GET",
                 dataType: "json",
                 success: function(data) {
-                    console.log(data);
                     populateSubServiceForm(data);
                 },
                 error: function(xhr, error, thrown) {
