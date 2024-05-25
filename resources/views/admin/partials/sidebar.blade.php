@@ -79,7 +79,7 @@
         </a>
     </li>
 
-    <li class="nav-item {{ request()->routeIs('prevLogStaffs') ? 'active' : '' }}">
+    <li class="nav-item {{ request()->routeIs('prevLogStaffs','task.details.staff','allPrevLogStaffs') ? 'active' : '' }}">
         <a class="nav-link collapsed" href="{{ route('prevLogStaffs') }}">
             <i class="bi bi-calendar-check"></i>
             <span>Attendence Records</span>
@@ -93,7 +93,7 @@
         </a>
       </li> --}}
 
-      <li class="nav-item {{ request()->routeIs('holiday') ? 'active' : '' }}">
+      <li class="nav-item {{ request()->routeIs('holiday','createholiday','holidayReport','editHoliday') ? 'active' : '' }}">
         <a class="nav-link collapsed" href="{{ route('holiday') }}">
           <i class="bi bi-card-list"></i>
           <span>Holidays</span>

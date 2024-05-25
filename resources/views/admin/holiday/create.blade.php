@@ -99,6 +99,9 @@
     $(document).ready(function() {
         $('#saveButton').click(function(event) {
             event.preventDefault();
+            var saveButton = $(this);
+            saveButton.prop('disabled', true);
+            
             var data = {
                 staff_id: $('#staff_id').val(),
                 start_date: $('#start_date').val(),
@@ -106,27 +109,31 @@
                 holiday_type: $('#holiday_type').val(),
                 admin_note: $('#admin_note').val()
             };
-            // console.log(data);
+            console.log(data);
 
             $.ajax({
                 url: "{{url('/admin/holiday')}}",
                 type: 'POST',
-                data: data,
+                data: JSON.stringify(data), 
+                contentType: 'application/json',
                 dataType: 'json',
                 success: function (response) {
-                    // console.log(response);
                     swal({
                         title: "Success!",
                         text: "Staff schedule created successfully",
                         icon: "success",
                         button: "OK",
                     });
-                    window.setTimeout(function(){location.reload()},2000)
+                    window.setTimeout(function(){
+                        location.reload();
+                    }, 2000);
                 },
                 error: function (xhr, status, error) {
                     console.error(xhr.responseText);
                 },
-                cache: false
+                complete: function() {
+                    saveButton.prop('disabled', false);
+                }
             });
             return false;
         });

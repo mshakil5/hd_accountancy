@@ -179,17 +179,19 @@
 <!-- Holiday Start -->
 <script>
     $(document).ready(function () {
-
         $('#saveButton').click(function (event) {
             event.preventDefault();
+            var saveButton = $(this);
+            saveButton.prop('disabled', true);
 
             var formData = new FormData($('#myForm')[0]);
-            // console.log(formData);
+
             $.ajax({
                 url: "{{URL::to('/staff/holiday-request')}}",
                 type: 'POST',
                 data: formData,
-                async: false,
+                contentType: false,
+                processData: false,
                 success: function (response) {
                     swal({
                         title: "Success!",
@@ -197,42 +199,41 @@
                         icon: "success",
                         button: "OK",
                     });
-                    window.setTimeout(function(){location.reload()},2000)
+                    window.setTimeout(function() {
+                        location.reload();
+                    }, 2000);
                 },
                 error: function (xhr, status, error) {
                     console.error(xhr.responseText);
-                    if(xhr.responseJSON.status == 423){
+                    var errorMessage = "";
+
+                    if (xhr.responseJSON && xhr.responseJSON.status == 423) {
                         console.log(xhr.responseJSON.errors);
-                            $('#errorMessage').html(xhr.responseJSON.errors);
-                            $('#errorMessage').show();
-                            $('#successMessage').hide();
+                        $('#errorMessage').html(xhr.responseJSON.errors);
+                        $('#errorMessage').show();
+                        $('#successMessage').hide();
+                    } else if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        $.each(xhr.responseJSON.errors, function (key, value) {
+                            errorMessage += value.join(", ") + "<br>";
+                        });
+                        $('#errorMessage').html(errorMessage);
                     } else {
-                        var errorMessage = "";
-
-                        if (xhr.responseJSON && xhr.responseJSON.errors) {
-                            $.each(xhr.responseJSON.errors, function (key, value) {
-                                errorMessage += value.join(", ") + "<br>";
-                            });
-
-                            $('#errorMessage').html(errorMessage);
-                        }
-                        else {
-                            errorMessage = "An error occurred. Please try again later.";
-                            $('#errorMessage').html(errorMessage);
-                        }
-                            $('#errorMessage').show();
-                            $('#successMessage').hide();
+                        errorMessage = "An error occurred. Please try again later.";
+                        $('#errorMessage').html(errorMessage);
                     }
-                    
+
+                    $('#errorMessage').show();
+                    $('#successMessage').hide();
                 },
-                cache: false,
-                contentType: false,
-                processData: false
+                complete: function() {
+                    saveButton.prop('disabled', false);
+                },
+                cache: false
             });
             return false;
         });
 
-        $('#clearButton').click(function () {
+        $('#clearButton').click(function (event) {
             event.preventDefault();
             $('#myForm')[0].reset();
         });

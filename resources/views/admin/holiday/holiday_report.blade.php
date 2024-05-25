@@ -96,6 +96,9 @@
             dom: 'Bfrtip',
             buttons: [
                 'copy', 'csv', 'excel', 'pdf', 'print'
+            ],
+            columnDefs: [
+                { targets: '_all', className: 'text-center' }
             ]
         });
 
