@@ -192,7 +192,8 @@
 
         $('#saveButton').click(function (event) {
             event.preventDefault();
-
+            var saveButton = $(this);
+            saveButton.prop('disabled', true);
             var formData = new FormData($('#myForm')[0]);
 
             $.ajax({
@@ -207,6 +208,7 @@
                             icon: "success",
                             button: "OK",
                         });
+                    saveButton.prop('disabled', false);
                     setTimeout(function() {
                         window.location.href = "{{ route('allStaff') }}";
                     }, 2000);
@@ -225,6 +227,7 @@
                         $('#errorMessage').html(errorMessage);
                         $('#errorMessage').show();
                         $('#successMessage').hide();
+                        saveButton.prop('disabled', false);
                 },
                 cache: false,
                 contentType: false,

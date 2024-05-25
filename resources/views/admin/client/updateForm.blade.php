@@ -224,12 +224,6 @@
     $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') } });
 </script>
 
-<script>
-    $(function () {
-      $("#directorUpdateTable").DataTable();
-    });
-</script>
-
 <!-- Image preview start -->
 <script>
     document.getElementById('pic').addEventListener('change', function(event) {
@@ -351,15 +345,6 @@
     });
 </script>
 <!-- Businessinfo update End-->
-
-<!-- Director data table -->
-<script>
-    $(document).ready(function() {
-         $('#directorTable').DataTable({
-        });
-    });
-</script>
-<!-- Director data table -->
 
 <!-- Populating director info and update start-->
 <script>
@@ -518,9 +503,6 @@
                 async: false,
                 success: function (response) {
                     if (response.status === 200) {
-                        // $('#successMessage b').text(response.message);
-                        // $('#successMessage').show();
-                        // $('#errorMessage').hide();
                         swal({
                             title: "Success!",
                             text: "Director Info created successfully",
@@ -563,15 +545,6 @@
     });
 </script>
 <!-- Director Info create End -->
-
-<!-- Service data table -->
-<script>
-    $(document).ready(function() {
-         $('#serviceTable').DataTable({
-        });
-    });
-</script>
-<!-- Service data table -->
 
 <!-- Fetching sub services and putting on table start -->
 <script>
@@ -806,15 +779,6 @@
 </script>
 <!-- Updating services and sub services end -->
 
-<!-- Contact data table -->
-<script>
-    $(document).ready(function() {
-         $('#contactTable').DataTable({
-        });
-    });
-</script>
-<!-- Contact data table -->
-
 <!-- Contact Info create Start -->
 <script>
     $(document).ready(function () {
@@ -971,7 +935,6 @@
     $(document).ready(function() {
         $('#contactTable').on('click', '.delete-contact', function() {
             var contactId = $(this).closest('tr').data('contact-id');
-            // console.log(contactId);
         
             if (confirm("Are you sure you want to delete this conatct?")) {
                 $.ajax({
@@ -1013,5 +976,14 @@
     });
 </script>
 <!-- Delete contact end-->
+
+<!-- Data table initialize -->
+<script>
+    $(document).ready(function() {
+         $("#directorTable, #contactTable").DataTable({
+        });
+    });
+</script>
+<!-- Data table initialize -->
 
 @endsection

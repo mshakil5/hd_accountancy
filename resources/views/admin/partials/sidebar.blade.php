@@ -37,7 +37,7 @@
         </a>
     </li>
 
-      <li class="nav-item {{ request()->routeIs('allClient','createClient','client.update.form') ? 'active' : '' }}">
+      <li class="nav-item {{ request()->routeIs('allClient','createClient','client.update.form','createNewClient') ? 'active' : '' }}">
         <a class="nav-link collapsed" href="{{ route('allClient') }}">
             <i class="bi bi-person"></i>
             <span>Client</span>

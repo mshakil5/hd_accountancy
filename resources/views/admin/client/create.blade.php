@@ -256,6 +256,8 @@
         var clientId;
         $('#details-saveButton').click(function (event) {
             event.preventDefault();
+            var saveButton = $(this);
+            saveButton.prop('disabled', true);
             
             var name = $('#name').val();
             var clientTypeId = $('#client_type_id').val();
@@ -272,6 +274,9 @@
                 type: 'POST',
                 data: formData,
                 async: false,
+                cache: false,
+                contentType: false,
+                processData: false,
                 success: function (response) {
                     if (response.status === 200) {
                         swal({
@@ -282,6 +287,7 @@
                         });
                         $('#successMessage').show();
                         $('#errorMessage').hide();
+                        saveButton.prop('disabled', false);
                         clientId = response.client_id;
                         window.setTimeout(function(){window.location.href = "/admin/create-client/" + clientId},2000);
                     } else {
@@ -302,6 +308,7 @@
                         $('#errorMessage').html(errorMessage);
                         $('#errorMessage').show();
                         $('#successMessage').hide();
+                        saveButton.prop('disabled', false);
                 },
                 cache: false,
                 contentType: false,
@@ -326,6 +333,8 @@
     $(document).ready(function() {
         $('#details-updateButton').click(function(event) {
             event.preventDefault();
+            var saveButton = $(this);
+            saveButton.prop('disabled', true);
 
             var name = $('#name').val();
             var clientTypeId = $('#client_type_id').val();
@@ -343,15 +352,17 @@
                     type: 'POST',
                     data: formData,
                     async: false,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
                     success: function(response) {
-                        // $('#successMessage b').text(response.message);
-                        // $('#successMessage').show();
                         swal({
                             title: "Success!",
                             text: "Client details updated successfully",
                             icon: "success",
                             button: "OK",
                         });
+                        saveButton.prop('disabled', false);
                     },
                     error: function(xhr, status, error) {
                          var errorMessage = "";
@@ -365,6 +376,7 @@
                         $('#errorMessage').html(errorMessage);
                         $('#errorMessage').show();
                         $('#successMessage').hide();
+                        saveButton.prop('disabled', false);
                     },
                     cache: false,
                     contentType: false,
@@ -382,6 +394,8 @@
     $(document).ready(function () {
         $('#business-saveButton').click(function (event) {
             event.preventDefault();
+            var saveButton = $(this);
+            saveButton.prop('disabled', true);
             var clientId = "{{ $id }}";
 
             var formData = new FormData($('#businessForm')[0]);
@@ -392,16 +406,18 @@
                 type: 'POST',
                 data: formData,
                 async: false,
+                cache: false,
+                contentType: false,
+                processData: false,
                 success: function (response) {
                     if (response.status === 200) {
-                        // $('#successMessage b').text(response.message);
-                        // $('#successMessage').show();
                         swal({
                             title: "Success!",
                             text: "Business Info created successfully",
                             icon: "success",
                             button: "OK",
                         });
+                        saveButton.prop('disabled', false);
                         $('#errorMessage').hide();
                     } else {
                         $('#errorMessage b').text(response.message);
@@ -421,6 +437,7 @@
                         $('#errorMessage').html(errorMessage);
                         $('#errorMessage').show();
                         $('#successMessage').hide();
+                        saveButton.prop('disabled', false);
                 },
                 cache: false,
                 contentType: false,
@@ -442,6 +459,8 @@
     $(document).ready(function() {
         $('#business-updateButton').click(function(event) {
             event.preventDefault();
+            var saveButton = $(this);
+            saveButton.prop('disabled', true);
 
             var formData = new FormData($('#businessForm')[0]);
             var clientId = "{{ $client->id ?? '' }}";
@@ -452,15 +471,17 @@
                     type: 'POST',
                     data: formData,
                     async: false,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
                     success: function(response) {
-                        // $('#successMessage b').text(response.message);
-                        // $('#successMessage').show();
                         swal({
                             title: "Success!",
                             text: "Business info updated successfully",
                             icon: "success",
                             button: "OK",
                         });
+                        saveButton.prop('disabled', false);
                     },
                     error: function(xhr, status, error) {
                          var errorMessage = "";
@@ -474,6 +495,7 @@
                         $('#errorMessage').html(errorMessage);
                         $('#errorMessage').show();
                         $('#successMessage').hide();
+                        saveButton.prop('disabled', false);
                     },
                     cache: false,
                     contentType: false,
@@ -485,15 +507,6 @@
     });
 </script>
 <!-- Business Info update End-->
-
-<!-- Director data table -->
-<script>
-    $(document).ready(function() {
-         $('#directorTable').DataTable({
-        });
-    });
-</script>
-<!-- Director data table -->
 
 <!-- Populating director info and update start-->
 <script>
@@ -640,8 +653,10 @@
     $(document).ready(function () {
         $('#director-saveButton').click(function (event) {
             event.preventDefault();
-            var clientId = "{{ $id }}";
+            var saveButton = $(this);
+            saveButton.prop('disabled', true);
 
+            var clientId = "{{ $id }}";
             var formData = new FormData($('#directorForm')[0]);
             formData.append('client_id', clientId);
 
@@ -649,18 +664,18 @@
                 url: "{{URL::to('/admin/director-info')}}",
                 type: 'POST',
                 data: formData,
-                async: false,
+                cache: false,
+                contentType: false,
+                processData: false,
                 success: function (response) {
                     if (response.status === 200) {
-                        // $('#successMessage b').text(response.message);
-                        // $('#successMessage').show();
-                        // $('#errorMessage').hide();
                         swal({
                             title: "Success!",
                             text: "Director Info created successfully",
                             icon: "success",
                             button: "OK",
                         });
+                        saveButton.prop('disabled', false);
                         setTimeout(function() {
                             location.reload();
                         }, 2000);
@@ -676,36 +691,25 @@
                             $.each(xhr.responseJSON.errors, function (key, value) {
                                 errorMessage += key + ": " + value.join(", ") + "<br>";
                             });
-                        } else {
-                            errorMessage = "An error occurred. Please try again later.";
                         }
                         $('#errorMessage').html(errorMessage);
                         $('#errorMessage').show();
                         $('#successMessage').hide();
+                        saveButton.prop('disabled', false);
                 },
                 cache: false,
                 contentType: false,
                 processData: false
             });
-            return false;
         });
 
-        $('#director-clearButton').click(function () {
+        $('#director-clearButton').click(function (event) {
             event.preventDefault();
             $('#directorForm')[0].reset();
         });
     });
 </script>
 <!-- Director Info create End -->
-
-<!-- Service data table -->
-<script>
-    $(document).ready(function() {
-         $('#serviceTable').DataTable({
-        });
-    });
-</script>
-<!-- Service data table -->
 
 <!-- Fetching sub services and putting on table start -->
 <script>
@@ -1045,29 +1049,33 @@
                     }, 2000);
                 },
                 error: function(xhr, status, error) {
+                    var errorMessage = "";
+                    if (xhr.responseJSON && xhr.responseJSON.errors){
+                        $.each(xhr.responseJSON.errors, function (key, value) {
+                            errorMessage += key + ": " + value.join(", ") + "<br>";
+                        });
+                    } else {
+                        errorMessage = "An error occurred. Please try again later.";
+                    }
+                    $('#errorMessage').html(errorMessage);
+                    $('#errorMessage').show();
+                    $('#successMessage').hide();
+                    console.error("Error occurred: " + error);
                     console.error(xhr.responseText);
                 }
             });
         });
     });
-
 </script>
 <!-- Updating services and sub services end -->
-
-<!-- Contact data table -->
-<script>
-    $(document).ready(function() {
-         $('#contactTable').DataTable({
-        });
-    });
-</script>
-<!-- Contact data table -->
 
 <!-- Contact Info create Start -->
 <script>
     $(document).ready(function () {
         $('#contact-saveButton').click(function (event) {
             event.preventDefault();
+            var saveButton = $(this);
+            saveButton.prop('disabled', true);
             var clientId = "{{ $id }}";
 
             var formData = new FormData($('#contactForm')[0]);
@@ -1077,18 +1085,18 @@
                 url: "{{URL::to('/admin/contact-info')}}",
                 type: 'POST',
                 data: formData,
-                async: false,
+                cache: false,
+                contentType: false,
+                processData: false,
                 success: function (response) {
                     if (response.status === 200) {
-                        // $('#successMessage b').text(response.message);
-                        // $('#successMessage').show();
-                        // $('#errorMessage').hide();
                         swal({
                             title: "Success!",
                             text: "Contact Info created successfully",
                             icon: "success",
                             button: "OK",
                         });
+                        saveButton.prop('disabled', false);
                         setTimeout(function() {
                             location.reload();
                         }, 2000);
@@ -1110,6 +1118,7 @@
                     $('#errorMessage').html(errorMessage);
                     $('#errorMessage').show();
                     $('#successMessage').hide();
+                    saveButton.prop('disabled', false);
                 },
                 cache: false,
                 contentType: false,
@@ -1219,16 +1228,12 @@
     $(document).ready(function() {
         $('#contactTable').on('click', '.delete-contact', function() {
             var contactId = $(this).closest('tr').data('contact-id');
-            // console.log(contactId);
         
             if (confirm("Are you sure you want to delete this conatct?")) {
                 $.ajax({
                     url: '/admin/delete-contact/' + contactId,
                     type: 'DELETE',
                     success: function(response) {
-                            // $('#successMessage b').text(response.message);
-                            // $('#successMessage').show();
-                            // $('#errorMessage').hide();
                             swal({
                                 title: "Success!",
                                 text: "Contact Info deleted successfully",
@@ -1261,5 +1266,14 @@
     });
 </script>
 <!-- Delete contact end-->
+
+<!-- Data table initialize -->
+<script>
+    $(document).ready(function() {
+         $("#directorTable, #contactTable").DataTable({
+        });
+    });
+</script>
+<!-- Data table initialize -->
 
 @endsection
