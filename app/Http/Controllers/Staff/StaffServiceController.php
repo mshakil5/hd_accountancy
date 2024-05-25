@@ -85,16 +85,8 @@ class StaffServiceController extends Controller
 
     public function getClientSubServices($clientserviceId)
     {
-        // $clientSubServices = ClientSubService::with(['subService', 'serviceMessage'])
-        // ->withSum('workTimes', 'duration')
-        // ->where('client_service_id', $clientserviceId)
-        // ->get();
-        // return response()->json($clientSubServices);
-
         $clientSubServices = ClientSubService::with('subService','serviceMessage','workTimes')->where('client_service_id', $clientserviceId)->get();
         return response()->json($clientSubServices);
-
-
     }
 
     public function getServiceMessages($clientSubServiceId)
@@ -373,7 +365,6 @@ class StaffServiceController extends Controller
             $activeTimeInSeconds += $startTime->diffInSeconds($currentTime);
         }
 
-
         $startOfDay = Carbon::today()->startOfDay();
         $endOfDay = Carbon::today()->endOfDay();
 
@@ -390,6 +381,10 @@ class StaffServiceController extends Controller
             $workTime = $clientSubService->workTimes->first();
 
             if ($workTime) {
+                $start_time = Carbon::parse($workTime->start_time);
+                $end_time = Carbon::parse($workTime->end_time);
+                $eachDuration = $start_time->diffInSeconds($end_time);
+
                 $completedServices[] = [
                     'client_name' => $clientSubService->client->name,
                     'client_id' => $clientSubService->client_id,
@@ -398,17 +393,17 @@ class StaffServiceController extends Controller
                     'note' => $clientSubService->note,
                     'start_time' => $workTime->start_time,
                     'end_time' => $workTime->end_time,
+                    'duration' => $eachDuration,
                 ];
-
             }
         }
 
-         $totalBreakDuration = WorkTime::where('staff_id', $staffId)
+        $totalBreakDuration = WorkTime::where('staff_id', $staffId)
             ->whereDate('start_time', $today)
             ->where('is_break', true)
             ->sum('duration');
 
-         $totalDuration = WorkTime::where('staff_id', $staffId)
+        $totalDuration = WorkTime::where('staff_id', $staffId)
             ->whereDate('start_time', $today)
             ->where('is_break', false)
             ->sum('duration');

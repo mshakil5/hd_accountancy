@@ -109,9 +109,9 @@
                                             <table class="table">
                                                 <thead>
                                                     <tr>
-                                                        <th>Active Time:</th>
-                                                        <th>Break Time:</th>
-                                                        <th>Total Work Time:</th>
+                                                        <th>Active:</th>
+                                                        <th>Break:</th>
+                                                        <th>Work Time:</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -128,8 +128,9 @@
                                             <table id="completedServicesTable" class="table">
                                                 <thead>
                                                     <tr>
-                                                        <th>Client Name</th>
-                                                        <th>Sub Service Name</th>
+                                                        <th>Client</th>
+                                                        <th>Task</th>
+                                                        <th>Duration</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -1133,23 +1134,24 @@
                     
                     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
                 }
+
                 var duration = moment.duration(response.login_time, 'seconds');
                 var formattedLoginTime = moment.utc(duration.asMilliseconds()).format('HH:mm:ss');
 
                 $('#loginTime').text(formattedLoginTime);
-
                 $('#totalBreakTime').text(formatDuration(response.total_break_duration));
                 $('#totalDuration').text(formatDuration(response.total_duration));
 
-
                 var completedServicesHtml = '';
-                    $.each(response.completed_services, function(index, item) {
-                        completedServicesHtml += '<tr>';
-                        completedServicesHtml += '<td>' + item.client_name + '</td>';
-                        completedServicesHtml += '<td>' + item.sub_service_name + '</td>';
-                        completedServicesHtml += '</tr>';
-                    });
-                    $('#completedServicesTable tbody').html(completedServicesHtml);
+                $.each(response.completed_services, function(index, item) {
+                    var formattedDuration = formatDuration(item.duration);
+                    completedServicesHtml += '<tr>';
+                    completedServicesHtml += '<td>' + item.client_name + '</td>';
+                    completedServicesHtml += '<td>' + item.sub_service_name + '</td>';
+                    completedServicesHtml += '<td>' + formattedDuration + '</td>';
+                    completedServicesHtml += '</tr>';
+                });
+                $('#completedServicesTable tbody').html(completedServicesHtml);
             },
             error: function(xhr, status, error) {
                 console.error(xhr.responseText);
