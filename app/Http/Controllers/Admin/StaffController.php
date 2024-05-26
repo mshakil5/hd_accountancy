@@ -559,9 +559,13 @@ class StaffController extends Controller
             $user->address_line2 = $request->address_2;
 
             if ($request->hasFile('image')) {
-                $image = $request->file('image');
-                $imageName = time() . '.' . $image->getClientOriginalExtension();
-                $image->move(public_path('images/staff'), $imageName);
+
+                if ($user->image && file_exists(public_path('images/staff/' . $user->image))) {
+                    unlink(public_path('images/staff/' . $user->image));
+                }
+
+                $imageName = time() . '_' . $request->image->getClientOriginalName();
+                $request->image->move(public_path('images/staff'), $imageName);
                 $user->image = $imageName;
             }
 

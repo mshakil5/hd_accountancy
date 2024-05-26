@@ -31,7 +31,6 @@ class HolidayTypeController extends Controller
         }
         $data = new HolidayType;
         $data->type = $request->type;
-        $data->day = $request->day;
         $data->created_by = Auth::id();
         if ($data->save()) {
             $message ="<div class='alert alert-success'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Data Created Successfully.</b></div>";

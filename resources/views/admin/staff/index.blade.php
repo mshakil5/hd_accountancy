@@ -744,7 +744,6 @@
 
     function sendUpdateRequest() {
         var staffId = $('#hiddenStaffId').val();
-        // console.log(staffId);
         var formData = new FormData();
         formData.append('staff_id', staffId);
         formData.append('first_name', $('#first_name').val());

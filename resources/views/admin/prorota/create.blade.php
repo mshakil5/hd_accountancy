@@ -118,6 +118,7 @@
                                         </div>
                                         <div class="row">
                                             <div class="col-lg-4 mx-auto text-center">
+                                                <a href="{{ route('prorota') }}" class="btn btn-sm btn-outline-dark">Cancel</a>
                                                 <button id="clearButton" class="btn btn-sm btn-outline-dark">Clear</button>
                                                 <button id="saveButton" class="btn btn-sm bg-theme text-light btn-outline-dark">Save</button>
                                             </div>

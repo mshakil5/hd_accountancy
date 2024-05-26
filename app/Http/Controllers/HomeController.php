@@ -139,17 +139,9 @@ class HomeController extends Controller
                         ->whereDate('start_date', '<=', $today)
                         ->whereDate('end_date', '>=', $today);
                 })
-                ->whereNotIn('id', function ($query) use ($today) {
-                    $currentDayOfWeek = Carbon::now()->format('l');
-                    $query->select('staff_id')
-                        ->from('prorota_details')
-                        ->where('day', $currentDayOfWeek)
-                        ->whereTime('start_time', '>', now());
-                })
                 ->with('logComments')
                 ->orderBy('id', 'desc')
                 ->get();
-                // dd($absentStaff);
                 $totalAbsentStaffCount = $absentStaff->count();
 
                 $currentDayOfWeek = Carbon::now()->format('l');

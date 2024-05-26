@@ -169,7 +169,7 @@
                                         </div>
                                         <div class="row">
                                             <div class="col-lg-4 mx-auto text-center">
-                                                <button id="clearButton" class="btn btn-sm btn-outline-dark">Clear</button>
+                                                <a href="{{ route('prorota') }}" class="btn btn-sm btn-outline-dark">Cancel</a>
                                                 <button id="upButton" class="btn btn-sm bg-theme text-light btn-outline-dark">Update</button>
                                             </div>
                                         </div>
@@ -268,18 +268,13 @@
             });
             return false;
         });
-
-        $('#clearButton').click(function () {
-            event.preventDefault();
-            $('#myForm')[0].reset();
-        });
     });
 </script>
 <!-- Prorota End -->
 <script>
     $(document).ready(function () {
         $(document).on('click', '.add-new-day', function () {
-            var inputField = '<tr><td><input type="text" name="day[]" class="form-control" value=""> <input type="hidden" name="prorotaDetail_id[]" class="form-control" value="" </td><td><input type="time" name="start_time[]" class="form-control" value="10:00"></td><td><input type="time" name="end_time[]" class="form-control" value="18:00"></td><td><button class="btn btn-secondary remove-schedule" style="margin-left: 10px;" type="button">-</button></td></tr>';
+            var inputField = '<tr><td><input type="text" name="day[]" class="form-control" value=""> <input type="hidden" name="prorotaDetail_id[]" class="form-control" value="" </td><td><input type="time" name="start_time[]" class="form-control" value="09:00"></td><td><input type="time" name="end_time[]" class="form-control" value="17:00"></td><td><button class="btn btn-secondary remove-schedule" style="margin-left: 10px;" type="button">-</button></td></tr>';
             $('#scheduleContainer').append(inputField);
         });
 
