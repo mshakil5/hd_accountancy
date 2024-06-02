@@ -740,7 +740,7 @@
             var subServiceDetailsTemplate = `
               <div class="row mt-4 subServiceDetails">
                 <div class="col-12">
-                  <h5 class="p-2 bg-theme text-white mb-0 text-capitalize">Sub Services Details</h5>
+                  <h5 class="p-2 bg-theme text-white mb-0 text-capitalize">Services Details</h5>
                   <div class="border-theme p-3 border-1">
                     <div class="row mt-2">
                       <!-- Sub-service details -->
