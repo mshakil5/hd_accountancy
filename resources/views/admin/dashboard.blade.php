@@ -103,7 +103,7 @@
                       <h5 class="mb-3">Choose Service</h5>
                       <div class="form-check">
                         <input type="hidden" id="clientId">
-                        <select id="servicesDropdown" class="form-control mt-2">
+                        <select id="servicesDropdown" class="form-control mt-2" disabled>
                             <option value="">Select Service</option>
                                 @foreach($services as $service)
                                 <option value="{{ $service->id }}">
@@ -117,7 +117,7 @@
                       <h5 class="mb-3">Choose Manager</h5>
                       <div class="form-check">
                           <select id="managerDropdown" class="form-control mt-2">
-                            <option value="">Select Manager</option>
+                            <option value="" selected disabled>Select Manager</option>
                             @foreach($managers as $manager)
                                 <option value="{{ $manager->id }}">
                                     {{ $manager->first_name }}
@@ -130,7 +130,7 @@
                       <h5 class="mb-3">Choose Frequency</h5>
                       <div class="form-check">
                           <select id="service_frequency" class="form-control mt-2" name="service_frequency">
-                              <option value="">Select Frequency</option>
+                              <option value="" selected disabled>Select Frequency</option>
                               <option >Daily</option>
                               <option>Weekly</option>
                               <option >Monthly</option>

@@ -717,6 +717,21 @@
     $('#serviceDropdown').change(function() {
       var serviceId = $(this).val();
       if(serviceId) {
+
+        var exists = false;
+
+        $('.subServiceDetails').each(function() {
+                if ($(this).find('input[name="service_id"]').val() == serviceId) {
+                    exists = true;
+                    return false;
+                }
+            });
+            
+        if (exists) {
+            alert('This service is already added.');
+            return;
+        }
+
         $.ajax({
           url: '/admin/getSubServices/' + serviceId,
           type: "GET",
