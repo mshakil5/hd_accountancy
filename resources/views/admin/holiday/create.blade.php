@@ -120,7 +120,7 @@
                 success: function (response) {
                     swal({
                         title: "Success!",
-                        text: "Staff schedule created successfully",
+                        text: "Holiday scheduled successfully",
                         icon: "success",
                         button: "OK",
                     });
