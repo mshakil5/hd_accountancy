@@ -760,6 +760,8 @@
                     <div class="col-md-1 text-center">
                       <h5 class="mb-3">Service</h5>
                       <p> <b>${serviceName}</b> </p>
+                      <input type="hidden" name="service_id" value="${serviceId}">
+                      <input type="hidden" name="client_service_id[]" value="">
                     </div>
                     <div class="col-md-2 text-center">
                         <h5 class="mb-3">Manager</h5>
@@ -830,6 +832,8 @@
                   <td><textarea name="note" id="note" rows="1" class="form-control" placeholder="Note for this task"></textarea></td>
                    <td><span class="removeSubServiceRow" style="cursor: pointer; font-size: 24px; color: red;">&#10006;</span></td>
                    <input type="hidden" class="sub-service-id" data-sub-service-id="${value.id}">
+                   <input type="hidden" name="sub_service_id[]" value="${value.id}">
+                   <input type="hidden" name="client_sub_service_id[]" value="">
                 </tr>
               `;
               $('.subServiceDetails:last').find('tbody').append(newRow);
@@ -990,47 +994,6 @@
                 clientId: clientId,
                 services: services
             };
-            // console.log(data);
-
-            // var newclientId = "{{ $id }}";
-            // var newservices = [];
-
-            // $('.subServiceDetails').each(function() {
-            //     var newserviceId = $('#serviceDropdown').val();
-            //     var newmanagerId = $(this).find('.managerDropdown').val();
-            //     var newservice_frequency = $(this).find('#serviceFrequency').val();
-            //     var newservice_deadline = $(this).find('#serviceDeadline').val();
-            //     var newsubServices = [];
-
-            //     $(this).find('tbody tr').each(function() {
-            //         var newsubServiceId = $(this).find('.sub-service-id').attr('data-sub-service-id'); 
-            //         var newdeadline = $(this).find('#deadline').val();
-            //         var newnote = $(this).find('#note').val();
-            //         var newstaffId = $(this).find('#selectedStaff').val();
-
-            //         newsubServices.push({
-            //             newsubServiceId: newsubServiceId,
-            //             newdeadline: newdeadline,
-            //             newnote: newnote,
-            //             newstaffId: newstaffId
-            //         });
-            //     });
-
-            //     newservices.push({
-            //         newserviceId: newserviceId,
-            //         newmanagerId: newmanagerId,
-            //         newservice_frequency: newservice_frequency,
-            //         newservice_deadline: newservice_deadline,
-            //         newsubServices: newsubServices
-            //     });
-            // });
-
-            // var newdata = {
-            //     clientId: clientId,
-            //     newservices: newservices
-            // };
-
-            // console.log(newdata);
 
             $.ajax({
                 url: '/admin/update-service',
@@ -1040,7 +1003,7 @@
                 success: function(response) {
                     swal({
                         title: "Success!",
-                        text: "Tasks assigned successfully",
+                        text: "Tasks updated successfully",
                         icon: "success",
                         button: "OK",
                     });

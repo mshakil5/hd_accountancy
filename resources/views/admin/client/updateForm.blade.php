@@ -548,44 +548,144 @@
 
 <!-- Fetching sub services and putting on table start -->
 <script>
-    $(document).ready(function() {
-        $('#serviceDropdown').change(function() {
-            var serviceId = $(this).val();
-            if(serviceId) {
-                $.ajax({
-                    url: '/admin/getSubServices/' + serviceId,
-                    type: "GET",
-                    dataType: "json",
-                    success: function(data) {
-                        $('#serviceDetailsTable tr').remove();
+  $(document).ready(function() {
+    $('#serviceDropdown').change(function() {
+      var serviceId = $(this).val();
+      if(serviceId) {
+        $.ajax({
+          url: '/admin/getSubServices/' + serviceId,
+          type: "GET",
+          dataType: "json",
+          success: function(data) {
+            var subServiceDetailsTemplate = `
+              <div class="row mt-4 subServiceDetails">
+                <div class="col-12">
+                  <h5 class="p-2 bg-theme text-white mb-0 text-capitalize">Sub Services Details</h5>
+                  <div class="border-theme p-3 border-1">
+                    <div class="row mt-2">
+                      <!-- Sub-service details -->
+                    </div>
+                    <table class="table mt-3">
+                      <thead>
+                        <tr>
+                          <th>Sub Service</th>
+                          <th>Deadline</th>
+                          <th>Staff</th>
+                          <th>Note</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <!-- Sub-service rows  -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            `;
 
-                        $.each(data, function(key, value) {
-                            var newRow = `
-                                <tr>
-                                    <td>${value.name}</td>
-                                    <td><input type="date" name="deadline" class="form-control"></td>
-                                    <td>
-                                        <select class="form-control select2 staffDropdown" name="staff_id">
-                                            <option value="">Select Staff</option>
-                                            @foreach($staffs as $staff)
-                                                <option value="{{ $staff->id }}">{{ $staff->first_name }}</option>
-                                            @endforeach
-                                        </select>
-                                    </td>
-                                    <td><textarea name="note" rows="1" class="form-control"></textarea></td>
-                                <input type="hidden" class="sub-service-id" data-sub-service-id="${value.id}">
-                                </tr>
-                            `;
-                            $('#serviceDetailsTable').append(newRow);
-                        });
-                        $('#subServiceDropdown').show();
-                    }
-                });
-            } else {
-                $('#subServiceDropdown').empty().hide();
-            }
+            $('#serviceForm').append(subServiceDetailsTemplate);
+
+            var serviceName = $('#serviceDropdown option:selected').text();
+
+            var serviceFields = `
+              <div class="row">
+                <div class="col-md-12">
+                  <div class="row">
+                    <div class="col-md-1 text-center">
+                      <h5 class="mb-3">Service</h5>
+                      <p> <b>${serviceName}</b> </p>
+                      <input type="hidden" name="service_id" value="${serviceId}">
+                      <input type="hidden" name="client_service_id[]" value="">
+                    </div>
+                    <div class="col-md-2 text-center">
+                        <h5 class="mb-3">Manager</h5>
+                        <div class="form-check">
+                            <select class="form-control mt-2 select2 managerDropdown" name="manager_id">
+                            <option value="">Select</option>
+                            @foreach($managers as $manager)
+                            <option value="{{ $manager->id }}">{{ $manager->first_name }}</option>
+                            @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2 text-center">
+                        <h5 class="mb-3">Frequency</h5>
+                        <div class="form-check">
+                            <select class="form-control mt-2 select2 serviceFrequency" id="serviceFrequency" name="service_frequency">
+                            <option value="">Select</option>
+                            <option>Daily</option>
+                            <option>Weekly</option>
+                            <option>Monthly</option>
+                            <option>Quarterly</option>
+                            <option>Yearly</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2 text-center">
+                        <h5 class="mb-3">Due Date</h5>
+                        <div class="form-check">
+                            <input type="date" class="form-control dueDate" id="dueDate" name="dueDate">
+                        </div>
+                    </div>
+                    <div class="col-md-2 text-center">
+                        <h5 class="mb-3">Legal Deadline</h5>
+                        <div class="form-check">
+                            <input type="date" class="form-control legalDeadline" id="legalDeadline" name="legalDeadline">
+                        </div>
+                    </div>
+                    <div class="col-md-2 text-center">
+                        <h5 class="mb-3">Deadline</h5>
+                        <div class="form-check">
+                            <input type="date" class="form-control serviceDeadline" id="serviceDeadline" name="service_deadline">
+                        </div>
+                    </div>
+                    <div class="col-md-1 text-center">
+                      <h5 class="mb-1">Action</h5>
+                      <span class="removeSubServiceDetails" style="cursor: pointer; font-size: 24px; color: red;">&#10006;</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+            $('.subServiceDetails:last').find('.row:first').after(serviceFields);
+
+            $('.subServiceDetails:last').find('tbody').empty();
+            $.each(data, function(key, value) {
+              var newRow = `
+                <tr>
+                  <td>${value.name}</td>
+                  <td><input type="date" id="deadline" name="deadline" class="form-control"></td>
+                  <td>
+                    <select class="form-control select2 staffDropdown" id="selectedStaff" name="staff_id">
+                      <option value="">Select Staff</option>
+                      @foreach($staffs as $staff)
+                      <option value="{{ $staff->id }}">{{ $staff->first_name }}</option>
+                      @endforeach
+                    </select>
+                  </td>
+                  <td><textarea name="note" id="note" rows="1" class="form-control" placeholder="Note for this task"></textarea></td>
+                   <td><span class="removeSubServiceRow" style="cursor: pointer; font-size: 24px; color: red;">&#10006;</span></td>
+                   <input type="hidden" class="sub-service-id" data-sub-service-id="${value.id}">
+                   <input type="hidden" name="sub_service_id[]" value="${value.id}">
+                   <input type="hidden" name="client_sub_service_id[]" value="">
+                </tr>
+              `;
+              $('.subServiceDetails:last').find('tbody').append(newRow);
+            });
+          }
         });
+      }
     });
+    
+    $(document).on('click', '.removeSubServiceRow', function() {
+        $(this).closest('tr').remove();
+    });
+
+    $(document).on('click', '.removeSubServiceDetails', function() {
+      $(this).closest('.subServiceDetails').remove();
+    });
+  });
 </script>
 <!-- Fetching sub services and putting on table end -->
 
@@ -712,47 +812,6 @@
                 clientId: clientId,
                 services: services
             };
-            // console.log(data);
-
-            
-            // var newservices = [];
-
-            // $('.subServiceDetails').each(function() {
-            //     var newserviceId = $('#serviceDropdown').val();
-            //     var newmanagerId = $(this).find('.managerDropdown').val();
-            //     var newservice_frequency = $(this).find('#serviceFrequency').val();
-            //     var newservice_deadline = $(this).find('#serviceDeadline').val();
-            //     var newsubServices = [];
-
-            //     $(this).find('tbody tr').each(function() {
-            //         var newsubServiceId = $(this).find('.sub-service-id').attr('data-sub-service-id'); 
-            //         var newdeadline = $(this).find('#deadline').val();
-            //         var newnote = $(this).find('#note').val();
-            //         var newstaffId = $(this).find('#selectedStaff').val();
-
-            //         newsubServices.push({
-            //             newsubServiceId: newsubServiceId,
-            //             newdeadline: newdeadline,
-            //             newnote: newnote,
-            //             newstaffId: newstaffId
-            //         });
-            //     });
-
-            //     newservices.push({
-            //         newserviceId: newserviceId,
-            //         newmanagerId: newmanagerId,
-            //         newservice_frequency: newservice_frequency,
-            //         newservice_deadline: newservice_deadline,
-            //         newsubServices: newsubServices
-            //     });
-            // });
-
-            // var newdata = {
-            //     clientId: clientId,
-            //     newservices: newservices
-            // };
-
-            // console.log(newdata);
 
             $.ajax({
                 url: '/admin/update-service',
@@ -762,7 +821,7 @@
                 success: function(response) {
                     swal({
                         title: "Success!",
-                        text: "Tasks assigned successfully",
+                        text: "Tasks updated successfully",
                         icon: "success",
                         button: "OK",
                     });
@@ -771,6 +830,18 @@
                     }, 2000);
                 },
                 error: function(xhr, status, error) {
+                    var errorMessage = "";
+                    if (xhr.responseJSON && xhr.responseJSON.errors){
+                        $.each(xhr.responseJSON.errors, function (key, value) {
+                            errorMessage += key + ": " + value.join(", ") + "<br>";
+                        });
+                    } else {
+                        errorMessage = "An error occurred. Please try again later.";
+                    }
+                    $('#errorMessage').html(errorMessage);
+                    $('#errorMessage').show();
+                    $('#successMessage').hide();
+                    console.error("Error occurred: " + error);
                     console.error(xhr.responseText);
                 }
             });
