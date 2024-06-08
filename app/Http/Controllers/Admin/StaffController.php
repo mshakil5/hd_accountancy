@@ -535,13 +535,13 @@ class StaffController extends Controller
         $validator = Validator::make($request->all(), [
             'staff_id' => 'required',
             'first_name' => 'required|string',
-            'last_name' => 'required|string',
-            'phone' => 'required|numeric|digits:11',
+            // 'last_name' => 'required|string',
+            // 'phone' => 'required|numeric|digits:11',
             'email' => 'required|email|unique:users,email,'. $request->input('staff_id'),
-            'ni_number' => 'required|regex:/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]+$/',
-            'date_of_birth' => 'required',
-            'address_1' => 'required',
-            'address_2' => 'required',
+            // 'ni_number' => 'required|regex:/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]+$/',
+            // 'date_of_birth' => 'required',
+            // 'address_1' => 'required',
+            // 'address_2' => 'required',
         ]);
 
          if ($validator->fails()) {
@@ -582,11 +582,11 @@ class StaffController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'staff_id' => 'required',
-            'job_title' => 'required',
-            'employment_status' => 'required',
-            'reporting_id' => 'required',
-            'joining_date' => 'required|date',
-            'reporting_to' => 'required',
+            // 'job_title' => 'required',
+            // 'employment_status' => 'required',
+            // 'reporting_id' => 'required',
+            // 'joining_date' => 'required|date',
+            // 'reporting_to' => 'required',
         ]);
 
          if ($validator->fails()) {
