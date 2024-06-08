@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>Dashboard </title>
+  <title>HD Accountancy</title>
   <meta content="" name="description">
   <meta content="" name="keywords">
 
@@ -23,7 +23,7 @@
   <link href="{{ asset('assets/vendor/boxicons/css/boxicons.min.css')}}" rel="stylesheet">
   <link href="{{ asset('assets/vendor/simple-datatables/style.css')}}" rel="stylesheet">
   <link href="{{ asset('assets/vendor/select2/select2.min.css')}}" rel="stylesheet">
-  <link href="{{ asset('assets/vendor/datatables/dataTables.dataTables.bootstrap4.min.css')}}" rel="stylesheet">
+  <link href="{{ asset('assets/vendor/datatables/dataTables.bootstrap4.min.css')}}" rel="stylesheet">
   <link href="{{ asset('assets/vendor/datatables/jquery.dataTables.min.css')}}" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <link href="{{ asset('assets/vendor/toastify/toastify.min.css')}}" rel="stylesheet">

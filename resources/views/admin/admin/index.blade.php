@@ -197,7 +197,13 @@
                         $(".ermsg").html(d.message);
                     }else if(d.status == 300){
                       $(".ermsg").html(d.message);
-                        window.setTimeout(function(){location.reload()},2000)
+                      swal({
+                            title: "Success!",
+                            text: "Admin created successfully",
+                            icon: "success",
+                            button: "OK",
+                        });
+                      window.setTimeout(function(){location.reload()},2000)
                       }
                 },
                 error: function (d) {
@@ -229,8 +235,13 @@
                       if (d.status == 303) {
                         $(".ermsg").html(d.message);
                       }else if(d.status == 300){
-                        $(".ermsg").html(d.message);
-                        window.setTimeout(function(){location.reload()},2000)
+                        swal({
+                            title: "Success!",
+                            text: "Admin updated successfully",
+                            icon: "success",
+                            button: "OK",
+                        });
+                      window.setTimeout(function(){location.reload()},2000)
                       }
                   },
                   error:function(d){

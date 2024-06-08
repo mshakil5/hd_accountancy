@@ -23,21 +23,21 @@ class ManagerController extends Controller
             return response()->json(['status'=> 303,'message'=>$message]);
             exit();
         }
-        if(empty($request->last_name)){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Last name \" field..!</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
-            exit();
-        }
-        if(empty($request->phone)){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Phone \" field..!</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
-            exit();
-        }
-        if (!preg_match('/^\d{11}$/', $request->phone)) {
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Phone number must be 11 digits.</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
-            exit();
-        }
+        // if(empty($request->last_name)){
+        //     $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Last name \" field..!</b></div>";
+        //     return response()->json(['status'=> 303,'message'=>$message]);
+        //     exit();
+        // }
+        // if(empty($request->phone)){
+        //     $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Phone \" field..!</b></div>";
+        //     return response()->json(['status'=> 303,'message'=>$message]);
+        //     exit();
+        // }
+        // if (!preg_match('/^\d{11}$/', $request->phone)) {
+        //     $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Phone number must be 11 digits.</b></div>";
+        //     return response()->json(['status'=> 303,'message'=>$message]);
+        //     exit();
+        // }
         if(empty($request->email)){
             $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Email \" field..!</b></div>";
             return response()->json(['status'=> 303,'message'=>$message]);
@@ -101,21 +101,21 @@ class ManagerController extends Controller
             return response()->json(['status'=> 303,'message'=>$message]);
             exit();
         }
-        if(empty($request->last_name)){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Last name \" field..!</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
-            exit();
-        }
-        if(empty($request->phone)){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Phone \" field..!</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
-            exit();
-        }
-        if (!preg_match('/^\d{11}$/', $request->phone)) {
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Phone number must be 11 digits.</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
-            exit();
-        }
+        // if(empty($request->last_name)){
+        //     $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Last name \" field..!</b></div>";
+        //     return response()->json(['status'=> 303,'message'=>$message]);
+        //     exit();
+        // }
+        // if(empty($request->phone)){
+        //     $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Phone \" field..!</b></div>";
+        //     return response()->json(['status'=> 303,'message'=>$message]);
+        //     exit();
+        // }
+        // if (!preg_match('/^\d{11}$/', $request->phone)) {
+        //     $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Phone number must be 11 digits.</b></div>";
+        //     return response()->json(['status'=> 303,'message'=>$message]);
+        //     exit();
+        // }
         if(empty($request->email)){
             $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Email \" field..!</b></div>";
             return response()->json(['status'=> 303,'message'=>$message]);

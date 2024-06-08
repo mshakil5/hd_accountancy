@@ -92,7 +92,7 @@
                                 <div class="col-lg-6">
                                     <div class="px-2">
                                         <h2 class="txt-theme" id="fullname"></h2>
-                                        <h4 class="txt-theme" id="departmentname"></h4>
+                                        <h4 class="txt-theme" id="jobTitle"></h4>
                                         <h5 class="txt-theme" id="phoneNumber"></h5>
                                         <h6 class="txt-theme fw-bold" id="emailNumber"></h6>
                                     </div>
@@ -686,8 +686,8 @@
                 $('#last_name').val(response.last_name);
                 var fullName = response.first_name + ' ' + response.last_name;
                 $('#fullname').text(fullName);
-                var departmentName = response.department ? response.department.name : '';
-                $('#departmentname').text(departmentName);
+                var jobTitle = response.job_title ? response.job_title : '';
+                $('#jobTitle').text(jobTitle);
                 $('#phoneNumber').text(response.phone);
                 $('#emailNumber').text(response.email);
                 $('#phone').val(response.phone);

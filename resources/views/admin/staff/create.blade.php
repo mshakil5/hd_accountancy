@@ -80,10 +80,10 @@
                                                 <label for="">Address line 2</label>
                                                 <input type="text" class="form-control my-2" id="address_line2" name="address_line2" placeholder="Enter address line 2">
                                             </div>
-                                            <div class="col-lg-4">
+                                            <!-- <div class="col-lg-4">
                                                 <label for="">Address line 3</label>
                                                 <input type="text" class="form-control my-2" id="address_line3" name="address_line3" placeholder="Enter address line 3">
-                                            </div>
+                                            </div> -->
                                             <div class="col-lg-4">
                                                 <label for="">Town</label>
                                                 <input type="text" class="form-control my-2" id="town" name="town" placeholder="Enter town">

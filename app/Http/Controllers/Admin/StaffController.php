@@ -26,7 +26,7 @@ class StaffController extends Controller
     public function getStuffs(Request $request)
     {
         if ($request->ajax()) {
-            $data = User::whereIn('type', ['2', '3'])->orderBy('id', 'DESC')->get();
+            $data = User::where('type', ['3'])->orderBy('id', 'DESC')->get();
             return Datatables::of($data)
                 ->addIndexColumn()
                 ->make(true);
@@ -44,21 +44,21 @@ class StaffController extends Controller
     {
             $validator = Validator::make($request->all(), [
             'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'phone' => 'required|numeric|digits:11',
+            // 'last_name' => 'required|string|max:255',
+            // 'phone' => 'required|numeric|digits:11',
             'email' => 'required|email|unique:users,email',
-            'ni_number' => 'required|regex:/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]+$/',
-            'date_of_birth' => 'required|date',
-            'address_line1' => 'required|string|max:255',
-            'address_line2' => 'required|string|max:255',
-            'town' => 'required|string|max:255',
-            'postcode' => 'required|string|max:255',
-            'department_id' => 'required|integer',
-            'job_title' => 'required|string|max:255',
-            'employment_status' => 'required|string|max:255',
-            'joining_date' => 'required|date',
+            // 'ni_number' => 'required|regex:/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]+$/',
+            // 'date_of_birth' => 'required|date',
+            // 'address_line1' => 'required|string|max:255',
+            // 'address_line2' => 'required|string|max:255',
+            // 'town' => 'required|string|max:255',
+            // 'postcode' => 'required|string|max:255',
+            // 'department_id' => 'required|integer',
+            // 'job_title' => 'required|string|max:255',
+            // 'employment_status' => 'required|string|max:255',
+            // 'joining_date' => 'required|date',
             'image' => 'nullable|mimes:jpeg,png,jpg,gif,svg,pdf|max:8048',
-            'reporting_to' => 'required',
+            // 'reporting_to' => 'required',
             'password' => 'required|string|max:255',
             'confirm_password' => 'required|same:password',
         ],[
@@ -79,7 +79,7 @@ class StaffController extends Controller
         $data->date_of_birth = $request->date_of_birth;
         $data->address_line1 = $request->address_line1;
         $data->address_line2 = $request->address_line2;
-        $data->address_line3 = $request->address_line3;
+        // $data->address_line3 = $request->address_line3;
         $data->town = $request->town;
         $data->postcode = $request->postcode;
         $data->department_id = $request->department_id;
@@ -127,21 +127,21 @@ class StaffController extends Controller
             return response()->json(['status'=> 303,'message'=>$message]);
             exit();
         }
-        if(empty($request->last_name)){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Last name \" field..!</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
-            exit();
-        }
-        if(empty($request->phone)){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Phone \" field..!</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
-            exit();
-        }
-        if (!preg_match('/^\d{11}$/', $request->phone)) {
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Phone number must be 11 digits.</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
-            exit();
-        }
+        // if(empty($request->last_name)){
+        //     $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Last name \" field..!</b></div>";
+        //     return response()->json(['status'=> 303,'message'=>$message]);
+        //     exit();
+        // }
+        // if(empty($request->phone)){
+        //     $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Phone \" field..!</b></div>";
+        //     return response()->json(['status'=> 303,'message'=>$message]);
+        //     exit();
+        // }
+        // if (!preg_match('/^\d{11}$/', $request->phone)) {
+        //     $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Phone number must be 11 digits.</b></div>";
+        //     return response()->json(['status'=> 303,'message'=>$message]);
+        //     exit();
+        // }
         if(empty($request->email)){
             $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Email \" field..!</b></div>";
             return response()->json(['status'=> 303,'message'=>$message]);
@@ -153,46 +153,46 @@ class StaffController extends Controller
             return response()->json(['status'=> 303,'message'=>$message]);
             exit();
         }
-        if(empty($request->ni_number)){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"NI Number \" field..!</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
-            exit();
-        }
-        if(empty($request->date_of_birth)){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Date of birth \" field..!</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
-            exit();
-        }
-        if(empty($request->address)){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Address \" field..!</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
-            exit();
-        }
-        if(empty($request->department_id )){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Department\" field..!</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
-            exit();
-        }
-        if(empty($request->job_title )){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Job title\" field..!</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
-            exit();
-        }
-        if(empty($request->employment_status )){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Employment status\" field..!</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
-            exit();
-        }
-        if(empty($request->joining_date )){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Joining date\" field..!</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
-            exit();
-        }
-        if(empty($request->reporting_to )){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Reporting to\" field..!</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
-            exit();
-        }
+        // if(empty($request->ni_number)){
+        //     $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"NI Number \" field..!</b></div>";
+        //     return response()->json(['status'=> 303,'message'=>$message]);
+        //     exit();
+        // }
+        // if(empty($request->date_of_birth)){
+        //     $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Date of birth \" field..!</b></div>";
+        //     return response()->json(['status'=> 303,'message'=>$message]);
+        //     exit();
+        // }
+        // if(empty($request->address_line1)){
+        //     $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Address \" field..!</b></div>";
+        //     return response()->json(['status'=> 303,'message'=>$message]);
+        //     exit();
+        // }
+        // if(empty($request->department_id )){
+        //     $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Department\" field..!</b></div>";
+        //     return response()->json(['status'=> 303,'message'=>$message]);
+        //     exit();
+        // }
+        // if(empty($request->job_title )){
+        //     $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Job title\" field..!</b></div>";
+        //     return response()->json(['status'=> 303,'message'=>$message]);
+        //     exit();
+        // }
+        // if(empty($request->employment_status )){
+        //     $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Employment status\" field..!</b></div>";
+        //     return response()->json(['status'=> 303,'message'=>$message]);
+        //     exit();
+        // }
+        // if(empty($request->joining_date )){
+        //     $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Joining date\" field..!</b></div>";
+        //     return response()->json(['status'=> 303,'message'=>$message]);
+        //     exit();
+        // }
+        // if(empty($request->reporting_to )){
+        //     $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Reporting to\" field..!</b></div>";
+        //     return response()->json(['status'=> 303,'message'=>$message]);
+        //     exit();
+        // }
         if(isset($request->password) && ($request->password != $request->confirm_password)){
             $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Password doesn't match.</b></div>";
             return response()->json(['status'=> 303,'message'=>$message]);
@@ -223,7 +223,9 @@ class StaffController extends Controller
         $data->id_number = $request->id_number;
         $data->ni_number = $request->ni_number;
         $data->date_of_birth = $request->date_of_birth;
-        $data->address = $request->address;
+        $data->address_line1 = $request->address_line1;
+        $data->address_line2 = $request->address_line2;
+        $data->address_line3 = $request->address_line3;
         $data->department_id = $request->department_id;
         $data->job_title  = $request->job_title;
         $data->employment_status  = $request->employment_status;
