@@ -100,6 +100,7 @@
                                 <div class="col-lg-6 text-end">
                                     <div style="margin-right: 10px; margin-bottom: 10px; padding-right: 10px;">
                                         <img width="160" src="" class="border-theme border-2 rounded-3 user_image" id="user_image">
+
                                     </div>
                                     <div class="col-12">
                                         <div class="row px-3">
@@ -207,7 +208,8 @@
                                     <div class="col-lg-6"></div>
                                     <div class="col-lg-6 text-center">
                                         <div class="img mb-2">
-                                            <img width="160" src="" class="border-theme border-2 rounded-3 user_image" id="imagePreview">              
+                                            <img width="160" src="" class="border-theme border-2 rounded-3 user_image" id="imagePreview">
+
                                         </div>
                                         <label for="pic" class="mb-0" style="cursor: pointer;">
                                             <i class="bi bi-cloud-upload"></i>
@@ -681,7 +683,6 @@
             url: '/admin/get-staff-details/' + staffId,
             method: 'GET',
             success: function(response) {
-                // console.log(response);
                 $('#first_name').val(response.first_name);
                 $('#last_name').val(response.last_name);
                 var fullName = response.first_name + ' ' + response.last_name;
@@ -703,25 +704,30 @@
                 $('#reporting_to').val(response.reporting_user ? response.reporting_user.first_name : '');
 
 
-                var departmentId = response.department.id; 
+                if (response.department && response.department.id) {
+                    var departmentId = response.department.id;
 
-                var departmentOption = $('#department option[value="' + departmentId + '"]');
-                if (departmentOption.length > 0) {
-                    departmentOption.prop('selected', true);
+                    var departmentOption = $('#department option[value="' + departmentId + '"]');
+                    if (departmentOption.length > 0) {
+                        departmentOption.prop('selected', true);
+                    }
                 }
 
-                var managerId = response.reporting_user.id; 
+                if (response.reporting_user && response.reporting_user.id) {
+                    var managerId = response.reporting_user.id;
 
-                var managerOption = $('#reporting_to option[value="' + managerId + '"]');
-                if (managerOption.length > 0) {
-                    managerOption.prop('selected', true);
+                    var managerOption = $('#reporting_to option[value="' + managerId + '"]');
+                    if (managerOption.length > 0) {
+                        managerOption.prop('selected', true);
+                    }
                 }
 
-                var imageUrl = "{{ asset('images/staff') }}/";
+                var placeholderUrl = "{{ asset('assets/img/human-placeholder.jpg') }}";
+                var staffImageUrl = "{{ asset('images/staff') }}/";
                 if (response.image) {
-                    imageUrl += response.image;
+                    var imageUrl = staffImageUrl + response.image;
                 } else {
-                    imageUrl = "{{ asset('assets/img/human-placeholder.jpg') }}";
+                    var imageUrl = placeholderUrl;
                 }
                 $('.user_image').attr('src', imageUrl);
 
