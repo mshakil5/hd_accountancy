@@ -13,6 +13,7 @@ use App\Http\Controllers\Staff\HolidayController;
 use App\Http\Controllers\Manager\ManagerController;
 use App\Http\Controllers\Manager\ServiceController;
 use App\Http\Controllers\Staff\StaffServiceController;
+use App\Http\Controllers\Frontend\FrontendController;
   
 /*
 |--------------------------------------------------------------------------
@@ -35,8 +36,11 @@ Route::fallback(function () {
   
 Auth::routes();
 
+// Frontend
+Route::get('/', [FrontendController::class, 'index'])->name('frontend.index');
+
 //Base login
-Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/dashboard', [HomeController::class, 'index'])->name('home');
 
 //Manager
 Route::middleware(['auth', 'user-access:manager'])->group(function () {
