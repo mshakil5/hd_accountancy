@@ -28,6 +28,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <link href="{{ asset('assets/vendor/toastify/toastify.min.css')}}" rel="stylesheet">
   <link href="{{ asset('assets/vendor/datatables/buttons.dataTables.min.css')}}" rel="stylesheet">
+  <link href="{{ asset('assets/vendor/summernote/summernote-bs4.min.css')}}" rel="stylesheet">
 
   <!-- Template Main CSS File -->
   <link href="{{ asset('assets/css/style.css')}}" rel="stylesheet">
@@ -57,7 +58,7 @@
   <!--Main -->
 
   <!--Footer-->
-  @include('admin.partials.footer')
+  <!-- @include('admin.partials.footer') -->
   <!-- End Footer -->
 
   <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
@@ -81,6 +82,7 @@
   <script src="{{ asset('assets/vendor/toastify/toastify-js.js')}}"></script>
   <script src="{{ asset('assets/vendor/moment/moment.min.js')}}"></script>
   <script src="{{ asset('assets/vendor/sweet-alert/sweetalert.min.js')}}"></script>
+  <script src="{{ asset('assets/vendor/summernote/summernote.min.js')}}"></script>
 
   <!-- Template Main JS File -->
   <script src="{{ asset('assets/js/main.js') }}"></script>

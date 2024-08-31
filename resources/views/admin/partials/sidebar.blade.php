@@ -114,6 +114,13 @@
         </a>
       </li>
 
+      <li class="nav-item {{ request()->routeIs('admin.companyDetail') ? 'active' : '' }}">
+        <a class="nav-link collapsed" href="{{ route('admin.companyDetail') }}">
+          <i class="bi bi-building"></i>
+          <span>Company Details</span>
+        </a>
+      </li>
+
       {{--  <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#icons-nav" data-bs-toggle="collapse" href="#">
           <i class="bi bi-gem"></i><span>Reports</span><i class="bi bi-chevron-down ms-auto"></i>

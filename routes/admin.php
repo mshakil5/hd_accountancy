@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\BusinessInfoController;
 use App\Http\Controllers\Admin\DirectorInfoController;
 use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\WeWorkWithImageController;
+use App\Http\Controllers\Admin\CompanyDetailsController;
 
 //Fallback route
 Route::fallback(function () {
@@ -307,5 +308,8 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::post('/holiday-type-update', [HolidayTypeController::class, 'update']);
     Route::get('/holiday-type/{id}', [HolidayTypeController::class, 'delete']);
 
+    // company information
+    Route::get('/company-details', [CompanyDetailsController::class, 'index'])->name('admin.companyDetail');
+    Route::post('/company-details', [CompanyDetailsController::class, 'update'])->name('admin.companyDetails');
 
 });
