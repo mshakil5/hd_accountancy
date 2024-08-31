@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\DirectorInfoController;
 use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\WeWorkWithImageController;
 use App\Http\Controllers\Admin\CompanyDetailsController;
+use App\Http\Controllers\Admin\SoftCodeController;
 
 //Fallback route
 Route::fallback(function () {
@@ -311,5 +312,19 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     // company information
     Route::get('/company-details', [CompanyDetailsController::class, 'index'])->name('admin.companyDetail');
     Route::post('/company-details', [CompanyDetailsController::class, 'update'])->name('admin.companyDetails');
+
+    //SoftCode crud
+    Route::get('/soft-code', [SoftCodeController::class, 'index'])->name('allSoftCode');    
+    Route::post('/soft-code', [SoftCodeController::class, 'store']);
+    Route::get('/soft-code/{id}/edit', [SoftCodeController::class, 'edit']);
+    Route::post('/soft-code-update', [SoftCodeController::class, 'update']);
+    Route::get('/soft-code/{id}', [SoftCodeController::class, 'delete']);
+
+    //Master crud
+    Route::get('/master', [MasterController::class, 'index'])->name('allMaster');    
+    Route::post('/master', [MasterController::class, 'store']);
+    Route::get('/master/{id}/edit', [MasterController::class, 'edit']);
+    Route::post('/master-update', [MasterController::class, 'update']);
+    Route::get('/master/{id}', [MasterController::class, 'delete']);
 
 });
