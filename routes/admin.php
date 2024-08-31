@@ -23,6 +23,7 @@ use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\WeWorkWithImageController;
 use App\Http\Controllers\Admin\CompanyDetailsController;
 use App\Http\Controllers\Admin\SoftCodeController;
+use App\Http\Controllers\Admin\MasterController;
 
 //Fallback route
 Route::fallback(function () {

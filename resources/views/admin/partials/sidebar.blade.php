@@ -114,6 +114,20 @@
         </a>
       </li>
 
+      <li class="nav-item {{ request()->routeIs('allSoftCode') ? 'active' : '' }}">
+        <a class="nav-link collapsed" href="{{ route('allSoftCode') }}">
+          <i class="bi bi-code"></i>
+          <span>Soft Code</span>
+        </a>
+      </li>
+
+      <li class="nav-item {{ request()->routeIs('allMaster') ? 'active' : '' }}">
+        <a class="nav-link collapsed" href="{{ route('allMaster') }}">
+          <i class="bi bi-list"></i>
+          <span>Master</span>
+        </a>
+      </li>
+
       <li class="nav-item {{ request()->routeIs('admin.companyDetail') ? 'active' : '' }}">
         <a class="nav-link collapsed" href="{{ route('admin.companyDetail') }}">
           <i class="bi bi-building"></i>
