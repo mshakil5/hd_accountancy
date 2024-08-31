@@ -34,7 +34,7 @@
                     <label for="">Client Type</label>
                     <div class="mt-2">
                     <select name="client_type_id" class="form-control mt-2 select2" id="client_type_id">
-                        <option value="" selected disabled>Select client</option>
+                        <option value="" selected>Select client</option>
                             @foreach($clientTypes as $clientType)
                                 <option value="{{ $clientType->id }}" {{ isset($client->clientType) && $client->clientType->id == $clientType->id ? 'selected' : '' }}>{{ $clientType->name }}</option>
                             @endforeach
@@ -45,7 +45,7 @@
                     <label for="">Client Manager</label>
                         <div class="mt-2">
                             <select class="form-control mt-2 select2" name="manager_id" id="manager_id">
-                                <option value="" selected disabled>Select manager</option>
+                                <option value="" selected>Select manager</option>
                                 @foreach($managers as $manager)
                                     <option value="{{ $manager->id }}" {{ isset($client->manager) && $client->manager->id == $manager->id ? 'selected' : '' }}>{{ $manager->first_name }}</option>
                                 @endforeach
@@ -296,19 +296,20 @@
                         $('#successMessage').hide();
                     }
                 },
-                error: function (xhr, status, error) {
+                error: function(xhr, status, error) {
                     var errorMessage = "";
-                        if (xhr.responseJSON && xhr.responseJSON.errors) {
-                            $.each(xhr.responseJSON.errors, function (key, value) {
-                                errorMessage += key + ": " + value.join(", ") + "<br>";
-                            });
-                        } else {
-                            errorMessage = "An error occurred. Please try again later.";
-                        }
-                        $('#errorMessage').html(errorMessage);
-                        $('#errorMessage').show();
-                        $('#successMessage').hide();
-                        saveButton.prop('disabled', false);
+                    if (xhr.responseJSON && xhr.responseJSON.errors){
+                        $.each(xhr.responseJSON.errors, function (key, value) {
+                            errorMessage += key + ": " + value.join(", ") + "<br>";
+                        });
+                    } else {
+                        errorMessage = "An error occurred. Please try again later.";
+                    }
+                    $('#errorMessage').html(errorMessage);
+                    $('#errorMessage').show();
+                    $('#successMessage').hide();
+                    console.error("Error occurred: " + error);
+                    console.error(xhr.responseText);
                 },
                 cache: false,
                 contentType: false,
@@ -425,19 +426,20 @@
                         $('#successMessage').hide();
                     }
                 },
-                error: function (xhr, status, error) {
+                error: function(xhr, status, error) {
                     var errorMessage = "";
-                        if (xhr.responseJSON && xhr.responseJSON.errors) {
-                            $.each(xhr.responseJSON.errors, function (key, value) {
-                                errorMessage += key + ": " + value.join(", ") + "<br>";
-                            });
-                        } else {
-                            errorMessage = "An error occurred. Please try again later.";
-                        }
-                        $('#errorMessage').html(errorMessage);
-                        $('#errorMessage').show();
-                        $('#successMessage').hide();
-                        saveButton.prop('disabled', false);
+                    if (xhr.responseJSON && xhr.responseJSON.errors){
+                        $.each(xhr.responseJSON.errors, function (key, value) {
+                            errorMessage += key + ": " + value.join(", ") + "<br>";
+                        });
+                    } else {
+                        errorMessage = "An error occurred. Please try again later.";
+                    }
+                    $('#errorMessage').html(errorMessage);
+                    $('#errorMessage').show();
+                    $('#successMessage').hide();
+                    console.error("Error occurred: " + error);
+                    console.error(xhr.responseText);
                 },
                 cache: false,
                 contentType: false,

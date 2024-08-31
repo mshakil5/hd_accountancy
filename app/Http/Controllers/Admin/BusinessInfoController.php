@@ -28,13 +28,13 @@ class BusinessInfoController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'client_id' => 'required',
-            'nature_of_business' => 'required|string',
-            'company_number' => 'required',
-            'due_date' => 'required',
-            'confirmation_due_date' => 'same:due_date',
-            'authorization_code' => 'required',
-            'company_utr' => 'required',
-            'status' => 'required',
+            // 'nature_of_business' => 'required|string',
+            // 'company_number' => 'required',
+            // 'due_date' => 'required',
+            // 'confirmation_due_date' => 'same:due_date',
+            // 'authorization_code' => 'required',
+            // 'company_utr' => 'required',
+            // 'status' => 'required',
         ],[
             'client_id.required' => 'The client reference id field is required.',
         ]);

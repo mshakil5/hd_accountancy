@@ -94,17 +94,17 @@ class ClientController extends Controller
     {
          $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'client_type_id' => 'required',
-            'manager_id' => 'required',
+            // 'client_type_id' => 'required',
+            // 'manager_id' => 'required',
             'email' => 'required|email|unique:clients',
-            'phone' => 'required|numeric|digits:11',
-            'address_line1' => 'required|string|max:255',
-            'address_line2' => 'required|string|max:255',
-            'trading_address' => 'required|string|max:255',
-            'city' => 'required|string|max:255',
-            'town' => 'required|string|max:255',
-            'postcode' => 'required|string',
-            'country' => 'required|string|max:255',
+            // 'phone' => 'required|numeric|digits:11',
+            // 'address_line1' => 'required|string|max:255',
+            // 'address_line2' => 'required|string|max:255',
+            // 'trading_address' => 'required|string|max:255',
+            // 'city' => 'required|string|max:255',
+            // 'town' => 'required|string|max:255',
+            // 'postcode' => 'required|string',
+            // 'country' => 'required|string|max:255',
             'photo' => 'nullable|mimes:jpeg,png,jpg,gif,svg,pdf|max:8048',
             'photo_id' => 'nullable|numeric',
         ]);
@@ -172,36 +172,36 @@ class ClientController extends Controller
             return response()->json(['status'=> 303,'message'=>$message]);
             exit();
         }
-        if(empty($request->phone)){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Phone \" field..!</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
-            exit();
-        }
-        if(empty($request->address_line1)){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Address \" field..!</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
-            exit();
-        }
-        if(empty($request->trading_address)){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Trading address\" field..!</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
-            exit();
-        }
-        if(empty($request->city)){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"City \" field..!</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
-            exit();
-        }
-        if(empty($request->postcode)){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Postal code \" field..!</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
-            exit();
-        }
-        if(empty($request->country)){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Country \" field..!</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
-            exit();
-        }
+        // if(empty($request->phone)){
+        //     $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Phone \" field..!</b></div>";
+        //     return response()->json(['status'=> 303,'message'=>$message]);
+        //     exit();
+        // }
+        // if(empty($request->address_line1)){
+        //     $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Address \" field..!</b></div>";
+        //     return response()->json(['status'=> 303,'message'=>$message]);
+        //     exit();
+        // }
+        // if(empty($request->trading_address)){
+        //     $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Trading address\" field..!</b></div>";
+        //     return response()->json(['status'=> 303,'message'=>$message]);
+        //     exit();
+        // }
+        // if(empty($request->city)){
+        //     $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"City \" field..!</b></div>";
+        //     return response()->json(['status'=> 303,'message'=>$message]);
+        //     exit();
+        // }
+        // if(empty($request->postcode)){
+        //     $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Postal code \" field..!</b></div>";
+        //     return response()->json(['status'=> 303,'message'=>$message]);
+        //     exit();
+        // }
+        // if(empty($request->country)){
+        //     $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Country \" field..!</b></div>";
+        //     return response()->json(['status'=> 303,'message'=>$message]);
+        //     exit();
+        // }
 
         $data = Client::find($request->codeid);
 
@@ -299,19 +299,19 @@ class ClientController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'client_type_id' => 'required',
-            'manager_id' => 'required',
-            'email' => 'required|email',
-            'phone' => 'required|numeric|digits:11',
-            'address_line1' => 'required|string|max:255',
-            'address_line2' => 'required|string|max:255',
-            'trading_address' => 'required|string|max:255',
-            'city' => 'required|string|max:255',
-            'town' => 'required|string|max:255',
-            'postcode' => 'required|string',
-            'country' => 'required|string|max:255',
-            'photo' => 'nullable|mimes:jpeg,png,jpg,gif,svg,pdf|max:8048',
-            'photo_id' => 'nullable|numeric',
+            // 'client_type_id' => 'required',
+            // 'manager_id' => 'required',
+            // 'email' => 'required|email',
+            // 'phone' => 'required|numeric|digits:11',
+            // 'address_line1' => 'required|string|max:255',
+            // 'address_line2' => 'required|string|max:255',
+            // 'trading_address' => 'required|string|max:255',
+            // 'city' => 'required|string|max:255',
+            // 'town' => 'required|string|max:255',
+            // 'postcode' => 'required|string',
+            // 'country' => 'required|string|max:255',
+            // 'photo' => 'nullable|mimes:jpeg,png,jpg,gif,svg,pdf|max:8048',
+            // 'photo_id' => 'nullable|numeric',
         ]);
 
         if ($validator->fails()) {
@@ -362,7 +362,6 @@ class ClientController extends Controller
 
     public function updateClientBusinessInfo(Request $request, $id)
     {
-        // Attempt to find the BusinessInfo record for the client, or create a new one if not found
         $businessInfo = BusinessInfo::firstOrCreate(
             ['client_id' => $id],
             [
@@ -379,13 +378,13 @@ class ClientController extends Controller
         );
 
         $validator = Validator::make($request->all(), [
-            'nature_of_business' => 'required|string',
-            'company_number' => 'required',
-            'due_date' => 'required',
-            'confirmation_due_date' => 'same:due_date',
-            'authorization_code' => 'required',
-            'company_utr' => 'required',
-            'status' => 'required',
+            // 'nature_of_business' => 'required|string',
+            // 'company_number' => 'required',
+            // 'due_date' => 'required',
+            // 'confirmation_due_date' => 'same:due_date',
+            // 'authorization_code' => 'required',
+            // 'company_utr' => 'required',
+            // 'status' => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -420,17 +419,17 @@ class ClientController extends Controller
     public function updateClientDirectorInfo(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string',
-            'phone' => 'required|numeric|digits:11',
-            'email' => 'required',
-            'address' => 'required',
-            'dob' => 'required',
-            'ni_number' => 'required', 
-            'utr_number' => 'required', 
-            'utr_authorization' => 'required', 
-            'nino' => 'required', 
+            // 'name' => 'required|string',
+            // 'phone' => 'required|numeric|digits:11',
+            // 'email' => 'required',
+            // 'address' => 'required',
+            // 'dob' => 'required',
+            // 'ni_number' => 'required', 
+            // 'utr_number' => 'required', 
+            // 'utr_authorization' => 'required', 
+            // 'nino' => 'required', 
         ], [
-            'client_id.required' => 'The client reference id field is required.',
+            // 'client_id.required' => 'The client reference id field is required.',
         ]);
 
         if ($validator->fails()) {
@@ -483,11 +482,11 @@ class ClientController extends Controller
     public function updateClientServices(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'services' => 'required|array|min:1',
-            'deadline' => 'required|date',
+            // 'services' => 'required|array|min:1',
+            // 'deadline' => 'required|date',
         ], [
-            'deadline.required' => 'The deadline field is required.',
-            'deadline.date' => 'The deadline must be a valid date.',
+            // 'deadline.required' => 'The deadline field is required.',
+            // 'deadline.date' => 'The deadline must be a valid date.',
         ]);
 
         if ($validator->fails()) {
@@ -519,12 +518,12 @@ class ClientController extends Controller
     public function updateClientContactInfo(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'greeting' => 'required',
-            'first_name' => 'required',
-            'last_name' => 'required',
-            'job_title' => 'required',
-            'email' => 'required|email',
-            'phone' => 'required|numeric|digits:11',
+            // 'greeting' => 'required',
+            // 'first_name' => 'required',
+            // 'last_name' => 'required',
+            // 'job_title' => 'required',
+            // 'email' => 'required|email',
+            // 'phone' => 'required|numeric|digits:11',
         ]);
 
         if ($validator->fails()) {

@@ -14,7 +14,7 @@
                         <div class="form-group">
                             <label for="greeting">Greeting</label>
                             <select class="form-control my-2" name="greeting" id="greeting">
-                                <option value="" selected disabled>Choose greeting</option>
+                                <option value="" selected >Choose greeting</option>
                                 <option value="Mr.">Mr.</option>
                                 <option value="Ms.">Ms.</option>
                             </select>

@@ -383,13 +383,13 @@ class ServiceController extends Controller
 
         foreach ($request->services as $serviceData) {
             $validator = Validator::make($serviceData, [
-                'serviceId' => 'required|integer',
-                'managerId' => 'required|integer',
-                'service_frequency' => 'required',
-                'service_deadline' => 'required',
-                'due_date' => 'required',
-                'legal_deadline' => 'required',
-                'subServices' => 'nullable|array',
+                // 'serviceId' => 'required|integer',
+                // 'managerId' => 'required|integer',
+                // 'service_frequency' => 'required',
+                // 'service_deadline' => 'required',
+                // 'due_date' => 'required',
+                // 'legal_deadline' => 'required',
+                // 'subServices' => 'nullable|array',
             ]);
 
             if ($validator->fails()) {

@@ -32,7 +32,7 @@
             <label for="">Company status</label>
             <div class="mt-2">
                 <select class="form-control my-2" name="status" id="status">
-                    <option value="" selected disabled>Select status</option>
+                    <!-- <option value="" selected>Select status</option> -->
                     <option value="0" {{ isset($client->businessInfo) && $client->businessInfo->status == '0' ? 'selected' : '' }}>Inactive</option>
                     <option value="1" {{ isset($client->businessInfo) && $client->businessInfo->status == '1' ? 'selected' : '' }}>Active</option>
                 </select>
