@@ -247,6 +247,9 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     //Contact message
     Route::get('/contact-messages', [ContactMessageController::class, 'index'])->name('allContactMessage');
 
+    //web contact page
+    Route::get('/web-contact', [ContactMessageController::class, 'webContact'])->name('webContact');
+    Route::put('/web-contact/update', [ContactMessageController::class, 'webContactUpdate'])->name('admin.contact.update');
     //Img: we work with crud
     Route::get('/we-work-image', [WeWorkWithImageController::class, 'index'])->name('weWorkImage');
     Route::post('/we-work-image', [WeWorkWithImageController::class, 'store']);

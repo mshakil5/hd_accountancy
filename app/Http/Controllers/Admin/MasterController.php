@@ -49,16 +49,6 @@ class MasterController extends Controller
             return response()->json(['status'=> 303,'message'=>$message]);
             exit();
         }
-        if(empty($request->meta_title)){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \" Meta title \" field..!</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
-            exit();
-        }
-        if(empty($request->meta_description)){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \" Meta Description \" field..!</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
-            exit();
-        }
         if (!$request->hasFile('meta_image')) {
             $message = "<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please upload \" Meta Image \" ..!</b></div>";
             return response()->json(['status'=> 303,'message'=>$message]);
@@ -133,14 +123,6 @@ class MasterController extends Controller
             $message = "<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Long Description\" field..!</b></div>";
             return response()->json(['status' => 303, 'message' => $message]);
         }
-        if (empty($request->meta_title)) {
-            $message = "<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Meta title\" field..!</b></div>";
-            return response()->json(['status' => 303, 'message' => $message]);
-        }
-        if (empty($request->meta_description)) {
-            $message = "<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Meta Description\" field..!</b></div>";
-            return response()->json(['status' => 303, 'message' => $message]);
-        }
 
         if ($request->hasFile('meta_image')) {
             if ($data->meta_image) {
@@ -171,6 +153,26 @@ class MasterController extends Controller
             return response()->json(['status'=> 300,'message'=>$message]);
         }else{
             return response()->json(['status'=> 303,'message'=>'Server Error!!']);
+        }
+    }
+
+    public function delete($id)
+    {
+        $data = Master::find($id);
+        if (!$data) {
+            return response()->json(['status' => 404, 'message' => 'Record not found!']);
+        }
+
+        $imagePath = public_path('images/meta_image/' . $data->meta_image);
+
+        if ($data->delete()) {
+            if ($data->meta_image && file_exists($imagePath)) {
+                unlink($imagePath);
+            }
+            $message = "<div class='alert alert-success'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Deleted successfully.</b></div>";
+            return response()->json(['status' => 300, 'message' => $message]);
+        } else {
+            return response()->json(['status' => 303, 'message' => 'Server Error!!']);
         }
     }
 

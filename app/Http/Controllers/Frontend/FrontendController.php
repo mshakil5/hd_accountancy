@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Contact;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Softcode;
+use App\Models\Master;
 
 class FrontendController extends Controller
 {
@@ -16,7 +18,13 @@ class FrontendController extends Controller
 
     public function contact()
     {
-        return view('frontend.contact.index');
+        $softcode = Softcode::where('name', 'Contact')->first();
+        if ($softcode) {
+            $contactHeading = Master::where('softcode_id', $softcode->id)->first();
+        } else {
+            $contactHeading = null;
+        }
+        return view('frontend.contact.index', compact('contactHeading'));
     }
 
     public function storeStore(Request $request)

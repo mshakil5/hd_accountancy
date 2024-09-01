@@ -306,7 +306,7 @@
                 data:{
                 },
                 success: function(d){
-                    if(d.success) {
+                    if (response.status === 300) {
                       alert(d.message);
                       location.reload();
                     }

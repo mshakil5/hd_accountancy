@@ -8,4 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class Softcode extends Model
 {
     use HasFactory;
+
+    public function masters()
+    {
+        return $this->hasMany(Master::class, 'softcode_id');
+    }
 }

@@ -72,12 +72,28 @@
         </a>
     </li>
 
-      <li class="nav-item {{ request()->routeIs('allContactMessage') ? 'active' : '' }}">
-        <a class="nav-link collapsed" href="{{ route('allContactMessage') }}">
-            <i class="bi bi-envelope"></i>
-            <span>Contact Message</span>
-        </a>
-    </li>
+  <li class="nav-item {{ request()->routeIs('allContactMessage*') || request()->routeIs('webContact') ? 'menu-open' : '' }}">
+      <a class="nav-link collapsed {{ request()->routeIs('allContactMessage*') || request()->routeIs('webContact') ? 'active' : '' }}" href="#" data-bs-toggle="collapse" data-bs-target="#contactMessageDropdown" aria-expanded="{{ request()->routeIs('allContactMessage*') || request()->routeIs('webContact') ? 'true' : 'false' }}">
+          <i class="bi bi-envelope"></i>
+          <span>Contact</span>
+          <i class="bi bi-chevron-down"></i>
+      </a>
+
+      <ul id="contactMessageDropdown" class="collapse list-unstyled {{ request()->routeIs('allContactMessage*') || request()->routeIs('webContact') ? 'show' : '' }}">
+          <li class="nav-item {{ request()->routeIs('allContactMessage') ? 'active' : '' }}">
+              <a class="nav-link" href="{{ route('allContactMessage') }}">
+                  <i class="bi bi-file-text"></i>
+                  <span>Contact Messages</span>
+              </a>
+          </li>
+          <li class="nav-item {{ request()->routeIs('webContact') ? 'active' : '' }}">
+              <a class="nav-link" href="{{ route('webContact') }}">
+                  <i class="bi bi-pencil"></i>
+                  <span>Edit Contact Page</span>
+              </a>
+          </li>
+      </ul>
+  </li>
 
     <li class="nav-item {{ request()->routeIs('prevLogStaffs','task.details.staff','allPrevLogStaffs') ? 'active' : '' }}">
         <a class="nav-link collapsed" href="{{ route('prevLogStaffs') }}">
