@@ -59,6 +59,9 @@ Route::get('/our-team', [FrontendController::class, 'ourTeam'])->name('frontend.
 // Career
 Route::get('/career', [FrontendController::class, 'career'])->name('frontend.career');
 
+// FAQ
+Route::get('/faq', [FrontendController::class, 'faq'])->name('frontend.faq');
+
 //Base login
 Route::get('/dashboard', [HomeController::class, 'index'])->name('home');
 

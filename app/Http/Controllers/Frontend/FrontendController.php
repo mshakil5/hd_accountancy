@@ -42,4 +42,9 @@ class FrontendController extends Controller
         return view('frontend.career.index');
     }
 
+    public function faq()
+    {
+        return view('frontend.faq.index');
+    }
+
 }
