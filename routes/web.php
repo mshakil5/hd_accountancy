@@ -37,7 +37,12 @@ Route::fallback(function () {
 Auth::routes();
 
 // Frontend
+
+// Homepage
 Route::get('/', [FrontendController::class, 'index'])->name('frontend.index');
+
+// Contact
+Route::get('/contact', [FrontendController::class, 'contact'])->name('frontend.contact');
 
 //Base login
 Route::get('/dashboard', [HomeController::class, 'index'])->name('home');
