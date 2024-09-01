@@ -16,4 +16,14 @@ class FrontendController extends Controller
     {
         return view('frontend.contact.index');
     }
+
+    public function pricing()
+    {
+        return view('frontend.pricing.index');
+    }
+
+    public function getQuotation()
+    {
+        return view('frontend.get-quotation.index');
+    }
 }

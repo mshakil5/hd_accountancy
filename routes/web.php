@@ -44,6 +44,12 @@ Route::get('/', [FrontendController::class, 'index'])->name('frontend.index');
 // Contact
 Route::get('/contact', [FrontendController::class, 'contact'])->name('frontend.contact');
 
+// Pricing
+Route::get('/pricing', [FrontendController::class, 'pricing'])->name('frontend.pricing');
+
+// Get Qoutation
+Route::get('/get-quotation', [FrontendController::class, 'getQuotation'])->name('frontend.getQuotation');
+
 //Base login
 Route::get('/dashboard', [HomeController::class, 'index'])->name('home');
 

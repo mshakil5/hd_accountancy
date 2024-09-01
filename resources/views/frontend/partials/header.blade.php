@@ -29,7 +29,7 @@
                             </ul>
                         </li>
                         <li class="nav-item">
-                            <a href="./pricing.php" class="nav-link">pricing</a>
+                            <a href="{{ route('frontend.pricing') }}" class="nav-link">pricing</a>
                         </li>
                         <li class="nav-item">
                             <a href="{{ route('frontend.index') }}#about-us" class="nav-link">about us</a>
@@ -40,7 +40,7 @@
                     </ul>
                     <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                         <li class="nav-item bg-primary box-hover rounded-3  ">
-                            <a href="./get-quotation.php" class="nav-link text-white text-center fw-bold fs-6 px-4" aria-current="page">Book Appointment <br>
+                            <a href="{{ route('frontend.getQuotation') }}" class="nav-link text-white text-center fw-bold fs-6 px-4" aria-current="page">Book Appointment <br>
                                 <span class="fs-5 d-flex gap-1 justify-content-center align-items-center">
                                     <iconify-icon icon="charm:phone"></iconify-icon> 01484 508951</span>
                             </a>
