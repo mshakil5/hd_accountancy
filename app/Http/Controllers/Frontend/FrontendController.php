@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Contact;
+use Illuminate\Support\Facades\Validator;
 
 class FrontendController extends Controller
 {
@@ -15,6 +17,37 @@ class FrontendController extends Controller
     public function contact()
     {
         return view('frontend.contact.index');
+    }
+
+    public function storeStore(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255',
+            'phone' => 'required|integer',
+            'business_name' => 'required|string|max:255',
+            'yearly_turnover' => 'nullable|integer',
+            'interested_service' => 'array',
+            'message' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        $contact = Contact::create([
+            'name' => $request->input('name'),
+            'email' => $request->input('email'),
+            'phone' => $request->input('phone'),
+            'business_name' => $request->input('business_name'),
+            'yearly_turnover' => $request->input('yearly_turnover'),
+            'interested_service' => json_encode($request->input('interested_service')),
+            'message' => $request->input('message'),
+            'created_by' => auth()->id(),
+            'updated_by' => auth()->id(),
+        ]);
+
+        return redirect()->back()->with('success', 'Message sent successfully!');
     }
 
     public function pricing()

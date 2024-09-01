@@ -20,8 +20,11 @@
                 <tr>
                   <th style="text-align: center">Sl</th>
                   <th style="text-align: center">Name</th>
+                  <th style="text-align: center">Business Name</th>
                   <th style="text-align: center">Email</th>
-                  <th style="text-align: center">Subject</th>
+                  <th style="text-align: center">Phone</th>
+                  <th style="text-align: center">Yearly Turnover</th>
+                  <th style="text-align: center">Interested Service</th>
                   <th style="text-align: center">Message</th>
                 </tr>
                 </thead>
@@ -30,9 +33,17 @@
                   <tr>
                     <td style="text-align: center">{{ $key + 1 }}</td>
                     <td style="text-align: center">{{$data->name}}</td>
+                    <td style="text-align: center">{{$data->business_name}}</td>
                     <td style="text-align: center">{{$data->email}}</td>
-                    <td style="text-align: center">{{$data->subject}}</td>
-                    <td style="text-align: center">{{$data->message}}</td>
+                    <td style="text-align: center">{{$data->phone}}</td>
+                    <td style="text-align: center">{{$data->yearly_turnover}}</td>
+                    <td style="text-align: center">
+                      @php
+                        $services = json_decode($data->interested_service);
+                        $serviceList = implode(', ', $services);
+                        echo $serviceList;
+                    @endphp</td>
+                    <td style="text-align: center">{!!$data->message!!}</td>
                   </tr>
                   @endforeach  
                 </tbody>
