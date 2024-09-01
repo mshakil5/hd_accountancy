@@ -26,4 +26,10 @@ class FrontendController extends Controller
     {
         return view('frontend.get-quotation.index');
     }
+
+    public function services()
+    {
+        return view('frontend.services.index');
+    }
+
 }

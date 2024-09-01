@@ -2,7 +2,7 @@
     <section class="container">
         <nav class="navbar navbar-expand-lg py-3">
             <div class="container-fluid">
-                <a class="navbar-brand" href="index.php">
+                <a class="navbar-brand" href="{{ route('frontend.index') }}">
                     <img src="{{ asset('assets/frontend/images/logo.png') }}" width="160px" class="img-fluid" alt="logo">
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
@@ -13,7 +13,7 @@
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0 navCustom">
                         <li class="nav-item">
-                            <a class="nav-link active" aria-current="page" href="index.php">Home</a>
+                            <a class="nav-link active" aria-current="page" href="{{ route('frontend.index') }}">Home</a>
                         </li>
 
                         <li class="nav-item dropdown">

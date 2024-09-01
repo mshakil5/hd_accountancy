@@ -13,10 +13,10 @@
                         Follow us on
                     </h6>
                     <div class="d-flex gap-2 follow-us align-items-center justify-content-center justify-content-md-start ">
-                        <a href=""><iconify-icon class="fs-3 text-white" icon="ic:baseline-facebook"></iconify-icon></a>
-                        <a href=""><iconify-icon class="fs-3 text-white" icon="mdi:instagram"></iconify-icon></a>
-                        <a href=""><iconify-icon class="fs-3 text-white" icon="mdi:youtube"></iconify-icon></a>
-                        <a href=""><iconify-icon class="fs-3 text-white" icon="mdi:linkedin"></iconify-icon></a>
+                        <a href="#"><iconify-icon class="fs-3 text-white" icon="ic:baseline-facebook"></iconify-icon></a>
+                        <a href="#"><iconify-icon class="fs-3 text-white" icon="mdi:instagram"></iconify-icon></a>
+                        <a href="#"><iconify-icon class="fs-3 text-white" icon="mdi:youtube"></iconify-icon></a>
+                        <a href="#"><iconify-icon class="fs-3 text-white" icon="mdi:linkedin"></iconify-icon></a>
 
                     </div>
 
@@ -79,13 +79,13 @@
                 <h4 class="fw-bold text-white fs-5 mb-4">Company</h4>
                 <ul class="nav flex-column">
                     <li class="nav-item mb-2">
-                        <a href="services.php" class="text-white link">Our Services</a>
+                        <a href="{{ route('frontend.services') }}" class="text-white link">Our Services</a>
                     </li>
                     <li class="nav-item mb-2">
-                        <a href="index.php#about-us" class="text-white link">about us</a>
+                        <a href="{{ route('frontend.index') }}#about-us" class="text-white link">about us</a>
                     </li>
                     <li class="nav-item mb-2">
-                        <a href="contact.php" class="text-white link">contact us</a>
+                        <a href="{{ route('frontend.contact') }}" class="text-white link">contact us</a>
                     </li>
                     <li class="nav-item mb-2">
                         <a href="our-team.php" class="text-white link">our team</a>

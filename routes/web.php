@@ -50,6 +50,9 @@ Route::get('/pricing', [FrontendController::class, 'pricing'])->name('frontend.p
 // Get Qoutation
 Route::get('/get-quotation', [FrontendController::class, 'getQuotation'])->name('frontend.getQuotation');
 
+// Services
+Route::get('/services', [FrontendController::class, 'services'])->name('frontend.services');
+
 //Base login
 Route::get('/dashboard', [HomeController::class, 'index'])->name('home');
 

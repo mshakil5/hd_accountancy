@@ -46,7 +46,7 @@
                                             </p>
                                         </div>
                                         <div class="col-lg-6 text-end">
-                                            <a class="navbar-brand" href="index.php">
+                                            <a class="navbar-brand" href="{{ route('frontend.index') }}">
                                                 <img src="{{ asset('assets/frontend/images/logo.png') }}" width="90px" alt="df">
                                             </a>
                                         </div>
