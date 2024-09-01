@@ -22,9 +22,9 @@
                                 our service
                             </a>
                             <ul class="dropdown-menu border-0 shadow">
-                                <li><a class="dropdown-item text-capitalize fw-bold " href="pricing.php">accounting solution </a></li>
-                                <li><a class="dropdown-item text-capitalize fw-bold " href="#">tax solution </a></li>
-                                <li><a class="dropdown-item text-capitalize fw-bold " href="#">other solution </a></li>
+                                <li><a class="dropdown-item text-capitalize fw-bold " href="{{ route('frontend.services') }}#accounting-solution">accounting solution </a></li>
+                                <li><a class="dropdown-item text-capitalize fw-bold " href="{{ route('frontend.services') }}#tax-solution">tax solution </a></li>
+                                <li><a class="dropdown-item text-capitalize fw-bold " href="{{ route('frontend.services') }}#other-solution">other solution </a></li>
 
                             </ul>
                         </li>

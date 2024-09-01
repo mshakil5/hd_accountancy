@@ -1,6 +1,6 @@
 <section class="py-5 bg-primary">
     <div class="container">
-        <div class="row py-5">
+        <div class="row py-5" id="accounting-solution">
             <div class="col-lg-12">
                 <div class="text-center w-100  mx-auto">
                     <div class=" px-5">
@@ -98,7 +98,7 @@
 
 <section class="py-4 bg-primary">
     <div class="container">
-        <div class="row py-5">
+        <div class="row py-5" id="tax-solution">
             <div class="col-lg-12">
                 <div class="text-center w-100  mx-auto">
                     <div class=" px-5">
@@ -186,7 +186,7 @@
 
 <section class="py-4 bg-primary">
     <div class="container">
-        <div class="row py-5">
+        <div class="row py-5" id="other-solution">
             <div class="col-lg-12">
                 <div class="text-center w-100  mx-auto">
                     <div class=" px-5">

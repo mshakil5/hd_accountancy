@@ -31,7 +31,6 @@
 
     <!-- popup css -->
     <link href="{{ asset('assets/frontend/css/popup.css') }}" rel="stylesheet">
-    <!-- <link href="{{ asset('assets/frontend/css/img-style-popup.css') }}" rel="stylesheet"> -->
 
 </head>
 
@@ -53,7 +52,6 @@
     <script src="{{ asset('assets/frontend/js/bootstrap-5.2.3-bundle.min.js')}}"></script>
     <script src="{{ asset('assets/frontend/js/jquery-v2.1.3.min.js')}}"></script>
     <script src="{{ asset('assets/frontend/js/jquery-ui.min.js')}}"></script>
-    <script src="{{ asset('assets/frontend/js/jquery.image-popup.js')}}"></script>
     <script src="{{ asset('assets/frontend/js/slick.min.js')}}"></script>
     <script src="{{ asset('assets/frontend/js/app.js')}}"></script>
     <script src="{{ asset('assets/frontend/js/wow.min.js')}}"></script>

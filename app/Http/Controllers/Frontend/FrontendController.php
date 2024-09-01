@@ -46,5 +46,50 @@ class FrontendController extends Controller
     {
         return view('frontend.faq.index');
     }
+    
+    public function booking()
+    {
+        return view('frontend.booking.index');
+    }
+
+    public function caseStudy()
+    {
+        return view('frontend.case-study.index');
+    }
+
+    public function cloudAccounting()
+    {
+        return view('frontend.cloud-accounting.index');
+    }
+
+    public function digitalBookkeeping()
+    {
+        return view('frontend.digital-bookkeeping.index');
+    }
+
+    public function growBusiness()
+    {
+        return view('frontend.grow-business.index');
+    }
+
+    public function monthlyAccountManagement()
+    {
+        return view('frontend.monthly-account-management.index');
+    }
+
+    public function payroll()
+    {
+        return view('frontend.payroll.index');
+    }
+
+    public function videoTestimonial()
+    {
+        return view('frontend.video-testimonial.index');
+    }
+
+    public function yearEndAccount()
+    {
+        return view('frontend.year-end-account.index');
+    }
 
 }
