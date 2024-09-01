@@ -53,6 +53,9 @@ Route::get('/get-quotation', [FrontendController::class, 'getQuotation'])->name(
 // Services
 Route::get('/services', [FrontendController::class, 'services'])->name('frontend.services');
 
+// Our Team
+Route::get('/our-team', [FrontendController::class, 'ourTeam'])->name('frontend.ourTeam');
+
 //Base login
 Route::get('/dashboard', [HomeController::class, 'index'])->name('home');
 

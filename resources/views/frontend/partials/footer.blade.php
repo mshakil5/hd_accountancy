@@ -88,7 +88,7 @@
                         <a href="{{ route('frontend.contact') }}" class="text-white link">contact us</a>
                     </li>
                     <li class="nav-item mb-2">
-                        <a href="our-team.php" class="text-white link">our team</a>
+                        <a href="{{ route('frontend.ourTeam') }}" class="text-white link">our team</a>
                     </li>
                     <li class="nav-item mb-2">
                         <a href="career.php" class="text-white link">career</a>

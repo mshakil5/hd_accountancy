@@ -32,4 +32,9 @@ class FrontendController extends Controller
         return view('frontend.services.index');
     }
 
+    public function ourTeam()
+    {
+        return view('frontend.our-team.index');
+    }
+
 }
