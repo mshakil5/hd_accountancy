@@ -91,7 +91,7 @@
                         <a href="{{ route('frontend.ourTeam') }}" class="text-white link">our team</a>
                     </li>
                     <li class="nav-item mb-2">
-                        <a href="career.php" class="text-white link">career</a>
+                        <a href="{{ route('frontend.career') }}" class="text-white link">career</a>
                     </li>
                     <li class="nav-item mb-2">
                         <a href="./FAQ.php" class="text-white link">FAQ</a>

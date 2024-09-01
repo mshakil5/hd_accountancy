@@ -37,4 +37,9 @@ class FrontendController extends Controller
         return view('frontend.our-team.index');
     }
 
+    public function career()
+    {
+        return view('frontend.career.index');
+    }
+
 }
