@@ -25,6 +25,7 @@ use App\Http\Controllers\Admin\CompanyDetailsController;
 use App\Http\Controllers\Admin\SoftCodeController;
 use App\Http\Controllers\Admin\MasterController;
 use App\Http\Controllers\Admin\HomepageController;
+use App\Http\Controllers\Admin\TimeslotController;
 
 //Fallback route
 Route::fallback(function () {
@@ -339,5 +340,12 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/master/{id}/edit', [MasterController::class, 'edit']);
     Route::post('/master-update', [MasterController::class, 'update']);
     Route::get('/master/{id}', [MasterController::class, 'delete']);
+
+    //Timeslot crud
+    Route::get('/time-slot', [TimeslotController::class, 'index'])->name('allTimeslot');    
+    Route::post('/time-slot', [TimeslotController::class, 'store']);
+    Route::get('/time-slot/{id}/edit', [TimeslotController::class, 'edit']);
+    Route::post('/time-slot-update', [TimeslotController::class, 'update']);
+    Route::get('/time-slot/{id}', [TimeslotController::class, 'delete']);
 
 });

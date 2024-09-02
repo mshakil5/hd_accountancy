@@ -167,6 +167,13 @@
         </a>
       </li>
 
+      <li class="nav-item {{ request()->routeIs('allTimeslot') ? 'active' : '' }}">
+        <a class="nav-link collapsed" href="{{ route('allTimeslot') }}">
+          <i class="bi bi-list"></i>
+          <span>Time slot</span>
+        </a>
+      </li>
+
       <li class="nav-item {{ request()->routeIs('admin.companyDetail') ? 'active' : '' }}">
         <a class="nav-link collapsed" href="{{ route('admin.companyDetail') }}">
           <i class="bi bi-building"></i>

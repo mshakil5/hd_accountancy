@@ -17,7 +17,7 @@
                     <input type="search" name="" placeholder="Sort By" class="form-control" id="">
                 </div> --}}
                 <div class="col-lg-12 p-3 text-end">
-                    <a href="{{ route('createprorota') }}" class="btn btn-sm bg-theme text-light btn-outline-dark">+ Add New</a>
+                    <a href="{{ route('prorota.create') }}" class="btn btn-sm bg-theme text-light btn-outline-dark">+ Add New</a>
                 </div>
             </div>
             <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
