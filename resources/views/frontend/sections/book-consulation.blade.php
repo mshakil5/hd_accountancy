@@ -45,57 +45,15 @@
                             </div>
                             <div class="row">
                                 <div class="col-lg-7">
-                                    calender goes here
+                                    <input type="date" class="form-control" id="date" name="date">
                                 </div>
                                 <div class="col-lg-5 d-flex flex-wrap gx-1 justify-content-center my-4">
-                                    <div class="mb-2">
-                                        <input type="radio" class="timepick invisible" name="timepick" id="11">
-                                        <label for="11" class=""> 11:00 Am </label>
-                                    </div>
-                                    <div class="mb-2">
-                                        <input type="radio" class="timepick invisible" name="timepick" id="1130">
-                                        <label for="1130" class=""> 11:00 Am </label>
-                                    </div>
-                                    <div class="mb-2">
-                                        <input type="radio" class="timepick invisible" name="timepick" id="12">
-                                        <label for="12" class=""> 11:00 Am </label>
-                                    </div>
-                                    <div class="mb-2">
-                                        <input type="radio" class="timepick invisible" name="timepick" id="1230">
-                                        <label for="1230" class=""> 11:00 Am </label>
-                                    </div>
-                                    <div class="mb-2">
-                                        <input type="radio" class="timepick invisible" name="timepick" id="100">
-                                        <label for="100" class=""> 11:00 Am </label>
-                                    </div>
-                                    <div class="mb-2">
-                                        <input type="radio" class="timepick invisible" name="timepick" id="130">
-                                        <label for="130" class=""> 11:00 Am </label>
-                                    </div>
-                                    <div class="mb-2">
-                                        <input type="radio" class="timepick invisible" name="timepick" id="2">
-                                        <label for="2" class=""> 11:00 Am </label>
-                                    </div>
-                                    <div class="mb-2">
-                                        <input type="radio" class="timepick invisible" name="timepick" id="230">
-                                        <label for="230" class=""> 11:00 Am </label>
-                                    </div>
-                                    <div class="mb-2">
-                                        <input type="radio" class="timepick invisible" name="timepick" id="3">
-                                        <label for="3" class=""> 11:00 Am </label>
-                                    </div>
-                                    <div class="mb-2">
-                                        <input type="radio" class="timepick invisible" name="timepick" id="330">
-                                        <label for="330" class=""> 11:00 Am </label>
-                                    </div>
-                                    <div class="mb-2">
-                                        <input type="radio" class="timepick invisible" name="timepick" id="4">
-                                        <label for="4" class=""> 11:00 Am </label>
-                                    </div>
-                                    <div class="mb-2">
-                                        <input type="radio" class="timepick invisible" name="timepick" id="430">
-                                        <label for="430" class=""> 11:00 Am </label>
-                                    </div>
+                                    @foreach(\App\Models\TimeSlot::all() as $timeSlot)
+                                        <div class="mb-2">
+                                            <input type="radio" class="timepick invisible" name="timepick" id="{{ $timeSlot->id }}">
+                                            <label for="{{ $timeSlot->id }}">{{ $timeSlot->start_time }}</label>
+                                        </div>
+                                    @endforeach
                                 </div>
                             </div>
                             <div class="row">

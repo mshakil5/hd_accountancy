@@ -32,6 +32,7 @@
         @include('frontend.sections.book-consulation')
     </div>
 </section>
+
 <!-- Latest Insight -->
 @include('frontend.sections.blog')
 
