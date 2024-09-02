@@ -83,7 +83,50 @@ class FrontendController extends Controller
 
     public function services()
     {
-        return view('frontend.services.index');
+        $accountingSolutionCode = Softcode::where('name', 'Accounting Solution')->first();
+        if ($accountingSolutionCode) {
+            $accountingSolution = Master::where('softcode_id', $accountingSolutionCode->id)->first();
+        } else {
+            $accountingSolution = null;
+        }
+
+        $taxSolutionCode = Softcode::where('name', 'Tax Solution')->first();
+        if ($taxSolutionCode) {
+            $taxSolution = Master::where('softcode_id', $taxSolutionCode->id)->first();
+        } else {
+            $taxSolution = null;
+        }
+
+        $otherSolutionCode = Softcode::where('name', 'Other Solution')->first();
+        if ($otherSolutionCode) {
+            $otherSolution = Master::where('softcode_id', $otherSolutionCode->id)->first();
+        } else {
+            $otherSolution = null;
+        }
+
+        $businessStartupCode = Softcode::where('name', 'Business Start-up')->first();
+        if ($businessStartupCode) {
+            $businessStartUp = Master::where('softcode_id', $businessStartupCode->id)->first();
+        } else {
+            $businessStartUp = null;
+        }
+
+        $companySecretarialCode = Softcode::where('name', 'Company Secretarial')->first();
+        if ($companySecretarialCode) {
+            $companySecretarial = Master::where('softcode_id', $companySecretarialCode->id)->first();
+        } else {
+            $companySecretarial = null;
+        }
+
+        $bankruptcyLiquidationCode = Softcode::where('name', 'Bankruptcy and Liquidation')->first();
+        if ($bankruptcyLiquidationCode) {
+            $bankruptcyLiquidation = Master::where('softcode_id', $bankruptcyLiquidationCode->id)->first();
+        } else {
+            $bankruptcyLiquidation = null;
+        }
+
+
+        return view('frontend.services.index', compact('accountingSolution', 'taxSolution', 'otherSolution', 'businessStartUp', 'companySecretarial', 'bankruptcyLiquidation'));
     }
 
     public function ourTeam()

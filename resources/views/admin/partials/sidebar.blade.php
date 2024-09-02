@@ -118,6 +118,53 @@
       </ul>
   </li>
 
+    <li class="nav-item {{ request()->routeIs('servicepageAccounting') || request()->routeIs('servicepageTaxSolution') || request()->routeIs('servicepageOtherSolution') || request()->routeIs('servicepageBusinessStartup') || request()->routeIs('servicepageCompanySecretarial') || request()->routeIs('bankruptcyAndLiquidation') ? 'menu-open' : '' }}">
+    <a class="nav-link collapsed {{ request()->routeIs('servicepageAccounting') || request()->routeIs('servicepageTaxSolution') || request()->routeIs('servicepageOtherSolution') || request()->routeIs('servicepageBusinessStartup') || request()->routeIs('servicepageCompanySecretarial') || request()->routeIs('bankruptcyAndLiquidation') ? 'active' : '' }}" href="#" data-bs-toggle="collapse" data-bs-target="#servicePagesDropdown" aria-expanded="{{ request()->routeIs('servicepageAccounting') || request()->routeIs('servicepageTaxSolution') || request()->routeIs('servicepageOtherSolution') || request()->routeIs('servicepageBusinessStartup') || request()->routeIs('servicepageCompanySecretarial') || request()->routeIs('bankruptcyAndLiquidation') ? 'true' : 'false' }}">
+        <i class="bi bi-file-text"></i>
+        <span>Service Pages</span>
+        <i class="bi bi-chevron-down"></i>
+    </a>
+
+    <ul id="servicePagesDropdown" class="collapse list-unstyled {{ request()->routeIs('servicepageAccounting') || request()->routeIs('servicepageTaxSolution') || request()->routeIs('servicepageOtherSolution') || request()->routeIs('servicepageBusinessStartup') || request()->routeIs('servicepageCompanySecretarial') || request()->routeIs('bankruptcyAndLiquidation') ? 'show' : '' }}">
+        <li class="nav-item {{ request()->routeIs('servicepageAccounting') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('servicepageAccounting') }}">
+                <i class="bi bi-file-text"></i>
+                <span>Accounting</span>
+            </a>
+        </li>
+        <li class="nav-item {{ request()->routeIs('servicepageTaxSolution') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('servicepageTaxSolution') }}">
+                <i class="bi bi-file-text"></i>
+                <span>Tax Solution</span>
+            </a>
+        </li>
+        <li class="nav-item {{ request()->routeIs('servicepageOtherSolution') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('servicepageOtherSolution') }}">
+                <i class="bi bi-file-text"></i>
+                <span>Other Solution</span>
+            </a>
+        </li>
+        <li class="nav-item {{ request()->routeIs('servicepageBusinessStartup') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('servicepageBusinessStartup') }}">
+                <i class="bi bi-file-text"></i>
+                <span>Business Startup</span>
+            </a>
+        </li>
+        <li class="nav-item {{ request()->routeIs('servicepageCompanySecretarial') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('servicepageCompanySecretarial') }}">
+                <i class="bi bi-file-text"></i>
+                <span>Company Secretarial</span>
+            </a>
+        </li>
+        <li class="nav-item {{ request()->routeIs('bankruptcyAndLiquidation') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('bankruptcyAndLiquidation') }}">
+                <i class="bi bi-file-text"></i>
+                <span>Bankruptcy and Liquidation</span>
+            </a>
+        </li>
+    </ul>
+  </li>
+
     <li class="nav-item {{ request()->routeIs('prevLogStaffs','task.details.staff','allPrevLogStaffs') ? 'active' : '' }}">
         <a class="nav-link collapsed" href="{{ route('prevLogStaffs') }}">
             <i class="bi bi-calendar-check"></i>

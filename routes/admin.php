@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\SoftCodeController;
 use App\Http\Controllers\Admin\MasterController;
 use App\Http\Controllers\Admin\HomepageController;
 use App\Http\Controllers\Admin\TimeslotController;
+use App\Http\Controllers\Admin\ServicepageController;
 
 //Fallback route
 Route::fallback(function () {
@@ -257,8 +258,33 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/homepage-intro', [HomepageController::class, 'homepageIntro'])->name('homepageIntro');
     Route::put('/homepage-intro/update', [HomepageController::class, 'homepageIntroUpdate'])->name('homepageIntro.update');
 
+    //Homepage our values
     Route::get('/homepage-our-values', [HomepageController::class, 'homepageOurValues'])->name('homepageOurValues');
     Route::put('/homepage-our-values/update', [HomepageController::class, 'homepageOurValuesUpdate'])->name('homepageOurValues.update');
+
+    //Servicepage accounting
+    Route::get('/servicepage-accounting', [ServicepageController::class, 'servicepageAccounting'])->name('servicepageAccounting');
+    Route::put('/servicepage-accounting/update', [ServicepageController::class, 'servicepageAccountingUpdate'])->name('servicepageAccounting.update');
+
+    //Servicepage tax solution
+    Route::get('/servicepage-tax-solution', [ServicepageController::class, 'servicepageTaxSolution'])->name('servicepageTaxSolution');
+    Route::put('/servicepage-tax-solution/update', [ServicepageController::class, 'servicepageTaxSolutionUpdate'])->name('servicepageTaxSolution.update');
+
+    //Servicepage other solution
+    Route::get('/servicepage-other-solution', [ServicepageController::class, 'servicepageOtherSolution'])->name('servicepageOtherSolution');
+    Route::put('/servicepage-other-solution/update', [ServicepageController::class, 'servicepageOtherSolutionUpdate'])->name('servicepageOtherSolution.update');
+
+    //Servicepage business startup
+    Route::get('/servicepage-business-startup', [ServicepageController::class, 'servicepageBusinessStartup'])->name('servicepageBusinessStartup');
+    Route::put('/servicepage-business-startup/update', [ServicepageController::class, 'servicepageBusinessStartupUpdate'])->name('servicepageBusinessStartup.update');
+
+    //Servicepage company Secretarial
+    Route::get('/servicepage-company-secretarial', [ServicepageController::class, 'servicepageCompanySecretarial'])->name('servicepageCompanySecretarial');
+    Route::put('/servicepage-company-secretarial/update', [ServicepageController::class, 'servicepageCompanySecretarialUpdate'])->name('servicepageCompanySecretarial.update');
+
+    //Servicepage ⁠Bankruptcy and Liquidation
+    Route::get('/servicepage-bankruptcy-and-liquidation', [ServicepageController::class, 'bankruptcyAndLiquidation'])->name('bankruptcyAndLiquidation');
+    Route::put('/servicepage-bankruptcy-and-liquidation/update', [ServicepageController::class, 'bankruptcyAndLiquidationUpdate'])->name('bankruptcyAndLiquidation.update');
 
     //Img: we work with crud
     Route::get('/we-work-image', [WeWorkWithImageController::class, 'index'])->name('weWorkImage');

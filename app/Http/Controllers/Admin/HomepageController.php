@@ -31,7 +31,7 @@ class HomepageController extends Controller
 
         $homePageIntro = Master::where('softcode_id', $softcode->id)->first();
         if (!$homePageIntro) {
-            return redirect()->back()->withErrors(['error' => 'Contact heading not found.']);
+            return redirect()->back()->withErrors(['error' => 'Not found.']);
         }
 
         $homePageIntro->short_title = $request->input('short_title');
@@ -53,7 +53,7 @@ class HomepageController extends Controller
 
         $homePageIntro->save();
 
-        return redirect()->back()->with('success', 'Contact page updated successfully.');
+        return redirect()->back()->with('success', 'Updated successfully.');
     }
 
     public function homepageOurValues()
@@ -79,7 +79,7 @@ class HomepageController extends Controller
 
         $homePageOurValues = Master::where('softcode_id', $softcode->id)->first();
         if (!$homePageOurValues) {
-            return redirect()->back()->withErrors(['error' => 'Contact heading not found.']);
+            return redirect()->back()->withErrors(['error' => 'Not found.']);
         }
 
         $homePageOurValues->short_title = $request->input('short_title');
@@ -102,6 +102,6 @@ class HomepageController extends Controller
 
         $homePageOurValues->save();
 
-        return redirect()->back()->with('success', 'Contact page updated successfully.');
+        return redirect()->back()->with('success', 'Updated successfully.');
     }
 }
