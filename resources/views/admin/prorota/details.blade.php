@@ -6,7 +6,7 @@
     <div class="row">
         <div class="col-lg-12 px-0 border shadow-sm">
             <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center">
-                <i class='bx bxs-user-plus fs-4 me-2'></i> New Staff Entry
+                <i class='bx bxs-user-plus fs-4 me-2'></i> Prorota Details
             </p>
 
             <!-- Success and Error message -->

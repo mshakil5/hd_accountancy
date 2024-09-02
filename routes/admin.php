@@ -284,7 +284,7 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     // prorota make
     Route::get('/prorota', [ProrotaController::class, 'index'])->name('prorota');
     Route::get('/prorota-list', [ProrotaController::class, 'getprorota'])->name('get.prorota');
-    Route::get('/create-prorota', [ProrotaController::class, 'create'])->name('createprorota');
+    Route::get('/create-prorota', [ProrotaController::class, 'create'])->name('prorota.create');
     Route::post('/prorota', [ProrotaController::class, 'store']);
     Route::post('/prorota/update', [ProrotaController::class, 'update']);
     Route::get('/prorota/details/{id}', [ProrotaController::class,'showDetails'])->name('prorota.details');
