@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\WeWorkWithImageController;
 use App\Http\Controllers\Admin\CompanyDetailsController;
 use App\Http\Controllers\Admin\SoftCodeController;
 use App\Http\Controllers\Admin\MasterController;
+use App\Http\Controllers\Admin\HomepageController;
 
 //Fallback route
 Route::fallback(function () {
@@ -250,6 +251,11 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     //web contact page
     Route::get('/web-contact', [ContactMessageController::class, 'webContact'])->name('webContact');
     Route::put('/web-contact/update', [ContactMessageController::class, 'webContactUpdate'])->name('admin.contact.update');
+
+    //Homepage edit
+    Route::get('/homepage-intro', [HomepageController::class, 'homepageIntro'])->name('homepageIntro');
+    Route::put('/homepage-intro/update', [HomepageController::class, 'homepageIntroUpdate'])->name('homepageIntro.update');
+
     //Img: we work with crud
     Route::get('/we-work-image', [WeWorkWithImageController::class, 'index'])->name('weWorkImage');
     Route::post('/we-work-image', [WeWorkWithImageController::class, 'store']);

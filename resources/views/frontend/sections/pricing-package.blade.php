@@ -183,7 +183,7 @@
                         </div>
                     </div>
                     <div class="col-12 text-center mt-4">
-                       <a href="our-team.php" class="btn btn-theme-outline d-inline w-50 mx-auto rounded-3 fs-6">Meet our team</a>
+                       <a href="{{route('frontend.ourTeam')}}" class="btn btn-theme-outline d-inline w-50 mx-auto rounded-3 fs-6">Meet our team</a>
                     </div>
 
                 </div>

@@ -13,7 +13,13 @@ class FrontendController extends Controller
 {
     public function index()
     {
-        return view('frontend.homepage.index');
+        $homeIntroSoftcode = Softcode::where('name', 'Homepage Intro')->first();
+        if ($homeIntroSoftcode) {
+            $homePageIntro = Master::where('softcode_id', $homeIntroSoftcode->id)->first();
+        } else {
+            $homePageIntro = null;
+        }
+        return view('frontend.homepage.index', compact('homePageIntro'));
     }
 
     public function contact()

@@ -55,7 +55,7 @@ class ContactMessageController extends Controller
             }
 
             $image = $request->file('meta_image');
-            $imageName = time() . '.' . $image->getClientOriginalExtension();
+            $imageName = rand(10000000, 99999999) . '.' . $image->getClientOriginalExtension();
             $image->move(public_path('images/meta_image'), $imageName);
             $contactHeading->meta_image = $imageName;
          }

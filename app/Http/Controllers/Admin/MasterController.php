@@ -19,11 +19,6 @@ class MasterController extends Controller
 
     public function store(Request $request)
     {
-        if(empty($request->name)){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \" Name \" field..!</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
-            exit();
-        }
         if(empty($request->softcode_id)){
             $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \" Soft Code \" field..!</b></div>";
             return response()->json(['status'=> 303,'message'=>$message]);
@@ -34,23 +29,8 @@ class MasterController extends Controller
             return response()->json(['status'=> 303,'message'=>$message]);
             exit();
         }
-        if(empty($request->long_title)){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \" Long Title \" field..!</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
-            exit();
-        }
-        if(empty($request->short_description)){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \" Short Description \" field..!</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
-            exit();
-        }
         if(empty($request->long_description)){
             $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \" Long Description \" field..!</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
-            exit();
-        }
-        if (!$request->hasFile('meta_image')) {
-            $message = "<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please upload \" Meta Image \" ..!</b></div>";
             return response()->json(['status'=> 303,'message'=>$message]);
             exit();
         }
@@ -68,7 +48,7 @@ class MasterController extends Controller
 
         if ($request->hasFile('meta_image')) {
             $image = $request->file('meta_image');
-            $imageName = time().'.'.$image->getClientOriginalExtension();
+            $imageName = rand(10000000, 99999999) . '.' . $image->getClientOriginalExtension();
             $image->move(public_path('images/meta_image'), $imageName);
             $data->meta_image = $imageName;
         }
@@ -98,25 +78,12 @@ class MasterController extends Controller
             $message = "<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Record not found!</b></div>";
             return response()->json(['status' => 404, 'message' => $message]);
         }
-
-        if (empty($request->name)) {
-            $message = "<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Name\" field..!</b></div>";
-            return response()->json(['status' => 303, 'message' => $message]);
-        }
         if (empty($request->softcode_id)) {
             $message = "<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Soft Code\" field..!</b></div>";
             return response()->json(['error' => $message], 422);
         }
         if (empty($request->short_title)) {
             $message = "<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Short Title\" field..!</b></div>";
-            return response()->json(['status' => 303, 'message' => $message]);
-        }
-        if (empty($request->long_title)) {
-            $message = "<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Long Title\" field..!</b></div>";
-            return response()->json(['status' => 303, 'message' => $message]);
-        }
-        if (empty($request->short_description)) {
-            $message = "<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Short Description\" field..!</b></div>";
             return response()->json(['status' => 303, 'message' => $message]);
         }
         if (empty($request->long_description)) {
@@ -133,7 +100,7 @@ class MasterController extends Controller
             }
 
             $image = $request->file('meta_image');
-            $imageName = time() . '.' . $image->getClientOriginalExtension();
+            $imageName = rand(10000000, 99999999) . '.' . $image->getClientOriginalExtension();
             $image->move(public_path('images/meta_image'), $imageName);
             $data->meta_image = $imageName;
         }

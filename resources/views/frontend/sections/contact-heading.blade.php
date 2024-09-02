@@ -8,7 +8,7 @@
         <div class="p-4">
           <h1 class="display-5 text-white poppins-bold">{{ $contactHeading->short_title }} </h1>
           <p class="h2 text-white poppins-medium my-3">
-          {!! $contactHeading->long_title !!}
+          {{ $contactHeading->long_title }}
           </p>
           <p class="text-white poppins-regular w-75">
           {!! $contactHeading->long_description !!}

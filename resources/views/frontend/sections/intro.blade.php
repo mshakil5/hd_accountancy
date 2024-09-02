@@ -4,13 +4,10 @@
             <div class="col-lg-6 d-flex align-items-center">
                 <div class="py-5">
                     <h1 class="text-center text-md-start fw-bold  txt-primary poppins-bold">
-                        Grow more, Keep More <br> Save TAX, Save Time
+                         {{ $homePageIntro->short_title }}
                     </h1>
                     <p class="text-center text-md-start txt-primary ">
-                    Let us design fully digital books for your business to keep control of your finance. You and your business will be fully compliant with taxes and legal Requirements. 
-                    </p>
-                    <p class="text-center text-md-start txt-primary mb-5">
-                    If you are a small business /Limited company owner looking for a reliable accountant you are in right place
+                    {!! $homePageIntro->long_description !!}
                     </p>
                     <div class="text-center text-md-start">
                     <a href="" class=" poppins-medium btn-theme rounded-3 fs-5">Talk to us Now</a>
