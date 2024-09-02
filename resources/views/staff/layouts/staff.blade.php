@@ -1,17 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 
+@php
+    $companyDetails = \App\Models\CompanyDetails::first();
+@endphp
+
 <head>
   <meta charset="utf-8">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>HD Accountancy</title>
+  <title>{{ $companyDetails->company_name ?? 'HD Accountancy' }}</title>
   <meta content="" name="description">
   <meta content="" name="keywords">
 
   <!-- Favicons -->
-  <link href=" {{ asset('assets/img/favicon.png')}} " rel="icon">
-  <link href="{{ asset('assets/img/apple-touch-icon.png')}}" rel="apple-touch-icon">
+  <link rel="icon" href="{{ asset('images/company/' . $companyDetails->fav_icon) }}" />
 
   <!-- Google Fonts -->
   <link href="https://fonts.gstatic.com" rel="preconnect">
@@ -25,9 +28,10 @@
   <link href="{{ asset('assets/vendor/select2/select2.min.css')}}" rel="stylesheet">
   <link href="{{ asset('assets/vendor/datatables/dataTables.bootstrap4.min.css')}}" rel="stylesheet">
   <link href="{{ asset('assets/vendor/datatables/jquery.dataTables.min.css')}}" rel="stylesheet">
-  <link href="{{ asset('assets/vendor/toastify/toastify.min.css')}}" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-  <script src="{{ asset('assets/vendor/sweet-alert/sweetalert.min.js')}}"></script>
+  <link href="{{ asset('assets/vendor/toastify/toastify.min.css')}}" rel="stylesheet">
+  <link href="{{ asset('assets/vendor/datatables/buttons.dataTables.min.css')}}" rel="stylesheet">
+  <link href="{{ asset('assets/vendor/summernote/summernote-bs4.min.css')}}" rel="stylesheet">
 
   <!-- Template Main CSS File -->
   <link href="{{ asset('assets/css/style.css')}}" rel="stylesheet">
@@ -63,7 +67,7 @@
   <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
   <!-- Vendor JS Files -->
-  <script src="{{ asset('assets/vendor/jquery/jquery.min.js')}}"></script>
+<script src="{{ asset('assets/vendor/jquery/jquery.min.js')}}"></script>
   <script src="{{ asset('assets/vendor/bootstrap/js/bootstrap.bundle.min.js')}}"></script>
   <script src="{{ asset('assets/vendor/simple-datatables/simple-datatables.js')}}"></script>
   <script src="{{ asset('assets/vendor/tinymce/tinymce.min.js')}}"></script>
@@ -71,13 +75,21 @@
   <script src="{{ asset('assets/vendor/select2/select2.min.js')}}"></script>
   <script src="{{ asset('assets/vendor/datatables/jquery.dataTables.min.js')}}"></script>
   <script src="{{ asset('assets/vendor/datatables/dataTables.bootstrap4.min.js')}}"></script>
-  <script src="{{ asset('assets/vendor/moment/moment.min.js')}}"></script>
+  <script src="{{ asset('assets/vendor/datatables/dataTables.buttons.min.js')}}"></script>
+  <script src="{{ asset('assets/vendor/datatables/jszip.min.js')}}"></script>
+  <script src="{{ asset('assets/vendor/datatables/buttons.html5.min.js')}}"></script>
+  <script src="{{ asset('assets/vendor/datatables/buttons.print.min.js')}}"></script>
+  <script src="{{ asset('assets/vendor/datatables/buttons.colVis.min.js')}}"></script>
+  <script src="{{ asset('assets/vendor/datatables/pdfmake.min.js')}}"></script>
+  <script src="{{ asset('assets/vendor/datatables/vfs_fonts.js')}}"></script>
   <script src="{{ asset('assets/vendor/toastify/toastify-js.js')}}"></script>
+  <script src="{{ asset('assets/vendor/moment/moment.min.js')}}"></script>
+  <script src="{{ asset('assets/vendor/sweet-alert/sweetalert.min.js')}}"></script>
+  <script src="{{ asset('assets/vendor/summernote/summernote.min.js')}}"></script>
 
   <!-- Template Main JS File -->
   <script src="{{ asset('assets/js/main.js') }}"></script>
 
-  
   <script>
     function toggleSidebar() {
       document.getElementsByTagName('body').classlist.toggle('toggle-sidebar');

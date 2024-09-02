@@ -1,17 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 
+@php
+    $companyDetails = \App\Models\CompanyDetails::first();
+@endphp
+
 <head>
   <meta charset="utf-8">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>HD Accountancy</title>
+  <title>{{ $companyDetails->company_name ?? 'HD Accountancy' }}</title>
   <meta content="" name="description">
   <meta content="" name="keywords">
 
   <!-- Favicons -->
-  <link href=" {{ asset('assets/img/favicon.png')}} " rel="icon">
-  <link href="{{ asset('assets/img/apple-touch-icon.png')}}" rel="apple-touch-icon">
+  <link rel="icon" href="{{ asset('images/company/' . $companyDetails->fav_icon) }}" />
 
   <!-- Google Fonts -->
   <link href="https://fonts.gstatic.com" rel="preconnect">
