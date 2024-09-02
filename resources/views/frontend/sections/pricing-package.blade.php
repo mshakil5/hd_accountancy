@@ -99,9 +99,9 @@
         <div class="row py-5" id="about-us">
             <div class="col-lg-6  ">
                 <div class="row">
-                    <h2 class="txt-primary poppins-bold mb-3">Our Values </h2>
+                    <h2 class="txt-primary poppins-bold mb-3">{{ $homeOurValues->short_title }} </h2>
                     <p class="txt-primary my-3 mt-2">
-                    Our objectives is to leverage the latest accounting technology to save tax and time as much as possible and make sure you are safe from any future risk and tax investigation.
+                        {!! $homeOurValues->long_title !!}
                     </p>
                 </div>
                 <div class="row g-2 gx-4 mt-5">
@@ -135,7 +135,7 @@
         <div class="row py-3">
             <div class="col-lg-6 d-flex ">
                 <div>
-                    <h2 class="txt-primary poppins-bold mb-4">What Makes us Different?</h2>
+                    <!-- <h2 class="txt-primary poppins-bold mb-4">What Makes us Different?</h2>
                     <ul class="txt-primary ps-4">
                         <li class="mb-3">We guarantee you superfast communication through email, telephone or text message
                         </li>
@@ -153,7 +153,8 @@
                         We Deliver the service according to up-to-date Tax law. 
                         </li>
                         
-                    </ul>
+                    </ul> -->
+                    {!! $homeOurValues->long_description !!} 
                 </div>
             </div>
             <div class="col-lg-6 ">

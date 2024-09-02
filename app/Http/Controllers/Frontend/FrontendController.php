@@ -19,7 +19,14 @@ class FrontendController extends Controller
         } else {
             $homePageIntro = null;
         }
-        return view('frontend.homepage.index', compact('homePageIntro'));
+
+        $homeOurValuesSoftcode = Softcode::where('name', 'Homepage Our Values')->first();
+        if ($homeOurValuesSoftcode) {
+            $homeOurValues = Master::where('softcode_id', $homeOurValuesSoftcode->id)->first();
+        } else {
+            $homeOurValues = null;
+        }
+        return view('frontend.homepage.index', compact('homePageIntro', 'homeOurValues'));
     }
 
     public function contact()

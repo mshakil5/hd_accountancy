@@ -256,6 +256,9 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/homepage-intro', [HomepageController::class, 'homepageIntro'])->name('homepageIntro');
     Route::put('/homepage-intro/update', [HomepageController::class, 'homepageIntroUpdate'])->name('homepageIntro.update');
 
+    Route::get('/homepage-our-values', [HomepageController::class, 'homepageOurValues'])->name('homepageOurValues');
+    Route::put('/homepage-our-values/update', [HomepageController::class, 'homepageOurValuesUpdate'])->name('homepageOurValues.update');
+
     //Img: we work with crud
     Route::get('/we-work-image', [WeWorkWithImageController::class, 'index'])->name('weWorkImage');
     Route::post('/we-work-image', [WeWorkWithImageController::class, 'store']);

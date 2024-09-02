@@ -72,6 +72,29 @@
         </a>
     </li>
 
+    <li class="nav-item {{ request()->routeIs('homepageOurValues') || request()->routeIs('homepageIntro') ? 'menu-open' : '' }}">
+      <a class="nav-link collapsed {{ request()->routeIs('homepageOurValues') || request()->routeIs('homepageIntro') ? 'active' : '' }}" href="#" data-bs-toggle="collapse" data-bs-target="#homepageDropdown" aria-expanded="{{ request()->routeIs('homepageOurValues') || request()->routeIs('homepageIntro') ? 'true' : 'false' }}">
+          <i class="bi bi-house"></i>
+          <span>Homepage</span>
+          <i class="bi bi-chevron-down"></i>
+      </a>
+
+      <ul id="homepageDropdown" class="collapse list-unstyled {{ request()->routeIs('homepageOurValues') || request()->routeIs('homepageIntro') ? 'show' : '' }}">
+          <li class="nav-item {{ request()->routeIs('homepageOurValues') ? 'active' : '' }}">
+              <a class="nav-link" href="{{ route('homepageOurValues') }}">
+                  <i class="bi bi-heart"></i>
+                  <span>Our Values</span>
+              </a>
+          </li>
+          <li class="nav-item {{ request()->routeIs('homepageIntro') ? 'active' : '' }}">
+              <a class="nav-link" href="{{ route('homepageIntro') }}">
+                  <i class="bi bi-info-circle"></i>
+                  <span>Intro</span>
+              </a>
+          </li>
+      </ul>
+  </li>
+
   <li class="nav-item {{ request()->routeIs('allContactMessage*') || request()->routeIs('webContact') ? 'menu-open' : '' }}">
       <a class="nav-link collapsed {{ request()->routeIs('allContactMessage*') || request()->routeIs('webContact') ? 'active' : '' }}" href="#" data-bs-toggle="collapse" data-bs-target="#contactMessageDropdown" aria-expanded="{{ request()->routeIs('allContactMessage*') || request()->routeIs('webContact') ? 'true' : 'false' }}">
           <i class="bi bi-envelope"></i>

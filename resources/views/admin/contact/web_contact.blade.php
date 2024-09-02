@@ -61,7 +61,7 @@
                 </div>
               </form>
             @else
-              <p class="alert alert-warning">No contact information found to edit. Please check the database or create a new entry.</p>
+              <p class="alert alert-warning">No information found.</p>
             @endif
           </div>
           <div class="card-footer">
