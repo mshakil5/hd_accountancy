@@ -26,13 +26,9 @@ class ContactMessageController extends Controller
     public function webContactUpdate(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
             'short_title' => 'required|string|max:255',
             'long_title' => 'required|string|max:255',
-            'short_description' => 'nullable|string|max:255',
             'long_description' => 'required|string',
-            'meta_title' => 'nullable|string|max:255',
-            'meta_description' => 'nullable|string',
             'meta_image' => 'nullable|image|mimes:jpg,png,jpeg,gif|max:2048',
         ]);
 
@@ -46,13 +42,9 @@ class ContactMessageController extends Controller
             return redirect()->back()->withErrors(['error' => 'Contact heading not found.']);
         }
 
-        $contactHeading->name = $request->input('name');
         $contactHeading->short_title = $request->input('short_title');
         $contactHeading->long_title = $request->input('long_title');
-        $contactHeading->short_description = $request->input('short_description');
         $contactHeading->long_description = $request->input('long_description');
-        $contactHeading->meta_title = $request->input('meta_title');
-        $contactHeading->meta_description = $request->input('meta_description');
 
          if ($request->hasFile('meta_image')) {
             if ($contactHeading->meta_image) {

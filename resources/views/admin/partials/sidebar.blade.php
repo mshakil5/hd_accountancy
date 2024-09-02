@@ -89,7 +89,7 @@
           <li class="nav-item {{ request()->routeIs('webContact') ? 'active' : '' }}">
               <a class="nav-link" href="{{ route('webContact') }}">
                   <i class="bi bi-pencil"></i>
-                  <span>Edit Contact Page</span>
+                  <span>Contact Page</span>
               </a>
           </li>
       </ul>
