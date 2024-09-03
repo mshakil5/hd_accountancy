@@ -30,6 +30,7 @@ use App\Http\Controllers\Admin\ServicepageController;
 use App\Http\Controllers\Admin\PackageController;
 use App\Http\Controllers\Admin\PackageFeatureController;
 use App\Http\Controllers\Admin\BusinessServiceController;
+use App\Http\Controllers\Admin\BusinessValueController;
 
 //Fallback route
 Route::fallback(function () {
@@ -397,5 +398,12 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/business-service/{id}/edit', [BusinessServiceController::class, 'edit']);
     Route::post('/business-service-update', [BusinessServiceController::class, 'update']);
     Route::get('/business-service/{id}', [BusinessServiceController::class, 'delete']);
+
+    //Business value crud
+    Route::get('/business-value', [BusinessValueController::class, 'index'])->name('allBusinessValue');    
+    Route::post('/business-value', [BusinessValueController::class, 'store']);
+    Route::get('/business-value/{id}/edit', [BusinessValueController::class, 'edit']);
+    Route::post('/business-value-update', [BusinessValueController::class, 'update']);
+    Route::get('/business-value/{id}', [BusinessValueController::class, 'delete']);
 
 });
