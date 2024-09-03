@@ -29,6 +29,7 @@ use App\Http\Controllers\Admin\TimeslotController;
 use App\Http\Controllers\Admin\ServicepageController;
 use App\Http\Controllers\Admin\PackageController;
 use App\Http\Controllers\Admin\PackageFeatureController;
+use App\Http\Controllers\Admin\BusinessServiceController;
 
 //Fallback route
 Route::fallback(function () {
@@ -389,5 +390,12 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/package-feature/{id}/edit', [PackageFeatureController::class, 'edit']);
     Route::post('/package-feature-update', [PackageFeatureController::class, 'update']);
     Route::get('/package-feature/{id}', [PackageFeatureController::class, 'delete']);
+
+    //Business service crud
+    Route::get('/business-service', [BusinessServiceController::class, 'index'])->name('allBusinessService');    
+    Route::post('/business-service', [BusinessServiceController::class, 'store']);
+    Route::get('/business-service/{id}/edit', [BusinessServiceController::class, 'edit']);
+    Route::post('/business-service-update', [BusinessServiceController::class, 'update']);
+    Route::get('/business-service/{id}', [BusinessServiceController::class, 'delete']);
 
 });

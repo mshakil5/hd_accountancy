@@ -10,6 +10,7 @@ use App\Models\Softcode;
 use App\Models\Master;
 use App\Models\TimeSlot;
 use App\Models\Package;
+use App\Models\BusinessService;
 
 class FrontendController extends Controller
 {
@@ -32,9 +33,10 @@ class FrontendController extends Controller
         $timeSlots = TimeSlot::orderBy('id', 'desc')->get();
 
         $packages = Package::orderBy('price', 'asc')->get();
-        // dd($packages);
+
+        $businessServices = BusinessService::orderBy('id', 'asc')->get();
         
-        return view('frontend.homepage.index', compact('homePageIntro', 'homeOurValues', 'timeSlots', 'packages'));
+        return view('frontend.homepage.index', compact('homePageIntro', 'homeOurValues', 'timeSlots', 'packages', 'businessServices'));
     }
 
     public function contact()

@@ -16,36 +16,18 @@
                 <h2 class="text-white text-center fw-bold text-capitalize ">What are you looking for?</h2>
             </div>
             <div class="row my-5">
-                <div class="col-lg-4 text-center text-white">
-                    <div class=" bg-white rounded-3 d-inline  w-auto p-3 mx-auto d-inline-flex align-items-center justify-content-center">
-                        <img src="{{ asset('assets/frontend/images/new-project 1.svg') }}" width="150">
+                @foreach($businessServices as $businessService)
+                    <div class="col-lg-4 text-center text-white">
+                        <div class="bg-white rounded-3 d-inline  w-auto p-3 mx-auto d-inline-flex align-items-center justify-content-center">
+                            <img src="{{ asset('/' . $businessService->image) }}" width="150">
+                        </div>
+                        <h5 class="my-4 fw-bold text-white">{{ $businessService->short_title }}</h5>
+                        <p class="mb-5">
+                            {!! $businessService->long_description !!}
+                        </p>
+                        <a href="#" class="bg-light  border-0 py-2 px-5 link  rounded-2 fw-bold txt-primary">See More</a>
                     </div>
-                    <h5 class="my-4 fw-bold text-white">I want to set Up New Business</h5>
-                    <p class="mb-5">
-                        Either you want to set up Sole trade We will handle all kinds of documentation and registration of your business
-                    </p>
-                    <a href="#" class=" bg-light  border-0 py-2 px-5 link  rounded-2 fw-bold txt-primary">See More</a>
-                </div>
-                <div class="col-lg-4 text-center text-white">
-                    <div class=" bg-white rounded-3 d-inline  w-auto p-3 mx-auto d-inline-flex align-items-center justify-content-center">
-                        <img src="{{ asset('assets/frontend/images/growth 1.svg') }}" width="150">
-                    </div>
-                    <h5 class="my-4 fw-bold text-white">I want to grow my Business</h5>
-                    <p class="mb-5">
-                        With advance financial planning <br>and tax advice you can grow<br> your business with us
-                    </p>
-                    <a href="#" class=" bg-light  border-0 py-2 px-5 link  rounded-2 fw-bold txt-primary">See More</a>
-                </div>
-                <div class="col-lg-4 text-center text-white">
-                    <div class=" bg-white rounded-3 d-inline  w-auto p-3 mx-auto d-inline-flex align-items-center justify-content-center">
-                        <img src="{{ asset('assets/frontend/images/Landlord certificate 1.svg') }}" width="150">
-                    </div>
-                    <h5 class="my-4 fw-bold text-white">I am a landlord</h5>
-                    <p class="mb-5">
-                        We will handle all of your property <br> documents and fill your <br> self assessment return
-                    </p>
-                    <a href="#" class=" bg-light  border-0 py-2 px-5 link  rounded-2 fw-bold txt-primary">See More</a>
-                </div>
+                @endforeach
             </div>
         </div>
         <br>
