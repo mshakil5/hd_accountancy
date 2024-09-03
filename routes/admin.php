@@ -27,6 +27,8 @@ use App\Http\Controllers\Admin\MasterController;
 use App\Http\Controllers\Admin\HomepageController;
 use App\Http\Controllers\Admin\TimeslotController;
 use App\Http\Controllers\Admin\ServicepageController;
+use App\Http\Controllers\Admin\PackageController;
+use App\Http\Controllers\Admin\PackageFeatureController;
 
 //Fallback route
 Route::fallback(function () {
@@ -373,5 +375,19 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/time-slot/{id}/edit', [TimeslotController::class, 'edit']);
     Route::post('/time-slot-update', [TimeslotController::class, 'update']);
     Route::get('/time-slot/{id}', [TimeslotController::class, 'delete']);
+
+    //Package Features crud
+    Route::get('/package', [PackageController::class, 'index'])->name('allPackage');    
+    Route::post('/package', [PackageController::class, 'store']);
+    Route::get('/package/{id}/edit', [PackageController::class, 'edit']);
+    Route::post('/package-update', [PackageController::class, 'update']);
+    Route::get('/package/{id}', [PackageController::class, 'delete']);
+
+    //Package crud
+    Route::get('/package-feature', [PackageFeatureController::class, 'index'])->name('allPackageFeature');    
+    Route::post('/package-feature', [PackageFeatureController::class, 'store']);
+    Route::get('/package-feature/{id}/edit', [PackageFeatureController::class, 'edit']);
+    Route::post('/package-feature-update', [PackageFeatureController::class, 'update']);
+    Route::get('/package-feature/{id}', [PackageFeatureController::class, 'delete']);
 
 });
