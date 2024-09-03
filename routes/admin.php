@@ -31,6 +31,7 @@ use App\Http\Controllers\Admin\PackageController;
 use App\Http\Controllers\Admin\PackageFeatureController;
 use App\Http\Controllers\Admin\BusinessServiceController;
 use App\Http\Controllers\Admin\BusinessValueController;
+use App\Http\Controllers\Admin\TestimonialController;
 
 //Fallback route
 Route::fallback(function () {
@@ -405,5 +406,12 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/business-value/{id}/edit', [BusinessValueController::class, 'edit']);
     Route::post('/business-value-update', [BusinessValueController::class, 'update']);
     Route::get('/business-value/{id}', [BusinessValueController::class, 'delete']);
+
+    //Client testimonial crud
+    Route::get('/client-testimonial', [TestimonialController::class, 'index'])->name('allClientTestimonial');    
+    Route::post('/client-testimonial', [TestimonialController::class, 'store']);
+    Route::get('/client-testimonial/{id}/edit', [TestimonialController::class, 'edit']);
+    Route::post('/client-testimonial-update', [TestimonialController::class, 'update']);
+    Route::get('/client-testimonial/{id}', [TestimonialController::class, 'delete']);
 
 });

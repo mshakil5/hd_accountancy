@@ -9,30 +9,15 @@
         <div class="row mt-5">
 
             <div class="testimonial">
-                <div class="p-3">
-                    <video controls width="100% " class="rounded-4">
-                        <source src="{{ asset('assets/frontend/videos/3145-166335957.mp4') }}" type="video/mp4">
-                        </source>
-                    </video>
-                </div>
-                <div class="p-3">
-                    <video controls width="100% " class="rounded-4">
-                        <source src="{{ asset('assets/frontend/videos/3145-166335957.mp4') }}" type="video/mp4">
-                        </source>
-                    </video>
-                </div>
-                <div class="p-3">
-                    <video controls width="100% " class="rounded-4">
-                        <source src="{{ asset('assets/frontend/videos/3145-166335957.mp4') }}" type="video/mp4">
-                        </source>
-                    </video>
-                </div>
-                <div class="p-3">
-                    <video controls width="100% " class="rounded-4">
-                        <source src="{{ asset('assets/frontend/videos/3145-166335957.mp4') }}" type="video/mp4">
-                        </source>
-                    </video>
-                </div>
+                @foreach($clientTestimonial as $testimonial)
+                    @if($testimonial->video)
+                        <div class="p-3">
+                            <video controls width="320" height="240" class="rounded-4" poster="{{ asset($testimonial->thumbnail) }}">
+                                <source src="{{ asset($testimonial->video) }}" type="video/mp4">
+                            </video>
+                        </div>
+                    @endif
+                @endforeach
             </div>
 
             <div class="col-12 text-center my-3">

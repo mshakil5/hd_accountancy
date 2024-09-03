@@ -12,6 +12,7 @@ use App\Models\TimeSlot;
 use App\Models\Package;
 use App\Models\BusinessService;
 use App\Models\BusinessValue;
+use App\Models\ClientTestimonial;
 
 class FrontendController extends Controller
 {
@@ -38,8 +39,10 @@ class FrontendController extends Controller
         $businessServices = BusinessService::orderBy('id', 'asc')->get();
 
         $businessValues = BusinessValue::orderBy('id', 'asc')->get();
+
+        $clientTestimonial = ClientTestimonial::orderBy('id', 'desc')->take(3)->get();
         
-        return view('frontend.homepage.index', compact('homePageIntro', 'homeOurValues', 'timeSlots', 'packages', 'businessServices', 'businessValues'));
+        return view('frontend.homepage.index', compact('homePageIntro', 'homeOurValues', 'timeSlots', 'packages', 'businessServices', 'businessValues', 'clientTestimonial'));
     }
 
     public function contact()
