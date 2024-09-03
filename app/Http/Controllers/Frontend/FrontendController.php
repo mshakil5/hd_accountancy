@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Validator;
 use App\Models\Softcode;
 use App\Models\Master;
 use App\Models\TimeSlot;
+use App\Models\Package;
 
 class FrontendController extends Controller
 {
@@ -29,7 +30,11 @@ class FrontendController extends Controller
         }
 
         $timeSlots = TimeSlot::orderBy('id', 'desc')->get();
-        return view('frontend.homepage.index', compact('homePageIntro', 'homeOurValues', 'timeSlots'));
+
+        $packages = Package::orderBy('price', 'asc')->get();
+        // dd($packages);
+        
+        return view('frontend.homepage.index', compact('homePageIntro', 'homeOurValues', 'timeSlots', 'packages'));
     }
 
     public function contact()

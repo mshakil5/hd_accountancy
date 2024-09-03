@@ -165,6 +165,29 @@
     </ul>
   </li>
 
+  <li class="nav-item {{ request()->routeIs('allPackage') || request()->routeIs('allPackageFeature') ? 'menu-open' : '' }}">
+    <a class="nav-link collapsed {{ request()->routeIs('allPackage') || request()->routeIs('allPackageFeature') ? 'active' : '' }}" href="#" data-bs-toggle="collapse" data-bs-target="#packageDropdown" aria-expanded="{{ request()->routeIs('allPackage') || request()->routeIs('allPackageFeature') ? 'true' : 'false' }}">
+        <i class="bi bi-box"></i>
+        <span>Package</span>
+        <i class="bi bi-chevron-down"></i>
+    </a>
+
+    <ul id="packageDropdown" class="collapse list-unstyled {{ request()->routeIs('allPackage') || request()->routeIs('allPackageFeature') ? 'show' : '' }}">
+      <li class="nav-item {{ request()->routeIs('allPackage') ? 'active' : '' }}">
+        <a class="nav-link" href="{{ route('allPackage') }}">
+            <i class="bi bi-box"></i>
+            <span>All Packages</span>
+        </a>
+      </li>
+      <li class="nav-item {{ request()->routeIs('allPackageFeature') ? 'active' : '' }}">
+        <a class="nav-link" href="{{ route('allPackageFeature') }}">
+            <i class="bi bi-list-check"></i>
+            <span>Package Features</span>
+        </a>
+      </li>
+    </ul>
+  </li>
+
     <li class="nav-item {{ request()->routeIs('prevLogStaffs','task.details.staff','allPrevLogStaffs') ? 'active' : '' }}">
         <a class="nav-link collapsed" href="{{ route('prevLogStaffs') }}">
             <i class="bi bi-calendar-check"></i>

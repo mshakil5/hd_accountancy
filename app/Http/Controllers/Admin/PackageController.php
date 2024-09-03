@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Package;
 use App\Models\PackageFeature;
+use Illuminate\Support\Str;
 
 class PackageController extends Controller
 {
@@ -41,6 +42,7 @@ class PackageController extends Controller
         } else {
             $data = new Package;
             $data->name = $request->name;
+            $data->slug = Str::slug($request->name);
             $data->short_title = $request->short_title;
             $data->price = $request->price;
             $data->long_title = $request->long_title;

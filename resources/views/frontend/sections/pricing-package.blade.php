@@ -9,92 +9,30 @@
             </div>
         </div>
         <div class="row my-5">
-            <div class="col-lg-4">
-                <div class="card text-center border-1 p-4 rounded-4 mb-3">
-                    <h4 class="txt-primary poppins-bold">Sole Trader</h4>
-                    <small class="txt-primary my-3">
-                        Ideal for self-employed, small business, freelancer and subcontractor with a straight forward income structure
-                    </small>
-                    <p></p>
-                    <div class="mb-3">
-                        <span class="txt-primary poppins-regular mb-0">From</span>
-                        <h3 class="txt-primary poppins-bold mb-0">£25</h3>
-                        <small class="txt-primary my-3">+VAT / Month</small>
+            @foreach($packages as $package)
+                <div class="col-lg-4">
+                    <div class="card text-center border-1 p-4 rounded-4 mb-3">
+                        <h4 class="txt-primary poppins-bold">{{ $package->short_title }}</h4>
+                        <small class="txt-primary my-3">
+                            {!! $package->long_description !!}
+                        </small>
+                        <p></p>
+                        <div class="mb-3">
+                            <span class="txt-primary poppins-regular mb-0">From</span>
+                            <h3 class="txt-primary poppins-bold mb-0">£{{ number_format($package->price, 0) }}</h3>
+                            <small class="txt-primary my-3">+ VAT / Month</small>
+                        </div>
+                        <ul class="ms-5 text-start small txt-primary list-unstyled mb-4">
+                            @foreach(explode(',', trim($package->features, '"')) as $feature)
+                                <li class="d-flex align-items-center gap-2">
+                                    <iconify-icon class="txt-primary fw-bold fs-5" icon="fluent:checkmark-12-filled"></iconify-icon>{{ trim($feature) }}
+                                </li>
+                            @endforeach
+                        </ul>
+                        <a class="btn btn-theme-outline d-inline w-50 mx-auto rounded-3 fs-6">Explore</a>
                     </div>
-                    <ul class="ms-5 text-start small txt-primary list-unstyled mb-4">
-                        <li class="d-flex align-items-center gap-2">
-                            <iconify-icon class="txt-primary fw-bold fs-5" icon="fluent:checkmark-12-filled"></iconify-icon>Dedicated Accountant
-                        </li>
-                        <li class="d-flex align-items-center gap-2">
-                            <iconify-icon class="txt-primary fw-bold fs-5" icon="fluent:checkmark-12-filled"></iconify-icon> Unlimited Expert Support
-                        </li>
-                        <li class="d-flex align-items-center gap-2">
-                            <iconify-icon class="txt-primary fw-bold fs-5" icon="fluent:checkmark-12-filled"></iconify-icon> Self-assessment Tax return
-                        </li>
-                        <li class="d-flex align-items-center gap-2">
-                            <iconify-icon class="txt-primary fw-bold fs-5" icon="fluent:checkmark-12-filled"></iconify-icon> Year-end Accounts
-                        </li>
-                    </ul>
-                    <a class="btn btn-theme-outline d-inline w-50 mx-auto rounded-3 fs-6">Explore</a>
                 </div>
-            </div>
-            <div class="col-lg-4">
-                <div class="card text-center border-1 p-4 rounded-4 mb-3">
-                    <h4 class="txt-primary poppins-bold">Limited Company</h4>
-                    <small class="txt-primary my-3">
-                        Designed for small business or new business or start up turnover below the VAT threshold looking to tax efficient use of income
-                    </small>
-                    <p></p>
-                    <div class="mb-3">
-                        <span class="txt-primary poppins-regular mb-0">From</span>
-                        <h3 class="txt-primary poppins-bold mb-0">£49</h3>
-                        <small class="txt-primary my-3">+ VAT / Month</small>
-                    </div>
-                    <ul class="ms-5 text-start small txt-primary list-unstyled mb-4">
-                        <li class="d-flex align-items-center gap-2">
-                            <iconify-icon class="txt-primary fw-bold fs-5" icon="fluent:checkmark-12-filled"></iconify-icon>Dedicated Accountant
-                        </li>
-                        <li class="d-flex align-items-center gap-2">
-                            <iconify-icon class="txt-primary fw-bold fs-5" icon="fluent:checkmark-12-filled"></iconify-icon> Unlimited Expert Support
-                        </li>
-                        <li class="d-flex align-items-center gap-2">
-                            <iconify-icon class="txt-primary fw-bold fs-5" icon="fluent:checkmark-12-filled"></iconify-icon> Annual Accounts
-                        </li>
-                        <li class="d-flex align-items-center gap-2">
-                            <iconify-icon class="txt-primary fw-bold fs-5" icon="fluent:checkmark-12-filled"></iconify-icon>Corporation TAX Return
-                        </li>
-                    </ul>
-                    <a class="btn btn-theme-outline d-inline w-50 mx-auto rounded-3 fs-6">Explore</a>
-                </div>
-            </div>
-            <div class="col-lg-4">
-                <div class="card text-center border-1 p-4 rounded-4 mb-3">
-                    <h4 class="txt-primary poppins-bold">VAT Registered Business</h4>
-                    <small class="txt-primary my-3">
-                        Perfectly designed for more established vat registered business looking to manage bookkeeping, vat, accounts, taxes and all other compliance
-                    </small>
-                    <div class="mb-3">
-                        <span class="txt-primary poppins-regular mb-0">From</span>
-                        <h3 class="txt-primary poppins-bold mb-0">£99</h3>
-                        <small class="txt-primary my-3">+ VAT / Month</small>
-                    </div>
-                    <ul class="ms-5 text-start small txt-primary list-unstyled mb-4">
-                        <li class="d-flex align-items-center gap-2">
-                            <iconify-icon class="txt-primary fw-bold fs-5" icon="fluent:checkmark-12-filled"></iconify-icon>Dedicated Accountant
-                        </li>
-                        <li class="d-flex align-items-center gap-2">
-                            <iconify-icon class="txt-primary fw-bold fs-5" icon="fluent:checkmark-12-filled"></iconify-icon> Unlimited Expert Support
-                        </li>
-                        <li class="d-flex align-items-center gap-2">
-                            <iconify-icon class="txt-primary fw-bold fs-5" icon="fluent:checkmark-12-filled"></iconify-icon> Quarterly VAT Submission
-                        </li>
-                        <li class="d-flex align-items-center gap-2">
-                            <iconify-icon class="txt-primary fw-bold fs-5" icon="fluent:checkmark-12-filled"></iconify-icon>Annual Accounts and TAX
-                        </li>
-                    </ul>
-                    <a class="btn btn-theme-outline d-inline w-50 mx-auto rounded-3 fs-6">Explore</a>
-                </div>
-            </div>
+            @endforeach
         </div>
         <div class="row py-5" id="about-us">
             <div class="col-lg-6  ">
