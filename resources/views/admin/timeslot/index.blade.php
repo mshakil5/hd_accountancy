@@ -89,8 +89,8 @@
                   @foreach ($data as $key => $data)
                   <tr>
                     <td style="text-align: center">{{ $key + 1 }}</td>
-                    <td style="text-align: center">{{$data->start_time}}</td>
-                    <td style="text-align: center">{{$data->end_time}}</td>
+                    <td style="text-align: center">{{ \Carbon\Carbon::parse($data->start_time)->format('g:i A') }}</td>
+                    <td style="text-align: center">{{ \Carbon\Carbon::parse($data->end_time)->format('g:i A') }}</td>
                     <td style="text-align: center">
                       <a class="btn btn-link" id="EditBtn" rid="{{$data->id}}"><i class="fa fa-edit" style="font-size: 20px;"></i></a>
                         <a class="btn btn-link" id="deleteBtn" rid="{{$data->id}}"><i class="fas fa-trash" style="color: red; font-size: 20px;"></i></a>

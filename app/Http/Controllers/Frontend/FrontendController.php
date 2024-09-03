@@ -8,6 +8,7 @@ use App\Models\Contact;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Softcode;
 use App\Models\Master;
+use App\Models\TimeSlot;
 
 class FrontendController extends Controller
 {
@@ -26,7 +27,9 @@ class FrontendController extends Controller
         } else {
             $homeOurValues = null;
         }
-        return view('frontend.homepage.index', compact('homePageIntro', 'homeOurValues'));
+
+        $timeSlots = TimeSlot::orderBy('id', 'desc')->get();
+        return view('frontend.homepage.index', compact('homePageIntro', 'homeOurValues', 'timeSlots'));
     }
 
     public function contact()

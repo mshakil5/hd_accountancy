@@ -45,13 +45,21 @@
                             </div>
                             <div class="row">
                                 <div class="col-lg-7">
-                                    <input type="date" class="form-control" id="date" name="date">
+                                    <div id="datepicker" class="datepicker"></div>
+                                    <input type="hidden" id="date" name="date">
                                 </div>
                                 <div class="col-lg-5 d-flex flex-wrap gx-1 justify-content-center my-4">
+
+                                @php
+                                    use Carbon\Carbon;
+                                @endphp
+
                                     @foreach(\App\Models\TimeSlot::all() as $timeSlot)
                                         <div class="mb-2">
-                                            <input type="radio" class="timepick invisible" name="timepick" id="{{ $timeSlot->id }}">
-                                            <label for="{{ $timeSlot->id }}">{{ $timeSlot->start_time }}</label>
+                                            <input type="radio" class="timepick invisible" name="timepick" id="timepick-{{ $timeSlot->id }}">
+                                            <label for="timepick-{{ $timeSlot->id }}">
+                                                {{ Carbon::createFromFormat('H:i', $timeSlot->start_time)->format('h:i A') }}
+                                            </label>
                                         </div>
                                     @endforeach
                                 </div>
