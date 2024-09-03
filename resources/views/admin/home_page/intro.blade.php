@@ -35,6 +35,15 @@
                   </div>
                   <div class="col-sm-12">
                     <div class="form-group">
+                      <label for="long_title">Short Title</label>
+                      <input type="text" class="form-control @error('long_title') is-invalid @enderror" id="long_title" name="long_title" value="{{ old('long_title', $homePageIntro->long_title) }}" placeholder="Enter short title">
+                      @error('long_title')
+                        <span class="invalid-feedback d-block">{{ $message }}</span>
+                      @enderror
+                    </div>
+                  </div>
+                  <div class="col-sm-12">
+                    <div class="form-group">
                       <label for="long_description">Long Description</label>
                       <textarea class="form-control summernote @error('long_description') is-invalid @enderror" id="long_description" name="long_description">{{ old('long_description', $homePageIntro->long_description) }}</textarea>
                       @error('long_description')

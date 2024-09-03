@@ -80,18 +80,18 @@
       </a>
 
       <ul id="homepageDropdown" class="collapse list-unstyled {{ request()->routeIs('homepageOurValues') || request()->routeIs('homepageIntro') ? 'show' : '' }}">
-          <li class="nav-item {{ request()->routeIs('homepageOurValues') ? 'active' : '' }}">
-              <a class="nav-link" href="{{ route('homepageOurValues') }}">
-                  <i class="bi bi-heart"></i>
-                  <span>Our Values</span>
-              </a>
-          </li>
-          <li class="nav-item {{ request()->routeIs('homepageIntro') ? 'active' : '' }}">
+        <li class="nav-item {{ request()->routeIs('homepageIntro') ? 'active' : '' }}">
               <a class="nav-link" href="{{ route('homepageIntro') }}">
                   <i class="bi bi-info-circle"></i>
                   <span>Intro</span>
               </a>
           </li>
+          <li class="nav-item {{ request()->routeIs('homepageOurValues') ? 'active' : '' }}">
+              <a class="nav-link" href="{{ route('homepageOurValues') }}">
+                  <i class="bi bi-heart"></i>
+                  <span>Our Values</span>
+              </a>
+          </li>     
       </ul>
   </li>
 

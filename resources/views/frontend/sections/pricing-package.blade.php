@@ -129,31 +129,12 @@
                 </div>
             </div>
             <div class="col-lg-6 text-center">
-                <img src="{{ asset('assets/frontend/images/Group Pic.png') }}" class="img-fluid mt-3" alt="">
+                <img src="{{ asset('images/meta_image/' . $homeOurValues->meta_image) }}" class="img-fluid mt-3" alt="">
             </div>
         </div>
         <div class="row py-3">
             <div class="col-lg-6 d-flex ">
                 <div>
-                    <!-- <h2 class="txt-primary poppins-bold mb-4">What Makes us Different?</h2>
-                    <ul class="txt-primary ps-4">
-                        <li class="mb-3">We guarantee you superfast communication through email, telephone or text message
-                        </li>
-                        <li class="mb-3">
-                        our commitment is to defend our client in any tax investigation.
-
-                        </li>
-                        <li class="mb-3">
-                            our commitment is to defend our client in any tax investigation.
-                        </li>
-                        <li class="mb-3">
-                        Tax bill will be minimized using all possible legal way
-                        </li>
-                        <li class="mb-3">
-                        We Deliver the service according to up-to-date Tax law. 
-                        </li>
-                        
-                    </ul> -->
                     {!! $homeOurValues->long_description !!} 
                 </div>
             </div>

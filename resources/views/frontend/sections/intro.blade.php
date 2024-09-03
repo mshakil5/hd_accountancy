@@ -5,6 +5,8 @@
                 <div class="py-5">
                     <h1 class="text-center text-md-start fw-bold  txt-primary poppins-bold">
                          {{ $homePageIntro->short_title }}
+                         <br>
+                         {{ $homePageIntro->long_title }}
                     </h1>
                     <p class="text-center text-md-start txt-primary ">
                     {!! $homePageIntro->long_description !!}
@@ -21,7 +23,7 @@
                 </div>
             </div>
             <div class="col-lg-6 overflow-hidden position-relative  ">
-                <img src="{{ asset('assets/frontend/images/person.png') }}" class="mt-5 img-fluid image-control" alt="">
+                <img src="{{ asset('images/meta_image/' . $homePageIntro->meta_image) }}" class="mt-5 img-fluid image-control" alt="">
             </div>
         </div>
     </div>
