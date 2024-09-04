@@ -10,61 +10,26 @@
 
             <div class="caseStudy">
 
+                @foreach ($caseStudies as $item)
                 <div class="p-3">
                     <div class="row gx-3">
                         <div class="col-lg-6">
-                            <img src="{{ asset('assets/frontend/images/Learning-Designer-Job-Description.jpg') }}" class="img-fluid rounded-3 shadow" alt="">
+                            <img src="{{ asset($item->image) }}" class="img-fluid rounded-3 shadow" alt="">
                         </div>
                         <div class="col-lg-6">
                             <div class="theme-b bg-primary rounded-4 p-3">
-                                <h3 class="poppins-bold text-light">Transforming Financial Worries into Success for Distribution...</h3>
+                                <h3 class="poppins-bold text-light">{{ $item->short_title }}</h3>
                                 <small class="text-light">
-                                Sam Goldthorpe, Director of Distribution Jointing Services Ltd, was a high-stress individual employed as an electrician jointing high voltage lines. As a higher rate taxpayer with significant family expenses, Sam faced a high-risk decision to start his own business. With a wife returning to university after a 10-year break to care for their two children, the stakes were high.
+                                    {!! $item->long_description !!}
                                 </small>
-                               <p class="text-end mb-0">
-                               <a href="" class="btn bg-white mt-2 poppins-bold txt-primary ">See More</a>
-                               </p>
+                                <p class="text-end mb-0">
+                                    <a href="" class="btn bg-white mt-2 poppins-bold txt-primary">See More</a>
+                                </p>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="p-3">
-                    <div class="row gx-3">
-                        <div class="col-lg-6">
-                            <img src="{{ asset('assets/frontend/images/Learning-Designer-Job-Description.jpg') }}" class="img-fluid rounded-3 shadow" alt="">
-                        </div>
-                        <div class="col-lg-6">
-                            <div class="theme-b bg-primary rounded-4 p-3">
-                                <h3 class="poppins-bold text-light">Transforming Financial Worries into Success for Distribution...</h3>
-                                <small class="text-light">
-                                Sam Goldthorpe, Director of Distribution Jointing Services Ltd, was a high-stress individual employed as an electrician jointing high voltage lines. As a higher rate taxpayer with significant family expenses, Sam faced a high-risk decision to start his own business. With a wife returning to university after a 10-year break to care for their two children, the stakes were high.
-                                </small>
-                               <p class="text-end mb-0">
-                               <a href="" class="btn bg-white mt-2 poppins-bold txt-primary ">See More</a>
-                               </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="p-3">
-                    <div class="row gx-3">
-                        <div class="col-lg-6">
-                            <img src="{{ asset('assets/frontend/images/Learning-Designer-Job-Description.jpg') }}" class="img-fluid rounded-3 shadow" alt="">
-                        </div>
-                        <div class="col-lg-6">
-                            <div class="theme-b bg-primary rounded-4 p-3">
-                                <h3 class="poppins-bold text-light">Transforming Financial Worries into Success for Distribution...</h3>
-                                <small class="text-light">
-                                Sam Goldthorpe, Director of Distribution Jointing Services Ltd, was a high-stress individual employed as an electrician jointing high voltage lines. As a higher rate taxpayer with significant family expenses, Sam faced a high-risk decision to start his own business. With a wife returning to university after a 10-year break to care for their two children, the stakes were high.
-                                </small>
-                               <p class="text-end mb-0">
-                               <a href="" class="btn bg-white mt-2 poppins-bold txt-primary ">See More</a>
-                               </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
+                @endforeach
 
             </div>
 

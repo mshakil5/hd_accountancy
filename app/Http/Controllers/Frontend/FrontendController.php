@@ -13,6 +13,7 @@ use App\Models\Package;
 use App\Models\BusinessService;
 use App\Models\BusinessValue;
 use App\Models\ClientTestimonial;
+use App\Models\CaseStudy;
 
 class FrontendController extends Controller
 {
@@ -41,8 +42,10 @@ class FrontendController extends Controller
         $businessValues = BusinessValue::orderBy('id', 'asc')->get();
 
         $clientTestimonial = ClientTestimonial::orderBy('id', 'desc')->take(3)->get();
+
+        $caseStudies = CaseStudy::orderBy('id', 'desc')->take(3)->get();
         
-        return view('frontend.homepage.index', compact('homePageIntro', 'homeOurValues', 'timeSlots', 'packages', 'businessServices', 'businessValues', 'clientTestimonial'));
+        return view('frontend.homepage.index', compact('homePageIntro', 'homeOurValues', 'timeSlots', 'packages', 'businessServices', 'businessValues', 'clientTestimonial', 'caseStudies'));
     }
 
     public function contact()
