@@ -23,7 +23,7 @@
                                     {!! $item->long_description !!}
                                 </small>
                                 <p class="text-end mb-0">
-                                    <a href="" class="btn bg-white mt-2 poppins-bold txt-primary">See More</a>
+                                    <a href="{{ route('frontend.caseStudy') }}" class="btn bg-white mt-2 poppins-bold txt-primary">See More</a>
                                 </p>
                             </div>
                         </div>
@@ -34,7 +34,7 @@
             </div>
 
             <div class="col-12 text-center mt-5">
-                <a href="#" class="btn btn-theme-outline d-inline w-50 mx-auto rounded-3 fs-6">See More Case Study</a>
+                <a href="{{ route('frontend.caseStudy') }}" class="btn btn-theme-outline d-inline w-50 mx-auto rounded-3 fs-6">See More Case Study</a>
             </div>
 
         </div>

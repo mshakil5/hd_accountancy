@@ -1,4 +1,4 @@
-<section class="py-5 bg-light">
+<section class="py-5 bg-light" id="contactForm">
   <div class="container">
     <div class="row py-2 col-lg-10 mx-auto">
       @if(session('success'))

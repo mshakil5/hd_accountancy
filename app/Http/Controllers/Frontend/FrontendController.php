@@ -173,7 +173,14 @@ class FrontendController extends Controller
 
     public function caseStudy()
     {
-        return view('frontend.case-study.index');
+        $caseStudySoftcode = Softcode::where('name', 'Case Study')->first();
+        if ($caseStudySoftcode) {
+            $caseStudy = Master::where('softcode_id', $caseStudySoftcode->id)->first();
+        } else {
+            $caseStudy = null;
+        }
+        $caseStudies = CaseStudy::orderby('id','DESC')->get();
+        return view('frontend.case-study.index', compact('caseStudy', 'caseStudies'));
     }
 
     public function cloudAccounting()

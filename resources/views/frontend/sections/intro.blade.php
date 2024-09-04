@@ -12,7 +12,7 @@
                     {!! $homePageIntro->long_description !!}
                     </p>
                     <div class="text-center text-md-start">
-                    <a href="" class=" poppins-medium btn-theme rounded-3 fs-5">Talk to us Now</a>
+                    <a href="{{ route('frontend.contact') }}#contactForm" class=" poppins-medium btn-theme rounded-3 fs-5">Talk to us Now</a>
                     </div>
                     <div class="mt-5 mb-4 align-items-center gap-3 justify-content-center  justify-content-md-start  "> 
                         <img src="{{ asset('assets/frontend/images/Google Review.png') }}" alt="" class=" ">                    
