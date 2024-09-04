@@ -16,6 +16,7 @@ use App\Models\ClientTestimonial;
 use App\Models\CaseStudy;
 use App\Models\LatestInsight;
 use App\Models\OurTeam;
+use App\Models\ClientSchedule;
 
 class FrontendController extends Controller
 {
@@ -224,6 +225,25 @@ class FrontendController extends Controller
     public function yearEndAccount()
     {
         return view('frontend.year-end-account.index');
+    }
+
+    public function storeSchedule(Request $request)
+    {
+        $validatedData = $request->validate([
+            'date' => 'required|date',
+            'time' => 'required',
+            'time_zone' => 'required|string',
+            'meet_type' => 'required|string',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => 'required|email',
+            'phone' => 'required|numeric',
+            'discussion' => 'required|string',
+        ]);
+
+        ClientSchedule::create($validatedData);
+
+        return response()->json(['message' => 'Meeting scheduled successfully!']);
     }
 
 }

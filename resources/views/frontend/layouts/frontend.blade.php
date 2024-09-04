@@ -59,6 +59,7 @@
         <script src="{{ asset('assets/frontend/js/app.js')}}"></script>
         <script src="{{ asset('assets/frontend/js/wow.min.js')}}"></script>
         <script src="{{ asset('assets/frontend/js/iconify.min.js')}}"></script>
+        <script src="{{ asset('assets/vendor/sweet-alert/sweetalert.min.js')}}"></script>
 
         <!-- date picker -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>

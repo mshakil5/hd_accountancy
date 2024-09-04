@@ -27,14 +27,18 @@
                         </div>
                     </div>
                 </div>
+
+                @php
+                    use Carbon\Carbon;
+                @endphp
+
                 <div class="col-lg-8">
                     <div class="border-start border-1 h-100 p-4">
                         <div id="stepOne" class="">
                             <div class="row">
                                 <div class="col-lg-6">
-
-                                    <p class="txt-primary poppins-medium d-flex  align-items-center"> <span class="">
-                                            Select A Date & Time </span>
+                                    <p class="txt-primary poppins-medium d-flex align-items-center">
+                                        <span>Select A Date & Time</span>
                                     </p>
                                 </div>
                                 <div class="col-lg-6 text-end">
@@ -49,14 +53,9 @@
                                     <input type="hidden" id="date" name="date">
                                 </div>
                                 <div class="col-lg-5 d-flex flex-wrap gx-1 justify-content-center my-4">
-
-                                @php
-                                    use Carbon\Carbon;
-                                @endphp
-
                                     @foreach(\App\Models\TimeSlot::all() as $timeSlot)
                                         <div class="mb-2">
-                                            <input type="radio" class="timepick invisible" name="timepick" id="timepick-{{ $timeSlot->id }}">
+                                            <input type="radio" class="timepick invisible" name="timepick" id="timepick-{{ $timeSlot->id }}" value="{{ $timeSlot->start_time }}">
                                             <label for="timepick-{{ $timeSlot->id }}">
                                                 {{ Carbon::createFromFormat('H:i', $timeSlot->start_time)->format('h:i A') }}
                                             </label>
@@ -66,21 +65,17 @@
                             </div>
                             <div class="row">
                                 <div class="col-lg-4">
-                                    <h6 class="txt-primary poppins-bold">
-                                        Time Zone
-                                    </h6>
+                                    <h6 class="txt-primary poppins-bold">Time Zone</h6>
                                     <div class="d-flex align-items-center">
                                         <iconify-icon icon="fe:globe" class="txt-primary fw-bold"></iconify-icon>
-                                        <select name="" id="" class="txt-primary poppins-medium border-0">
-                                            <option value="">UK, London Time</option>
+                                        <select name="time_zone" id="time_zone" class="txt-primary poppins-medium border-0">
+                                            <option value="UK, London Time">UK, London Time</option>
                                         </select>
                                     </div>
-                                    <a href="{{ route('frontend.contact') }}" class="btn btn-theme-outline my-3 d-inline-block  mx-auto rounded-5 fs-6">Not Working? </a>
+                                    <a href="{{ route('frontend.contact') }}" class="btn btn-theme-outline my-3 d-inline-block mx-auto rounded-5 fs-6">Not Working?</a>
                                 </div>
                                 <div class="col-lg-8 px-4">
-                                    <h6 class="txt-primary poppins-bold">
-                                        How would you like to meet?
-                                    </h6>
+                                    <h6 class="txt-primary poppins-bold">How would you like to meet?</h6>
                                     <div class="custom-select-container">
                                         <label class="custom-radio">
                                             <input type="radio" name="meet" value="video">
@@ -96,35 +91,32 @@
                                         </label>
                                     </div>
                                 </div>
-
                             </div>
-
                         </div>
                         <div id="stepTwo" class="d-none">
-                            <p class="txt-primary poppins-medium ">Enter Your Details</p>
+                            <p class="txt-primary poppins-medium">Enter Your Details</p>
                             <div class="card p-4 pt-5 mt-4">
                                 <div class="row">
                                     <div class="col-lg-6 mb-4">
-                                        <input type="text" star-data="*" placeholder="First Name" class="form-control">
+                                        <input type="text" star-data="*" placeholder="First Name *" name="first_name" id="first_name" class="form-control">
                                     </div>
                                     <div class="col-lg-6 mb-4">
-                                        <input type="text" placeholder="Last Name" class="form-control">
+                                        <input type="text" placeholder="Last Name *" name="last_name" id="last_name" class="form-control">
                                     </div>
                                     <div class="col-lg-12 mb-4">
-                                        <input type="email" placeholder="Email" class="form-control">
+                                        <input type="email" placeholder="Email *" name="email" id="email" class="form-control">
                                     </div>
                                     <div class="col-lg-12 mb-4">
-                                        <input type="number" placeholder="Telephone No" class="form-control">
+                                        <input type="number" placeholder="Telephone No *" name="phone" id="phone" class="form-control">
                                     </div>
-
                                     <div class="col-lg-12 mb-4">
-                                        <label for="" class="txt-primary mb-3  poppins-medium">
-                                            Please let me know what do you want to discuss <span class="text-danger "> *</span>
+                                        <label for="" class="txt-primary mb-3 poppins-medium">
+                                            Please let me know what do you want to discuss <span class="text-danger"> *</span>
                                         </label>
-                                        <textarea name="" id="" class="form-control " style="height: 160px;" placeholder="Describe your meeting agenda"></textarea>
+                                        <textarea name="discussion" id="discussion" class="form-control" style="height: 160px;" placeholder="Describe your meeting agenda"></textarea>
                                     </div>
                                     <div class="col-lg-12 text-center">
-                                        <button type="submit" class="btn btn-theme-outline  text-light py-2 px-3">Schedule your meeting</button>
+                                        <button type="button" id="submitBtn" class="btn btn-theme-outline text-light py-2 px-3">Schedule your meeting</button>
                                     </div>
                                 </div>
                             </div>
@@ -140,3 +132,77 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.getElementById('submitBtn').addEventListener('click', function() {
+        let date = $('#date').val();
+        let time = document.querySelector('input[name="timepick"]:checked');
+        let time_zone = document.getElementById('time_zone').value;
+        let meet_type = document.querySelector('input[name="meet"]:checked');
+        let first_name = document.querySelector('input[name="first_name"]').value;
+        let last_name = document.querySelector('input[name="last_name"]').value;
+        let email = document.querySelector('input[name="email"]').value;
+        let phone = document.querySelector('input[name="phone"]').value;
+        let discussion = document.querySelector('textarea[name="discussion"]').value;
+
+        if (!date || !time || !time_zone || !meet_type || !first_name || !last_name || !email || !phone || !discussion) {
+            swal({
+                icon: 'warning',
+                title: 'Validation Error',
+                text: 'Please fill out all required fields.',
+                button: 'OK'
+            });
+            return;
+        }
+
+        let formData = {
+            date: date,
+            time: time.value,
+            time_zone: time_zone,
+            meet_type: meet_type.value,
+            first_name: first_name,
+            last_name: last_name,
+            email: email,
+            phone: phone,
+            discussion: discussion,
+        };
+
+        var csrfToken = '{{ csrf_token() }}';
+
+        $.ajax({
+            url: "{{ route('schedule.meeting.store') }}",
+            type: 'POST',
+            data: formData,
+            headers: {
+                'X-CSRF-TOKEN': csrfToken
+            },
+            success: function(response) {
+                swal({
+                    icon: 'success',
+                    title: 'Success',
+                    text: 'Meeting scheduled successfully!',
+                    button: 'OK'
+                });
+
+                $('#date').val('');
+                $('#datepicker').datepicker('update', '');
+                $('input[name="timepick"]').prop('checked', false);
+                $('#time_zone').val('');
+                $('input[name="meet"]').prop('checked', false);
+                $('#first_name').val('');
+                $('#last_name').val('');
+                $('#email').val('');
+                $('#phone').val('');
+                $('#discussion').val('');
+            },
+            error: function(xhr, status, error) {
+                swal({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred. Please try again.',
+                    button: 'OK'
+                });
+            }
+        });
+    });
+</script>

@@ -89,6 +89,9 @@ Route::get('/year-end-account', [FrontendController::class, 'yearEndAccount'])->
 // FAQ
 Route::get('/faq', [FrontendController::class, 'faq'])->name('frontend.faq');
 
+//Meeting Schedule Store
+Route::post('/schedule-meeting', [FrontendController::class, 'storeSchedule'])->name('schedule.meeting.store');
+
 //Base login
 Route::get('/dashboard', [HomeController::class, 'index'])->name('home');
 
