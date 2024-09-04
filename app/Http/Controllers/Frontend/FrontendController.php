@@ -14,6 +14,7 @@ use App\Models\BusinessService;
 use App\Models\BusinessValue;
 use App\Models\ClientTestimonial;
 use App\Models\CaseStudy;
+use App\Models\LatestInsight;
 
 class FrontendController extends Controller
 {
@@ -43,9 +44,11 @@ class FrontendController extends Controller
 
         $clientTestimonial = ClientTestimonial::orderBy('id', 'desc')->take(3)->get();
 
-        $caseStudies = CaseStudy::orderBy('id', 'desc')->take(3)->get();
+        $caseStudies = CaseStudy::orderBy('id', 'desc')->get();
+
+        $latestInsights = LatestInsight::orderBy('id', 'desc')->get();
         
-        return view('frontend.homepage.index', compact('homePageIntro', 'homeOurValues', 'timeSlots', 'packages', 'businessServices', 'businessValues', 'clientTestimonial', 'caseStudies'));
+        return view('frontend.homepage.index', compact('homePageIntro', 'homeOurValues', 'timeSlots', 'packages', 'businessServices', 'businessValues', 'clientTestimonial', 'caseStudies', 'latestInsights'));
     }
 
     public function contact()

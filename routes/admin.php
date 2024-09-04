@@ -33,6 +33,7 @@ use App\Http\Controllers\Admin\BusinessServiceController;
 use App\Http\Controllers\Admin\BusinessValueController;
 use App\Http\Controllers\Admin\TestimonialController;
 use App\Http\Controllers\CaseStudiesController;
+use App\Http\Controllers\Admin\LatestInsightController;
 
 //Fallback route
 Route::fallback(function () {
@@ -421,5 +422,12 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/case-studies/{id}/edit', [CaseStudiesController::class, 'edit']);
     Route::post('/case-studies-update', [CaseStudiesController::class, 'update']);
     Route::get('/case-studies/{id}', [CaseStudiesController::class, 'delete']);
+
+    //Latest Insights crud
+    Route::get('/latest-insights', [LatestInsightController::class, 'index'])->name('allLatestInsight');    
+    Route::post('/latest-insights', [LatestInsightController::class, 'store']);
+    Route::get('/latest-insights/{id}/edit', [LatestInsightController::class, 'edit']);
+    Route::post('/latest-insights-update', [LatestInsightController::class, 'update']);
+    Route::get('/latest-insights/{id}', [LatestInsightController::class, 'delete']);
 
 });

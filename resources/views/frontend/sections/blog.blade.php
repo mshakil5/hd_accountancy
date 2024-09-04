@@ -7,39 +7,19 @@
             </div>
         </div>
         <div class="row mt-5">
-            <div class="col-lg-4">
-                <a href="">
-                    <img src="{{ asset('assets/frontend/images/blog1.png') }}" class="img-fluid" alt="">
-                    <h5 class="poppins-medium txt-primary my-3">
-                        10 Tips to follow in tax season for sole entrepreneur
-                    </h5>
-                </a>
-                <p class="txt-primary">
-                    If philanthropy is important to you, now could be a good time to consider giving more...
-                </p>
-            </div>
-            <div class="col-lg-4">
-                <a href="">
-                    <img src="{{ asset('assets/frontend/images/blog1.png') }}" class="img-fluid" alt="">
-                    <h5 class="poppins-medium txt-primary my-3">
-                        10 Tips to follow in tax season for sole entrepreneur
-                    </h5>
-                </a>
-                <p class="txt-primary">
-                    If philanthropy is important to you, now could be a good time to consider giving more...
-                </p>
-            </div>
-            <div class="col-lg-4">
-                <a href="">
-                    <img src="{{ asset('assets/frontend/images/blog1.png') }}" class="img-fluid" alt="">
-                    <h5 class="poppins-medium txt-primary my-3">
-                        10 Tips to follow in tax season for sole entrepreneur
-                    </h5>
-                </a>
-                <p class="txt-primary">
-                    If philanthropy is important to you, now could be a good time to consider giving more...
-                </p>
-            </div>
+            @foreach($latestInsights as $item)
+                <div class="col-lg-4">
+                    <a href="">
+                        <img src="{{ asset($item->image) }}" class="img-fluid">
+                        <h5 class="poppins-medium txt-primary my-3">
+                            {{ $item->short_title }}
+                        </h5>
+                    </a>
+                    <p class="txt-primary">
+                        {!! $item->long_description !!}
+                    </p>
+                </div>
+            @endforeach
             <div class="col-12 text-center my-5">
                        <a class="btn btn-theme-outline d-inline w-50 mx-auto rounded-3 fs-6">See More Article</a>
                     </div>
