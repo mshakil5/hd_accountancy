@@ -17,7 +17,7 @@
                             </p>
                             <p class="text-muted poppins-medium d-flex  align-items-center"><iconify-icon icon="wpf:phone" class="fs-4"></iconify-icon> <span class="ms-2"> phone</span>
                             </p>
-                            <p class="text-muted poppins-medium d-flex  align-items-center"><iconify-icon icon="material-symbols-light:event-available-rounded" class="fs-4"></iconify-icon> <span class="ms-2">Thursday, 20 June 2024</span>
+                            <p class="text-muted poppins-medium d-flex  align-items-center"><iconify-icon icon="material-symbols-light:event-available-rounded" class="fs-4"></iconify-icon> <span class="ms-2">{{ date('l, j F Y') }}</span>
                             </p>
                             <p class="text-muted poppins-medium d-flex  align-items-center"><iconify-icon icon="fe:globe" class="fs-4"></iconify-icon> <span class="ms-2"> 3:00 PM - 3:30 PM, UK, London Time</span>
                             </p>
@@ -73,32 +73,28 @@
                                         <iconify-icon icon="fe:globe" class="txt-primary fw-bold"></iconify-icon>
                                         <select name="" id="" class="txt-primary poppins-medium border-0">
                                             <option value="">UK, London Time</option>
-                                            <option value="">UK, London Time</option>
-                                            <option value="">UK, London Time</option>
-                                            <option value="">UK, London Time</option>
                                         </select>
                                     </div>
-                                    <a class="btn btn-theme-outline my-3 d-inline-block  mx-auto rounded-5 fs-6">Not Working? </a>
+                                    <a href="{{ route('frontend.contact') }}" class="btn btn-theme-outline my-3 d-inline-block  mx-auto rounded-5 fs-6">Not Working? </a>
                                 </div>
                                 <div class="col-lg-8 px-4">
                                     <h6 class="txt-primary poppins-bold">
                                         How would you like to meet?
                                     </h6>
-                                    <div class="d-flex gap-2 align-items-center flex-wrap lh-1">
-                                        <label for="video">
-                                            <input type="checkbox" name="meet" id="video">
-                                            Video Conference
+                                    <div class="custom-select-container">
+                                        <label class="custom-radio">
+                                            <input type="radio" name="meet" value="video">
+                                            <span>Video Conference</span>
                                         </label>
-                                        <label for="phone">
-                                            <input type="checkbox" name="meet" id="phone">
-                                            Phone
+                                        <label class="custom-radio">
+                                            <input type="radio" name="meet" value="phone">
+                                            <span>Phone</span>
                                         </label>
-                                        <label for="face">
-                                            <input type="checkbox" name="meet" id="face">
-                                            Face to face
+                                        <label class="custom-radio">
+                                            <input type="radio" name="meet" value="face">
+                                            <span>Face to face</span>
                                         </label>
                                     </div>
-
                                 </div>
 
                             </div>
