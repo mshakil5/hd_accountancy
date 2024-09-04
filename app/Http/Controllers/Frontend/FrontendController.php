@@ -15,6 +15,7 @@ use App\Models\BusinessValue;
 use App\Models\ClientTestimonial;
 use App\Models\CaseStudy;
 use App\Models\LatestInsight;
+use App\Models\OurTeam;
 
 class FrontendController extends Controller
 {
@@ -153,7 +154,14 @@ class FrontendController extends Controller
 
     public function ourTeam()
     {
-        return view('frontend.our-team.index');
+        $ourTeamCode = Softcode::where('name', 'Our Team Page')->first();
+        if ($ourTeamCode) {
+            $ourTeamPage = Master::where('softcode_id', $ourTeamCode->id)->first();
+        } else {
+            $ourTeamPage = null;
+        }
+        $ourTeam = OurTeam::orderBy('id', 'desc')->get();
+        return view('frontend.our-team.index', compact('ourTeamPage', 'ourTeam'));
     }
 
     public function career()

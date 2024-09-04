@@ -20,7 +20,7 @@
                             <div class="theme-b bg-primary rounded-4 p-3">
                                 <h3 class="poppins-bold text-light">{{ $item->short_title }}</h3>
                                 <small class="text-light">
-                                    {!! $item->long_description !!}
+                                    {{ $item->long_title }}
                                 </small>
                                 <p class="text-end mb-0">
                                     <a href="{{ route('frontend.caseStudy') }}" class="btn bg-white mt-2 poppins-bold txt-primary">See More</a>
