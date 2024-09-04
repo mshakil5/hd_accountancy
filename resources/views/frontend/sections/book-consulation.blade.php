@@ -78,15 +78,15 @@
                                     <h6 class="txt-primary poppins-bold">How would you like to meet?</h6>
                                     <div class="custom-select-container">
                                         <label class="custom-radio">
-                                            <input type="radio" name="meet" value="video">
+                                            <input type="radio" name="meet" value="Video Conference" class="largerRadiobox">
                                             <span>Video Conference</span>
                                         </label>
                                         <label class="custom-radio">
-                                            <input type="radio" name="meet" value="phone">
+                                            <input type="radio" name="meet" value="Phone" class="largerRadiobox">
                                             <span>Phone</span>
                                         </label>
                                         <label class="custom-radio">
-                                            <input type="radio" name="meet" value="face">
+                                            <input type="radio" name="meet" value="Face to face" class="largerRadiobox">
                                             <span>Face to face</span>
                                         </label>
                                     </div>
@@ -98,16 +98,16 @@
                             <div class="card p-4 pt-5 mt-4">
                                 <div class="row">
                                     <div class="col-lg-6 mb-4">
-                                        <input type="text" star-data="*" placeholder="First Name *" name="first_name" id="first_name" class="form-control">
+                                        <input type="text" star-data="*" placeholder="First Name *" name="first_name" id="first_name" class="form-control" value="{{ Auth::check() ? Auth::user()->first_name : '' }}">
                                     </div>
                                     <div class="col-lg-6 mb-4">
-                                        <input type="text" placeholder="Last Name *" name="last_name" id="last_name" class="form-control">
+                                        <input type="text" placeholder="Last Name *" name="last_name" id="last_name" class="form-control" value="{{ Auth::check() ? Auth::user()->last_name : '' }}">
                                     </div>
                                     <div class="col-lg-12 mb-4">
-                                        <input type="email" placeholder="Email *" name="email" id="email" class="form-control">
+                                        <input type="email" placeholder="Email *" name="email" id="email" class="form-control" value="{{ Auth::check() ? Auth::user()->email : '' }}">
                                     </div>
                                     <div class="col-lg-12 mb-4">
-                                        <input type="number" placeholder="Telephone No *" name="phone" id="phone" class="form-control">
+                                        <input type="number" placeholder="Telephone No *" name="phone" id="phone" class="form-control" value="{{ Auth::check() ? Auth::user()->phone : '' }}">
                                     </div>
                                     <div class="col-lg-12 mb-4">
                                         <label for="" class="txt-primary mb-3 poppins-medium">
@@ -132,6 +132,25 @@
         </div>
     </div>
 </div>
+
+<!-- <style>
+    input.largerRadiobox {
+        width: 25px;
+        height: 25px;
+        background-color: white;
+        border-radius: 5%;
+        vertical-align: middle;
+        border: 1px solid #9c9999;
+        appearance: none;
+        -webkit-appearance: none;
+        outline: none;
+        cursor: pointer;
+    }
+
+    .largerRadiobox:checked {
+        background-color:#193d5b;
+}
+</style> -->
 
 <script>
     document.getElementById('submitBtn').addEventListener('click', function() {

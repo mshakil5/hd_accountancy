@@ -35,6 +35,7 @@ use App\Http\Controllers\Admin\TestimonialController;
 use App\Http\Controllers\CaseStudiesController;
 use App\Http\Controllers\Admin\LatestInsightController;
 use App\Http\Controllers\Admin\OurTeamController;
+use App\Http\Controllers\Admin\BookingController;
 
 //Fallback route
 Route::fallback(function () {
@@ -437,5 +438,8 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/our-teams/{id}/edit', [OurTeamController::class, 'edit']);
     Route::post('/our-teams-update', [OurTeamController::class, 'update']);
     Route::get('/our-teams/{id}', [OurTeamController::class, 'delete']);
+
+    //Booking list
+    Route::get('/booking-list', [BookingController::class, 'index'])->name('allBookingList');
 
 });
