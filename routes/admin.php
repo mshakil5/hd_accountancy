@@ -37,6 +37,7 @@ use App\Http\Controllers\Admin\LatestInsightController;
 use App\Http\Controllers\Admin\OurTeamController;
 use App\Http\Controllers\Admin\BookingController;
 use App\Http\Controllers\Admin\QuotationController;
+use App\Http\Controllers\Admin\CareerController;
 
 //Fallback route
 Route::fallback(function () {
@@ -445,8 +446,13 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
 
     //Quotation list
     Route::get('/quotation-list', [QuotationController::class, 'index'])->name('allQuotationList');
+
     //Quotation Page
     Route::get('/quotation-page', [QuotationController::class, 'quotationPage'])->name('quotationPage');
     Route::put('/quotation-page', [QuotationController::class, 'quotationPageUpdate'])->name('quotationPage.update');
+
+    //Career Page
+    Route::get('/career-page', [CareerController::class, 'careerPage'])->name('careerPage');
+    Route::put('/career-page', [CareerController::class, 'careerPageUpdate'])->name('careerPage.update');
 
 });
