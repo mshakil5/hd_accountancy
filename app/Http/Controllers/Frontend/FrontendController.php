@@ -174,7 +174,13 @@ class FrontendController extends Controller
 
     public function career()
     {
-        return view('frontend.career.index');
+        $code = Softcode::where('name', 'Career Page')->first();
+        if ($code) {
+            $career = Master::where('softcode_id', $code->id)->first();
+        } else {
+            $career = null;
+        }
+        return view('frontend.career.index', compact('career'));
     }
 
     public function faq()
