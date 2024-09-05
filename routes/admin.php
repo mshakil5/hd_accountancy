@@ -455,4 +455,7 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/career-page', [CareerController::class, 'careerPage'])->name('careerPage');
     Route::put('/career-page', [CareerController::class, 'careerPageUpdate'])->name('careerPage.update');
 
+    //Career List
+    Route::get('/career-list', [CareerController::class, 'index'])->name('allCareerList');
+
 });

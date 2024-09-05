@@ -6,9 +6,17 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Master;
 use App\Models\Softcode;
+use App\Models\Career;
 
 class CareerController extends Controller
 {
+
+    public function index()
+    {
+        $data = Career::orderBy('id', 'DESC')->get();
+        return view('admin.career.index', compact('data'));
+    }
+
     public function careerPage()
     {
         $getQuotationCode = Softcode::where('name', 'Career Page')->first();

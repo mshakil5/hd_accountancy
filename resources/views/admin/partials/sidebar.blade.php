@@ -229,6 +229,29 @@
     </ul>
   </li>
 
+  <li class="nav-item {{ request()->routeIs('careerPage') || request()->routeIs('allCareerList') ? 'menu-open' : '' }}">
+    <a class="nav-link collapsed {{ request()->routeIs('careerPage') || request()->routeIs('allCareerList') ? 'active' : '' }}" href="#" data-bs-toggle="collapse" data-bs-target="#careerDropdown" aria-expanded="{{ request()->routeIs('careerPage') || request()->routeIs('allCareerList') ? 'true' : 'false' }}">
+      <i class="bi bi-briefcase"></i>
+      <span>Career</span>
+      <i class="bi bi-chevron-down"></i>
+    </a>
+
+    <ul id="careerDropdown" class="collapse list-unstyled {{ request()->routeIs('careerPage') || request()->routeIs('allCareerList') ? 'show' : '' }}">
+      <li class="nav-item {{ request()->routeIs('careerPage') ? 'active' : '' }}">
+        <a class="nav-link" href="{{ route('careerPage') }}">
+          <i class="bi bi-briefcase"></i>
+          <span>Career Page</span>
+        </a>
+      </li>
+      <li class="nav-item {{ request()->routeIs('allCareerList') ? 'active' : '' }}">
+        <a class="nav-link" href="{{ route('allCareerList') }}">
+          <i class="bi bi-list-ul"></i>
+          <span>Career List</span>
+        </a>
+      </li>
+    </ul>
+  </li>
+
     <li class="nav-item {{ request()->routeIs('prevLogStaffs','task.details.staff','allPrevLogStaffs') ? 'active' : '' }}">
         <a class="nav-link collapsed" href="{{ route('prevLogStaffs') }}">
             <i class="bi bi-calendar-check"></i>
