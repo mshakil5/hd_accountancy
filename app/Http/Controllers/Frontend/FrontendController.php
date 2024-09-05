@@ -18,6 +18,7 @@ use App\Models\LatestInsight;
 use App\Models\OurTeam;
 use App\Models\ClientSchedule;
 use App\Models\Quotation;
+use App\Models\Career;
 
 class FrontendController extends Controller
 {
@@ -294,6 +295,30 @@ class FrontendController extends Controller
         ]);
 
         return response()->json(['success' => true]);
+    }
+
+    public function storeCareer(Request $request)
+    {
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email',
+            'phone' => 'required|numeric',
+            'linkedin_profile' => 'required|string',
+            'yearly_turnover' => 'required|numeric',
+            'cv' => 'required|mimes:pdf,docx,doc|max:4096',
+            'about_yourself' => 'required|string',
+        ]);
+
+        $cv = $request->file('cv');
+        $randomNumber = rand(1000000000, 9999999999);
+        $cvFileName = $randomNumber . '.' . $cv->getClientOriginalExtension();
+        $cv->move(public_path('images/Cv'), $cvFileName);
+
+        $validatedData['cv'] = $cvFileName;
+
+        Career::create($validatedData);
+
+        return response()->json(['message' => 'Career form submitted successfully!']);
     }
 
 }
