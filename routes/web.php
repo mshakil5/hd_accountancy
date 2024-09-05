@@ -49,6 +49,7 @@ Route::get('/pricing', [FrontendController::class, 'pricing'])->name('frontend.p
 
 // Get Qoutation
 Route::get('/get-quotation', [FrontendController::class, 'getQuotation'])->name('frontend.getQuotation');
+Route::post('/quotations/store', [FrontendController::class, 'storeQuotation'])->name('quotations.store');
 
 // Services
 Route::get('/services', [FrontendController::class, 'services'])->name('frontend.services');

@@ -4,11 +4,11 @@
          <div class="col-lg-12">
             <div class="text-center w-100  mx-auto">
                <div class=" px-5">
-                  <h1 class="text-light poppins-bold">Get a Customized Quotation</h1>
-                  <h3 class="text-light poppins-bold">We will design what you need</h3>
+                  <h1 class="text-light poppins-bold">{{ $getQuotation->short_title }}</h1>
+                  <h3 class="text-light poppins-bold">{{ $getQuotation->long_title }}</h3>
                </div>
                <p class="text-light w-75 text-center my-3 mx-auto">
-                  We know the value of your time and money. We're passionate about simplifying your taxes and accounting with powerful digital solutions. Don't hesitate to reach out – our team is eager to connect with you and help you embrace a paperless future!
+                  {!! $getQuotation->long_description !!}
                </p>
             </div>
 
@@ -20,76 +20,144 @@
 <section class="py-5 bg-light">
    <div class="container">
       <div class="row py-2 col-lg-10 mx-auto">
-         <h4 class="txt-primary text-center text-capitalize poppins-bold">Please fill up the form bellow</h4>
+         <h4 class="txt-primary text-center text-capitalize poppins-bold">Please fill up the form below</h4>
          <div class="card p-4 pt-5 mt-4">
-            <div class="row">
-               <div class="col-lg-6 mb-4">
-                  <label for="" class="txt-primary">Name<span class="text-danger">*</span></label>
-                  <input type="text" placeholder="" class="form-control">
+            <form id="contactForm">
+               <div class="row">
+                  <div class="col-lg-6 mb-4">
+                     <label for="name" class="txt-primary">Name<span class="text-danger">*</span></label>
+                     <input type="text" name="name" id="name" class="form-control">
+                  </div>
+                  <div class="col-lg-6 mb-4">
+                     <label for="vat_returns" class="txt-primary">Do you want to complete your VAT Returns?</label>
+                     <select name="vat_returns" id="vat_returns" class="form-control" style="appearance: auto;">
+                        <option value="No">No</option>
+                        <option value="Yes">Yes</option>
+                     </select>
+                  </div>
+                  <div class="col-lg-6 mb-4">
+                     <label for="email" class="txt-primary">Email<span class="text-danger">*</span></label>
+                     <input type="email" name="email" id="email" class="form-control">
+                  </div>
+                  <div class="col-lg-6 mb-4">
+                     <label for="payroll" class="txt-primary">Do you want to manage Payroll?</label>
+                     <select name="payroll" id="payroll" class="form-control" style="appearance: auto;">
+                        <option value="No">No</option>
+                        <option value="Yes">Yes</option>
+                     </select>
+                  </div>
+                  <div class="col-lg-6 mb-4">
+                     <label for="company_name" class="txt-primary">Company Name<span class="text-danger">*</span></label>
+                     <input type="text" id="company_name" name="company_name" class="form-control">
+                  </div>
+                  <div class="col-lg-6 mb-4">
+                     <label for="bookkeeping" class="txt-primary">Do you want us to complete bookkeeping?</label>
+                     <select name="bookkeeping" id="bookkeeping" class="form-control" style="appearance: auto;">
+                        <option value="No">No</option>
+                        <option value="Yes">Yes</option>
+                     </select>
+                  </div>
+                  <div class="col-lg-6 mb-4">
+                     <label for="phone" class="txt-primary">Telephone No<span class="text-danger">*</span></label>
+                     <input type="text" id="phone" name="phone" class="form-control">
+                  </div>
+                  <div class="col-lg-6 mb-4">
+                     <label for="bookkeeping_software" class="txt-primary">Which Book Keeping software do you use?</label>
+                     <select name="bookkeeping_software" id="bookkeeping_software" class="form-control" style="appearance: auto;">
+                        <option value="Xero">Xero</option>
+                     </select>
+                  </div>
+                  <div class="col-lg-6 mb-4">
+                     <label for="business_type" class="txt-primary">Business Type<span class="text-danger">*</span></label>
+                     <input type="text" id="business_type" name="business_type" class="form-control">
+                  </div>
+                  <div class="col-lg-6 mb-4">
+                     <label for="management_account" class="txt-primary">Do you need Management Account?</label>
+                     <select name="management_account" id="management_account" class="form-control" style="appearance: auto;">
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                     </select>
+                  </div>
+                  <div class="col-lg-6 mb-4">
+                     <label for="turnover" class="txt-primary">Your Turnover<span class="text-danger">*</span></label>
+                     <input type="number" id="turnover" name="turnover" class="form-control">
+                  </div>
+                  <div class="col-lg-6 mb-4">
+                     <label for="bank_accounts" class="txt-primary">How many bank accounts do you have?</label>
+                     <input type="number" id="bank_accounts" name="bank_accounts" class="form-control">
+                  </div>
+                  <div class="col-lg-12 text-center my-4">
+                     <button type="button" id="submitForm" class="btn bg-primary text-light py-1 px-3">Submit</button>
+                  </div>
                </div>
-               <div class="col-lg-6 mb-4">
-                  <label for="" class="txt-primary">Do you want to complete your vAT Returns? </label>
-                  <select name="" id="" class="form-control" style="appearance: auto;">
-                     <option value="">No</option>
-                     <option value="">Yes</option>
-                  </select>
-               </div>
-               <div class="col-lg-6 mb-4">
-                  <label for="" class="txt-primary">Email<span class="text-danger">*</span></label>
-                  <input type="email" placeholder="" class="form-control">
-               </div>
-               <div class="col-lg-6 mb-4">
-                  <label for="" class="txt-primary">Do you want to manage Payroll? </label>
-                  <select name="" id="" class="form-control" style="appearance: auto;">
-                     <option value="">No</option>
-                     <option value="">Yes</option>
-                  </select>
-               </div>
-               <div class="col-lg-6 mb-4">
-                  <label for="" class="txt-primary">Company Name<span class="text-danger">*</span></label>
-                  <input type="text" placeholder="" class="form-control">
-               </div>
-               <div class="col-lg-6 mb-4">
-                  <label for="" class="txt-primary">Do you want us to complete bookkeeping? </label>
-                  <select name="" id="" class="form-control" style="appearance: auto;">
-                     <option value="">No</option>
-                     <option value="">Yes</option>
-                  </select>
-               </div>
-               <div class="col-lg-6 mb-4">
-                  <label for="" class="txt-primary">Telephone No *<span class="text-danger">*</span></label>
-                  <input type="number" placeholder="" class="form-control">
-               </div>
-               <div class="col-lg-6 mb-4">
-                  <label for="" class="txt-primary">Which Book Keeping software do you use ?</label>
-                  <select name="" id="" class="form-control" style="appearance: auto;">
-                     <option value="">Xero</option> 
-                  </select>
-               </div>
-               <div class="col-lg-6 mb-4">
-                  <label for="" class="txt-primary">Business Type <span class="text-danger">*</span></label>
-                  <input type="number" placeholder="" class="form-control">
-               </div>
-               <div class="col-lg-6 mb-4">
-                  <label for="" class="txt-primary">Do you need Management Account?</label>
-                  <select name="" id="" class="form-control" style="appearance: auto;">
-                     <option value="">Yes</option> 
-                  </select>
-               </div>
-               <div class="col-lg-6 mb-4">
-                  <label for="" class="txt-primary">Your Turnover <span class="text-danger">*</span></label>
-                  <input type="number" placeholder="" class="form-control">
-               </div>
-               <div class="col-lg-6 mb-4">
-                  <label for="" class="txt-primary">How many bank account do you have?</label>
-                  <input type="text" placeholder="" class="form-control">
-               </div>
-                              
-               <div class="col-lg-12 text-center my-4">
-                  <button type="submit" class="btn  bg-primary text-light py-1 px-3">Submit</button>
-               </div>
-            </div>
+            </form>
          </div>
       </div>
    </div>
 </section>
+
+<script>
+   document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('submitForm').addEventListener('click', function(e) {
+         e.preventDefault();
+
+         var name = document.getElementById('name').value.trim();
+         var email = document.getElementById('email').value.trim();
+         var company_name = document.getElementById('company_name').value.trim();
+         var phone = document.getElementById('phone').value.trim();
+         var business_type = document.getElementById('business_type').value.trim();
+         var turnover = document.getElementById('turnover').value.trim();
+         var vat_returns = document.getElementById('vat_returns').value;
+         var payroll = document.getElementById('payroll').value;
+         var bookkeeping = document.getElementById('bookkeeping').value;
+         var bookkeeping_software = document.getElementById('bookkeeping_software').value;
+         var management_account = document.getElementById('management_account').value;
+         var bank_accounts = document.getElementById('bank_accounts').value.trim();
+
+         if (!name || !email || !company_name || !phone || !business_type || !turnover || !vat_returns || !payroll || !bookkeeping || !bookkeeping_software || !management_account || !bank_accounts) {
+            swal({
+               icon: 'warning',
+               title: 'Validation Error',
+               text: 'Please fill out all required fields.',
+               button: 'OK'
+            });
+            return;
+         }
+
+         var formData = new FormData(document.getElementById('contactForm'));
+         var csrfToken = '{{ csrf_token() }}';
+
+         $.ajax({
+            url: '{{ route('quotations.store') }}',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+               'X-CSRF-TOKEN': csrfToken
+            },
+            success: function(data) {
+               if (data.success) {
+                  swal({
+                     icon: 'success',
+                     title: 'Success',
+                     text: 'Submitted successfully.',
+                     button: 'OK'
+                  });
+                  document.getElementById('contactForm').reset();
+               } else {
+                  swal({
+                     icon: 'error',
+                     title: 'Submission Error',
+                     text: 'Something went wrong. Please try again.',
+                     button: 'OK'
+                  });
+               }
+            },
+            error: function(xhr, status, error) {
+               console.error(xhr.responseText);
+            }
+         });
+      });
+   });
+</script>

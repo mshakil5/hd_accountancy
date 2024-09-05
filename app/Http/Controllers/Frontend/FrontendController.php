@@ -17,6 +17,7 @@ use App\Models\CaseStudy;
 use App\Models\LatestInsight;
 use App\Models\OurTeam;
 use App\Models\ClientSchedule;
+use App\Models\Quotation;
 
 class FrontendController extends Controller
 {
@@ -102,7 +103,13 @@ class FrontendController extends Controller
 
     public function getQuotation()
     {
-        return view('frontend.get-quotation.index');
+        $getQuotationCode = Softcode::where('name', 'Get Quotation Page')->first();
+        if ($getQuotationCode) {
+            $getQuotation = Master::where('softcode_id', $getQuotationCode->id)->first();
+        } else {
+            $getQuotation = null;
+        }
+        return view('frontend.get-quotation.index', compact('getQuotation'));
     }
 
     public function services()
@@ -244,6 +251,43 @@ class FrontendController extends Controller
         ClientSchedule::create($validatedData);
 
         return response()->json(['message' => 'Meeting scheduled successfully!']);
+    }
+
+    public function storeQuotation(Request $request)    
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'company_name' => 'required|string|max:255',
+            'phone' => 'required',
+            'business_type' => 'required|string|max:255',
+            'turnover' => 'required|numeric',
+            'vat_returns' => 'required|string|max:255',
+            'payroll' => 'required|string|max:255',
+            'bookkeeping' => 'required|string|max:255',
+            'bookkeeping_software' => 'required|string|max:255',
+            'management_account' => 'required|string|max:255',
+            'bank_accounts' => 'required|integer',
+        ]);
+
+        $quotation = Quotation::create([
+            'name' => $request->input('name'),
+            'email' => $request->input('email'),
+            'company_name' => $request->input('company_name'),
+            'phone' => $request->input('phone'),
+            'business_type' => $request->input('business_type'),
+            'turnover' => $request->input('turnover'),
+            'vat_returns' => $request->input('vat_returns'),
+            'payroll' => $request->input('payroll'),
+            'bookkeeping' => $request->input('bookkeeping'),
+            'bookkeeping_software' => $request->input('bookkeeping_software'),
+            'management_account' => $request->input('management_account'),
+            'bank_accounts' => $request->input('bank_accounts'),
+            'status' => 1,
+            'created_by' => auth()->id() ?? null,
+        ]);
+
+        return response()->json(['success' => true]);
     }
 
 }
