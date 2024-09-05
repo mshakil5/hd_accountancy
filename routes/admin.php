@@ -36,6 +36,7 @@ use App\Http\Controllers\CaseStudiesController;
 use App\Http\Controllers\Admin\LatestInsightController;
 use App\Http\Controllers\Admin\OurTeamController;
 use App\Http\Controllers\Admin\BookingController;
+use App\Http\Controllers\Admin\QuotationController;
 
 //Fallback route
 Route::fallback(function () {
@@ -441,5 +442,11 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
 
     //Booking list
     Route::get('/booking-list', [BookingController::class, 'index'])->name('allBookingList');
+
+    //Quotation list
+    Route::get('/quotation-list', [QuotationController::class, 'index'])->name('allQuotationList');
+    //Quotation Page
+    Route::get('/quotation-page', [QuotationController::class, 'quotationPage'])->name('quotationPage');
+    Route::put('/quotation-page', [QuotationController::class, 'quotationPageUpdate'])->name('quotationPage.update');
 
 });

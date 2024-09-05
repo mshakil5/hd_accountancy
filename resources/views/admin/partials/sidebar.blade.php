@@ -206,6 +206,29 @@
     </ul>
   </li>
 
+  <li class="nav-item {{ request()->routeIs('quotationPage') || request()->routeIs('allQuotationList') ? 'menu-open' : '' }}">
+    <a class="nav-link collapsed {{ request()->routeIs('quotationPage') || request()->routeIs('allQuotationList') ? 'active' : '' }}" href="#" data-bs-toggle="collapse" data-bs-target="#quotationDropdown" aria-expanded="{{ request()->routeIs('quotationPage') || request()->routeIs('allQuotationList') ? 'true' : 'false' }}">
+      <i class="bi bi-file-text"></i>
+      <span>Quotation</span>
+      <i class="bi bi-chevron-down"></i>
+    </a>
+
+    <ul id="quotationDropdown" class="collapse list-unstyled {{ request()->routeIs('quotationPage') || request()->routeIs('allQuotationList') ? 'show' : '' }}">
+      <li class="nav-item {{ request()->routeIs('quotationPage') ? 'active' : '' }}">
+        <a class="nav-link" href="{{ route('quotationPage') }}">
+          <i class="bi bi-file-text"></i>
+          <span>Quotation Page</span>
+        </a>
+      </li>
+      <li class="nav-item {{ request()->routeIs('allQuotationList') ? 'active' : '' }}">
+        <a class="nav-link" href="{{ route('allQuotationList') }}">
+          <i class="bi bi-list-ul"></i>
+          <span>Quotation List</span>
+        </a>
+      </li>
+    </ul>
+  </li>
+
     <li class="nav-item {{ request()->routeIs('prevLogStaffs','task.details.staff','allPrevLogStaffs') ? 'active' : '' }}">
         <a class="nav-link collapsed" href="{{ route('prevLogStaffs') }}">
             <i class="bi bi-calendar-check"></i>
