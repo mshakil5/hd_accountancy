@@ -26,7 +26,7 @@
                <div class="row">
                   <div class="col-lg-6 mb-4">
                      <label for="name" class="txt-primary">Name<span class="text-danger">*</span></label>
-                     <input type="text" name="name" id="name" class="form-control">
+                     <input type="text" name="name" id="name" class="form-control" value="{{ Auth::check() ? Auth::user()->first_name . ' ' . Auth::user()->last_name : '' }}">
                   </div>
                   <div class="col-lg-6 mb-4">
                      <label for="vat_returns" class="txt-primary">Do you want to complete your VAT Returns?</label>
@@ -37,7 +37,7 @@
                   </div>
                   <div class="col-lg-6 mb-4">
                      <label for="email" class="txt-primary">Email<span class="text-danger">*</span></label>
-                     <input type="email" name="email" id="email" class="form-control">
+                     <input type="email" name="email" id="email" class="form-control" value="{{ Auth::check() ? Auth::user()->email : '' }}">
                   </div>
                   <div class="col-lg-6 mb-4">
                      <label for="payroll" class="txt-primary">Do you want to manage Payroll?</label>
@@ -59,7 +59,7 @@
                   </div>
                   <div class="col-lg-6 mb-4">
                      <label for="phone" class="txt-primary">Telephone No<span class="text-danger">*</span></label>
-                     <input type="text" id="phone" name="phone" class="form-control">
+                     <input type="number" id="phone" name="phone" class="form-control" value="{{ Auth::check() ? Auth::user()->phone : '' }}">
                   </div>
                   <div class="col-lg-6 mb-4">
                      <label for="bookkeeping_software" class="txt-primary">Which Book Keeping software do you use?</label>

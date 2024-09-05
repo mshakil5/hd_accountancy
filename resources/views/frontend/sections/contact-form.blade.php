@@ -13,19 +13,19 @@
 
         <div class="row">
           <div class="col-lg-6 mb-4">
-            <input type="text" name="name" placeholder="Name*" class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}" required>
+            <input type="text" name="name" placeholder="Name*" class="form-control @error('name') is-invalid @enderror" value="{{ old('name') ?? (Auth::check() ? Auth::user()->first_name . ' ' . Auth::user()->last_name : '') }}" required>
             @error('name')
               <div class="invalid-feedback">{{ $message }}</div>
             @enderror
           </div>
           <div class="col-lg-6 mb-4">
-            <input type="email" name="email" placeholder="Email*" class="form-control @error('email') is-invalid @enderror" value="{{ old('email') }}" required>
+            <input type="email" name="email" placeholder="Email*" class="form-control @error('email') is-invalid @enderror" value="{{ old('email') ?? (Auth::check() ? Auth::user()->email : '') }}" required>
             @error('email')
               <div class="invalid-feedback">{{ $message }}</div>
             @enderror
           </div>
           <div class="col-lg-6 mb-4">
-            <input type="number" name="phone" placeholder="Phone*" class="form-control @error('phone') is-invalid @enderror" value="{{ old('phone') }}" required>
+            <input type="number" name="phone" placeholder="Phone*" class="form-control @error('phone') is-invalid @enderror" value="{{ old('phone') ?? (Auth::check() ? Auth::user()->phone : '') }}" required>
             @error('phone')
               <div class="invalid-feedback">{{ $message }}</div>
             @enderror
