@@ -67,6 +67,9 @@ Route::get('/booking', [FrontendController::class, 'booking'])->name('frontend.b
 // Case-Study
 Route::get('/case-study', [FrontendController::class, 'caseStudy'])->name('frontend.caseStudy');
 
+// Business Services
+route::get('/business-services/{slug}', [FrontendController::class, 'businessServices'])->name('frontend.businessServices');
+
 // Latest Insight Details
 route::get('/latest-insights/{slug}', [FrontendController::class, 'latestInsightDetails'])->name('latest-insights.show');
 
@@ -93,6 +96,18 @@ Route::get('/year-end-account', [FrontendController::class, 'yearEndAccount'])->
 
 // FAQ
 Route::get('/faq', [FrontendController::class, 'faq'])->name('frontend.faq');
+
+// Latest Insights
+Route::get('/latest-insights', [FrontendController::class, 'latestInsights'])->name('frontend.latestInsights');
+
+// Client Testimonials
+Route::get('/client-testimonials', [FrontendController::class, 'clientTestimonials'])->name('frontend.clientTestimonials');
+
+// Privacy Policy
+Route::get('/privacy-policy', [FrontendController::class, 'privacyPolicy'])->name('frontend.privacyPolicy');
+
+// Terms and Conditions
+Route::get('/terms-and-conditions', [FrontendController::class, 'termsConditions'])->name('frontend.termsConditions');
 
 //Meeting Schedule Store
 Route::post('/schedule-meeting', [FrontendController::class, 'storeSchedule'])->name('schedule.meeting.store');

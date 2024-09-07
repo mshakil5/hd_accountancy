@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\BusinessService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class BusinessServiceController extends Controller
 {
@@ -30,6 +31,7 @@ class BusinessServiceController extends Controller
         
         $data = new BusinessService;
         $data->short_title = $request->short_title;
+        $data->slug = Str::slug($request->short_title);
         $data->long_title = $request->long_title;
         $data->short_description = $request->short_description;
         $data->long_description = $request->long_description;
@@ -77,6 +79,7 @@ class BusinessServiceController extends Controller
         }
 
         $data->short_title = $request->short_title;
+        $data->slug = Str::slug($request->short_title);
         $data->long_title = $request->long_title;
         $data->short_description = $request->short_description;
         $data->long_description = $request->long_description;

@@ -23,9 +23,9 @@
                         </div>
                         <h5 class="my-4 fw-bold text-white">{{ $businessService->short_title }}</h5>
                         <p class="mb-5">
-                            {!! $businessService->long_description !!}
+                            {!! $businessService->short_description !!}
                         </p>
-                        <a href="#" class="bg-light  border-0 py-2 px-5 link  rounded-2 fw-bold txt-primary">See More</a>
+                        <a href="{{ route('frontend.businessServices', ['slug' => $businessService->slug]) }}" class="bg-light border-0 py-2 px-5 link rounded-2 fw-bold txt-primary">See More</a>
                     </div>
                 @endforeach
             </div>

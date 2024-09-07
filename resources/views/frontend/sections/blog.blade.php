@@ -21,7 +21,7 @@
                 </div>
             @endforeach
             <div class="col-12 text-center my-5">
-                <a class="btn btn-theme-outline d-inline w-50 mx-auto rounded-3 fs-6">See More Article</a>
+                <a href="{{ route('frontend.latestInsights') }}" class="btn btn-theme-outline d-inline w-50 mx-auto rounded-3 fs-6">See More Article</a>
             </div>
         </div>
     </div>

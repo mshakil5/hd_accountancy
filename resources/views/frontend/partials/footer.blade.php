@@ -114,10 +114,10 @@
                         <a href="{{ route('frontend.faq') }}" class="text-white link">FAQ</a>
                     </li>
                     <li class="nav-item mb-2">
-                        <a href="#" class="text-white link">Privacy policy</a>
+                        <a href="{{ route('frontend.privacyPolicy') }}" class="text-white link">Privacy policy</a>
                     </li>
                     <li class="nav-item mb-2">
-                        <a href="#" class="text-white link">Terms & Conditions</a>
+                        <a href="{{ route('frontend.termsConditions') }}" class="text-white link">Terms & Conditions</a>
                     </li>
 
 

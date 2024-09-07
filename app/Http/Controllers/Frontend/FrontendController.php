@@ -51,7 +51,7 @@ class FrontendController extends Controller
 
         $caseStudies = CaseStudy::orderBy('id', 'desc')->get();
 
-        $latestInsights = LatestInsight::orderBy('id', 'desc')->get();
+        $latestInsights = LatestInsight::orderBy('id', 'desc')->take(3)->get();
 
         $weWorkWithImages = WeWorkWithImage::orderBy('id', 'asc')->get();
         
@@ -331,10 +331,50 @@ class FrontendController extends Controller
         return response()->json(['message' => 'Career form submitted successfully!']);
     }
 
+    public function latestInsights()
+    {
+        $data = LatestInsight::orderBy('id', 'DESC')->get();
+        return view('frontend.latest-insight.index', compact('data'));
+    }
+
     public function latestInsightDetails($slug)
     {
         $latestInsight = LatestInsight::where('slug', $slug)->firstOrFail();
-        return view('frontend.latest-insight.index', compact('latestInsight'));
+        return view('frontend.latest-insight.details', compact('latestInsight'));
+    }
+
+    public function businessServices($slug)
+    {
+        $businessService = BusinessService::where('slug', $slug)->firstOrFail();
+        return view('frontend.business-service.details', compact('businessService'));
+    }
+
+    public function clientTestimonials()
+    {
+        $data = ClientTestimonial::orderBy('id', 'DESC')->get();
+        return view('frontend.client-testimonial.index', compact('data'));
+    }
+
+    public function privacyPolicy()
+    {
+        $softcode = Softcode::where('name', 'Privacy Policy')->first();
+        if ($softcode) {
+            $privacyPolicy = Master::where('softcode_id', $softcode->id)->first();
+        } else {
+            $privacyPolicy = null;
+        }
+        return view('frontend.privacy-policy.index', compact('privacyPolicy'));
+    }
+
+    public function termsConditions()
+    {
+        $softcode = Softcode::where('name', 'Terms & Conditions')->first();
+        if ($softcode) {
+            $termsConditions = Master::where('softcode_id', $softcode->id)->first();
+        } else {
+            $termsConditions = null;
+        }
+        return view('frontend.terms-conditions.index', compact('termsConditions'));
     }
 
 }

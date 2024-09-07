@@ -72,14 +72,14 @@
         </a>
     </li>
 
-    <li class="nav-item {{ request()->routeIs('homepageOurValues') || request()->routeIs('homepageIntro') || request()->routeIs('allClientTestimonial') || request()->routeIs('allCaseStudies') || request()->routeIs('allLatestInsight') ? 'menu-open' : '' }}">
-        <a class="nav-link collapsed {{ request()->routeIs('homepageOurValues') || request()->routeIs('homepageIntro') || request()->routeIs('allClientTestimonial') || request()->routeIs('allCaseStudies') || request()->routeIs('allLatestInsight') ? 'active' : '' }}" href="#" data-bs-toggle="collapse" data-bs-target="#homepageDropdown" aria-expanded="{{ request()->routeIs('homepageOurValues') || request()->routeIs('homepageIntro') || request()->routeIs('allClientTestimonial') || request()->routeIs('allCaseStudies') || request()->routeIs('allLatestInsight') ? 'true' : 'false' }}">
+    <li class="nav-item {{ request()->routeIs('homepageOurValues') || request()->routeIs('homepageIntro') || request()->routeIs('allClientTestimonial') || request()->routeIs('allCaseStudies') || request()->routeIs('allCaseStudies') || request()->routeIs('allLatestInsight') ? 'menu-open' : '' }}">
+        <a class="nav-link collapsed {{ request()->routeIs('homepageOurValues') || request()->routeIs('homepageIntro') || request()->routeIs('allClientTestimonial') || request()->routeIs('allCaseStudies') || request()->routeIs('allCaseStudies') || request()->routeIs('allLatestInsight') ? 'active' : '' }}" href="#" data-bs-toggle="collapse" data-bs-target="#homepageDropdown" aria-expanded="{{ request()->routeIs('homepageOurValues') || request()->routeIs('homepageIntro') || request()->routeIs('allClientTestimonial') || request()->routeIs('allCaseStudies') || request()->routeIs('allLatestInsight') ? 'true' : 'false' }}">
             <i class="bi bi-house"></i>
             <span>Homepage</span>
             <i class="bi bi-chevron-down"></i>
         </a>
 
-        <ul id="homepageDropdown" class="collapse list-unstyled {{ request()->routeIs('homepageOurValues') || request()->routeIs('homepageIntro') || request()->routeIs('allClientTestimonial') || request()->routeIs('allCaseStudies') || request()->routeIs('allLatestInsight') ? 'show' : '' }}">
+        <ul id="homepageDropdown" class="collapse list-unstyled {{ request()->routeIs('homepageOurValues') || request()->routeIs('homepageIntro') || request()->routeIs('allClientTestimonial') || request()->routeIs('allCaseStudies') || request()->routeIs('allBusinessService') || request()->routeIs('allLatestInsight') ? 'show' : '' }}">
             <li class="nav-item {{ request()->routeIs('homepageIntro') ? 'active' : '' }}">
                 <a class="nav-link" href="{{ route('homepageIntro') }}">
                     <i class="bi bi-info-circle"></i>
@@ -90,6 +90,12 @@
                 <a class="nav-link" href="{{ route('homepageOurValues') }}">
                     <i class="bi bi-heart"></i>
                     <span>Our Values</span>
+                </a>
+            </li>
+            <li class="nav-item {{ request()->routeIs('allBusinessService') ? 'active' : '' }}">
+                <a class="nav-link" href="{{ route('allBusinessService') }}">
+                    <i class="bi bi-briefcase"></i>
+                    <span>Business Service</span>
                 </a>
             </li>
             <li class="nav-item {{ request()->routeIs('allClientTestimonial') ? 'active' : '' }}">
