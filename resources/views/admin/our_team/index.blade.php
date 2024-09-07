@@ -44,7 +44,7 @@
                     <select name="title" class="form-control" id="title">
                         <option value="">Select Title</option>
                         <option value="Mr.">Mr.</option>
-                        <option value="Mr.">Mrs.</option>
+                        <option value="Mrs.">Mrs.</option>
                     </select>
                   </div>
                 </div>             

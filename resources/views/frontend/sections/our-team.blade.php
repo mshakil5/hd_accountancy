@@ -33,22 +33,35 @@
       </div>
 
       <div class="row g-0">
-
          @foreach($ourTeam as $teamMember)
             <div class="col-lg-4 col-md-6 col-sm-12 mt-5">
-                  <div class="card text-center border-0  p-4">
-                     <div>
-                        <img src="{{ asset($teamMember->image) }}" class="img-fluid" alt="">
+                  <div class="card text-center border-0 p-4">
+                     <div class="team-member-wrapper">
+                        @if(!empty($teamMember->image))
+                           <img src="{{ asset($teamMember->image) }}" class="img-fluid rounded" alt="" width="250" height="250">
+                        @elseif(str_starts_with($teamMember->title, 'Mr.'))
+                           <img src="{{ asset('assets/frontend/images/male.jpg') }}" class="img-fluid rounded" alt="" width="250" height="250">
+                        @elseif(str_starts_with($teamMember->title, 'Mrs.'))
+                           <img src="{{ asset('assets/frontend/images/female.jpg') }}" class="img-fluid rounded" alt="" width="250" height="250">
+                        @endif
                      </div>
                      <div class="mt-3">
-                        <h6 class="poppins-bold txt-primary" >{{ $teamMember->title }} {{ $teamMember->name }}</h6>
+                        <h6 class="poppins-bold txt-primary">{{ $teamMember->title }} {{ $teamMember->name }}</h6>
                         <span class="txt-primary">{{ $teamMember->position }}</span>
                      </div>
                   </div>
             </div>
          @endforeach
-
       </div>
 
    </div>
  </section>
+
+ <style>
+   .team-member-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+}
+ </style>
