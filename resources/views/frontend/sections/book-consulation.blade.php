@@ -13,16 +13,18 @@
                             <p class="fw-normal txt-primary poppins-medium">Director, HD Accountancy LTD</p>
                         </div>
                         <div>
-                            <p class="text-muted poppins-medium d-flex  align-items-center"><iconify-icon icon="uil:clock" class="fs-4"></iconify-icon> <span class="ms-2">30 min</span>
+                            <p class="text-muted poppins-medium d-flex  align-items-center"><iconify-icon icon="uil:clock" class="fs-4"></iconify-icon> <span id="time-diff-1" class="ms-2">30 min</span>
                             </p>
-                            <p class="text-muted poppins-medium d-flex  align-items-center"><iconify-icon icon="wpf:phone" class="fs-4"></iconify-icon> <span class="ms-2"> phone</span>
+                            <p class="text-muted poppins-medium d-flex  align-items-center"><iconify-icon icon="wpf:phone" class="fs-4"></iconify-icon> <span id="meeting-method" class="ms-2"> Phone</span>
                             </p>
-                            <p class="text-muted poppins-medium d-flex  align-items-center"><iconify-icon icon="material-symbols-light:event-available-rounded" class="fs-4"></iconify-icon> <span class="ms-2">{{ date('l, j F Y') }}</span>
+                            <p class="text-muted poppins-medium d-flex  align-items-center"><iconify-icon icon="material-symbols-light:event-available-rounded" class="fs-4"></iconify-icon> <span id="date-display" class="ms-2">{{ date('l, j F Y') }}</span>
                             </p>
-                            <p class="text-muted poppins-medium d-flex  align-items-center"><iconify-icon icon="fe:globe" class="fs-4"></iconify-icon> <span class="ms-2"> 3:00 PM - 3:30 PM, UK, London Time</span>
+                            <p class="text-muted poppins-medium d-flex  align-items-center"><iconify-icon icon="fe:globe" class="fs-4"></iconify-icon> <span id="time-display" class="ms-2">10:00 AM - 10:30 AM, UK, London Time</span>
                             </p>
 
-                            <small class="txt-primary mt-4 text-center poppins-medium d-flex  align-items-center"> <span class="ms-2"> 30 Minutes discussion on your specific topic</span>
+                            <small class="txt-primary mt-4 text-center poppins-medium d-flex  align-items-center"> <span id="time-diff-2" class="ms-2">
+                                30 Minutes discussion on your specific topic
+                            </span>
                             </small>
                         </div>
                     </div>
@@ -55,7 +57,7 @@
                                 <div class="col-lg-5 d-flex flex-wrap gx-1 justify-content-center my-4">
                                     @foreach(\App\Models\TimeSlot::all() as $timeSlot)
                                         <div class="mb-2">
-                                            <input type="radio" class="timepick invisible" name="timepick" id="timepick-{{ $timeSlot->id }}" value="{{ $timeSlot->start_time }}">
+                                            <input type="radio" class="timepick invisible" name="timepick" id="timepick-{{ $timeSlot->id }}" value="{{ $timeSlot->start_time }}" data-start-time="{{ $timeSlot->start_time }}" data-end-time="{{ $timeSlot->end_time }}">
                                             <label for="timepick-{{ $timeSlot->id }}">
                                                 {{ Carbon::createFromFormat('H:i', $timeSlot->start_time)->format('h:i A') }}
                                             </label>
