@@ -189,7 +189,14 @@ class FrontendController extends Controller
 
     public function faq()
     {
-        return view('frontend.faq.index');
+        $code = Softcode::where('name', 'Faq')->first();
+        if ($code) {
+            $faq = Master::where('softcode_id', $code->id)->first();
+        } else {
+            $faq = null;
+        }
+
+        return view('frontend.faq.index', compact('faq'));
     }
     
     public function booking()

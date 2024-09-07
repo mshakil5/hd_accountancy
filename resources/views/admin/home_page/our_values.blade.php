@@ -5,7 +5,7 @@
 <section class="content" id="addThisFormContainer">
   <div class="container-fluid">
     <div class="row justify-content-md-center">
-      <div class="col-md-10">
+      <div class="col-md-12">
         <div class="card card-secondary">
           <div class="card-header">
             <h3 class="card-title">Home Page Values</h3>
