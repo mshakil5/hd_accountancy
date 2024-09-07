@@ -16,6 +16,20 @@ class QuotationController extends Controller
         return view('admin.quotation.index', compact('data'));
     }
 
+    public function delete($id)
+    {
+        $data = Quotation::find($id);
+        if (!$data) {
+            return response()->json(['status' => 404, 'message' => 'Record not found!']);
+        }
+
+        if ($data->delete()) {
+            return response()->json(['status' => 300, 'message' => 'Deleted successfully.']);
+        } else {
+            return response()->json(['status' => 303, 'message' => 'Server Error!!']);
+        }
+    }
+
     public function quotationPage()
     {
         $getQuotationCode = Softcode::where('name', 'Get Quotation Page')->first();

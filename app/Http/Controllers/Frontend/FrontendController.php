@@ -19,6 +19,7 @@ use App\Models\OurTeam;
 use App\Models\ClientSchedule;
 use App\Models\Quotation;
 use App\Models\Career;
+use App\Models\WeWorkWithImage;
 
 class FrontendController extends Controller
 {
@@ -51,8 +52,10 @@ class FrontendController extends Controller
         $caseStudies = CaseStudy::orderBy('id', 'desc')->get();
 
         $latestInsights = LatestInsight::orderBy('id', 'desc')->get();
+
+        $weWorkWithImages = WeWorkWithImage::orderBy('id', 'asc')->get();
         
-        return view('frontend.homepage.index', compact('homePageIntro', 'homeOurValues', 'timeSlots', 'packages', 'businessServices', 'businessValues', 'clientTestimonial', 'caseStudies', 'latestInsights'));
+        return view('frontend.homepage.index', compact('homePageIntro', 'homeOurValues', 'timeSlots', 'packages', 'businessServices', 'businessValues', 'clientTestimonial', 'caseStudies', 'latestInsights', 'weWorkWithImages'));
     }
 
     public function contact()

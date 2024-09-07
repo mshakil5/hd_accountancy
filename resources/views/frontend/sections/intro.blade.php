@@ -14,11 +14,12 @@
                     <div class="text-center text-md-start">
                     <a href="{{ route('frontend.contact') }}#contactForm" class=" poppins-medium btn-theme rounded-3 fs-5">Talk to us Now</a>
                     </div>
-                    <div class="mt-5 mb-4 align-items-center gap-3 justify-content-center  justify-content-md-start  "> 
-                        <img src="{{ asset('assets/frontend/images/Google Review.png') }}" alt="" class=" ">                    
-                        <img src="{{ asset('assets/frontend/images/Xero logo.png') }}" alt="">
-                        <img src="{{ asset('assets/frontend/images/Dext-Partner-logo.png') }}" alt="">
-                        <img src="{{ asset('assets/frontend/images/Quicknook gold badges-2023 1.png') }}" alt="">
+                    <div class="mt-5 mb-4 align-items-center gap-3 justify-content-center  justify-content-md-start">
+                        <div class="mt-5 mb-4 align-items-center gap-3 justify-content-center  justify-content-md-start">
+                            @foreach($weWorkWithImages as $image)
+                                <img src="{{ asset('images/we_work_with_images/' . $image->image) }}" alt="">
+                            @endforeach
+                        </div>
                     </div>
                 </div>
             </div>

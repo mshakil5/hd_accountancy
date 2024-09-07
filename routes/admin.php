@@ -446,6 +446,7 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
 
     //Quotation list
     Route::get('/quotation-list', [QuotationController::class, 'index'])->name('allQuotationList');
+    Route::get('/quotation-list/{id}', [QuotationController::class, 'delete']);
 
     //Quotation Page
     Route::get('/quotation-page', [QuotationController::class, 'quotationPage'])->name('quotationPage');
@@ -457,5 +458,6 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
 
     //Career List
     Route::get('/career-list', [CareerController::class, 'index'])->name('allCareerList');
+    Route::get('/career-list/{id}', [CareerController::class, 'delete']);
 
 });

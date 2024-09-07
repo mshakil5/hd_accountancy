@@ -2,6 +2,10 @@
     <div class="container pt-3">
         <div class="row text-center text-md-start">
 
+        @php
+            $companyDetails = \App\Models\CompanyDetails::first();
+        @endphp
+
             <div class="col-lg-4 mb-3">
                 <div class="info-box rounded-3 text-white p-3 mb-3">
                     <h5 class="mb-3">Subscribe to stay tuned for latest updates. Let’s do it!</h5>
@@ -12,19 +16,34 @@
                     <h6 class="fw-bold my-3">
                         Follow us on
                     </h6>
-                    <div class="d-flex gap-2 follow-us align-items-center justify-content-center justify-content-md-start ">
-                        <a href="#"><iconify-icon class="fs-3 text-white" icon="ic:baseline-facebook"></iconify-icon></a>
-                        <a href="#"><iconify-icon class="fs-3 text-white" icon="mdi:instagram"></iconify-icon></a>
-                        <a href="#"><iconify-icon class="fs-3 text-white" icon="mdi:youtube"></iconify-icon></a>
-                        <a href="#"><iconify-icon class="fs-3 text-white" icon="mdi:linkedin"></iconify-icon></a>
-
+                    <div class="d-flex gap-2 follow-us align-items-center justify-content-center justify-content-md-start">
+                        @if($companyDetails->facebook)
+                            <a href="{{ $companyDetails->facebook }}" target="_blank">
+                                <iconify-icon class="fs-3 text-white" icon="ic:baseline-facebook"></iconify-icon>
+                            </a>
+                        @endif
+                        @if($companyDetails->instagram)
+                            <a href="{{ $companyDetails->instagram }}" target="_blank">
+                                <iconify-icon class="fs-3 text-white" icon="mdi:instagram"></iconify-icon>
+                            </a>
+                        @endif
+                        @if($companyDetails->youtube)
+                            <a href="{{ $companyDetails->youtube }}" target="_blank">
+                                <iconify-icon class="fs-3 text-white" icon="mdi:youtube"></iconify-icon>
+                            </a>
+                        @endif
+                        @if($companyDetails->linkedin)
+                            <a href="{{ $companyDetails->linkedin }}" target="_blank">
+                                <iconify-icon class="fs-3 text-white" icon="mdi:linkedin"></iconify-icon>
+                            </a>
+                        @endif
                     </div>
 
                 </div>
                 <div class="d-flex align-items-center justify-content-center flex-wrap">
-                    <img src="{{ asset('assets/frontend/images/Other Logos.png') }}">
-                    <img src="{{ asset('assets/frontend/images/Ellipse 997.png') }}" class="mx-2" alt="" width="60">
-                    <img src="{{ asset('assets/frontend/images/Ellipse 998.png') }}" alt="" width="60">
+                    @foreach(\App\Models\WeWorkWithImage::all() as $image)
+                        <img src="{{ asset('images/we_work_with_images/' . $image->image) }}" alt="">
+                    @endforeach
                 </div>
             </div>
             <div class="col-lg-3 mb-3">
@@ -33,22 +52,21 @@
                     <li class="nav-item mb-2">
                         <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-2 text-white">
                             <iconify-icon class="fs-4" icon="ri:map-pin-fill"></iconify-icon>
-                            23A Broad Lane, Moldgreen, Huddersfield, West Yorkshire, HD5 9BX
+                            {{ $companyDetails->address1 ?? 'Address not available' }}
                         </div>
                     </li>
                     <li class="nav-item mb-2">
-                        <div class="d-flex align-items-center  justify-content-center justify-content-md-start gap-2 text-white">
+                        <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-2 text-white">
                             <iconify-icon class="fs-4" icon="solar:phone-bold"></iconify-icon>
-                            01484 508951
+                            {{ $companyDetails->phone1 ?? 'Phone not available' }}
                         </div>
                     </li>
                     <li class="nav-item mb-2">
-                        <div class="d-flex align-items-center  justify-content-center justify-content-md-start gap-2 text-white">
+                        <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-2 text-white">
                             <iconify-icon class="fs-4" icon="mingcute:mail-fill"></iconify-icon>
-                            info@hd-accountancy.co.uk
+                            {{ $companyDetails->email1 ?? 'Email not available' }}
                         </div>
                     </li>
-
                 </ul>
             </div>
             <div class="col-lg-3 mb-3">
@@ -57,22 +75,21 @@
                     <li class="nav-item mb-2">
                         <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-2 text-white">
                             <iconify-icon class="fs-4" icon="ri:map-pin-fill"></iconify-icon>
-                            Suite no 03.20, Peter House, Oxford Street,Manchester, M1 5AN
+                            {{ $companyDetails->address2 ?? 'Address not available' }}
                         </div>
                     </li>
                     <li class="nav-item mb-2">
                         <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-2 text-white">
                             <iconify-icon class="fs-4" icon="solar:phone-bold"></iconify-icon>
-                            01612 416746
+                            {{ $companyDetails->phone2 ?? 'Phone not available' }}
                         </div>
                     </li>
                     <li class="nav-item mb-2">
                         <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-2 text-white">
                             <iconify-icon class="fs-4" icon="mingcute:mail-fill"></iconify-icon>
-                            info@hd-accountancy.co.uk
+                            {{ $companyDetails->email2 ?? 'Email not available' }}
                         </div>
                     </li>
-
                 </ul>
             </div>
             <div class="col-lg-2 mb-3">

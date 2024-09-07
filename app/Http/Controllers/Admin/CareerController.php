@@ -17,6 +17,25 @@ class CareerController extends Controller
         return view('admin.career.index', compact('data'));
     }
 
+    public function delete($id)
+    {
+        $data = Career::find($id);
+        if (!$data) {
+            return response()->json(['status' => 404, 'message' => 'Record not found!']);
+        }
+
+        $cvFilePath = public_path('images/Cv/' . $data->cv);
+        if (file_exists($cvFilePath)) {
+            unlink($cvFilePath);
+        }
+
+        if ($data->delete()) {
+            return response()->json(['status' => 300, 'message' => 'Deleted successfully.']);
+        } else {
+            return response()->json(['status' => 303, 'message' => 'Server Error!!']);
+        }
+    }
+
     public function careerPage()
     {
         $getQuotationCode = Softcode::where('name', 'Career Page')->first();

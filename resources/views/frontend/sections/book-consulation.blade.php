@@ -15,7 +15,9 @@
                         <div>
                             <p class="text-muted poppins-medium d-flex  align-items-center"><iconify-icon icon="uil:clock" class="fs-4"></iconify-icon> <span id="time-diff-1" class="ms-2">30 min</span>
                             </p>
-                            <p class="text-muted poppins-medium d-flex  align-items-center"><iconify-icon icon="wpf:phone" class="fs-4"></iconify-icon> <span id="meeting-method" class="ms-2"> Phone</span>
+                            <p class="text-muted poppins-medium d-flex align-items-center">
+                                <iconify-icon id="meeting-icon" icon="wpf:phone" class="fs-4"></iconify-icon>
+                                <span id="meeting-method" class="ms-2">Phone</span>
                             </p>
                             <p class="text-muted poppins-medium d-flex  align-items-center"><iconify-icon icon="material-symbols-light:event-available-rounded" class="fs-4"></iconify-icon> <span id="date-display" class="ms-2">{{ date('l, j F Y') }}</span>
                             </p>
@@ -55,7 +57,7 @@
                                     <input type="hidden" id="date" name="date">
                                 </div>
                                 <div class="col-lg-5 d-flex flex-wrap gx-1 justify-content-center my-4">
-                                    @foreach(\App\Models\TimeSlot::all() as $timeSlot)
+                                    @foreach(\App\Models\TimeSlot::orderBy('start_time', 'asc')->get() as $timeSlot)
                                         <div class="mb-2">
                                             <input type="radio" class="timepick invisible" name="timepick" id="timepick-{{ $timeSlot->id }}" value="{{ $timeSlot->start_time }}" data-start-time="{{ $timeSlot->start_time }}" data-end-time="{{ $timeSlot->end_time }}">
                                             <label for="timepick-{{ $timeSlot->id }}">

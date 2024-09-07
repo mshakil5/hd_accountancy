@@ -16,6 +16,16 @@
         $('input[name="meet"]').on('change', function() {
             var selectedMethod = $(this).val();
             $('#meeting-method').text(selectedMethod);
+
+            var iconElement = $('#meeting-icon');
+    
+            if (selectedMethod === 'Phone') {
+                iconElement.attr('icon', 'wpf:phone');
+            } else if (selectedMethod === 'Video Conference') {
+                iconElement.attr('icon', 'ic:baseline-video-call'); 
+            } else if (selectedMethod === 'Face to face') {
+                iconElement.attr('icon', 'mdi:face');
+            }
         });
 
         $('input[name="timepick"]').on('change', function() {

@@ -29,7 +29,7 @@
                      <input type="text" name="name" id="name" class="form-control" value="{{ Auth::check() ? Auth::user()->first_name . ' ' . Auth::user()->last_name : '' }}">
                   </div>
                   <div class="col-lg-6 mb-4">
-                     <label for="vat_returns" class="txt-primary">Do you want to complete your VAT Returns?</label>
+                     <label for="vat_returns" class="txt-primary">Do you want to complete your VAT Returns?<span class="text-danger">*</span></label>
                      <select name="vat_returns" id="vat_returns" class="form-control" style="appearance: auto;">
                         <option value="No">No</option>
                         <option value="Yes">Yes</option>
@@ -40,7 +40,7 @@
                      <input type="email" name="email" id="email" class="form-control" value="{{ Auth::check() ? Auth::user()->email : '' }}">
                   </div>
                   <div class="col-lg-6 mb-4">
-                     <label for="payroll" class="txt-primary">Do you want to manage Payroll?</label>
+                     <label for="payroll" class="txt-primary">Do you want to manage Payroll?<span class="text-danger">*</span></label>
                      <select name="payroll" id="payroll" class="form-control" style="appearance: auto;">
                         <option value="No">No</option>
                         <option value="Yes">Yes</option>
@@ -51,7 +51,7 @@
                      <input type="text" id="company_name" name="company_name" class="form-control">
                   </div>
                   <div class="col-lg-6 mb-4">
-                     <label for="bookkeeping" class="txt-primary">Do you want us to complete bookkeeping?</label>
+                     <label for="bookkeeping" class="txt-primary">Do you want us to complete bookkeeping?<span class="text-danger">*</span></label>
                      <select name="bookkeeping" id="bookkeeping" class="form-control" style="appearance: auto;">
                         <option value="No">No</option>
                         <option value="Yes">Yes</option>
@@ -62,17 +62,15 @@
                      <input type="number" id="phone" name="phone" class="form-control" value="{{ Auth::check() ? Auth::user()->phone : '' }}">
                   </div>
                   <div class="col-lg-6 mb-4">
-                     <label for="bookkeeping_software" class="txt-primary">Which Book Keeping software do you use?</label>
-                     <select name="bookkeeping_software" id="bookkeeping_software" class="form-control" style="appearance: auto;">
-                        <option value="Xero">Xero</option>
-                     </select>
+                     <label for="bookkeeping_software" class="txt-primary">Which Book Keeping software do you use?<span class="text-danger">*</span></label>
+                     <input type="text" name="bookkeeping_software" id="bookkeeping_software" class="form-control" />
                   </div>
                   <div class="col-lg-6 mb-4">
                      <label for="business_type" class="txt-primary">Business Type<span class="text-danger">*</span></label>
                      <input type="text" id="business_type" name="business_type" class="form-control">
                   </div>
                   <div class="col-lg-6 mb-4">
-                     <label for="management_account" class="txt-primary">Do you need Management Account?</label>
+                     <label for="management_account" class="txt-primary">Do you need Management Account?<span class="text-danger">*</span></label>
                      <select name="management_account" id="management_account" class="form-control" style="appearance: auto;">
                         <option value="Yes">Yes</option>
                         <option value="No">No</option>
@@ -83,7 +81,7 @@
                      <input type="number" id="turnover" name="turnover" class="form-control">
                   </div>
                   <div class="col-lg-6 mb-4">
-                     <label for="bank_accounts" class="txt-primary">How many bank accounts do you have?</label>
+                     <label for="bank_accounts" class="txt-primary">How many bank accounts do you have?<span class="text-danger">*</span></label>
                      <input type="number" id="bank_accounts" name="bank_accounts" class="form-control">
                   </div>
                   <div class="col-lg-12 text-center my-4">
