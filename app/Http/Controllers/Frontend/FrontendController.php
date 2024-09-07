@@ -324,4 +324,10 @@ class FrontendController extends Controller
         return response()->json(['message' => 'Career form submitted successfully!']);
     }
 
+    public function latestInsightDetails($slug)
+    {
+        $latestInsight = LatestInsight::where('slug', $slug)->firstOrFail();
+        return view('frontend.latest-insight.index', compact('latestInsight'));
+    }
+
 }

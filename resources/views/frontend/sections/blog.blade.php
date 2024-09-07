@@ -9,20 +9,20 @@
         <div class="row mt-5">
             @foreach($latestInsights as $item)
                 <div class="col-lg-4">
-                    <a href="">
+                    <a href="{{ route('latest-insights.show', $item->slug) }}">
                         <img src="{{ asset($item->image) }}" class="img-fluid">
                         <h5 class="poppins-medium txt-primary my-3">
                             {{ $item->short_title }}
                         </h5>
                     </a>
                     <p class="txt-primary">
-                        {!! $item->long_description !!}
+                        {{ $item->short_description }}
                     </p>
                 </div>
             @endforeach
             <div class="col-12 text-center my-5">
-                       <a class="btn btn-theme-outline d-inline w-50 mx-auto rounded-3 fs-6">See More Article</a>
-                    </div>
+                <a class="btn btn-theme-outline d-inline w-50 mx-auto rounded-3 fs-6">See More Article</a>
+            </div>
         </div>
     </div>
 </section>

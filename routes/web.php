@@ -67,6 +67,9 @@ Route::get('/booking', [FrontendController::class, 'booking'])->name('frontend.b
 // Case-Study
 Route::get('/case-study', [FrontendController::class, 'caseStudy'])->name('frontend.caseStudy');
 
+// Latest Insight Details
+route::get('/latest-insights/{slug}', [FrontendController::class, 'latestInsightDetails'])->name('latest-insights.show');
+
 // Cloud Accounting
 Route::get('/cloud-accounting', [FrontendController::class, 'cloudAccounting'])->name('frontend.cloudAccounting');
 
