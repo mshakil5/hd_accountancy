@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Models\Package;
 use App\Models\PackageFeature;
 use Illuminate\Support\Str;
+use App\Models\TurnOver;
+use Illuminate\Support\Facades\Auth;
 
 class PackageController extends Controller
 {
@@ -65,7 +67,11 @@ class PackageController extends Controller
             'id'=>$id
         ];
         $info = Package::where($where)->get()->first();
-        return response()->json($info);
+        $turnovers = TurnOver::where('package_id', $id)->get();
+        return response()->json([
+            'package' => $info,
+            'turnovers' => $turnovers,
+        ]);
     }
 
     public function update(Request $request)
@@ -120,6 +126,38 @@ class PackageController extends Controller
         }else{
             return response()->json(['success'=>false,'message'=>'Delete Failed']);
         }
-    } 
+    }
+    
+    public function showTurnover(Request $request)
+    {
+        $packageId = $request->query('package_id');
+        $package = Package::findOrFail($packageId);
+        $turnovers = TurnOver::where('package_id', $packageId)->get();
+        return response()->json([
+            'package' => $package,
+            'turnovers' => $turnovers,
+            'packageId' => $packageId
+        ]);
+    }
+
+    public function storeTurnover(Request $request)
+    {
+        $request->validate([
+            'package_id' => 'required|exists:packages,id',     
+            'price_range' => 'required|string',
+        ]);
+
+        TurnOver::create([
+            'package_id' => $request->input('package_id'),
+            'price_range' => $request->input('price_range'),
+            'created_by' => Auth::user()->id
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Turnover entry added successfully.',
+        ]);
+    }
+
     
 }

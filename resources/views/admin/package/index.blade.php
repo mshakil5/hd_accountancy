@@ -119,6 +119,7 @@
                   <th style="text-align: center">Sl</th>
                   <th style="text-align: center">Name</th>
                   <th style="text-align: center">Price</th>
+                  <th style="text-align: center">Turnovers</th>
                   <th style="text-align: center">Action</th>
                 </tr>
                 </thead>
@@ -128,6 +129,9 @@
                     <td style="text-align: center">{{ $key + 1 }}</td>
                     <td style="text-align: center">{{$data->name}}</td>
                     <td style="text-align: center">{{ number_format($data->price, 2) }}</td>
+                    <td style="text-align: center">
+                      <button type="button" class="btn btn-info btn-sm" id="turnOverBtn" rid="{{$data->id}}">Manage Turnovers</button>
+                    </td>
                     <td style="text-align: center">
                       <a class="btn btn-link" id="EditBtn" rid="{{$data->id}}"><i class="fa fa-edit" style="font-size: 20px;"></i></a>
                         <a class="btn btn-link" id="deleteBtn" rid="{{$data->id}}"><i class="fas fa-trash" style="color: red; font-size: 20px;"></i></a>
@@ -188,7 +192,36 @@
                         <label>Features:</label>
                         <ul id="view_features"></ul>
                     </div>
+                    <div class="col-sm-12">
+                        <div id="view_turnovers"></div>
+                    </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for managing turnovers -->
+<div class="modal fade" id="turnOverModal" tabindex="-1" role="dialog" aria-labelledby="turnOverModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="turnOverModalLabel">Manage Turnovers</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="turnOverList">
+                </div>
+                <hr>
+                <form id="addTurnOverForm">
+                    @csrf
+                    <input type="hidden" id="package_id" name="package_id">
+                    <div class="form-group">
+                        <label>New Turnover</label>
+                        <input type="text" class="form-control" id="price_range" name="price_range" placeholder="Enter turnover price range">
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-3">Add Turnover</button>
+                </form>
             </div>
         </div>
     </div>
@@ -227,12 +260,105 @@
 <script>
   $(document).ready(function () {
 
+        $("#contentContainer").on('click', '#turnOverBtn', function(){
+            var packageId = $(this).attr('rid');
+            $("#package_id").val(packageId);
+            var package_url = "{{ URL::to('/admin/package-turnover') }}";
+            
+            $.get(package_url, { package_id: packageId }, function(data){
+                var turnOverList = '';
+                
+                if (data.turnovers && Array.isArray(data.turnovers)) {
+                    data.turnovers.forEach(function(turnOver){
+                        turnOverList += '<div class="turnover-item mb-2">' +
+                            '<p><strong>Price Range:</strong> ' + turnOver.price_range + '</p>' +
+                            '</div>';
+                    });
+                } else {
+                    turnOverList = '<p>No turnovers found.</p>';
+                }
+                
+                $('#turnOverList').html(turnOverList);
+                $('#turnOverModal').modal('show');
+            }).fail(function() {
+                swal({
+                    title: "Error!",
+                    text: "Failed to load turnovers.",
+                    icon: "error",
+                    button: "OK",
+                });
+            });
+        });
+
+        $("#addTurnOverForm").submit(function(e){
+            e.preventDefault();
+
+            // Get form data
+            var formData = new FormData(this);
+            var packageId = $("#package_id").val();
+            var package_url = "{{ route('package.turnover.store') }}";
+            var priceRange = $("#price_range").val().trim();
+
+            // Check if price range is empty
+            if (!priceRange) {
+                swal({
+                    title: "Error!",
+                    text: "Please enter a price range.",
+                    icon: "error",
+                    button: "OK",
+                });
+                return; // Stop form submission
+            }
+
+            // Append package_id to formData
+            formData.append('package_id', packageId);
+
+            // Perform AJAX request
+            $.ajax({
+                url: package_url,
+                type: "POST",
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#turnOverModal').modal('hide');
+                        $('#addTurnOverForm')[0].reset();
+                        swal({
+                            title: "Success!",
+                            text: "Turnover added successfully",
+                            icon: "success",
+                            button: "OK",
+                        });
+                        // Optionally reload the list of turnovers
+                    } else {
+                        swal({
+                            title: "Error!",
+                            text: response.message || "An error occurred while adding the turnover.",
+                            icon: "error",
+                            button: "OK",
+                        });
+                        console.error('Error:', response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    swal({
+                        title: "Error!",
+                        text: "An error occurred while processing your request.",
+                        icon: "error",
+                        button: "OK",
+                    });
+                    console.error(xhr.responseText);
+                }
+            });
+        });
+
         $("#contentContainer").on('click', '#viewBtn', function(){
         var codeid = $(this).attr('rid');
         var info_url = "{{URL::to('/admin/package')}}" + '/' + codeid + '/edit'; 
 
         $.get(info_url, {}, function(data){
-          console.log(data);
+          // console.log(data);
             $('#view_name').text(data.name);
             $('#view_price').text(data.price);
             $('#view_short_title').text(data.short_title);
@@ -248,6 +374,16 @@
                         $('#view_features').append('<li>' + feature.trim() + '</li>');
                     });
                 }
+            }
+
+            $('#view_turnovers').empty();
+            if (data.turnovers && data.turnovers.length > 0) {
+                var turnoverTexts = data.turnovers.map(function(turnOver) {
+                    return turnOver.price_range;
+                }).join(', ');
+                $('#view_turnovers').html('<p>Price Range: ' + turnoverTexts + '</p>');
+            } else {
+                $('#view_turnovers').html('<p>No turnovers available.</p>');
             }
 
             $('#viewModal').modal('show');
@@ -338,7 +474,7 @@
                   processData: false,
                   data:form_data,
                   success: function(d){
-                      console.log(d);
+                      // console.log(d);
                       if (d.status == 303) {
                         $(".ermsg").html(d.message);
                       }else if(d.status == 300){
@@ -394,7 +530,7 @@
         });
       //Delete  
       function populateForm(data){
-        console.log(data);
+        // console.log(data);
         $("#name").val(data.name);
         $("#short_title").val(data.short_title);
         $("#price").val(data.price);
