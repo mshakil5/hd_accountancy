@@ -131,6 +131,7 @@
                     <td style="text-align: center">
                       <a class="btn btn-link" id="EditBtn" rid="{{$data->id}}"><i class="fa fa-edit" style="font-size: 20px;"></i></a>
                         <a class="btn btn-link" id="deleteBtn" rid="{{$data->id}}"><i class="fas fa-trash" style="color: red; font-size: 20px;"></i></a>
+                        <a class="btn btn-link" id="viewBtn" rid="{{$data->id}}"><i class="fas fa-eye" style="font-size: 20px;"></i></a>
                     </td>
                   </tr>
                   @endforeach
@@ -148,6 +149,50 @@
     <!-- /.container-fluid -->
 </section>
 <!-- /.content -->
+
+<!-- Modal for viewing data -->
+<div class="modal fade" id="viewModal" tabindex="-1" role="dialog" aria-labelledby="viewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewModalLabel">View Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-6">
+                        <label>Name:</label>
+                        <p id="view_name"></p>
+                    </div>
+                    <div class="col-sm-6">
+                        <label>Price:</label>
+                        <p id="view_price"></p>
+                    </div>
+                    <div class="col-sm-6">
+                        <label>Short Title:</label>
+                        <p id="view_short_title"></p>
+                    </div>
+                    <div class="col-sm-6">
+                        <label>Long Title:</label>
+                        <p id="view_long_title"></p>
+                    </div>
+                    <div class="col-sm-12">
+                        <label>Short Description:</label>
+                        <p id="view_short_description"></p>
+                    </div>
+                    <div class="col-sm-12">
+                        <label>Long Description:</label>
+                        <p id="view_long_description"></p>
+                    </div>
+                    <div class="col-sm-12">
+                        <label>Features:</label>
+                        <ul id="view_features"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <style>
   .feature-container {
@@ -181,6 +226,34 @@
 
 <script>
   $(document).ready(function () {
+
+        $("#contentContainer").on('click', '#viewBtn', function(){
+        var codeid = $(this).attr('rid');
+        var info_url = "{{URL::to('/admin/package')}}" + '/' + codeid + '/edit'; 
+
+        $.get(info_url, {}, function(data){
+          console.log(data);
+            $('#view_name').text(data.name);
+            $('#view_price').text(data.price);
+            $('#view_short_title').text(data.short_title);
+            $('#view_long_title').text(data.long_title);
+            $('#view_short_description').text(data.short_description);
+            $('#view_long_description').html(decodeURIComponent(data.long_description));
+
+            $('#view_features').empty();
+            if (data.features && data.features !== '') {
+                var featuresArray = data.features.replace(/\"/g, '').split(',');
+                if (featuresArray !== null) {
+                    featuresArray.forEach(function(feature){
+                        $('#view_features').append('<li>' + feature.trim() + '</li>');
+                    });
+                }
+            }
+
+            $('#viewModal').modal('show');
+        });
+    });
+
       $("#addThisFormContainer").hide();
       $("#newBtn").click(function(){
         clearform();
@@ -349,6 +422,7 @@
       function clearform(){
         $('#createThisForm')[0].reset();
         $("#addBtn").val('Create');
+        $("#long_description").summernote('code', '');
       }
   });
 </script>
