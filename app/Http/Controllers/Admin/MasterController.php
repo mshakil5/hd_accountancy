@@ -29,11 +29,6 @@ class MasterController extends Controller
             return response()->json(['status'=> 303,'message'=>$message]);
             exit();
         }
-        if(empty($request->long_description)){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \" Long Description \" field..!</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
-            exit();
-        }
         
         $data = new Master;
         $data->name = $request->name;
@@ -84,10 +79,6 @@ class MasterController extends Controller
         }
         if (empty($request->short_title)) {
             $message = "<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Short Title\" field..!</b></div>";
-            return response()->json(['status' => 303, 'message' => $message]);
-        }
-        if (empty($request->long_description)) {
-            $message = "<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Long Description\" field..!</b></div>";
             return response()->json(['status' => 303, 'message' => $message]);
         }
 

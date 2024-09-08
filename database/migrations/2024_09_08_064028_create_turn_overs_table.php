@@ -13,11 +13,14 @@ return new class extends Migration
     {
         Schema::create('turn_overs', function (Blueprint $table) {
             $table->id();
+            $table->string('price_range')->nullable();
             $table->unsignedBigInteger('package_id')->nullable();
             $table->foreign('package_id')->references('id')->on('packages')->onDelete('cascade');
             $table->string('title')->nullable();
-            $table->string('price_range')->nullable();
+            $table->string('price')->nullable();
+            $table->json('features')->nullable();
             $table->string('vat')->nullable();
+            $table->longText('note')->nullable();
             $table->boolean('status')->default(1);
             $table->string('created_by')->nullable();
             $table->string('updated_by')->nullable();

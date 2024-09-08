@@ -68,19 +68,6 @@
                         <textarea class="form-control summernote" id="long_description" name="long_description" placeholder="Enter long description"></textarea>
                     </div>
                 </div>
-                <div class="col-sm-12">
-                    <div class="form-group">
-                        <label>Features</label>
-                        <div class="feature-container">
-                            @foreach($features as $feature)
-                                <div class="form-check feature-item">
-                                    <input class="form-check-input" type="checkbox" name="features[]" value="{{$feature->name}}" id="feature_{{$feature->id}}">
-                                    <label class="form-check-label" for="feature_{{$feature->id}}">{{$feature->name}}</label>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
               </div>      
             </form>
           </div>
@@ -130,7 +117,7 @@
                     <td style="text-align: center">{{$data->name}}</td>
                     <td style="text-align: center">{{ number_format($data->price, 2) }}</td>
                     <td style="text-align: center">
-                      <button type="button" class="btn btn-info btn-sm" id="turnOverBtn" rid="{{$data->id}}">Manage Turnovers</button>
+                        <a href="{{ route('package-turnover', ['id' => $data->id]) }}" class="btn btn-sm bg-theme text-light btn-outline-dark">Manage Turnovers</a>
                     </td>
                     <td style="text-align: center">
                       <a class="btn btn-link" id="EditBtn" rid="{{$data->id}}"><i class="fa fa-edit" style="font-size: 20px;"></i></a>
@@ -188,40 +175,7 @@
                         <label>Long Description:</label>
                         <p id="view_long_description"></p>
                     </div>
-                    <div class="col-sm-12">
-                        <label>Features:</label>
-                        <ul id="view_features"></ul>
-                    </div>
-                    <div class="col-sm-12">
-                        <div id="view_turnovers"></div>
-                    </div>
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal for managing turnovers -->
-<div class="modal fade" id="turnOverModal" tabindex="-1" role="dialog" aria-labelledby="turnOverModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="turnOverModalLabel">Manage Turnovers</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div id="turnOverList">
-                </div>
-                <hr>
-                <form id="addTurnOverForm">
-                    @csrf
-                    <input type="hidden" id="package_id" name="package_id">
-                    <div class="form-group">
-                        <label>New Turnover</label>
-                        <input type="text" class="form-control" id="price_range" name="price_range" placeholder="Enter turnover price range">
-                    </div>
-                    <button type="submit" class="btn btn-primary mt-3">Add Turnover</button>
-                </form>
             </div>
         </div>
     </div>
@@ -354,41 +308,31 @@
         });
 
         $("#contentContainer").on('click', '#viewBtn', function(){
-        var codeid = $(this).attr('rid');
-        var info_url = "{{URL::to('/admin/package')}}" + '/' + codeid + '/edit'; 
+            var codeid = $(this).attr('rid');
+            var info_url = "{{URL::to('/admin/package')}}" + '/' + codeid + '/edit'; 
 
-        $.get(info_url, {}, function(data){
-          // console.log(data);
-            $('#view_name').text(data.name);
-            $('#view_price').text(data.price);
-            $('#view_short_title').text(data.short_title);
-            $('#view_long_title').text(data.long_title);
-            $('#view_short_description').text(data.short_description);
-            $('#view_long_description').html(decodeURIComponent(data.long_description));
+            $.get(info_url, {}, function(data){
+              // console.log(data);
+                $('#view_name').text(data.name);
+                $('#view_price').text(data.price);
+                $('#view_short_title').text(data.short_title);
+                $('#view_long_title').text(data.long_title);
+                $('#view_short_description').text(data.short_description);
+                $('#view_long_description').html(decodeURIComponent(data.long_description));
 
-            $('#view_features').empty();
-            if (data.features && data.features !== '') {
-                var featuresArray = data.features.replace(/\"/g, '').split(',');
-                if (featuresArray !== null) {
-                    featuresArray.forEach(function(feature){
-                        $('#view_features').append('<li>' + feature.trim() + '</li>');
-                    });
-                }
-            }
+                // $('#view_features').empty();
+                // if (data.features && data.features !== '') {
+                //     var featuresArray = data.features.replace(/\"/g, '').split(',');
+                //     if (featuresArray !== null) {
+                //         featuresArray.forEach(function(feature){
+                //             $('#view_features').append('<li>' + feature.trim() + '</li>');
+                //         });
+                //     }
+                // }
 
-            $('#view_turnovers').empty();
-            if (data.turnovers && data.turnovers.length > 0) {
-                var turnoverTexts = data.turnovers.map(function(turnOver) {
-                    return turnOver.price_range;
-                }).join(', ');
-                $('#view_turnovers').html('<p>Price Range: ' + turnoverTexts + '</p>');
-            } else {
-                $('#view_turnovers').html('<p>No turnovers available.</p>');
-            }
-
-            $('#viewModal').modal('show');
+                $('#viewModal').modal('show');
+            });
         });
-    });
 
       $("#addThisFormContainer").hide();
       $("#newBtn").click(function(){
@@ -416,14 +360,7 @@
               form_data.append("long_title", $("#long_title").val());
               form_data.append("short_description", $("#short_description").val());
               form_data.append("long_description", $('#long_description').summernote('code'));
-              var features = [];
-                $('input[name="features[]"]:checked').each(function() {
-                    features.push($(this).val());
-                });
-               form_data.append("features", features);
-              // for (let [key, value] of form_data.entries()) {
-              //     console.log(key, value);
-              // }
+
               $.ajax({
                 url: url,
                 method: "POST",
@@ -459,11 +396,6 @@
               form_data.append("long_title", $("#long_title").val());
               form_data.append("short_description", $("#short_description").val());
               form_data.append("long_description", $('#long_description').summernote('code'));
-              var features = [];
-                $('input[name="features[]"]:checked').each(function() {
-                    features.push($(this).val());
-                });
-              form_data.append("features", features);
               form_data.append("codeid", $("#codeid").val());
               
               $.ajax({
@@ -538,16 +470,16 @@
         $("#short_description").val(data.short_description);
         $("#long_description").summernote('code', data.long_description);
 
-        if (data.features && data.features !== '') {
-            var featuresArray = JSON.parse(data.features);
-            if (featuresArray !== null) {
-                $('input[name="features[]"]').each(function(){
-                    if(featuresArray.includes($(this).val())){
-                        $(this).prop('checked', true);
-                    }
-                });
-            }
-        }
+        // if (data.features && data.features !== '') {
+        //     var featuresArray = JSON.parse(data.features);
+        //     if (featuresArray !== null) {
+        //         $('input[name="features[]"]').each(function(){
+        //             if(featuresArray.includes($(this).val())){
+        //                 $(this).prop('checked', true);
+        //             }
+        //         });
+        //     }
+        // }
 
         $("#codeid").val(data.id);
         $("#addBtn").val('Update');

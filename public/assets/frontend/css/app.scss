@@ -136,7 +136,7 @@
 
     body {
         font-family: 'poppins-light', sans-serif;
-        background-color: #fff; 
+        background-color: #fff;
     }
 
     //   navbar css
@@ -425,8 +425,8 @@
     }
 
 
-    .bg-light{
-        background-color: #FBFCFD!important;
+    .bg-light {
+        background-color: #FBFCFD !important;
     }
 
 
@@ -441,49 +441,94 @@
         align-items: center;
         justify-content: center;
         font-size: 1.6rem;
-        &:hover{
+
+        &:hover {
             background-color: $primary;
-            iconify-icon{
+
+            iconify-icon {
                 color: #A2C63C;
             }
         }
     }
 
-    .form-control:focus{
-        outline:none;
+    .form-control:focus {
+        outline: none;
         box-shadow: none;
         border-color: $primary;
     }
 
-    .list-theme{
-        li{
-           
+    .list-theme {
+        li {
+
             color: #233969;
         }
     }
 
-    .icon-box{
+    .icon-box {
         position: relative;
-        .arcup{
+
+        .arcup {
             position: absolute;
             left: 69%;
             width: 63%;
             top: 8px;
             user-select: none;
             display: none;
-            @media(min-width:992px){
+
+            @media(min-width:992px) {
                 display: block;
             }
         }
-        .arcdown{
+
+        .arcdown {
             position: absolute;
             left: 69%;
             width: 63%;
             bottom: 52%;
             user-select: none;
             display: none;
-            @media(min-width:992px){
+
+            @media(min-width:992px) {
                 display: block;
+            }
+        }
+    }
+
+    #myTab {
+        border: 1px solid #BCCBE0;
+
+        .nav-item {
+            font-family: 'poppins-medium';
+            
+
+            &:nth-child(2) {
+               @media(min-width:768px){
+                border-left: 1px solid #BCCBE0;                
+                border-right: 1px solid #BCCBE0;
+                
+               }
+            }
+
+            &:hover {
+                background: $primary;
+
+                .nav-link { 
+                        color: $white !important; 
+                }
+            }
+        }
+
+        .nav-link {
+            padding: 16px 30px;
+            border: 0;
+            color: $primary;
+
+            &.active {
+                border-radius: 0 !important;
+                background: $primary;
+               
+                    color: $white !important; 
+                 
             }
         }
     }

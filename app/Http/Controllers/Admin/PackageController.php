@@ -50,7 +50,7 @@ class PackageController extends Controller
             $data->long_title = $request->long_title;
             $data->short_description = $request->short_description;
             $data->long_description = $request->long_description;
-            $data->features = json_encode($request->features);
+            // $data->features = json_encode($request->features);
             
             if ($data->save()) {
                 $message ="<div class='alert alert-success'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Created successfully.</b></div>";
@@ -67,11 +67,7 @@ class PackageController extends Controller
             'id'=>$id
         ];
         $info = Package::where($where)->get()->first();
-        $turnovers = TurnOver::where('package_id', $id)->get();
-        return response()->json([
-            'package' => $info,
-            'turnovers' => $turnovers,
-        ]);
+        return response()->json($info);
     }
 
     public function update(Request $request)
@@ -105,7 +101,7 @@ class PackageController extends Controller
                 $data->long_title = $request->long_title;
                 $data->short_description = $request->short_description;
                 $data->long_description = $request->long_description;
-                $data->features = json_encode($request->features);
+                // $data->features = json_encode($request->features);
 
                 if ($data->save()) {
                     $message = "<div class='alert alert-success'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Updated successfully.</b></div>";
@@ -140,24 +136,92 @@ class PackageController extends Controller
         ]);
     }
 
+    public function manageTurnovers($id)
+    {
+        $packageName = Package::where('id', $id)->pluck('name')->first();
+        $turnovers = TurnOver::where('package_id', $id)->get();
+        $features = PackageFeature::orderBy('id', 'DESC')->get();
+        return view('admin.package.turnover', compact('turnovers', 'id', 'features', 'packageName'));
+    }
+
     public function storeTurnover(Request $request)
     {
         $request->validate([
-            'package_id' => 'required|exists:packages,id',     
+            'package_id' => 'required|exists:packages,id',
             'price_range' => 'required|string',
+            'price' => 'required|numeric',
+            'note' => 'nullable|string',
+            'title' => 'required|string',
+            'vat' => 'nullable|numeric',
         ]);
 
-        TurnOver::create([
-            'package_id' => $request->input('package_id'),
-            'price_range' => $request->input('price_range'),
-            'created_by' => Auth::user()->id
-        ]);
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Turnover entry added successfully.',
-        ]);
+        $turnOver = new TurnOver();
+        
+        $turnOver->package_id = $request->input('package_id');
+        $turnOver->price_range = $request->input('price_range');
+        $turnOver->price = $request->input('price');
+        $turnOver->note = $request->input('note');
+        $turnOver->title = $request->input('title');
+        $turnOver->vat = $request->input('vat');
+        $turnOver->features = json_encode($request->input('features'));
+        $turnOver->created_by = Auth::user()->id;
+        
+        if ($turnOver->save()) {
+            $message ="<div class='alert alert-success'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Created successfully.</b></div>";
+            return response()->json(['status'=> 300,'message'=>$message]);
+        }else{
+            return response()->json(['status'=> 303,'message'=>'Server Error!!']);
+        }
     }
 
-    
+    public function editTurnover($id)
+    {
+        $where = [
+            'id'=>$id
+        ];
+        $info = TurnOver::where($where)->get()->first();
+        return response()->json($info);
+    }
+
+    public function updateTurnover(Request $request)
+    {
+        $request->validate([
+            'package_id' => 'required|exists:packages,id',
+            'price_range' => 'required|string',
+            'price' => 'required|numeric',
+            'note' => 'nullable|string',
+            'title' => 'required|string',
+            'vat' => 'nullable|numeric',
+        ]);
+
+        $turnOver = TurnOver::find($request->codeid);
+
+        if (!$turnOver) {
+            return response()->json(['status' => 404, 'message' => 'Turnover not found']);
+        }
+
+        $turnOver->package_id = $request->input('package_id');
+        $turnOver->price_range = $request->input('price_range');
+        $turnOver->price = $request->input('price');
+        $turnOver->note = $request->input('note');
+        $turnOver->title = $request->input('title');
+        $turnOver->vat = $request->input('vat');
+        $turnOver->features = json_encode($request->input('features'));
+
+        if ($turnOver->save()) {
+            $message = "<div class='alert alert-success'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Updated successfully.</b></div>";
+            return response()->json(['status' => 300, 'message' => $message]);
+        } else {
+            return response()->json(['status' => 303, 'message' => 'Server Error!!']);
+        }
+    }
+    public function deleteTurnover($id)
+    {
+        $turnOver = TurnOver::find($id);
+        if ($turnOver->delete()) {
+            return response()->json(['success'=>true,'message'=>'Deleted successfully']);
+        }else{
+            return response()->json(['success'=>false,'message'=>'Delete Failed']);
+        }
+    }
 }

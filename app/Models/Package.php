@@ -10,4 +10,10 @@ class Package extends Model
 {
     use HasFactory;
     use SoftDeletes;
+
+    public function turnOvers()
+    {
+        return $this->hasMany(TurnOver::class, 'package_id');
+    }
+
 }

@@ -12,19 +12,23 @@
   font-family: "poppins-regular";
   src: url(../fonts/Poppins-Regular.otf);
 }
+
 @font-face {
   font-family: "poppins-medium";
   src: url(../fonts/Poppins-Medium.otf);
 }
+
 @font-face {
   font-family: "poppins-bold";
   src: url(../fonts/Poppins-Bold.otf);
 }
+
 @font-face {
   font-family: "poppins-Light";
   src: url(../fonts/Poppins-Light.otf);
 }
-.timepick + label {
+
+.timepick+label {
   border: 1px solid #233969 !important;
   cursor: pointer;
   font-family: "poppins-medium";
@@ -33,7 +37,7 @@
   border-radius: 9px;
 }
 
-.timepick:checked + label {
+.timepick:checked+label {
   border: 1px solid #233969 !important;
   background-color: #233969 !important;
   color: #A2C63C !important;
@@ -50,6 +54,7 @@ input[type=radio] {
 .vh-75 {
   height: 75vh;
 }
+
 @media (max-width: 992px) {
   .vh-75 {
     height: auto;
@@ -82,6 +87,7 @@ a {
   margin: 0 auto;
   background: #ffffff;
 }
+
 .title-with-sub-title::before {
   content: "";
   height: 3px;
@@ -96,10 +102,12 @@ a {
 .bg-primary {
   background: #233969 !important;
 }
+
 .bg-primary.box-hover:hover {
   background-color: #A2C63C !important;
   border: 1px solid #233969 !important;
 }
+
 .bg-primary.box-hover:hover .text-white {
   color: #233969 !important;
 }
@@ -116,19 +124,23 @@ body {
 .site-header {
   background: #fff;
 }
+
 @media (max-width: 375px) {
   .site-header .navbar-brand img {
     width: 200px;
   }
 }
+
 .site-header .navCustom .nav-item {
   margin-left: 36px;
 }
+
 @media (max-width: 600px) {
   .site-header .navCustom .nav-item {
     margin-left: 0;
   }
 }
+
 .site-header .navCustom .nav-item .nav-link {
   font-size: 16px;
   color: #233969 !important;
@@ -138,20 +150,25 @@ body {
   font-family: "poppins-medium";
   text-transform: capitalize !important;
 }
+
 @media (max-width: 1024px) {
   .site-header .navCustom .nav-item .nav-link {
     font-size: 14px;
   }
 }
+
 .site-header .navCustom .nav-item .nav-link:hover {
   opacity: 1;
 }
+
 .site-header .navCustom .nav-item .nav-link.active {
   color: #233969 !important;
 }
+
 .site-header .navCustom .nav-item .dropdown-item {
   color: #233969 !important;
 }
+
 .site-header .navCustom .nav-item .dropdown-item:hover {
   background-color: #A2C63C !important;
   color: #233969 !important;
@@ -165,6 +182,7 @@ body {
   width: auto;
   margin: 0 auto;
 }
+
 .section-title::before {
   content: "";
   height: 3px;
@@ -181,6 +199,7 @@ body {
   position: relative;
   margin: 0 auto;
 }
+
 .section-title-single::before {
   content: "";
   height: 3px;
@@ -198,6 +217,7 @@ body {
 .link {
   text-transform: capitalize;
 }
+
 .link:hover {
   color: #A2C63C !important;
 }
@@ -246,6 +266,7 @@ body {
     top: 100% !important;
   }
 }
+
 @media (min-width: 768px) {
   .caseStudy .slick-next {
     right: 3% !important;
@@ -267,6 +288,7 @@ body {
 .slick-dots li button {
   background: lightgrey !important;
 }
+
 .slick-dots li button:before {
   opacity: 0 !important;
 }
@@ -274,6 +296,7 @@ body {
 .slick-dots {
   bottom: -14px !important;
 }
+
 .slick-dots li.slick-active button {
   background: #233969 !important;
 }
@@ -281,6 +304,7 @@ body {
 .carousel-indicators {
   bottom: 15px;
 }
+
 .carousel-indicators button {
   height: 10px !important;
   width: 10px !important;
@@ -304,6 +328,7 @@ body {
   text-decoration: none;
   font-family: "poppins-medium";
 }
+
 .btn-theme:hover {
   background: #A2C63C !important;
   border-color: #233969 !important;
@@ -323,6 +348,7 @@ body {
   font-family: "poppins-medium";
   border: 1px solid #233969 !important;
 }
+
 .btn-theme-outline:hover {
   border: 1px solid #233969 !important;
   background-color: #233969 !important;
@@ -330,6 +356,7 @@ body {
 }
 
 @media (min-width: 1400px) {
+
   .container,
   .container-lg,
   .container-md,
@@ -339,10 +366,12 @@ body {
     max-width: 1170px;
   }
 }
+
 ::-moz-selection {
   background-color: #A2C63C;
   color: #fff;
 }
+
 ::selection {
   background-color: #A2C63C;
   color: #fff;
@@ -364,9 +393,11 @@ body {
   justify-content: center;
   font-size: 1.6rem;
 }
+
 .previous-btn:hover {
   background-color: #233969 !important;
 }
+
 .previous-btn:hover iconify-icon {
   color: #A2C63C;
 }
@@ -384,33 +415,74 @@ body {
 .icon-box {
   position: relative;
 }
+
 .icon-box .arcup {
   position: absolute;
   left: 69%;
   width: 63%;
   top: 8px;
   -webkit-user-select: none;
-     -moz-user-select: none;
-          user-select: none;
+  -moz-user-select: none;
+  user-select: none;
   display: none;
 }
+
 @media (min-width: 992px) {
   .icon-box .arcup {
     display: block;
   }
 }
+
 .icon-box .arcdown {
   position: absolute;
   left: 69%;
   width: 63%;
   bottom: 52%;
   -webkit-user-select: none;
-     -moz-user-select: none;
-          user-select: none;
+  -moz-user-select: none;
+  user-select: none;
   display: none;
 }
+
 @media (min-width: 992px) {
   .icon-box .arcdown {
     display: block;
   }
-}/*# sourceMappingURL=app.css.map */
+}
+
+#myTab {
+  border: 1px solid #BCCBE0;
+}
+
+#myTab .nav-item {
+  font-family: "poppins-medium";
+}
+
+@media (min-width: 768px) {
+  #myTab .nav-item:nth-child(2) {
+    border-left: 1px solid #BCCBE0;
+    border-right: 1px solid #BCCBE0;
+  }
+}
+
+#myTab .nav-item:hover {
+  background: #233969 !important;
+}
+
+#myTab .nav-item:hover .nav-link {
+  color: #fff !important;
+}
+
+#myTab .nav-link {
+  padding: 16px 30px;
+  border: 0;
+  color: #233969 !important;
+}
+
+#myTab .nav-link.active {
+  border-radius: 0 !important;
+  background: #233969 !important;
+  color: #fff !important;
+}
+
+/*# sourceMappingURL=app.css.map */

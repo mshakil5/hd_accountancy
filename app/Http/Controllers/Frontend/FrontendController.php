@@ -41,7 +41,8 @@ class FrontendController extends Controller
 
         $timeSlots = TimeSlot::orderBy('id', 'desc')->get();
 
-        $packages = Package::orderBy('price', 'asc')->get();
+        $packages = Package::with('turnOvers.feature')->orderBy('price', 'asc')->get();
+        // dd($packages);
 
         $businessServices = BusinessService::orderBy('id', 'asc')->get();
 
@@ -102,7 +103,15 @@ class FrontendController extends Controller
 
     public function pricing()
     {
-        return view('frontend.pricing.index');
+        $packages = Package::with('turnOvers.feature')->orderBy('price', 'asc')->get();
+
+        $softcode = Softcode::where('name', 'Pricing')->first();
+        if ($softcode) {
+            $pricingHeading = Master::where('softcode_id', $softcode->id)->first();
+        } else {
+            $pricingHeading = null;
+        }
+        return view('frontend.pricing.index', compact('pricingHeading', 'packages'));
     }
 
     public function getQuotation()

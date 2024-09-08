@@ -395,6 +395,10 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     //Package turnover
     route::get('/package-turnover', [PackageController::class, 'showTurnover'])->name('package.turnover');
     Route::post('/package-turnover', [PackageController::class, 'storeTurnover'])->name('package.turnover.store');
+    route::get('/package-turnover/{id}/edit', [PackageController::class, 'editTurnover'])->name('package.turnover.edit');
+    Route::post('/package-turnover-update', [PackageController::class, 'updateTurnover']);
+    Route::get('/package-turnover/{id}', [PackageController::class, 'deleteTurnover']);
+    Route::get('/package-turnovers/{id}', [PackageController::class, 'manageTurnovers'])->name('package-turnover');
     
     //Package crud
     Route::get('/package-feature', [PackageFeatureController::class, 'index'])->name('allPackageFeature');    

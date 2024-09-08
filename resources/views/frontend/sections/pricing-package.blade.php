@@ -22,14 +22,24 @@
                             <h3 class="txt-primary poppins-bold mb-0">£{{ number_format($package->price, 0) }}</h3>
                             <small class="txt-primary my-3">+ VAT / Month</small>
                         </div>
-                        <ul class="ms-5 text-start small txt-primary list-unstyled mb-4">
-                            @foreach(explode(',', trim($package->features, '"')) as $feature)
-                                <li class="d-flex align-items-center gap-2">
-                                    <iconify-icon class="txt-primary fw-bold fs-5" icon="fluent:checkmark-12-filled"></iconify-icon>{{ trim($feature) }}
-                                </li>
-                            @endforeach
-                        </ul>
-                        <a class="btn btn-theme-outline d-inline w-50 mx-auto rounded-3 fs-6">Explore</a>
+                            <ul class="ms-5 text-start small txt-primary list-unstyled mb-4">
+                                @foreach ($package->turnOvers as $turnOver)
+                                    @php
+                                        $featureIds = explode(',', trim($turnOver->features, '"'));
+                                        $features = \App\Models\PackageFeature::whereIn('id', $featureIds)
+                                                    ->orderBy('id', 'asc')->limit(4)->get();
+                                    @endphp
+
+                                    @foreach ($features as $feature)
+                                        <li class="d-flex align-items-center gap-2">
+                                            <iconify-icon class="txt-primary fw-bold fs-5" icon="fluent:checkmark-12-filled"></iconify-icon>
+                                            {{ $feature->name }}
+                                        </li>
+                                    @endforeach
+                                @endforeach
+                            </ul>
+
+                        <a href="{{ route('frontend.pricing') }}" class="btn btn-theme-outline d-inline w-50 mx-auto rounded-3 fs-6">Explore</a>
                     </div>
                 </div>
             @endforeach

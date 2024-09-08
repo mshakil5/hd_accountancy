@@ -17,7 +17,7 @@
    </div>
 </section>
 
-<section class="py-5 bg-light">
+<section class="py-5 bg-light" id="get-qoutation">
    <div class="container">
       <div class="row py-2 col-lg-10 mx-auto">
          <h4 class="txt-primary text-center text-capitalize poppins-bold">Please fill up the form below</h4>
