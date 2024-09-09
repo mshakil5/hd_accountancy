@@ -21,7 +21,7 @@
                 <div class="content mt-4">
                     <h3 class="txt-primary poppins-medium display-6">{{ $latestInsight->short_description }}</h3>
                     <hr class="my-4">
-                    <p class="txt-primary lead">
+                    <p class="txt-primary lead" style="text-align: justify;">
                         {!! $latestInsight->long_description !!}
                     </p>
                 </div>
@@ -29,5 +29,3 @@
         </div>
     </div>
 </section>
-
-

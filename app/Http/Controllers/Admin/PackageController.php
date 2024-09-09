@@ -151,11 +151,11 @@ class PackageController extends Controller
             return response()->json(['status'=> 303,'message'=>$message]);
         }
         if(empty($request->price_range)){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \" price \" field..!</b></div>";
+            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \" price range \" field..!</b></div>";
             return response()->json(['status'=> 303,'message'=>$message]);
         }
         if(empty($request->price)){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \" price range \" field..!</b></div>";
+            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"price  \" field..!</b></div>";
             return response()->json(['status'=> 303,'message'=>$message]);
         }
 
@@ -194,11 +194,11 @@ class PackageController extends Controller
             return response()->json(['status'=> 303,'message'=>$message]);
         }
         if(empty($request->price_range)){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \" price \" field..!</b></div>";
+            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \" price range \" field..!</b></div>";
             return response()->json(['status'=> 303,'message'=>$message]);
         }
         if(empty($request->price)){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \" price range \" field..!</b></div>";
+            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"price  \" field..!</b></div>";
             return response()->json(['status'=> 303,'message'=>$message]);
         }
 

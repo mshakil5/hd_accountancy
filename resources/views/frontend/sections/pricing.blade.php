@@ -39,7 +39,7 @@
                                 <p class="text-center poppins-regular txt-primary">+ VAT / Month</p>
                                 <h6 class="txt-primary poppins-medium my-3">Price Depends on your requirements</h6>
                                 <div class="mt-4">
-                                    <a href="" class="poppins-medium btn-theme rounded-3 fs-5">Get Now</a>
+                                    <a href="{{ route('frontend.getQuotation') }}#get-qoutation" class="poppins-medium btn-theme rounded-3 fs-5">Get Now</a>
                                 </div>
                             </div>
                         </div>

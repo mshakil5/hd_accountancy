@@ -116,7 +116,6 @@
                 <thead>
                 <tr>
                   <th style="text-align: center">Sl</th>
-                  <th style="text-align: center">Title</th>
                   <th style="text-align: center">Price Range</th>
                   <th style="text-align: center">Price</th>
                   <th style="text-align: center">Action</th>
@@ -126,7 +125,6 @@
                   @foreach ($turnovers as $key => $data)
                   <tr>
                     <td style="text-align: center">{{ $key + 1 }}</td>
-                    <td style="text-align: center">{{$data->title}}</td>
                     <td style="text-align: center">{{$data->price_range}}</td>
                     <td style="text-align: center">{{$data->price}}</td>
                     <td style="text-align: center">
