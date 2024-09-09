@@ -258,6 +258,13 @@
     </ul>
   </li>
 
+    <li class="nav-item {{ request()->routeIs('allOurTeam') ? 'active' : '' }}">
+        <a class="nav-link collapsed" href="{{ route('allOurTeam') }}">
+            <i class="bi bi-people"></i>
+            <span>Our Teams</span>
+        </a>
+    </li>
+
     <li class="nav-item {{ request()->routeIs('prevLogStaffs','task.details.staff','allPrevLogStaffs') ? 'active' : '' }}">
         <a class="nav-link collapsed" href="{{ route('prevLogStaffs') }}">
             <i class="bi bi-calendar-check"></i>

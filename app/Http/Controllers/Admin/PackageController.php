@@ -146,14 +146,18 @@ class PackageController extends Controller
 
     public function storeTurnover(Request $request)
     {
-        $request->validate([
-            'package_id' => 'required|exists:packages,id',
-            'price_range' => 'required|string',
-            'price' => 'required|numeric',
-            'note' => 'nullable|string',
-            'title' => 'required|string',
-            'vat' => 'nullable|numeric',
-        ]);
+        if(empty($request->package_id)){
+            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \" Package \" field..!</b></div>";
+            return response()->json(['status'=> 303,'message'=>$message]);
+        }
+        if(empty($request->price_range)){
+            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \" price \" field..!</b></div>";
+            return response()->json(['status'=> 303,'message'=>$message]);
+        }
+        if(empty($request->price)){
+            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \" price range \" field..!</b></div>";
+            return response()->json(['status'=> 303,'message'=>$message]);
+        }
 
         $turnOver = new TurnOver();
         
@@ -185,14 +189,18 @@ class PackageController extends Controller
 
     public function updateTurnover(Request $request)
     {
-        $request->validate([
-            'package_id' => 'required|exists:packages,id',
-            'price_range' => 'required|string',
-            'price' => 'required|numeric',
-            'note' => 'nullable|string',
-            'title' => 'required|string',
-            'vat' => 'nullable|numeric',
-        ]);
+        if(empty($request->package_id)){
+            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \" Package \" field..!</b></div>";
+            return response()->json(['status'=> 303,'message'=>$message]);
+        }
+        if(empty($request->price_range)){
+            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \" price \" field..!</b></div>";
+            return response()->json(['status'=> 303,'message'=>$message]);
+        }
+        if(empty($request->price)){
+            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \" price range \" field..!</b></div>";
+            return response()->json(['status'=> 303,'message'=>$message]);
+        }
 
         $turnOver = TurnOver::find($request->codeid);
 

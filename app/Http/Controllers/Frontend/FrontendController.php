@@ -42,7 +42,6 @@ class FrontendController extends Controller
         $timeSlots = TimeSlot::orderBy('id', 'desc')->get();
 
         $packages = Package::with('turnOvers.feature')->orderBy('price', 'asc')->get();
-        // dd($packages);
 
         $businessServices = BusinessService::orderBy('id', 'asc')->get();
 

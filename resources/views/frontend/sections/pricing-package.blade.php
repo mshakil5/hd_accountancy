@@ -23,19 +23,34 @@
                             <small class="txt-primary my-3">+ VAT / Month</small>
                         </div>
                             <ul class="ms-5 text-start small txt-primary list-unstyled mb-4">
+                                @php
+                                    $featureCount = 0;
+                                @endphp
+
                                 @foreach ($package->turnOvers as $turnOver)
                                     @php
                                         $featureIds = explode(',', trim($turnOver->features, '"'));
                                         $features = \App\Models\PackageFeature::whereIn('id', $featureIds)
-                                                    ->orderBy('id', 'asc')->limit(4)->get();
+                                            ->orderBy('id', 'asc')->get();
                                     @endphp
 
                                     @foreach ($features as $feature)
-                                        <li class="d-flex align-items-center gap-2">
-                                            <iconify-icon class="txt-primary fw-bold fs-5" icon="fluent:checkmark-12-filled"></iconify-icon>
-                                            {{ $feature->name }}
-                                        </li>
+                                        @if ($featureCount < 4)
+                                            <li class="d-flex align-items-center gap-2">
+                                                <iconify-icon class="txt-primary fw-bold fs-5" icon="fluent:checkmark-12-filled"></iconify-icon>
+                                                {{ $feature->name }}
+                                            </li>
+                                            @php
+                                                $featureCount++;
+                                            @endphp
+                                        @else
+                                            @break
+                                        @endif
                                     @endforeach
+
+                                    @if ($featureCount >= 4)
+                                        @break
+                                    @endif
                                 @endforeach
                             </ul>
 
