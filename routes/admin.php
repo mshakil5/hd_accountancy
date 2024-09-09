@@ -469,4 +469,18 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/career-list', [CareerController::class, 'index'])->name('allCareerList');
     Route::get('/career-list/{id}', [CareerController::class, 'delete']);
 
+    //Accounting Solution crud
+    Route::get('/accounting-solution', [BusinessValueController::class, 'AccoutingSolutionindex'])->name('allAccoutingSolution');    
+    Route::post('/accounting-solution', [BusinessValueController::class, 'AccoutingSolutionstore']);
+    Route::get('/accounting-solution/{id}/edit', [BusinessValueController::class, 'AccoutingSolutionedit']);
+    Route::post('/accounting-solution-update', [BusinessValueController::class, 'AccoutingSolutionupdate']);
+    Route::get('/accounting-solution/{id}', [BusinessValueController::class, 'AccoutingSolutiondelete']);
+
+    //Tax Solution crud
+    Route::get('/tax-solution', [BusinessValueController::class, 'Taxindex'])->name('allTax');    
+    Route::post('/tax-solution', [BusinessValueController::class, 'Taxstore']);
+    Route::get('/tax-solution/{id}/edit', [BusinessValueController::class, 'Taxedit']);
+    Route::post('/tax-solution-update', [BusinessValueController::class, 'Taxupdate']);
+    Route::get('/tax-solution/{id}', [BusinessValueController::class, 'Taxdelete']);
+
 });

@@ -19,6 +19,8 @@ return new class extends Migration
             $table->longText('long_description')->nullable();
             $table->string('image')->nullable();
             $table->boolean('status')->default(1);
+            $table->boolean('accounting_solution')->default(0);
+            $table->boolean('tax_solution')->default(0);
             $table->string('created_by')->nullable();
             $table->string('updated_by')->nullable();
             $table->timestamps();

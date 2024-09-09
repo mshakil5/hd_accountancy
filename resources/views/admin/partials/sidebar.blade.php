@@ -58,7 +58,7 @@
         </a>
     </li>
 
-     <li class="nav-item {{ request()->routeIs('allWebService') ? 'active' : '' }}">
+    <li class="nav-item {{ request()->routeIs('allWebService') ? 'active' : '' }}">
         <a class="nav-link collapsed" href="{{ route('allWebService') }}">
             <i class="bi bi-globe"></i>
             <span>Web Services</span>
@@ -168,17 +168,29 @@
             <i class="bi bi-chevron-down"></i>
         </a>
 
-        <ul id="servicePagesDropdown" class="collapse list-unstyled {{ request()->routeIs('servicepageAccounting') || request()->routeIs('servicepageTaxSolution') || request()->routeIs('servicepageOtherSolution') || request()->routeIs('servicepageBusinessStartup') || request()->routeIs('servicepageCompanySecretarial') || request()->routeIs('bankruptcyAndLiquidation') ? 'show' : '' }}">
+        <ul id="servicePagesDropdown" class="collapse list-unstyled {{ request()->routeIs('servicepageAccounting') || request()->routeIs('allAccoutingSolution') || request()->routeIs('allTax') || request()->routeIs('servicepageTaxSolution') || request()->routeIs('servicepageOtherSolution') || request()->routeIs('servicepageBusinessStartup') || request()->routeIs('servicepageCompanySecretarial') || request()->routeIs('bankruptcyAndLiquidation') ? 'show' : '' }}">
             <li class="nav-item {{ request()->routeIs('servicepageAccounting') ? 'active' : '' }}">
                 <a class="nav-link" href="{{ route('servicepageAccounting') }}">
                     <i class="bi bi-file-text"></i>
-                    <span>Accounting</span>
+                    <span>Accounting Solution</span>
+                </a>
+            </li>
+            <li class="nav-item {{ request()->routeIs('allAccoutingSolution') ? 'active' : '' }}">
+                <a class="nav-link" href="{{ route('allAccoutingSolution') }}">
+                    <i class="bi bi-file-text"></i>
+                    <span>Accounting Solution Offers</span>
                 </a>
             </li>
             <li class="nav-item {{ request()->routeIs('servicepageTaxSolution') ? 'active' : '' }}">
                 <a class="nav-link" href="{{ route('servicepageTaxSolution') }}">
                     <i class="bi bi-file-text"></i>
                     <span>Tax Solution</span>
+                </a>
+            </li>
+            <li class="nav-item {{ request()->routeIs('allTax') ? 'active' : '' }}">
+                <a class="nav-link" href="{{ route('allTax') }}">
+                    <i class="bi bi-file-text"></i>
+                    <span>Tax Solution Offer</span>
                 </a>
             </li>
             <li class="nav-item {{ request()->routeIs('servicepageOtherSolution') ? 'active' : '' }}">

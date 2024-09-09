@@ -168,8 +168,15 @@ class FrontendController extends Controller
             $bankruptcyLiquidation = null;
         }
 
+        $taxSolutions = BusinessValue::where('tax_solution', 1)
+                         ->orderBy('id', 'DESC')
+                         ->get();
+                         
+        $accountingSolutions = BusinessValue::where('accounting_solution', 1)
+                         ->orderBy('id', 'DESC')
+                         ->get();
 
-        return view('frontend.services.index', compact('accountingSolution', 'taxSolution', 'otherSolution', 'businessStartUp', 'companySecretarial', 'bankruptcyLiquidation'));
+        return view('frontend.services.index', compact('accountingSolution', 'taxSolution', 'otherSolution', 'businessStartUp', 'companySecretarial', 'bankruptcyLiquidation', 'taxSolutions', 'accountingSolutions'));
     }
 
     public function ourTeam()
