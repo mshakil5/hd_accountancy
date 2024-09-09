@@ -100,7 +100,7 @@
         </a>
       </li>
 
-      <hr>
+      <br>
 
       <li class="nav-item {{ request()->routeIs('homepageOurValues') || request()->routeIs('homepageIntro') || request()->routeIs('weWorkImage') || request()->routeIs('allClientTestimonial') || request()->routeIs('allCaseStudies') || request()->routeIs('allCaseStudies') || request()->routeIs('allLatestInsight') ? 'menu-open' : '' }}">
           <a class="nav-link collapsed {{ request()->routeIs('homepageOurValues') || request()->routeIs('homepageIntro') || request()->routeIs('weWorkImage') || request()->routeIs('allClientTestimonial') || request()->routeIs('allCaseStudies') || request()->routeIs('allCaseStudies') || request()->routeIs('allLatestInsight') ? 'active' : '' }}" href="#" data-bs-toggle="collapse" data-bs-target="#homepageDropdown" aria-expanded="{{ request()->routeIs('homepageOurValues') || request()->routeIs('homepageIntro') || request()->routeIs('weWorkImage') || request()->routeIs('allClientTestimonial') || request()->routeIs('allCaseStudies') || request()->routeIs('allLatestInsight') ? 'true' : 'false' }}">
@@ -190,7 +190,7 @@
             <li class="nav-item {{ request()->routeIs('allTax') ? 'active' : '' }}">
                 <a class="nav-link" href="{{ route('allTax') }}">
                     <i class="bi bi-file-text"></i>
-                    <span>Tax Solution Offer</span>
+                    <span>Tax Solution Offers</span>
                 </a>
             </li>
             <li class="nav-item {{ request()->routeIs('servicepageOtherSolution') ? 'active' : '' }}">
