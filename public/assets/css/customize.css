@@ -111,3 +111,34 @@ input[type=checkbox] {
 .sidebar-nav .nav-item.active .nav-link {
     color: rgb(155, 198, 83);
 }
+
+.btn-link {
+   color: #233969;
+   font-weight: 400;
+   text-decoration: none;
+}
+
+.btn-link:hover {
+   color: #293d64;
+   text-decoration: underline;
+}
+
+.btn-primary,
+.btn-secondary {
+   background-color: #233969;
+   border-color: #233969;
+   color: #fff;
+}
+
+.btn-primary:hover,
+.btn-secondary:hover {
+   background-color: #1a2a4b;
+   border-color: #1a2a4b;
+}
+
+.btn-primary:focus,
+.btn-secondary:focus,
+.btn-primary.focus,
+.btn-secondary.focus {
+   box-shadow: 0 0 0 0.2rem rgba(43, 58, 87, 0.5);
+}

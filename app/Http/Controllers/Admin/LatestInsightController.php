@@ -79,6 +79,7 @@ class LatestInsightController extends Controller
         }
 
         $data->short_title = $request->short_title;
+        $data->slug = Str::slug($request->short_title);
         $data->long_title = $request->long_title;
         $data->short_description = $request->short_description;
         $data->long_description = $request->long_description;

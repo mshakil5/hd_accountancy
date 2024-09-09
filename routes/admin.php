@@ -260,6 +260,7 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
 
     //Contact message
     Route::get('/contact-messages', [ContactMessageController::class, 'index'])->name('allContactMessage');
+    Route::get('/contact-messages/{id}', [ContactMessageController::class, 'delete']);
 
     //web contact page
     Route::get('/web-contact', [ContactMessageController::class, 'webContact'])->name('webContact');
@@ -442,7 +443,7 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::post('/latest-insights-update', [LatestInsightController::class, 'update']);
     Route::get('/latest-insights/{id}', [LatestInsightController::class, 'delete']);
 
-    //Latest Insights crud
+    //Our Team crud
     Route::get('/our-teams', [OurTeamController::class, 'index'])->name('allOurTeam');    
     Route::post('/our-teams', [OurTeamController::class, 'store']);
     Route::get('/our-teams/{id}/edit', [OurTeamController::class, 'edit']);

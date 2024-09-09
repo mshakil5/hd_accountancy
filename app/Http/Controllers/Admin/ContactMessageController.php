@@ -16,7 +16,7 @@ class ContactMessageController extends Controller
     return view('admin.contact_message.index', compact('data'));
    }
 
-   public function webContact()
+    public function webContact()
     {
         $softcode = Softcode::where('name', 'Contact')->first();
         $contactHeading = $softcode ? Master::where('softcode_id', $softcode->id)->first() : null;
@@ -63,5 +63,19 @@ class ContactMessageController extends Controller
         $contactHeading->save();
 
         return redirect()->back()->with('success', 'Contact page updated successfully.');
+    }
+
+    public function delete($id)
+    {
+        $data = Contact::find($id);
+        if (!$data) {
+            return response()->json(['status' => 404, 'message' => 'Record not found!']);
+        }
+
+        if ($data->delete()) {
+            return response()->json(['status' => 300, 'message' => 'Deleted successfully.']);
+        } else {
+            return response()->json(['status' => 303, 'message' => 'Server Error!!']);
+        }
     }
 }

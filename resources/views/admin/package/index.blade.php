@@ -119,10 +119,10 @@
                     <td style="text-align: center">
                         <a href="{{ route('package-turnover', ['id' => $data->id]) }}" class="btn btn-sm bg-theme text-light btn-outline-dark">Manage Turnovers</a>
                     </td>
-                    <td style="text-align: center">
+                    <td style="text-align: center">                  
+                        <a class="btn btn-link" id="viewBtn" rid="{{$data->id}}"><i class="fas fa-eye" style="font-size: 20px;"></i></a>
                       <a class="btn btn-link" id="EditBtn" rid="{{$data->id}}"><i class="fa fa-edit" style="font-size: 20px;"></i></a>
                         <a class="btn btn-link" id="deleteBtn" rid="{{$data->id}}"><i class="fas fa-trash" style="color: red; font-size: 20px;"></i></a>
-                        <a class="btn btn-link" id="viewBtn" rid="{{$data->id}}"><i class="fas fa-eye" style="font-size: 20px;"></i></a>
                     </td>
                   </tr>
                   @endforeach

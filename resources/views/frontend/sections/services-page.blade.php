@@ -87,7 +87,7 @@
 
             <div class="col-lg-12 text-center mt-5">
                 <h2 class="txt-primary text-center text-capitalize poppins-bold mb-4">Thinking about setting up new Business?</h2>
-                <a href="./get-quotation.php" class="btn bg-primary py-2 px-5 poppins-bold text-white"> Book your Appointment</a>
+                <a href="{{ route('frontend.getQuotation') }}#get-qoutation" class="btn bg-primary py-2 px-5 poppins-bold text-white"> Book your Appointment</a>
 
             </div>
         </div>

@@ -100,6 +100,8 @@
                 <tr>
                   <th style="text-align: center">Sl</th>
                   <th style="text-align: center">Short Title</th>
+                  <th style="text-align: center">Short Description</th>
+                  <th style="text-align: center">Image</th>
                   <th style="text-align: center">Action</th>
                 </tr>
                 </thead>
@@ -108,6 +110,8 @@
                   <tr>
                     <td style="text-align: center">{{ $key + 1 }}</td>
                     <td style="text-align: center">{{$data->short_title}}</td>
+                    <td style="text-align: center">{!!$data->short_description!!}</td>
+                    <td style="text-align: center"><img src="{{ asset('/' . $data->image) }}" style="max-width: 100px; height: auto;"></td>
                     <td style="text-align: center">
                       <a class="btn btn-link" id="EditBtn" rid="{{$data->id}}"><i class="fa fa-edit" style="font-size: 20px;"></i></a>
                         <a class="btn btn-link" id="deleteBtn" rid="{{$data->id}}"><i class="fas fa-trash" style="color: red; font-size: 20px;"></i></a>
