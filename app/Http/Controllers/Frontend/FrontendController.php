@@ -45,7 +45,8 @@ class FrontendController extends Controller
 
         $businessServices = BusinessService::orderBy('id', 'asc')->get();
 
-        $businessValues = BusinessValue::orderBy('id', 'asc')->get();
+        $businessValues = BusinessValue::where('accounting_solution', 0)
+        ->where('tax_solution', 0)->orderBy('id', 'asc')->get();
 
         $clientTestimonial = ClientTestimonial::orderBy('id', 'desc')->take(3)->get();
 
