@@ -1,0 +1,39 @@
+<IfModule mod_rewrite.c>
+<IfModule mod_negotiation.c>
+   Options -MultiViews
+</IfModule>
+
+RewriteEngine On
+# new 
+# ensure www.
+RewriteCond %{HTTP_HOST} !^www\. [NC]
+RewriteRule ^ https://www.%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+  
+# ensure https
+RewriteCond %{HTTP:X-Forwarded-Proto} !https
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+# new end
+RewriteCond %{REQUEST_FILENAME} -d [OR]
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ ^$1 [N]
+
+RewriteCond %{REQUEST_URI} (\.\w+$) [NC]
+RewriteRule ^(.*)$ public/$1
+
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.php
+
+# Redirect Trailing Slashes...
+RewriteRule ^(.*)/$ /$1 [L,R=301]
+
+# Serve Cached Page If Available...
+RewriteCond %{REQUEST_URI} ^/?$
+RewriteCond %{DOCUMENT_ROOT}/page-cache/pc__index__pc.html -f
+RewriteRule .? page-cache/pc__index__pc.html [L]
+RewriteCond %{DOCUMENT_ROOT}/page-cache%{REQUEST_URI}.html -f
+RewriteRule . page-cache%{REQUEST_URI}.html [L]
+RewriteCond %{DOCUMENT_ROOT}/page-cache%{REQUEST_URI}.json -f
+RewriteRule . page-cache%{REQUEST_URI}.json [L]
+</IfModule>

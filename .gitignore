@@ -3,11 +3,11 @@
 /public/build
 /public/hot
 /public/images
-/public/.htaccess
+
 /public/storage
 /storage/*.key
 /vendor
-.htaccess
+
 .env
 .env.backup
 .env.production
