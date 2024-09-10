@@ -32,12 +32,13 @@
                 @csrf
                 <input type="hidden" class="form-control" id="codeid" name="codeid">
                 <div class="row">
-                    <div class="col-sm-12">
-                        <div class="form-group">
-                        <label>Image</label>
-                        <input type="file" class="form-control" id="image" name="image">
-                        </div>
-                    </div>
+                  <div class="col-sm-12">
+                      <div class="form-group">
+                          <label>Image</label>
+                          <input type="file" id="image" name="image" class="form-control" onchange="previewMetaImage(event)" accept="image/*">
+                      </div>
+                      <img id="image_preview" src="#" alt="Meta Image Preview" class="pt-3" style="max-width: 150px; height: auto; display: none;"/>
+                  </div>
             </form>
             </div>
 
@@ -86,7 +87,7 @@
                     <td style="text-align: center">{{ $key + 1 }}</td>
                     <td style="text-align: center">
                         @if ($data->image)
-                        <img src="{{asset('images/we_work_with_images/'.$data->image)}}" height="120px" width="220px" alt="">
+                        <img src="{{asset('images/we_work_with_images/'.$data->image)}}" width="100" height="100" alt="">
                         @endif
                     </td>
                     <td style="text-align: center">
@@ -114,6 +115,20 @@
 
 @endsection
 @section('script')
+
+<script>
+    function previewMetaImage(event) {
+        var output = document.getElementById('image_preview');
+        output.src = URL.createObjectURL(event.target.files[0]);
+        output.style.display = 'block';
+    }
+
+    $(document).ready(function() {
+        $('.summernote').summernote({
+            height: 200, 
+        });
+    });
+</script>
 
 <script>
     $(function () {
@@ -246,6 +261,11 @@
         });
       //Delete  
       function populateForm(data){
+          if (data.image) {
+            $("#image_preview").attr("src", "{{ asset('images/we_work_with_images/') }}" + "/" + data.image).show();
+          } else {
+              $("#image_preview").attr("src", "").hide();
+          }
           $("#codeid").val(data.id);
           $("#addBtn").val('Update');
           $("#addBtn").html('Update');
@@ -255,6 +275,7 @@
       function clearform(){
           $('#createThisForm')[0].reset();
           $("#addBtn").val('Create');
+          $('#image_preview').attr('src', '#').hide();
       }
   });
 </script>
