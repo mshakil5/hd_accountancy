@@ -8,7 +8,7 @@
       <div class="col-md-10">
         <div class="card card-secondary">
           <div class="card-header">
-            <h3 class="card-title">Home Page Values</h3>
+            <h3 class="card-title">Business Startup</h3>
           </div>
           <div class="card-body">
             @if(session('success'))

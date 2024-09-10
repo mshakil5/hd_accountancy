@@ -251,18 +251,18 @@
           </a>
 
           <ul id="contactMessageDropdown" class="collapse list-unstyled {{ request()->routeIs('allContactMessage*') || request()->routeIs('webContact') ? 'show' : '' }}">
-              <li class="nav-item {{ request()->routeIs('allContactMessage') ? 'active' : '' }}">
-                  <a class="nav-link" href="{{ route('allContactMessage') }}">
-                      <i class="bi bi-file-text"></i>
-                      <span>Contact Messages</span>
-                  </a>
-              </li>
               <li class="nav-item {{ request()->routeIs('webContact') ? 'active' : '' }}">
                   <a class="nav-link" href="{{ route('webContact') }}">
                       <i class="bi bi-pencil"></i>
                       <span>Contact Page</span>
                   </a>
               </li>
+              <li class="nav-item {{ request()->routeIs('allContactMessage') ? 'active' : '' }}">
+                  <a class="nav-link" href="{{ route('allContactMessage') }}">
+                      <i class="bi bi-file-text"></i>
+                      <span>Contact Messages</span>
+                  </a>
+              </li>       
           </ul>
       </li>
 

@@ -18,7 +18,7 @@
   <div class="container-fluid">
     <div class="row justify-content-md-center">
       <!-- right column -->
-      <div class="col-md-10">
+      <div class="col-md-12">
         <!-- general form elements disabled -->
         <div class="card card-secondary">
           <div class="card-header">
