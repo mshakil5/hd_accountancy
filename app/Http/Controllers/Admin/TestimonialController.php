@@ -109,7 +109,7 @@ class TestimonialController extends Controller
 
     public function delete($id)
     {
-        $data = BusinessValue::find($id);
+        $data = ClientTestimonial::find($id);
         if (!$data) {
             return response()->json(['status' => 404, 'message' => 'Record not found!']);
         }
@@ -120,6 +120,11 @@ class TestimonialController extends Controller
             if ($data->image && file_exists($imagePath)) {
                 unlink($imagePath);
             }
+
+            if ($data->video && file_exists(public_path($data->video))) {
+                unlink(public_path($data->video));
+            }
+
             $message = "<div class='alert alert-success'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Deleted successfully.</b></div>";
             return response()->json(['status' => 300, 'message' => $message]);
         } else {

@@ -287,10 +287,13 @@
                 data:{
                 },
                 success: function(d){
-                    if (d.status === 300) {
-                      $(".ermsg").html(d.message);
-                      location.reload();
-                    }
+                  swal({
+                        title: "Success!",
+                        text: "Deleted successfully",
+                        icon: "success",
+                        button: "OK",
+                    });
+                  window.setTimeout(function(){location.reload()},2000)
                 },
                 error:function(d){
                   console.log(d);
