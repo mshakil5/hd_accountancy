@@ -50,11 +50,11 @@
                                     @foreach($package->turnOvers as $turnover)
                                     @php
                                         $featureIds = explode(',', trim($turnover->features, '"'));
-                                        $features = \App\Models\PackageFeature::whereIn('id', $featureIds)->pluck('name')->toArray();
+                                        $features = \App\Models\PackageFeature::whereIn('id', $featureIds)->select('name', 'is_checked')->get()->toArray();
                                     @endphp
                                     <div class="mb-2">
                                         <input type="radio" class="timepick invisible" name="timepick-{{ $index }}" id="turnover-{{ $turnover->id }}" data-price="{{ $turnover->price }}" data-index="{{ $index }}" data-features="{{ json_encode($features) }}">
-                                        <label for="turnover-{{ $turnover->id }}" class="">{{ $turnover->price_range }}</label>
+                                        <label for="turnover-{{ $turnover->id }}">{{ $turnover->price_range }}</label>
                                     </div>
                                     @endforeach
                                     <div class="mb-2">
@@ -98,15 +98,13 @@
 
                 if (featureList) {
                     featureList.innerHTML = '';
-                    features.forEach(name => {
+                    features.forEach(feature => {
                         const li = document.createElement('li');
                         li.className = 'border border-start-0 border-end-0 border-bottom-0 py-3';
                         li.innerHTML = `
                             <div class="d-flex justify-content-between">
-                                ${name}
-                                <span class="float-end">
-                                    <iconify-icon class="fs-3" icon="icon-park-outline:check-one"></iconify-icon>
-                                </span>
+                                ${feature.name}
+                                ${feature.is_checked ? '<span class="float-end"><iconify-icon class="fs-3" icon="icon-park-outline:check-one"></iconify-icon></span>' : ''}
                             </div>
                         `;
                         featureList.appendChild(li);

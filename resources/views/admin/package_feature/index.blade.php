@@ -38,6 +38,12 @@
                     <input type="text" class="form-control" id="name" name="name" placeholder="Enter package feature name"> 
                   </div>
                 </div>
+                <div class="col-sm-12 mt-3">
+                  <div class="form-group form-check">
+                      <input type="checkbox" class="form-check-input" id="is_checked" name="is_checked" value="1" checked>
+                      <label class="form-check-label" for="is_checked">Is Checked</label>
+                  </div>
+                </div>
               </div>      
             </form>
           </div>
@@ -136,6 +142,7 @@
           if($(this).val() == 'Create') {
               var form_data = new FormData();
               form_data.append("name", $("#name").val());
+              form_data.append("is_checked", $("#is_checked").is(":checked") ? 1 : 0);
               $.ajax({
                 url: url,
                 method: "POST",
@@ -166,6 +173,7 @@
           if($(this).val() == 'Update'){
               var form_data = new FormData();
               form_data.append("name", $("#name").val());
+              form_data.append("is_checked", $("#is_checked").is(":checked") ? 1 : 0);
               form_data.append("codeid", $("#codeid").val());
               
               $.ajax({
@@ -233,6 +241,11 @@
       //Delete  
       function populateForm(data){
         $("#name").val(data.name);
+        if (data.is_checked == 1) {
+            $("#is_checked").prop('checked', true);
+        } else {
+            $("#is_checked").prop('checked', false);
+        }
         $("#codeid").val(data.id);
         $("#addBtn").val('Update');
         $("#addBtn").html('Update');

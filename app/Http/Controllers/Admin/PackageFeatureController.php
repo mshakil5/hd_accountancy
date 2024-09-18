@@ -30,6 +30,7 @@ class PackageFeatureController extends Controller
         } else {
             $data = new PackageFeature;
             $data->name = $request->name;
+            $data->is_checked = $request->is_checked;
             if ($data->save()) {
                 $message ="<div class='alert alert-success'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Created successfully.</b></div>";
                 return response()->json(['status'=> 300,'message'=>$message]);
@@ -67,6 +68,7 @@ class PackageFeatureController extends Controller
             return response()->json(['status'=> 303,'message'=>$message]);
         } else {
             $data->name = $request->name;
+            $data->is_checked = $request->is_checked;
             
             if ($data->save()) {
                 $message ="<div class='alert alert-success'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Updated Successfully.</b></div>";

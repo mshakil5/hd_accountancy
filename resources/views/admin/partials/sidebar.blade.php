@@ -227,19 +227,19 @@
             <i class="bi bi-chevron-down"></i>
         </a>
 
-        <ul id="packageDropdown" class="collapse list-unstyled {{ request()->routeIs('allPackage') || request()->routeIs('allPackageFeature') ? 'show' : '' }}">
-          <li class="nav-item {{ request()->routeIs('allPackage') ? 'active' : '' }}">
-            <a class="nav-link" href="{{ route('allPackage') }}">
-                <i class="bi bi-box"></i>
-                <span>All Packages</span>
-            </a>
-          </li>
-          <li class="nav-item {{ request()->routeIs('allPackageFeature') ? 'active' : '' }}">
-            <a class="nav-link" href="{{ route('allPackageFeature') }}">
-                <i class="bi bi-list-check"></i>
-                <span>Package Features</span>
-            </a>
-          </li>
+        <ul id="packageDropdown" class="collapse list-unstyled {{ request()->routeIs('allPackage') || request()->routeIs('allPackageFeature') || request()->routeIs('package-turnover') ? 'show' : '' }}">
+            <li class="nav-item {{ request()->routeIs('allPackage') || request()->routeIs('package-turnover') ? 'active' : '' }}">
+                <a class="nav-link" href="{{ route('allPackage') }}">
+                    <i class="bi bi-box"></i>
+                    <span>All Packages</span>
+                </a>
+            </li>
+            <li class="nav-item {{ request()->routeIs('allPackageFeature') ? 'active' : '' }}">
+                <a class="nav-link" href="{{ route('allPackageFeature') }}">
+                    <i class="bi bi-list-check"></i>
+                    <span>Package Features</span>
+                </a>
+            </li>
         </ul>
       </li>
 

@@ -114,10 +114,10 @@ class TestimonialController extends Controller
             return response()->json(['status' => 404, 'message' => 'Record not found!']);
         }
 
-        $imagePath = public_path($data->image);
+        $imagePath = public_path($data->thumbnail);
 
         if ($data->delete()) {
-            if ($data->image && file_exists($imagePath)) {
+            if ($data->thumbnail && file_exists($imagePath)) {
                 unlink($imagePath);
             }
 
