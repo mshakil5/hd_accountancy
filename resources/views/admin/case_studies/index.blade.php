@@ -149,7 +149,7 @@
 
     $(document).ready(function() {
         $('.summernote').summernote({
-            height: 200, 
+            height: 500, 
         });
     });
 </script>

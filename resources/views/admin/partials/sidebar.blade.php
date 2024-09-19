@@ -342,6 +342,13 @@
           </a>
       </li> 
 
+      <li class="nav-item {{ request()->routeIs('allFaq') ? 'active' : '' }}">
+        <a class="nav-link collapsed" href="{{ route('allFaq') }}">
+            <i class="fas fa-question-circle"></i>
+            <span>FAQ Questions & Answers</span>
+        </a>
+    </li>
+
       <li class="nav-item">
         <a class="nav-link collapsed" href="{{ route('logout') }}"  onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
           <i class="bi bi-box-arrow-right"></i>

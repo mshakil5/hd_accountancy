@@ -35,6 +35,8 @@
         <!-- date picker -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
 
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+
     </head>
 
     <body>
@@ -72,6 +74,19 @@
 
         <!-- date picker -->
         @include('frontend.partials.date-picker')
+
+        <!-- Faq answer show hide start -->
+        <script>
+            $(document).ready(function() {
+                $('.faq-item').click(function() {
+                    $(this).find('.faq-answer').slideToggle();
+                    $(this).find('.faq-question').slideToggle();
+
+                    $(this).find('.faq-icon i').toggleClass('fa-chevron-down fa-chevron-up');
+                });
+            });
+        </script>
+        <!-- Faq answer show hide end -->
 
         <!-- additional script -->
         @yield('script')
