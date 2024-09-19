@@ -20,6 +20,7 @@ use App\Models\ClientSchedule;
 use App\Models\Quotation;
 use App\Models\Career;
 use App\Models\WeWorkWithImage;
+use App\Models\FaqQuestion;
 
 class FrontendController extends Controller
 {
@@ -188,7 +189,7 @@ class FrontendController extends Controller
         } else {
             $ourTeamPage = null;
         }
-        $ourTeam = OurTeam::orderBy('id', 'desc')->get();
+        $ourTeam = OurTeam::orderBy('id', 'asc')->get();
         return view('frontend.our-team.index', compact('ourTeamPage', 'ourTeam'));
     }
 
@@ -212,7 +213,9 @@ class FrontendController extends Controller
             $faq = null;
         }
 
-        return view('frontend.faq.index', compact('faq'));
+        $faqQuestions = FaqQuestion::orderBy('id', 'asc')->get();
+
+        return view('frontend.faq.index', compact('faq', 'faqQuestions'));
     }
     
     public function booking()
@@ -259,7 +262,8 @@ class FrontendController extends Controller
 
     public function videoTestimonial()
     {
-        return view('frontend.video-testimonial.index');
+        $data = ClientTestimonial::orderBy('id', 'DESC')->get();
+        return view('frontend.video-testimonial.index', compact('data'));
     }
 
     public function yearEndAccount()

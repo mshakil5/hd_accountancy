@@ -89,7 +89,7 @@ Route::get('/monthly-account-management', [FrontendController::class, 'monthlyAc
 Route::get('/payroll', [FrontendController::class, 'payroll'])->name('frontend.payroll');
 
 // Video Testimonial
-Route::get('/video-testimonial', [FrontendController::class, 'videoTestimonial'])->name('frontend.videoTestimonial');
+Route::get('/video-testimonials', [FrontendController::class, 'videoTestimonial'])->name('frontend.videoTestimonial');
 
 // Year End Account
 Route::get('/year-end-account', [FrontendController::class, 'yearEndAccount'])->name('frontend.yearEndAccount');
