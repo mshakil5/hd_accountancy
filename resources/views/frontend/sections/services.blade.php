@@ -1,9 +1,11 @@
 <section>
     <div class="  mb-5  position-relative">
         <div class="section-title text-center">
-            <div class="txt-primary position-relative h2 lh-1 text-center poppins-bold  bg-white mx-auto d-inline">“WE DON'T JUST BALANCE BOOKS
-
-                <div class="txt-secondary position-relative text-center poppins-bold   mx-auto d-block"> WE BALANCE YOUR SUCCESS"</div>
+            <div class="txt-primary position-relative h2 lh-1 text-center poppins-bold mx-auto d-inline" style="background-color: #f7f8fe;">
+                “WE DON'T JUST BALANCE BOOKS
+                <div class="txt-secondary position-relative text-center poppins-bold mx-auto d-block">
+                    WE BALANCE YOUR SUCCESS"
+                </div>
             </div>
         </div>
     </div>

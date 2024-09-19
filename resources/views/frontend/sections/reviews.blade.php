@@ -1,7 +1,7 @@
 <section class="py-5 position-relative">
     <div class="container">
         <div class="row text-center">
-            <div class="title-with-sub-title">
+            <div class="title-with-sub-title" style="background-color: #f7f8fe;">
                 <h2 class="poppins-bold txt-primary text-capitalize">60+ happy client reviews</h2>
                 <h5 class="poppins-medium txt-primary txt-primary text-capitalize">see what they say</h5>
             </div>
