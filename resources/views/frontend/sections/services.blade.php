@@ -17,17 +17,17 @@
             <div class="row">
                 <h2 class="text-white text-center fw-bold text-capitalize ">What are you looking for?</h2>
             </div>
-            <div class="row my-5">
+            <div class="row my-5 align-items-stretch">
                 @foreach($businessServices as $businessService)
-                    <div class="col-lg-4 text-center text-white">
-                        <div class="bg-white rounded-3 d-inline  w-auto p-3 mx-auto d-inline-flex align-items-center justify-content-center">
+                    <div class="col-lg-4 text-center text-white d-flex flex-column service-card" style="transition: transform 0.3s ease, box-shadow 0.3s ease;">
+                        <div class="bg-white rounded-3 d-inline w-auto p-3 mx-auto d-inline-flex align-items-center justify-content-center">
                             <img src="{{ asset('/' . $businessService->image) }}" width="150">
                         </div>
                         <h5 class="my-4 fw-bold text-white">{{ $businessService->short_title }}</h5>
                         <p class="mb-5">
                             {!! $businessService->short_description !!}
                         </p>
-                        <a href="{{ route('frontend.businessServices', ['slug' => $businessService->slug]) }}" class="bg-light border-0 py-2 px-5 link rounded-2 fw-bold txt-primary">See More</a>
+                        <a href="{{ route('frontend.businessServices', ['slug' => $businessService->slug]) }}" class="bg-light border-0 py-2 px-5 link rounded-2 fw-bold txt-primary mt-auto">See More</a>
                     </div>
                 @endforeach
             </div>
@@ -58,3 +58,16 @@
         </div>
     </div>
 </section>
+
+<style>
+    .service-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .service-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        border-color: #007bff;
+    }
+</style>
