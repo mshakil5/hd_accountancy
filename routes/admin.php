@@ -38,6 +38,7 @@ use App\Http\Controllers\Admin\OurTeamController;
 use App\Http\Controllers\Admin\BookingController;
 use App\Http\Controllers\Admin\QuotationController;
 use App\Http\Controllers\Admin\CareerController;
+use App\Http\Controllers\Admin\FAQController;
 
 //Fallback route
 Route::fallback(function () {
@@ -482,5 +483,12 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/tax-solution/{id}/edit', [BusinessValueController::class, 'Taxedit']);
     Route::post('/tax-solution-update', [BusinessValueController::class, 'Taxupdate']);
     Route::get('/tax-solution/{id}', [BusinessValueController::class, 'Taxdelete']);
+
+    //Faq Question crud
+    Route::get('/faq-questions', [FAQController::class, 'index'])->name('allFaq');    
+    Route::post('/faq-questions', [FAQController::class, 'store']);
+    Route::get('/faq-questions/{id}/edit', [FAQController::class, 'edit']);
+    Route::post('/faq-questions-update', [FAQController::class, 'update']);
+    Route::get('/faq-questions/{id}', [FAQController::class, 'delete']);
 
 });
