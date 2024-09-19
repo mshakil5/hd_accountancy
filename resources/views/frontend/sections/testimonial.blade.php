@@ -6,7 +6,7 @@
                 <h5 class="poppins-medium txt-primary txt-primary text-capitalize">Your voice, Our Inspirations</h5>
             </div>
         </div>
-        <div class="row mt-5">
+        <div>
 
             <div class="testimonial">
                 @foreach($clientTestimonial as $testimonial)

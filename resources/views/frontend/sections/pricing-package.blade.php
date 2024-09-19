@@ -136,27 +136,19 @@
 </section>
 
 <style>
-
     .package-card {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
         cursor: pointer;
     }
 
     .package-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-        border-color: #007bff;
+        background-color: #c7e968
     }
 
     .hover-card {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
         cursor: pointer;
     }
 
     .hover-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-        border-color: #007bff;
+        background-color: #c7e968;
     }
-
 </style>
