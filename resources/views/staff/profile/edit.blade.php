@@ -8,11 +8,11 @@
             <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center">
                 <i class='bx bxs-user-plus fs-4 me-2'></i> Update Staff
             </p>
-            
+
             <!-- Success and Error message -->
             <div class="row my-4 px-3">
                 <div class="col-lg-12">
-                    <div id="successMessage" class="alert alert-success" style="display: none;">
+                    <div id="successMessage" class="alert alert-success" style="display: ;">
                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
                         <b></b>
                     </div>
@@ -114,7 +114,11 @@
 @section('script')
 
 <script>
-    $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') } });
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
 </script>
 
 <!-- Image preview start -->
@@ -134,30 +138,32 @@
 
 <!-- Staff update -->
 <script>
-$(document).ready(function () {
-    $('#saveButton').click(function (event) {
-        event.preventDefault();
+    $(document).ready(function() {
+        $('#saveButton').click(function(event) {
+            event.preventDefault();
 
-        var formData = new FormData($('#myForm')[0]);
+            var formData = new FormData($('#myForm')[0]);
 
-        $.ajax({
-            url: "/staff/profile",
-            type: 'POST',
-            data: formData,
-            async: false,
-            success: function (response) {
-                swal({
-                    title: "Success!",
-                    text: "Updated successfully",
-                    icon: "success",
-                    button: "OK",
-                });
-                 window.setTimeout(function(){location.reload()},2000)
-            },
-            error: function (xhr, status, error) {
+            $.ajax({
+                url: "/staff/profile",
+                type: 'POST',
+                data: formData,
+                async: false,
+                success: function(response) {
+                    swal({
+                        title: "Success!",
+                        text: "Updated successfully",
+                        icon: "success",
+                        button: "OK",
+                    });
+                    window.setTimeout(function() {
+                        location.reload()
+                    }, 2000)
+                },
+                error: function(xhr, status, error) {
                     var errorMessage = "";
                     if (xhr.responseJSON && xhr.responseJSON.errors) {
-                        $.each(xhr.responseJSON.errors, function (key, value) {
+                        $.each(xhr.responseJSON.errors, function(key, value) {
                             errorMessage += key + ": " + value.join(", ") + "<br>";
                         });
                     } else {
@@ -166,19 +172,18 @@ $(document).ready(function () {
                     $('#errorMessage').html(errorMessage);
                     $('#errorMessage').show();
                     $('#successMessage').hide();
-            },
-            cache: false,
-            contentType: false,
-            processData: false
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            console.error("Error occurred: " + errorThrown);
-            console.error(jqXHR.responseText);
+                },
+                cache: false,
+                contentType: false,
+                processData: false
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                console.error("Error occurred: " + errorThrown);
+                console.error(jqXHR.responseText);
+            });
+
+            return false;
         });
-
-        return false;
     });
-});
-
 </script>
 <!-- Staff Update -->
 

@@ -39,12 +39,14 @@
                         </li>
                     </ul>
                     <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                        <li class="nav-item bg-primary box-hover rounded-3  ">
-                            <a href="{{ route('frontend.getQuotation') }}" class="nav-link text-white text-center fw-bold fs-6 px-4" aria-current="page">Book Appointment <br>
-                                <span class="fs-5 d-flex gap-1 justify-content-center align-items-center">
-                                    <iconify-icon icon="charm:phone"></iconify-icon> 01484 508951</span>
-                            </a>
-                        </li>
+                    <li class="nav-item bg-primary rounded-3">
+                        <a href="{{ route('frontend.getQuotation') }}" class="nav-link text-white text-center fw-bold" aria-current="page">
+                            <span class="fs-book-appointment">Book Appointment</span><br>
+                            <span class="fs-phone-number">
+                                <iconify-icon icon="charm:phone"></iconify-icon> 01484 508951
+                            </span>
+                        </a>
+                    </li>
 
                     </ul>
                     <!-- <form class="d-flex" role="search">

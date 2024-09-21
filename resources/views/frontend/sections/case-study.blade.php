@@ -23,7 +23,7 @@
                                     {{ $item->long_title }}
                                 </small>
                                 <p class="text-end mb-0">
-                                    <a href="{{ route('frontend.caseStudy') }}" class="btn bg-white mt-2 poppins-bold txt-primary">See More</a>
+                                    <a href="{{ route('frontend.caseStudy') }}" class=" poppins-medium btn-theme rounded-3 fs-5">See More</a>
                                 </p>
                             </div>
                         </div>

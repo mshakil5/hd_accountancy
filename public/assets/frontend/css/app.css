@@ -105,11 +105,11 @@ a {
 
 .bg-primary.box-hover:hover {
   background-color: #A2C63C !important;
-  border: 1px solid #233969 !important;
+  /* border: 1px solid #233969 !important; */
 }
 
 .bg-primary.box-hover:hover .text-white {
-  color: #233969 !important;
+  /* color: #233969 !important; */
 }
 
 .bg-secondary {
@@ -483,6 +483,27 @@ body {
   border-radius: 0 !important;
   background: #233969 !important;
   color: #fff !important;
+}
+
+.nav-link {
+  font-weight: 600; 
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.nav-link span {
+  padding-left: 18px;
+  padding-right: 18px;
+}
+
+.fs-book-appointment {
+  font-family: 'Poppins', sans-serif;
+  font-size: 16px;
+}
+
+.fs-phone-number {
+  font-size: 18px;
+  font-family: 'Inter', sans-serif;
 }
 
 /*# sourceMappingURL=app.css.map */

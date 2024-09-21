@@ -33,7 +33,7 @@
             </div>
             <div class="col-lg-12 text-center mt-5">
                 <h2 class="txt-primary text-center text-capitalize poppins-bold mb-4">If you want to grow your business</h2>
-                <a href="{{ route('frontend.getQuotation') }}" class="btn bg-primary py-2 px-5 poppins-bold text-white"> Book your Appointment</a>
+                <a href="{{ route('frontend.getQuotation') }}" class="btn bg-primary py-2 px-5 poppins-bold text-white"style="border: none;"> Book your Appointment</a>
 
             </div>
         </div>

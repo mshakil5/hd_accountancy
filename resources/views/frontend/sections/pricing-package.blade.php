@@ -1,7 +1,7 @@
 <section class="pricing py-5">
     <div class="container ">
         <div class="row mt-3">
-            <div class="text-center text-white text-capitalize fw-bold" style="font-size: 44px; font-weight: 700;">
+            <div class="text-center text-white text-capitalize fw-bold" style="font-size: 50px; font-weight: bold;">
     Choose your suitable pricing package
             </div>
             <div class="text-center text-white text-capitalize" style="font-size: 30px; font-weight: 400;">
@@ -11,7 +11,7 @@
         <div class="row my-5 d-flex flex-wrap">
             @foreach($packages as $package)
                 <div class="col-lg-4 d-flex">
-                    <div class="card text-center border-1 p-4 rounded-4 mb-3 h-100 d-flex flex-column package-card">
+                    <div class="card text-center border-1 p-4 mb-3 h-100 d-flex flex-column package-card">
                         <h4 class="txt-primary poppins-bold">{{ $package->short_title }}</h4>
                         <small class="txt-primary my-3">
                             {!! $package->long_description !!}
@@ -66,24 +66,24 @@
                         {!! $homeOurValues->long_title !!}
                     </p>
                 </div>
-                <div class="row g-2 gx-4 mt-5">
+                <div class="row g-3 gx-4 mt-5">
                     <div class="col-lg-6">
-                        <div class="border shadow-sm p-3 rounded-4 gap-3 text-center hover-card"> 
+                        <div class="border p-3 gap-3 text-center hover-card"> 
                             <div class="poppins-medium txt-primary fw-bold fs-4">Embrace <br> Technology</div>
                         </div>
                     </div>
                     <div class="col-lg-6">
-                        <div class="border shadow-sm p-3 rounded-4 gap-3 text-center hover-card">
+                        <div class="border p-3 gap-3 text-center hover-card">
                             <div class="poppins-medium txt-primary fw-bold fs-4">Together <br> Stronger</div>
                         </div>
                     </div>
                     <div class="col-lg-6">
-                        <div class="border shadow-sm p-3 rounded-4 gap-3 text-center hover-card">
+                        <div class="border p-3 gap-3 text-center hover-card">
                             <div class="poppins-medium txt-primary fw-bold fs-4">Brave to face <br> the truth</div>
                         </div>
                     </div>
                     <div class="col-lg-6">
-                        <div class="border shadow-sm p-3 rounded-4 gap-3 text-center hover-card">
+                        <div class="border p-3 gap-3 text-center hover-card">
                             <div class="poppins-medium txt-primary fw-bold fs-4">Humble & <br> Helpful</div>
                         </div>
                     </div>
@@ -100,27 +100,27 @@
                 </div>
             </div>
             <div class="col-lg-6 ">
-                <div class="row g-2">
+                <div class="row g-3">
                     <div class="col-6">
-                        <div class="border shadow-sm p-3 rounded-3 d-flex align-items-center justify-content-center gap-3 hover-card">
+                        <div class="border p-3 d-flex align-items-center justify-content-center gap-3 hover-card">
                             <div class="poppins-bold display-3 txt-primary mb-0">1200</div>
-                            <div class="poppins-medium txt-primary fw-bold">Existing <br> Clients</div>
+                            <div class="poppins-medium txt-primary fw-semi-bold">Existing <br> Clients</div>
                         </div>
                     </div>
                     <div class="col-6">
-                        <div class="border shadow-sm p-3 rounded-3 d-flex align-items-center justify-content-center gap-3 hover-card">
+                        <div class="border p-3 d-flex align-items-center justify-content-center gap-3 hover-card">
                             <div class="poppins-bold display-3 txt-primary mb-0">7</div>
                             <div class="poppins-medium txt-primary fw-bold">Years in <br> Operation  </div>
                         </div>
                     </div>
                     <div class="col-6">
-                        <div class="border shadow-sm p-3 rounded-3 d-flex align-items-center justify-content-center gap-3 hover-card">
+                        <div class="border p-3 d-flex align-items-center justify-content-center gap-3 hover-card">
                             <div class="poppins-bold display-3 txt-primary mb-0">13</div>
                             <div class="poppins-medium txt-primary fw-bold">Full time <br> Employee</div>
                         </div>
                     </div>
                     <div class="col-6">
-                        <div class="border shadow-sm p-3 rounded-3 d-flex align-items-center justify-content-center gap-3 hover-card">
+                        <div class="border p-3 d-flex align-items-center justify-content-center gap-3 hover-card">
                             <div class="poppins-bold display-3 txt-primary mb-0">2</div>
                             <div class="poppins-medium txt-primary fw-bold">Office <br> Nationwide</div>
                         </div>
@@ -141,14 +141,25 @@
     }
 
     .package-card:hover {
-        background-color: #c7e968
+        background-color: #c7e968;
     }
 
     .hover-card {
         cursor: pointer;
+        border-radius: 15px;
+        border: 1px solid #8095C580;
+        transition: background-color 0.2s ease;
     }
 
     .hover-card:hover {
+        box-shadow: 0 0 0 1px #8095C580;
         background-color: #c7e968;
+    }
+    /* .poppins-medium {
+        line-height: 24px;
+    } */
+
+    .fw-semi-bold {
+    font-weight: 600;
     }
 </style>

@@ -72,7 +72,7 @@
                                 {{ $item->long_title }}
                             </small>
                             <p class="text-end mb-0">
-                                <a href="{{ route('frontend.caseStudy') }}" class="btn bg-white mt-2 poppins-bold txt-primary">See More</a>
+                                <a href="{{ route('frontend.caseStudy') }}" class="btn bg-white mt-2 poppins-bold txt-primary"style="border: none;">See More</a>
                             </p>
                         </div>
                     </div>
@@ -87,7 +87,7 @@
             </div>
             <div class="col-lg-12 text-center mt-5">
                 <h2 class="txt-primary text-center text-capitalize poppins-bold mb-4">Focus on Growth, We'll Handle the Numbers</h2>
-                <a href="{{ route('frontend.getQuotation') }}" class="btn bg-primary py-2 px-5 poppins-bold text-white">Book your Appointment</a>
+                <a href="{{ route('frontend.getQuotation') }}" class="btn bg-primary py-2 px-5 poppins-bold text-white"style="border: none;">Book your Appointment</a>
 
             </div>
         </div>

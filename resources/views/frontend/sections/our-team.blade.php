@@ -13,7 +13,7 @@
                   </p>
              
                <div>
-                   <a href="{{ route('frontend.getQuotation') }}" class="btn btn-theme poppins-medium">Get Your dedicated Partner</a>
+                   <a href="{{ route('frontend.getQuotation') }}" class="btn btn-theme poppins-medium" style="border: none;">Get Your dedicated Partner</a>
                </div>
             </div>
 

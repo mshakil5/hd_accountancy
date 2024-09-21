@@ -41,19 +41,16 @@
     <div class="container mt-5">
         <div class="row py-5">
             @foreach($businessValues as $businessValue)
-                <div class="col-lg-3 text-center text-white mb-3">
-                    <div class="mt-3 bg-white d-inline-block border w-auto  border-1 py-4 px-3  rounded-3 fw-bold position-relative">
-                        <div class="rounded-circle bg-white rounded-3 d-inline  w-auto p-3 border border-1 border-primary mx-auto d-inline-flex align-items-center justify-content-center position-absolute top-0 start-50 translate-middle">
-                            <img src="{{ asset('/' . $businessValue->image) }}" width="70">
-                        </div>
-                        <br>
-                        <br>
-                        <h5 class="d-block txt-primary "><b>{{ $businessValue->short_title }} </b></h5>
-                        <small class="txt-primary my-3">
-                            {!! $businessValue->long_description !!}
-                        </small>
+            <div class="col-lg-3 text-center text-white mb-3 d-flex">
+                <div class="mt-3 bg-white d-inline-block border w-auto border-1 py-4 px-3 rounded-3 fw-bold position-relative h-100">
+                    <div class="rounded-circle bg-white rounded-3 d-inline w-auto p-3 border border-1 border-primary mx-auto d-inline-flex align-items-center justify-content-center position-absolute top-0 start-50 translate-middle">
+                        <img src="{{ asset('/' . $businessValue->image) }}" width="70">
                     </div>
+                    <br> <br>
+                    <h5 class="d-block txt-primary"><b>{{ $businessValue->short_title }} </b></h5>
+                    <small class="txt-primary my-3">{!! $businessValue->long_description !!}</small>
                 </div>
+            </div>
             @endforeach
         </div>
     </div>

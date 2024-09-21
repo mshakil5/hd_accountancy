@@ -8,10 +8,10 @@
             <div class="col-lg-12">
                 <div class="text-center w-100  mx-auto">
                     <div class=" px-5">
-                        <h1 class="text-light poppins-bold">{{ $businessService->long_title }}</h1>
+                        <h1 class="text-light poppins-bold">{{ $businessService->short_description }}</h1>
                     </div>
                     <p class="text-light w-75 text-center my-3 mx-auto">
-                        {!! $businessService->short_description !!}
+                        {!! $businessService->long_title !!}
                     </p>
                 </div>
             </div>

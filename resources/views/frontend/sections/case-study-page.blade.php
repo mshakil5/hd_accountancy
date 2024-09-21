@@ -24,7 +24,7 @@
         {!!$caseStudy->long_description!!}
         <div class="col-md-12">
             <div class="text-center ">
-                <a href="{{ route('frontend.getQuotation') }}" class=" mt-4 btn bg-primary py-2 px-5 poppins-bold text-white"> Book your Appointment</a>                
+                <a href="{{ route('frontend.getQuotation') }}" class=" mt-4 btn bg-primary py-2 px-5 poppins-bold text-white"style="border: none;"> Book your Appointment</a>                
             </div>
         </div>
     </div>

@@ -58,7 +58,7 @@
                                     </div>
                                     @endforeach
                                     <div class="mb-2">
-                                        <a href="{{ route('frontend.getQuotation') }}#get-qoutation" class="btn bg-primary text-light mx-auto rounded-3 fs-6">Get Customized Quote</a>
+                                        <a href="{{ route('frontend.getQuotation') }}#get-qoutation" class="btn bg-primary text-light mx-auto rounded-3 fs-6" style="border: none;">Get Customized Quote</a>
                                     </div>
                                 </div>
                             </div>
