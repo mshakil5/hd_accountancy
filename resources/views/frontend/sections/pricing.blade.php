@@ -47,13 +47,14 @@
                             <div class="col-lg-12">
                                 <h5 class="txt-primary poppins-medium my-4 ms-4 text-center text-md-start">Choose your Turn Over</h5>
                                 <div class="d-flex flex-column flex-sm-row flex-wrap align-items-center gap-1 justify-content-center justify-content-md-around">
-                                    @foreach($package->turnOvers as $turnover)
+                                    @foreach($package->turnOvers as $key => $turnover)
                                     @php
                                         $featureIds = explode(',', trim($turnover->features, '"'));
                                         $features = \App\Models\PackageFeature::whereIn('id', $featureIds)->select('name', 'is_checked')->get()->toArray();
                                     @endphp
                                     <div class="mb-2">
-                                        <input type="radio" class="timepick invisible" name="timepick-{{ $index }}" id="turnover-{{ $turnover->id }}" data-price="{{ $turnover->price }}" data-index="{{ $index }}" data-features="{{ json_encode($features) }}">
+                                        
+                                        <input @if($key === 0) checked @endif type="radio" class="timepick invisible" name="timepick-{{ $index }}" id="turnover-{{ $turnover->id }}" data-price="{{ $turnover->price }}" data-index="{{ $index }}" data-features="{{ json_encode($features) }}">
                                         <label for="turnover-{{ $turnover->id }}">{{ $turnover->price_range }}</label>
                                     </div>
                                     @endforeach
@@ -67,7 +68,20 @@
                             <div class="col-lg-12">
                                 <h5 class="txt-primary poppins-medium my-4 ms-4 text-center text-md-start">You can customize your requirements from below</h5>
                                 <ul class="list-theme txt-primary align-items-center" id="feature-list-{{ $index }}">
-                                    
+                                    @if($turnover->features)
+                                    @foreach($features as $feature)
+                                    <li class="border border-start-0 border-end-0 border-bottom-0 py-3">
+                                        <div class="d-flex justify-content-between">
+                                            {{ $feature['name'] }}
+                                            <span class="float-end">
+                                                @if($feature['is_checked'] === 1)
+                                                <iconify-icon class="fs-3" icon="icon-park-outline:check-one"></iconify-icon>
+                                                @endif
+                                            </span>
+                                        </div>
+                                    </li>
+                                    @endforeach
+                                    @endif
                                 </ul>
                             </div>
                         </div>

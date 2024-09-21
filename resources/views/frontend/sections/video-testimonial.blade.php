@@ -27,6 +27,7 @@
                             <video controls width="320" height="240" class="rounded-4" poster="{{ asset($testimonial->thumbnail) }}">
                                 <source src="{{ asset($testimonial->video) }}" type="video/mp4">
                             </video>
+                            <h5 class="txt-primary poppins-medium my-2 ms-4 text-center text-md-start">{{ $testimonial->description }}</h5>
                         </div>
                     @endif
                 @endforeach
