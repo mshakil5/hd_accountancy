@@ -39,16 +39,16 @@
                   </div>
                 </div>
                 <div class="col-sm-6">
-                  <div class="form-group">
-                    <label>Long Title</label>
-                    <input type="text" class="form-control" id="long_title" name="long_title" placeholder="Enter long title">
+                <div class="form-group">
+                        <label>Short Description</label>
+                        <input type="text" class="form-control" id="short_description" name="short_description" placeholder="Enter short description">
                   </div>
                 </div>
                 <div class="col-sm-12">
-                    <div class="form-group">
-                        <label>Short Description</label>
-                        <input type="text" class="form-control" id="short_description" name="short_description" placeholder="Enter short description">
-                    </div>
+                <div class="form-group">
+                    <label>Long Title</label>
+                    <input type="text" class="form-control" id="long_title" name="long_title" placeholder="Enter long title">
+                  </div>
                 </div>
                 <div class="col-sm-12">
                   <div class="form-group">
