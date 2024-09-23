@@ -115,7 +115,7 @@
          if (!name || !email || !company_name || !phone || !business_type || !turnover || !vat_returns || !payroll || !bookkeeping || !bookkeeping_software || !management_account || !bank_accounts) {
             swal({
                icon: 'warning',
-               title: 'Validation Error',
+               title: 'Error',
                text: 'Please fill out all required fields.',
                button: 'OK'
             });

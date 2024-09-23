@@ -5,21 +5,18 @@
       <div class="card p-4 pt-5 mt-4">
         <div class="row">
           <div class="col-lg-6 mb-4">
-            <input type="text" id="name" name="name" placeholder="Name" class="form-control">
+            <input type="text" id="name" name="name" placeholder="Name *" class="form-control required">
           </div>
           <div class="col-lg-6 mb-4">
-            <input type="email" id="email" name="email" placeholder="Email" class="form-control">
+            <input type="email" id="email" name="email" placeholder="Email *" class="form-control" required>
           </div>
           <div class="col-lg-6 mb-4">
-            <input type="number" id="phone" name="phone" placeholder="Phone" class="form-control">
+            <input type="number" id="phone" name="phone" placeholder="Phone *" class="form-control" >
           </div>
           <div class="col-lg-6 mb-4">
-            <input type="url" id="linkedin_profile" name="linkedin_profile" placeholder="Linkedin Profile Link" class="form-control">
+            <input type="url" id="linkedin_profile" name="linkedin_profile" placeholder="Linkedin Profile Link *" class="form-control" required>
           </div>
-          <div class="col-lg-6 mb-4">
-            <input type="number" id="yearly_turnover" name="yearly_turnover" placeholder="Yearly Turnover" class="form-control">
-          </div>
-          <div class="col-lg-6 mb-4">
+          <div class="col-lg-12 mb-4">
               <label for="cv" class="txt-primary mb-3 poppins-medium">
                   Upload Your Updated CV
               </label>
@@ -33,7 +30,19 @@
             <label for="" class="txt-primary mb-3  poppins-medium">
             Tell us About Yourself
             </label>
-           <textarea id="about_yourself" name="about_yourself" class="form-control " style="height: 160px;" placeholder="Describe about yourself"></textarea>
+           <textarea id="about_yourself" name="about_yourself" class="form-control " style="height: 160px;" placeholder="Describe about yourself *"></textarea>
+          </div>
+          <div class="col-lg-12 mb-4">
+            <label for="privacy_policy" class="txt-primary poppins-medium">
+                <input type="checkbox" id="privacy_policy_checkbox" required> I agree to the 
+                <a href="{{ route('frontend.privacyPolicy') }}" target="_blank">Privacy Policy</a>
+            </label>
+          </div>
+          <div class="col-lg-12 mb-4" id="captcha-container" style="display: none;">
+              <div class="g-recaptcha" 
+                  data-sitekey="6Lf0hUwqAAAAADTHYCLkkMqbIuxcW8GcMEKWW7mQ"
+                  data-callback="onCaptchaSuccess">
+              </div>
           </div>
           <div class="col-lg-12 text-center">
            <button id="submitBtn" type="submit" class="btn  bg-primary text-light py-1 px-3">Submit</button>
@@ -43,6 +52,29 @@
     </div>
   </div>
 </section>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      const privacyPolicyCheckbox = document.getElementById('privacy_policy_checkbox');
+      const captchaContainer = document.getElementById('captcha-container');
+      const submitButton = document.getElementById('submitBtn');
+
+      submitButton.disabled = true;
+
+      privacyPolicyCheckbox.addEventListener('change', function () {
+          if (privacyPolicyCheckbox.checked) {
+              captchaContainer.style.display = 'block';
+          } else {
+              captchaContainer.style.display = 'none';
+          }
+      });
+  });
+
+  function onCaptchaSuccess() {
+      const submitButton = document.getElementById('submitBtn');
+      submitButton.disabled = false;
+  }
+</script>
 
 <script>
 
@@ -63,14 +95,13 @@
     let email = document.getElementById('email').value;
     let phone = document.getElementById('phone').value;
     let linkedin_profile = document.getElementById('linkedin_profile').value;
-    let yearly_turnover = document.getElementById('yearly_turnover').value;
     let cv = document.getElementById('cv').files[0];
     let about_yourself = document.getElementById('about_yourself').value;
 
-    if (!name || !email || !phone || !linkedin_profile || !yearly_turnover || !cv || !about_yourself) {
+    if (!name || !email || !phone || !linkedin_profile || !cv || !about_yourself) {
       swal({
         icon: 'warning',
-        title: 'Validation Error',
+        title: 'Error',
         text: 'Please fill out all required fields.',
         button: 'OK'
       });
@@ -82,7 +113,6 @@
     formData.append('email', email);
     formData.append('phone', phone);
     formData.append('linkedin_profile', linkedin_profile);
-    formData.append('yearly_turnover', yearly_turnover);
     formData.append('cv', cv);
     formData.append('about_yourself', about_yourself);
 
@@ -101,7 +131,7 @@
         swal({
           icon: 'success',
           title: 'Success',
-          text: 'Career form submitted successfully!',
+          text: 'Submitted successfully!',
           button: 'OK'
         });
 
@@ -109,7 +139,6 @@
         document.getElementById('email').value = '';
         document.getElementById('phone').value = '';
         document.getElementById('linkedin_profile').value = '';
-        document.getElementById('yearly_turnover').value = '';
         document.getElementById('cv').value = '';
         document.getElementById('about_yourself').value = '';
         document.getElementById('file-preview').innerHTML = '';

@@ -21,7 +21,6 @@
                   <th style="text-align: center">Name</th>
                   <th style="text-align: center">Contact</th>
                   <th style="text-align: center">LinkedIn</th>
-                  <th style="text-align: center">Yearly Turnover</th>
                   <th style="text-align: center">CV</th>
                   <th style="text-align: center">Action</th>
                 </tr>
@@ -33,7 +32,6 @@
                     <td style="text-align: center">{{$data->name}}</td>
                     <td style="text-align: center">{{$data->email}}, {{$data->phone}}</td>
                     <td style="text-align: center">{{$data->linkedin_profile}}</td>
-                    <td style="text-align: center">{{$data->yearly_turnover}}</td>
                     <td style="text-align: center">
                         <a href="{{ asset('images/Cv/' . $data->cv) }}" target="_blank">
                             <i class="fas fa-file-pdf" style="font-size: 24px;"></i>

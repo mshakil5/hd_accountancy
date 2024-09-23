@@ -171,7 +171,7 @@
         if (!date || !time || !time_zone || !meet_type || !first_name || !last_name || !email || !phone || !discussion) {
             swal({
                 icon: 'warning',
-                title: 'Validation Error',
+                title: 'Error',
                 text: 'Please fill out all required fields.',
                 button: 'OK'
             });

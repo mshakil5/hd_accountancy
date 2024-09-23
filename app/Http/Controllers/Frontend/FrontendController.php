@@ -337,7 +337,7 @@ class FrontendController extends Controller
             'email' => 'required|email',
             'phone' => 'required|numeric',
             'linkedin_profile' => 'required|string',
-            'yearly_turnover' => 'required|numeric',
+            // 'yearly_turnover' => 'required|numeric',
             'cv' => 'required|mimes:pdf,docx,doc|max:4096',
             'about_yourself' => 'required|string',
         ]);
