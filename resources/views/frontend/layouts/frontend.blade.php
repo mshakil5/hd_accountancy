@@ -81,6 +81,9 @@
         <!-- Lazy size start -->
         @include('frontend.partials.lazy-sizes')
 
+        <!-- Tawk.to  -->
+        @include('frontend.partials.tawk-to')
+
         <!-- additional script -->
         @yield('script')
 
