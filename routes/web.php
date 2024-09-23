@@ -43,7 +43,7 @@ Route::get('/', [FrontendController::class, 'index'])->name('frontend.index');
 
 // Contact
 Route::get('/contact', [FrontendController::class, 'contact'])->name('frontend.contact');
-Route::post('/contact', [FrontendController::class, 'storeStore'])->name('frontend.contact.store');
+Route::post('/contact', [FrontendController::class, 'contactStore'])->name('frontend.contact.store');
 
 // Pricing
 Route::get('/pricing', [FrontendController::class, 'pricing'])->name('frontend.pricing');

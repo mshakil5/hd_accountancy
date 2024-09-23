@@ -21,6 +21,7 @@ use App\Models\Quotation;
 use App\Models\Career;
 use App\Models\WeWorkWithImage;
 use App\Models\FaqQuestion;
+use App\Models\TurnOver;
 
 class FrontendController extends Controller
 {
@@ -68,18 +69,20 @@ class FrontendController extends Controller
         } else {
             $contactHeading = null;
         }
-        return view('frontend.contact.index', compact('contactHeading'));
+
+        $turnoverRanges = TurnOver::select('price_range')->distinct()->where('status', 1)->get();
+        return view('frontend.contact.index', compact('contactHeading', 'turnoverRanges'));
     }
 
-    public function storeStore(Request $request)
+    public function contactStore(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255',
             'phone' => 'required|integer',
             'business_name' => 'required|string|max:255',
-            'yearly_turnover' => 'nullable|integer',
-            'interested_service' => 'array',
+            'yearly_turnover' => 'required',
+            'interested_service' => 'required|array',
             'message' => 'required|string',
         ]);
 

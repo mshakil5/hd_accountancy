@@ -37,10 +37,17 @@
             @enderror
           </div>
           <div class="col-lg-6 mb-4">
-            <input type="number" name="yearly_turnover" placeholder="Yearly Turnover" class="form-control @error('yearly_turnover') is-invalid @enderror" value="{{ old('yearly_turnover') }}">
-            @error('yearly_turnover')
-              <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
+              <select name="yearly_turnover" class="form-control @error('yearly_turnover') is-invalid @enderror">
+                  <option value="">Select Yearly Turnover</option>
+                  @foreach($turnoverRanges as $range)
+                      <option value="{{ $range->price_range }}" {{ old('yearly_turnover') == $range->price_range ? 'selected' : '' }}>
+                          {{ $range->price_range }}
+                      </option>
+                  @endforeach
+              </select>
+              @error('yearly_turnover')
+                  <div class="invalid-feedback">{{ $message }}</div>
+              @enderror
           </div>
 
           <div class="col-lg-6 mb-4">
@@ -53,16 +60,18 @@
             <label for="tax" class="txt-primary poppins-medium">
               <input type="checkbox" name="interested_service[]" value="tax" {{ in_array('tax', old('interested_service', [])) ? 'checked' : '' }}>  TAX 
             </label>
-            @error('interested_service')
-              <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
+            @if ($errors->has('interested_service'))
+                <div class="invalid-feedback d-block">
+                    {{ $errors->first('interested_service') }}
+                </div>
+            @endif
           </div>
 
           <div class="col-lg-12 mb-4">
             <label for="" class="txt-primary mb-3  poppins-medium">
               Tell us what makes you awake at night
             </label>
-            <textarea name="message" id="" class="form-control @error('message') is-invalid @enderror" style="height: 160px;" placeholder="Describe your topic" required>{{ old('message') }}</textarea>
+            <textarea name="message" id="" class="form-control @error('message') is-invalid @enderror" style="height: 160px;" placeholder="Describe your topic *" required>{{ old('message') }}</textarea>
             @error('message')
               <div class="invalid-feedback">{{ $message }}</div>
             @enderror
