@@ -1,4 +1,4 @@
-<header class="site-header shadow-sm mb-1">
+<header class="site-header shadow-sm mb-1 fixed-top">
     <section class="container">
         <nav class="navbar navbar-expand-lg py-3">
             <div class="container-fluid">
