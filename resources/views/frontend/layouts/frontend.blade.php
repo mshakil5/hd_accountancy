@@ -72,6 +72,9 @@
         <!-- Lazy sizes -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.0/lazysizes.min.js" async></script>
 
+        <!-- recaptcha -->
+        <script src="https://www.google.com/recaptcha/enterprise.js" async defer></script>
+
         <!-- slick js -->
         @include('frontend.partials.slick-js')
 
@@ -82,7 +85,7 @@
         @include('frontend.partials.lazy-sizes')
 
         <!-- Tawk.to  -->
-        @include('frontend.partials.tawk-to')
+        <!-- @include('frontend.partials.tawk-to') -->
 
         <!-- additional script -->
         @yield('script')

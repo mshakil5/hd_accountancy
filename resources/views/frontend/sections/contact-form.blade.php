@@ -77,8 +77,22 @@
             @enderror
           </div>
 
+          <div class="col-lg-12 mb-4">
+            <label for="privacy_policy" class="txt-primary poppins-medium">
+                <input type="checkbox" id="privacy_policy_checkbox" required> I agree to the 
+                <a href="{{ route('frontend.privacyPolicy') }}" target="_blank">Privacy Policy</a>
+            </label>
+          </div>
+
+          <div class="col-lg-12 mb-4" id="captcha-container" style="display: none;">
+              <div class="g-recaptcha" 
+                  data-sitekey="6Lf0hUwqAAAAADTHYCLkkMqbIuxcW8GcMEKWW7mQ"
+                  data-callback="onCaptchaSuccess">
+              </div>
+          </div>
+
           <div class="col-lg-12 text-center">
-            <button type="submit" class="btn  bg-primary text-light py-1 px-3">Submit</button>
+            <button type="submit" id="submit_button" class="btn bg-primary text-light py-1 px-3" disabled>Submit</button>
           </div>
         </div>
       </form>
@@ -86,3 +100,26 @@
     </div>
   </div>
 </section>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+      const privacyPolicyCheckbox = document.getElementById('privacy_policy_checkbox');
+      const captchaContainer = document.getElementById('captcha-container');
+      const submitButton = document.getElementById('submit_button');
+
+      submitButton.disabled = true;
+
+      privacyPolicyCheckbox.addEventListener('change', function () {
+          if (privacyPolicyCheckbox.checked) {
+              captchaContainer.style.display = 'block';
+          } else {
+              captchaContainer.style.display = 'none';
+          }
+      });
+  });
+
+  function onCaptchaSuccess() {
+      const submitButton = document.getElementById('submit_button');
+      submitButton.disabled = false;
+  }
+</script>
