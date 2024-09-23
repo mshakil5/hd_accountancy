@@ -24,9 +24,12 @@
                 @foreach($data as $testimonial)
                     @if($testimonial->video)
                         <div class="p-3">
-                            <video controls width="320" height="240" class="rounded-4" poster="{{ asset($testimonial->thumbnail) }}">
-                                <source src="{{ asset($testimonial->video) }}" type="video/mp4">
-                            </video>
+                        <img src="{{ asset($testimonial->thumbnail) }}" 
+                            class="rounded-4 video-thumbnail lazy-video-thumbnail" 
+                            data-video-src="{{ asset($testimonial->video) }}" 
+                            alt="Client Testimonial Thumbnail" 
+                            width="320" height="240" 
+                            style="object-fit: cover; width: 100%; height: 100%; border-radius: 0.5rem;">
                             <h5 class="txt-primary poppins-medium my-2 ms-4 text-center text-md-start">{{ $testimonial->description }}</h5>
                         </div>
                     @endif

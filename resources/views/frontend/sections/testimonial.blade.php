@@ -8,17 +8,20 @@
         </div>
         <div>
 
-            <div class="testimonial">
-                @foreach($clientTestimonial as $testimonial)
-                    @if($testimonial->video)
-                        <div class="p-3">
-                            <video controls width="320" height="240" class="rounded-4" poster="{{ asset($testimonial->thumbnail) }}">
-                                <source src="{{ asset($testimonial->video) }}" type="video/mp4">
-                            </video>
-                        </div>
-                    @endif
-                @endforeach
-            </div>
+        <div class="testimonial">
+            @foreach($clientTestimonial as $testimonial)
+                @if($testimonial->video)
+                    <div class="p-3">
+                        <img src="{{ asset($testimonial->thumbnail) }}" 
+                            class="rounded-4 video-thumbnail lazy-video-thumbnail" 
+                            data-video-src="{{ asset($testimonial->video) }}" 
+                            alt="Client Testimonial Thumbnail" 
+                            width="320" height="240" 
+                            style="object-fit: cover; width: 100%; height: 100%; border-radius: 0.5rem;">
+                    </div>
+                @endif
+            @endforeach
+        </div>
 
             <div class="col-12 text-center my-3">
                 <a href="{{ route('frontend.clientTestimonials') }}" class="btn btn-theme-outline d-inline w-50 mx-auto rounded-3 fs-6">See More  </a>

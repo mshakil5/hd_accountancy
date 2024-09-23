@@ -69,11 +69,17 @@
         <!-- Moment js -->
         <script src="{{ asset('assets/vendor/moment/moment.min.js')}}"></script>
 
+        <!-- Lazy sizes -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.0/lazysizes.min.js" async></script>
+
         <!-- slick js -->
         @include('frontend.partials.slick-js')
 
         <!-- date picker -->
         @include('frontend.partials.date-picker')
+
+        <!-- Lazy size start -->
+        @include('frontend.partials.lazy-sizes')
 
         <!-- additional script -->
         @yield('script')
