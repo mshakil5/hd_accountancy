@@ -366,7 +366,8 @@ class FrontendController extends Controller
     public function businessServices($slug)
     {
         $businessService = BusinessService::where('slug', $slug)->firstOrFail();
-        return view('frontend.business-service.details', compact('businessService'));
+        $faqQuestions = FaqQuestion::orderBy('id', 'asc')->get();
+        return view('frontend.business-service.details', compact('businessService', 'faqQuestions'));
     }
 
     public function clientTestimonials()

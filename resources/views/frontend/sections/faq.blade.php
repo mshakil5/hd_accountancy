@@ -31,15 +31,26 @@
             <div class="col-md-12 pt-5">
                 <div class="">
                     <h2 class="poppins-bold text-center txt-primary">Frequently Asked Questions</h2>
-                </div> 
-                <div class="faq-container mx-auto">
-                    @foreach($faqQuestions as $faqQuestion)
-                        <div class="faq-item">
-                            <div class="faq-question">{{ $faqQuestion->question }}</div>
-                            <div class="faq-icon"><i class="fas fa-chevron-down fa-lg"></i></div>
-                            <div class="faq-answer" style="display: none;">{!! $faqQuestion->answer !!}</div>
+                </div>
+                <div class="row py-4">
+                    <div class="text-center">
+                        <div class="accordion accordion-flush w-75 mx-auto" id="accordionFlushExample">
+                            @foreach($faqQuestions as $faqQuestion)
+                                <div class="accordion-item my-3 shadow border border-1 rounded-4 overflow-hidden">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed txt-primary poppins-bold fs-5" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse-{{ $faqQuestion->id }}" aria-expanded="false" aria-controls="flush-collapse-{{ $faqQuestion->id }}">
+                                            {{ $faqQuestion->question }}
+                                        </button>
+                                    </h2>
+                                    <div id="flush-collapse-{{ $faqQuestion->id }}" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+                                        <div class="accordion-body text-start">
+                                            {!! $faqQuestion->answer !!}
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
                         </div>
-                    @endforeach
+                    </div>
                 </div>
             </div>
         </div>

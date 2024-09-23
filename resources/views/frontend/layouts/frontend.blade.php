@@ -75,19 +75,6 @@
         <!-- date picker -->
         @include('frontend.partials.date-picker')
 
-        <!-- Faq answer show hide start -->
-        <script>
-            $(document).ready(function() {
-                $('.faq-item').click(function() {
-                    $(this).find('.faq-answer').slideToggle();
-                    $(this).find('.faq-question').slideToggle();
-
-                    $(this).find('.faq-icon i').toggleClass('fa-chevron-down fa-chevron-up');
-                });
-            });
-        </script>
-        <!-- Faq answer show hide end -->
-
         <!-- additional script -->
         @yield('script')
 

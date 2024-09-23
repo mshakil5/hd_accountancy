@@ -40,14 +40,14 @@
                 </div>
                 <div class="col-sm-6">
                 <div class="form-group">
-                        <label>Short Description</label>
-                        <input type="text" class="form-control" id="short_description" name="short_description" placeholder="Enter short description">
+                        <label>Long Title</label>
+                        <input type="text" class="form-control" id="short_description" name="short_description" placeholder="Enter long title">
                   </div>
                 </div>
                 <div class="col-sm-12">
                 <div class="form-group">
-                    <label>Long Title</label>
-                    <input type="text" class="form-control" id="long_title" name="long_title" placeholder="Enter long title">
+                    <label>Short Description</label>
+                    <textarea class="form-control summernote" id="long_title" name="long_title" placeholder="Enter short description"></textarea>
                   </div>
                 </div>
                 <div class="col-sm-12">
@@ -179,9 +179,9 @@
           if($(this).val() == 'Create') {
               var form_data = new FormData();
               form_data.append("short_title", $("#short_title").val());
-              form_data.append("long_title", $("#long_title").val());
               form_data.append("short_description", $("#short_description").val());
               form_data.append("long_description", $("#long_description").summernote('code'));
+              form_data.append("long_title", $("#long_title").summernote('code'));
               form_data.append("image", $("#image")[0].files[0]);
               $.ajax({
                 url: url,
@@ -213,9 +213,9 @@
           if($(this).val() == 'Update'){
               var form_data = new FormData();
               form_data.append("short_title", $("#short_title").val());
-              form_data.append("long_title", $("#long_title").val());
               form_data.append("short_description", $("#short_description").val());
               form_data.append("long_description", $("#long_description").summernote('code'));
+              form_data.append("long_title", $("#long_title").summernote('code'));
               form_data.append("image", $("#image")[0].files[0]);
               form_data.append("codeid", $("#codeid").val());
               
@@ -283,10 +283,11 @@
         });
       //Delete  
       function populateForm(data){
+      // console.log(data);
         $("#short_title").val(data.short_title);
-        $("#long_title").val(data.long_title);
         $("#short_description").val(data.short_description);
         $("#long_description").summernote('code', data.long_description);
+        $("#long_title").summernote('code', data.long_title);
         if (data.image) {
             $("#image_preview").attr("src", "/" + data.image).show();
         } else {
