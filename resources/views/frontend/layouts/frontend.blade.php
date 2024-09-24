@@ -67,6 +67,21 @@
             .datepicker-inline {
                 width: unset;
             }
+
+            .datepicker table tr td.today{
+                background-color: #1a3a66;
+                background-repeat: repeat-x;
+                filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#fdd49a', endColorstr='#fdf59a', GradientType=0);
+                border-color: #fdf59a #fdf59a #fbed50;
+                border-color: rgba(0, 0, 0, .1) rgba(0, 0, 0, .1) rgba(0, 0, 0, .25);
+                filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
+                color: #ffffff;
+                background-image: unset;
+            }
+
+
+
+
         </style>
 
     </head>
