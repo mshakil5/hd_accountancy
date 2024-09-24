@@ -3,6 +3,7 @@
 @section('content')
 
 <!-- latest insight-->
+@if(count($data) > 0)
 <section class="py-5 position-relative">
     <div class="container">
         <div class="row text-center">
@@ -28,5 +29,6 @@
         </div>
     </div>
 </section>
+@endif
 
 @endsection
