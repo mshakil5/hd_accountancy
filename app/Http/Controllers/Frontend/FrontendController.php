@@ -79,12 +79,14 @@ class FrontendController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255',
-            'phone' => 'required|integer',
-            'business_name' => 'required|string|max:255',
+            'phone' => 'required|regex:/^44[0-9\s-]{9,10}$/',
+            'business_name' => 'nullable|string|max:255',
             'yearly_turnover' => 'required',
             'interested_service' => 'required|array',
             'message' => 'required|string',
-        ]);
+        ], [
+            'phone.regex' => 'The phone number must be in UK format and start with 44, followed by 9 or 10 digits.',
+        ]);        
 
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
@@ -97,9 +99,7 @@ class FrontendController extends Controller
             'business_name' => $request->input('business_name'),
             'yearly_turnover' => $request->input('yearly_turnover'),
             'interested_service' => json_encode($request->input('interested_service')),
-            'message' => $request->input('message'),
-            'created_by' => auth()->id(),
-            'updated_by' => auth()->id(),
+            'message' => $request->input('message')
         ]);
 
         return redirect()->back()->with('success', 'Message sent successfully!');

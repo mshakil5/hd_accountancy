@@ -31,7 +31,7 @@
             @enderror
           </div>
           <div class="col-lg-6 mb-4">
-            <input type="text" name="business_name" placeholder="Business Name*" class="form-control @error('business_name') is-invalid @enderror" value="{{ old('business_name') }}" required>
+            <input type="text" name="business_name" placeholder="Business Name" class="form-control @error('business_name') is-invalid @enderror" value="{{ old('business_name') }}">
             @error('business_name')
               <div class="invalid-feedback">{{ $message }}</div>
             @enderror
