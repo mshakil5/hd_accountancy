@@ -21,6 +21,7 @@ use App\Models\Quotation;
 use App\Models\Career;
 use App\Models\WeWorkWithImage;
 use App\Models\FaqQuestion;
+use App\Models\GoogleReview;
 use App\Models\TurnOver;
 
 class FrontendController extends Controller
@@ -57,8 +58,10 @@ class FrontendController extends Controller
         $latestInsights = LatestInsight::orderBy('id', 'desc')->take(3)->get();
 
         $weWorkWithImages = WeWorkWithImage::orderBy('id', 'asc')->get();
+
+        $googleReviews = GoogleReview::orderBy('id', 'asc')->get();
         
-        return view('frontend.homepage.index', compact('homePageIntro', 'homeOurValues', 'timeSlots', 'packages', 'businessServices', 'businessValues', 'clientTestimonial', 'caseStudies', 'latestInsights', 'weWorkWithImages'));
+        return view('frontend.homepage.index', compact('homePageIntro', 'homeOurValues', 'timeSlots', 'packages', 'businessServices', 'businessValues', 'clientTestimonial', 'caseStudies', 'latestInsights', 'weWorkWithImages', 'googleReviews'));
     }
 
     public function contact()

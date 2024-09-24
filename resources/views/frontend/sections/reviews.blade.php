@@ -14,114 +14,22 @@
         <div class="row mt-5">
 
             <div class="testimonial">
-                <div class="p-3">
-                    <div class="card rounded-5 text-center p-4 position-relative border-theme">
-                        <img src="{{ asset('assets/frontend/images/blog1.png') }}" class="position-absolute top-0 start-50 translate-middle border border-1 border-secondary rounded-circle" width="120" height="120" class="rounded-circle" alt="">
-                        <p style="color:#233969B2;" class="mt-5 text-italic text-capitalize poppins-medium fst-italic">
-                            “I have been dealing with the HD
-                            Accountancy Services Ltd for more
-                            than a year now. My contact person
-                            is Mr. Shultan Mahmud who has
-                            been advising me..”
-                        </p>
-                        <h6 class="txt-primary poppins-bold mb-2 mt-3">
-                            Tristan Clousso
-                        </h6>
-                        <h6 class="text-muted">
-                            Shutter Club NY
-                        </h6>
+                @foreach($googleReviews as $review)
+                    <div class="p-3">
+                        <div class="card rounded-5 text-center p-4 position-relative border-theme">
+                        <img src="{{ asset($review->image ?? 'assets/frontend/images/male.png') }}" class="position-absolute top-0 start-50 translate-middle border border-1 border-secondary rounded-circle" width="120" height="120" class="rounded-circle" alt="">
+                            <p style="color:#233969B2;" class="mt-5 text-italic text-capitalize poppins-medium fst-italic">
+                                "{!! $review->message !!}"
+                            </p>
+                            <h6 class="txt-primary poppins-bold mb-2 mt-3">
+                                {{ $review->name }}
+                            </h6>
+                            <h6 class="text-muted">
+                                {{ $review->position }}
+                            </h6>
+                        </div>
                     </div>
-                </div>
-                <div class="p-3">
-                    <div class="card rounded-5 text-center p-4 position-relative border-theme">
-                        <img src="{{ asset('assets/frontend/images/blog1.png') }}" class="position-absolute top-0 start-50 translate-middle border border-1 border-secondary rounded-circle" width="120" height="120" class="rounded-circle" alt="">
-                        <p style="color:#233969B2;" class="mt-5 text-italic text-capitalize poppins-medium fst-italic">
-                            “I have been dealing with the HD
-                            Accountancy Services Ltd for more
-                            than a year now. My contact person
-                            is Mr. Shultan Mahmud who has
-                            been advising me..”
-                        </p>
-                        <h6 class="txt-primary poppins-bold mb-2 mt-3">
-                            Tristan Clousso
-                        </h6>
-                        <h6 class="text-muted">
-                            Shutter Club NY
-                        </h6>
-                    </div>
-                </div>
-                <div class="p-3">
-                    <div class="card rounded-5 text-center p-4 position-relative border-theme">
-                        <img src="{{ asset('assets/frontend/images/blog1.png') }}" class="position-absolute top-0 start-50 translate-middle border border-1 border-secondary rounded-circle" width="120" height="120" class="rounded-circle" alt="">
-                        <p style="color:#233969B2;" class="mt-5 text-italic text-capitalize poppins-medium fst-italic">
-                            “I have been dealing with the HD
-                            Accountancy Services Ltd for more
-                            than a year now. My contact person
-                            is Mr. Shultan Mahmud who has
-                            been advising me..”
-                        </p>
-                        <h6 class="txt-primary poppins-bold mb-2 mt-3">
-                            Tristan Clousso
-                        </h6>
-                        <h6 class="text-muted">
-                            Shutter Club NY
-                        </h6>
-                    </div>
-                </div>
-                <div class="p-3">
-                    <div class="card rounded-5 text-center p-4 position-relative border-theme">
-                        <img src="{{ asset('assets/frontend/images/blog1.png') }}" class="position-absolute top-0 start-50 translate-middle border border-1 border-secondary rounded-circle" width="120" height="120" class="rounded-circle" alt="">
-                        <p style="color:#233969B2;" class="mt-5 text-italic text-capitalize poppins-medium fst-italic">
-                            “I have been dealing with the HD
-                            Accountancy Services Ltd for more
-                            than a year now. My contact person
-                            is Mr. Shultan Mahmud who has
-                            been advising me..”
-                        </p>
-                        <h6 class="txt-primary poppins-bold mb-2 mt-3">
-                            Tristan Clousso
-                        </h6>
-                        <h6 class="text-muted">
-                            Shutter Club NY
-                        </h6>
-                    </div>
-                </div>
-                <div class="p-3">
-                    <div class="card rounded-5 text-center p-4 position-relative border-theme">
-                        <img src="{{ asset('assets/frontend/images/blog1.png') }}" class="position-absolute top-0 start-50 translate-middle border border-1 border-theme rounded-circle" width="120" height="120" class="rounded-circle" alt="">
-                        <p style="color:#233969B2;" class="mt-5 text-italic text-capitalize poppins-medium fst-italic">
-                            “I have been dealing with the HD
-                            Accountancy Services Ltd for more
-                            than a year now. My contact person
-                            is Mr. Shultan Mahmud who has
-                            been advising me..”
-                        </p>
-                        <h6 class="txt-primary poppins-bold mb-2 mt-3">
-                            Tristan Clousso
-                        </h6>
-                        <h6 class="text-muted">
-                            Shutter Club NY
-                        </h6>
-                    </div>
-                </div>
-                <div class="p-3">
-                    <div class="card rounded-5 text-center p-4 position-relative border-theme">
-                        <img src="{{ asset('assets/frontend/images/blog1.png') }}" class="position-absolute top-0 start-50 translate-middle border border-1 border-secondary rounded-circle" width="120" height="120" class="rounded-circle" alt="">
-                        <p style="color:#233969B2;" class="mt-5 text-italic text-capitalize poppins-medium fst-italic">
-                            “I have been dealing with the HD
-                            Accountancy Services Ltd for more
-                            than a year now. My contact person
-                            is Mr. Shultan Mahmud who has
-                            been advising me..”
-                        </p>
-                        <h6 class="txt-primary poppins-bold mb-2 mt-3">
-                            Tristan Clousso
-                        </h6>
-                        <h6 class="text-muted">
-                            Shutter Club NY
-                        </h6>
-                    </div>
-                </div>
+                @endforeach
             </div>
 
             <p align="center" class="mt-4">

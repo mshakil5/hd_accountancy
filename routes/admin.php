@@ -39,6 +39,7 @@ use App\Http\Controllers\Admin\BookingController;
 use App\Http\Controllers\Admin\QuotationController;
 use App\Http\Controllers\Admin\CareerController;
 use App\Http\Controllers\Admin\FAQController;
+use App\Http\Controllers\Admin\GoogleReviewController;
 
 //Fallback route
 Route::fallback(function () {
@@ -490,5 +491,12 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/faq-questions/{id}/edit', [FAQController::class, 'edit']);
     Route::post('/faq-questions-update', [FAQController::class, 'update']);
     Route::get('/faq-questions/{id}', [FAQController::class, 'delete']);
+
+    //Google Review crud
+    Route::get('/google-review', [GoogleReviewController::class, 'index'])->name('allClientReview');    
+    Route::post('/google-review', [GoogleReviewController::class, 'store']);
+    Route::get('/google-review/{id}/edit', [GoogleReviewController::class, 'edit']);
+    Route::post('/google-review-update', [GoogleReviewController::class, 'update']);
+    Route::get('/google-review/{id}', [GoogleReviewController::class, 'delete']);
 
 });
