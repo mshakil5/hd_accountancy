@@ -510,4 +510,7 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/package-meta-data', [MetaDataController::class, 'packageMeta'])->name('packageMeta');
     Route::put('/package-meta-data', [MetaDataController::class, 'packageMetaUpdate'])->name('packageMeta.update');
 
+    Route::get('/contact-meta-data', [MetaDataController::class, 'contactMeta'])->name('contactMeta');
+    Route::put('/contact-meta-data', [MetaDataController::class, 'contactMetaUpdate'])->name('contactMeta.update');
+
 });
