@@ -13,7 +13,7 @@
         </div>
 
         <div class="row justify-content-center">
-            <div class="col-md-10">
+            <div class="col-md-12">
                 <div class="text-center mb-4">
                     <img src="{{ asset($latestInsight->image) }}" class="img-fluid rounded shadow-lg" alt="{{ $latestInsight->short_title }}" style="max-height: 500px; width: 800px; object-fit: cover;">
                 </div>

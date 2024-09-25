@@ -48,7 +48,7 @@
                     </div>
                     <br> <br>
                     <h5 class="d-block txt-primary"><b>{{ $businessValue->short_title }} </b></h5>
-                    <small class="txt-primary my-3">{!! $businessValue->long_description !!}</small>
+                    <small class="txt-primary my-3" style="text-align: justify;">{!! $businessValue->long_description !!}</small>
                 </div>
             </div>
             @endforeach

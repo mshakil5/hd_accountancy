@@ -62,7 +62,7 @@
             <div class="col-lg-6  ">
                 <div class="row">
                     <h2 class="txt-primary poppins-bold mb-3">{{ $homeOurValues->short_title }} </h2>
-                    <p class="txt-primary my-3 mt-2">
+                    <p class="txt-primary my-3 mt-2"style="text-align: justify;">
                         {!! $homeOurValues->long_title !!}
                     </p>
                 </div>

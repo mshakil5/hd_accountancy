@@ -177,7 +177,7 @@ class FrontendController extends Controller
         }
 
         $taxSolutions = BusinessValue::where('tax_solution', 1)
-                         ->orderBy('id', 'DESC')
+                         ->orderBy('id', 'asc')
                          ->get();
                          
         $accountingSolutions = BusinessValue::where('accounting_solution', 1)

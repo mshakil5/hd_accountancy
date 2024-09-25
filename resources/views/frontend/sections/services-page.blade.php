@@ -25,7 +25,7 @@
     <div class="container">
         <div class="row py-2 col-lg-12 mx-auto py-3">
             <div class="col-lg-12 text-center">
-                <h1 class="txt-primary text-center text-capitalize poppins-medium mt-2">
+                <h1 class="txt-primary text-center text-capitalize poppins-medium mt-2" style="font-weight: 600;">
                     The Solutions We offer
                 </h1>
 
@@ -34,14 +34,13 @@
         <div class="row my-4 gy-4 d-flex flex-wrap justify-content-center">
 
             @foreach($accountingSolutions as $solution)
-                <div class="col-lg-4 text-center icon-box">
-                    <div class="card p-4 text-center">
-
+                <div class="col-lg-4 col-md-6 d-flex">
+                    <div class="card flex-fill text-center p-4">
                         <img src="{{ asset('/' . $solution->image) }}" width="100" class="mb-3 mx-auto" alt="{{ $solution->short_title }}">
 
                         <h6 class="txt-primary poppins-bold">{{ $solution->short_title }}</h6>
 
-                        <p class="txt-primary">
+                        <p class="txt-primary justify">
                             {!! $solution->long_description !!}
                         </p>
 
@@ -52,8 +51,7 @@
 
             <div class="col-lg-12 text-center mt-5">
                 <h2 class="txt-primary text-center text-capitalize poppins-bold mb-4">Thinking about setting up new Business?</h2>
-                <a href="{{ route('frontend.getQuotation') }}#get-qoutation" class=" poppins-medium btn-theme rounded-3 fs-5"> Book your Appointment</a>
-
+                <a href="{{ route('frontend.getQuotation') }}#get-qoutation" class="poppins-medium btn-theme rounded-3 fs-5">Book your Appointment</a>
             </div>
         </div>
     </div>
@@ -66,7 +64,7 @@
                 <div class="text-center w-100  mx-auto">
                     <div class=" px-5">
                         <h1 class="text-light poppins-bold">{{ $taxSolution->short_title }}</h1>
-                        <h4 class="text-light poppins-bold"><span class="txt-secondary">{{ $taxSolution->long_title }}</span> {{ $taxSolution->short_description }}</h4>
+                        <h4 class="text-light poppins-bold justify"><span class="txt-secondary justify">{{ $taxSolution->long_title }}</span> {{ $taxSolution->short_description }}</h4>
                     </div>
                     <p class="text-light w-75 text-center my-3 mx-auto">
                         {!! $taxSolution->long_description !!}
@@ -110,7 +108,7 @@
                         <h1 class="text-light poppins-bold">{{ $otherSolution->short_title }}</h1>
                         <h4 class="text-light poppins-bold"><span class="txt-secondary">{{ $otherSolution->long_title }}</span> {{ $otherSolution->short_description }}</h4>
                     </div>
-                    <p class="text-light w-75 text-center my-3 mx-auto">
+                    <p class="text-light w-75 text-center my-3 mx-auto justify">
                         {!! $otherSolution->long_description !!}
                     </p>
 
