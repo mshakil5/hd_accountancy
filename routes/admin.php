@@ -525,4 +525,7 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/faq-meta-data', [MetaDataController::class, 'faqMeta'])->name('faqMeta');
     Route::put('/faq-meta-data', [MetaDataController::class, 'faqMetaMetaUpdate'])->name('faqMeta.update');
 
+    Route::get('/privacy-policy-meta-data', [MetaDataController::class, 'privacyMeta'])->name('privacyMeta');
+    Route::put('/privacy-policy-meta-data', [MetaDataController::class, 'privacyMetaUpdate'])->name('privacyMeta.update');
+
 });
