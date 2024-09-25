@@ -513,4 +513,7 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/contact-meta-data', [MetaDataController::class, 'contactMeta'])->name('contactMeta');
     Route::put('/contact-meta-data', [MetaDataController::class, 'contactMetaUpdate'])->name('contactMeta.update');
 
+    Route::get('/get-quotation-meta-data', [MetaDataController::class, 'getQuotationMeta'])->name('getQuotationMeta');
+    Route::put('/get-quotation-meta-data', [MetaDataController::class, 'getQuotationMetaUpdate'])->name('getQuotationMeta.update');
+
 });
