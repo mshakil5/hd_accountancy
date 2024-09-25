@@ -60,8 +60,10 @@ class FrontendController extends Controller
         $weWorkWithImages = WeWorkWithImage::orderBy('id', 'asc')->get();
 
         $googleReviews = GoogleReview::orderBy('id', 'asc')->get();
+
+        $meta = Master::where('name', 'Homepage Meta')->select('meta_title', 'meta_description', 'meta_image')->first();
         
-        return view('frontend.homepage.index', compact('homePageIntro', 'homeOurValues', 'timeSlots', 'packages', 'businessServices', 'businessValues', 'clientTestimonial', 'caseStudies', 'latestInsights', 'weWorkWithImages', 'googleReviews'));
+        return view('frontend.homepage.index', compact('homePageIntro', 'homeOurValues', 'timeSlots', 'packages', 'businessServices', 'businessValues', 'clientTestimonial', 'caseStudies', 'latestInsights', 'weWorkWithImages', 'googleReviews', 'meta'));
     }
 
     public function contact()
@@ -74,7 +76,10 @@ class FrontendController extends Controller
         }
 
         $turnoverRanges = TurnOver::select('price_range')->distinct()->where('status', 1)->get();
-        return view('frontend.contact.index', compact('contactHeading', 'turnoverRanges'));
+
+        $meta = Master::where('name', 'Contactpage Meta')->select('meta_title', 'meta_description', 'meta_image')->first();  
+
+        return view('frontend.contact.index', compact('contactHeading', 'turnoverRanges', 'meta'));
     }
 
     public function contactStore(Request $request)
@@ -118,7 +123,10 @@ class FrontendController extends Controller
         } else {
             $pricingHeading = null;
         }
-        return view('frontend.pricing.index', compact('pricingHeading', 'packages'));
+
+        $meta = Master::where('name', 'Servicepage Meta')->select('meta_title', 'meta_description', 'meta_image')->first();
+
+        return view('frontend.pricing.index', compact('pricingHeading', 'packages', 'meta'));
     }
 
     public function getQuotation()
@@ -129,7 +137,10 @@ class FrontendController extends Controller
         } else {
             $getQuotation = null;
         }
-        return view('frontend.get-quotation.index', compact('getQuotation'));
+
+        $meta = Master::where('name', 'Getquotationpage Meta')->select('meta_title', 'meta_description', 'meta_image')->first();  
+
+        return view('frontend.get-quotation.index', compact('getQuotation', 'meta'));
     }
 
     public function services()
@@ -184,7 +195,9 @@ class FrontendController extends Controller
                          ->orderBy('id', 'DESC')
                          ->get();
 
-        return view('frontend.services.index', compact('accountingSolution', 'taxSolution', 'otherSolution', 'businessStartUp', 'companySecretarial', 'bankruptcyLiquidation', 'taxSolutions', 'accountingSolutions'));
+        $meta = Master::where('name', 'Servicepage Meta')->select('meta_title', 'meta_description', 'meta_image')->first();                 
+
+        return view('frontend.services.index', compact('accountingSolution', 'taxSolution', 'otherSolution', 'businessStartUp', 'companySecretarial', 'bankruptcyLiquidation', 'taxSolutions', 'accountingSolutions', 'meta'));
     }
 
     public function ourTeam()
@@ -196,7 +209,10 @@ class FrontendController extends Controller
             $ourTeamPage = null;
         }
         $ourTeam = OurTeam::orderBy('id', 'asc')->get();
-        return view('frontend.our-team.index', compact('ourTeamPage', 'ourTeam'));
+
+        $meta = Master::where('name', 'Ourteampage Meta')->select('meta_title', 'meta_description', 'meta_image')->first();  
+
+        return view('frontend.our-team.index', compact('ourTeamPage', 'ourTeam', 'meta'));
     }
 
     public function career()
@@ -207,7 +223,9 @@ class FrontendController extends Controller
         } else {
             $career = null;
         }
-        return view('frontend.career.index', compact('career'));
+
+        $meta = Master::where('name', 'Careerpage Meta')->select('meta_title', 'meta_description', 'meta_image')->first();  
+        return view('frontend.career.index', compact('career', 'meta'));
     }
 
     public function faq()
@@ -221,7 +239,9 @@ class FrontendController extends Controller
 
         $faqQuestions = FaqQuestion::orderBy('id', 'asc')->get();
 
-        return view('frontend.faq.index', compact('faq', 'faqQuestions'));
+        $meta = Master::where('name', 'Faqpage Meta')->select('meta_title', 'meta_description', 'meta_image')->first(); 
+
+        return view('frontend.faq.index', compact('faq', 'faqQuestions', 'meta'));
     }
     
     public function booking()
@@ -390,7 +410,10 @@ class FrontendController extends Controller
         } else {
             $privacyPolicy = null;
         }
-        return view('frontend.privacy-policy.index', compact('privacyPolicy'));
+
+        $meta = Master::where('name', 'Privacypage Meta')->select('meta_title', 'meta_description', 'meta_image')->first(); 
+
+        return view('frontend.privacy-policy.index', compact('privacyPolicy', 'meta'));
     }
 
     public function termsConditions()
@@ -401,7 +424,9 @@ class FrontendController extends Controller
         } else {
             $termsConditions = null;
         }
-        return view('frontend.terms-conditions.index', compact('termsConditions'));
+
+        $meta = Master::where('name', 'Termspage Meta')->select('meta_title', 'meta_description', 'meta_image')->first();
+        return view('frontend.terms-conditions.index', compact('termsConditions', 'meta'));
     }
 
 }
