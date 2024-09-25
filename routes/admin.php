@@ -504,4 +504,7 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/homepage-meta-data', [MetaDataController::class, 'homeMeta'])->name('homeMeta');
     Route::put('/homepage-meta-data', [MetaDataController::class, 'homeMetaUpdate'])->name('homeMeta.update');
 
+    Route::get('/servicepage-meta-data', [MetaDataController::class, 'serviceMeta'])->name('serviceMeta');
+    Route::put('/servicepage-meta-data', [MetaDataController::class, 'serviceMetaUpdate'])->name('serviceMeta.update');
+
 });
