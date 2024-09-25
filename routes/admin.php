@@ -528,4 +528,7 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/privacy-policy-meta-data', [MetaDataController::class, 'privacyMeta'])->name('privacyMeta');
     Route::put('/privacy-policy-meta-data', [MetaDataController::class, 'privacyMetaUpdate'])->name('privacyMeta.update');
 
+    Route::get('/terms-meta-data', [MetaDataController::class, 'termsMeta'])->name('termsMeta');
+    Route::put('/terms-meta-data', [MetaDataController::class, 'termsMetaUpdate'])->name('termsMeta.update');
+
 });
