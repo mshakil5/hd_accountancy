@@ -516,4 +516,7 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/get-quotation-meta-data', [MetaDataController::class, 'getQuotationMeta'])->name('getQuotationMeta');
     Route::put('/get-quotation-meta-data', [MetaDataController::class, 'getQuotationMetaUpdate'])->name('getQuotationMeta.update');
 
+    Route::get('/career-meta-data', [MetaDataController::class, 'careerMeta'])->name('careerMeta');
+    Route::put('/career-meta-data', [MetaDataController::class, 'careerMetaUpdate'])->name('careerMeta.update');
+
 });
