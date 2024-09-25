@@ -519,4 +519,7 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/career-meta-data', [MetaDataController::class, 'careerMeta'])->name('careerMeta');
     Route::put('/career-meta-data', [MetaDataController::class, 'careerMetaUpdate'])->name('careerMeta.update');
 
+    Route::get('/our-team-meta-data', [MetaDataController::class, 'ourTeamMeta'])->name('ourTeamMeta');
+    Route::put('/our-team-meta-data', [MetaDataController::class, 'ourTeamMetaUpdate'])->name('ourTeamMeta.update');
+
 });
