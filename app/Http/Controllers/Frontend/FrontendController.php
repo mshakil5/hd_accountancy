@@ -192,7 +192,7 @@ class FrontendController extends Controller
                          ->get();
                          
         $accountingSolutions = BusinessValue::where('accounting_solution', 1)
-                         ->orderBy('id', 'DESC')
+                         ->orderBy('id', 'asc')
                          ->get();
 
         $meta = Master::where('name', 'Servicepage Meta')->select('meta_title', 'meta_description', 'meta_image')->first();                 

@@ -12,7 +12,7 @@
                         {!! $accountingSolution->long_description !!}
                     </p>
                     <div class="text-center mt-5">
-                        <a href="{{ route('frontend.getQuotation') }}#get-qoutation" class=" poppins-medium btn-theme rounded-3 fs-5">Book your Appointment</a>
+                        <a href="{{ route('frontend.getQuotation') }}#get-qoutation" class=" poppins-medium btn-theme rounded-3 fs-5" style="font-weight: bold;">Book your Appointment</a>
                     </div>
                 </div>
 
@@ -51,7 +51,7 @@
 
             <div class="col-lg-12 text-center mt-5">
                 <h2 class="txt-primary text-center text-capitalize poppins-bold mb-4">Thinking about setting up new Business?</h2>
-                <a href="{{ route('frontend.getQuotation') }}#get-qoutation" class="poppins-medium btn-theme rounded-3 fs-5">Book your Appointment</a>
+                <a href="{{ route('frontend.getQuotation') }}#get-qoutation" class="poppins-medium btn-theme rounded-3 fs-5" style="font-weight: bold;">Book your Appointment</a>
             </div>
         </div>
     </div>
@@ -71,7 +71,7 @@
                     </p>
 
                     <div class="text-center mt-5">
-                        <a href="{{ route('frontend.getQuotation') }}#get-qoutation" class=" poppins-medium btn-theme rounded-3 fs-5">Save Tax Now</a>
+                        <a href="{{ route('frontend.getQuotation') }}#get-qoutation" class=" poppins-medium btn-theme rounded-3 fs-5" style="font-weight: bold;">Save Tax Now</a>
                     </div>
                 </div>
 
@@ -113,7 +113,7 @@
                     </p>
 
                     <div class="text-center mt-5">
-                        <a href="{{ route('frontend.getQuotation') }}#get-qoutation" class=" poppins-medium btn-theme rounded-3 fs-5">Take To us Now</a>
+                        <a href="{{ route('frontend.getQuotation') }}#get-qoutation" class=" poppins-medium btn-theme rounded-3 fs-5" style="font-weight: bold;">Take To us Now</a>
                     </div>
                 </div>
 
