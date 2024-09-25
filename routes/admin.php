@@ -522,4 +522,7 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/our-team-meta-data', [MetaDataController::class, 'ourTeamMeta'])->name('ourTeamMeta');
     Route::put('/our-team-meta-data', [MetaDataController::class, 'ourTeamMetaUpdate'])->name('ourTeamMeta.update');
 
+    Route::get('/faq-meta-data', [MetaDataController::class, 'faqMeta'])->name('faqMeta');
+    Route::put('/faq-meta-data', [MetaDataController::class, 'faqMetaMetaUpdate'])->name('faqMeta.update');
+
 });
