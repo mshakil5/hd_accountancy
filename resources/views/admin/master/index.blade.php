@@ -87,7 +87,7 @@
                 </div>
                 <div class="col-sm-12">
                     <div class="form-group">
-                        <label>Meta Image</label>
+                        <label>Image</label>
                         <input type="file" id="meta_image" name="meta_image" class="form-control" onchange="previewMetaImage(event)" accept="image/*">
                     </div>
                     <img id="meta_image_preview" src="#" alt="Meta Image Preview" class="pt-3" style="max-width: 150px; height: auto; display: none;"/>

@@ -55,7 +55,7 @@
                         <label>Image</label>
                         <input type="file" id="image" name="image" class="form-control" onchange="previewMetaImage(event)" accept="image/*">
                     </div>
-                    <img id="image_preview" src="#" alt="Meta Image Preview" class="pt-3" style="max-width: 150px; height: auto; display: none;"/>
+                    <img id="image_preview" src="#" alt="Banner Image Preview" class="pt-3" style="max-width: 150px; height: auto; display: none;"/>
                 </div>
               </div>      
             </form>

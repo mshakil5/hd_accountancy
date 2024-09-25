@@ -40,6 +40,7 @@ use App\Http\Controllers\Admin\QuotationController;
 use App\Http\Controllers\Admin\CareerController;
 use App\Http\Controllers\Admin\FAQController;
 use App\Http\Controllers\Admin\GoogleReviewController;
+use App\Http\Controllers\Admin\MetaDataController;
 
 //Fallback route
 Route::fallback(function () {
@@ -498,5 +499,9 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/google-review/{id}/edit', [GoogleReviewController::class, 'edit']);
     Route::post('/google-review-update', [GoogleReviewController::class, 'update']);
     Route::get('/google-review/{id}', [GoogleReviewController::class, 'delete']);
+
+    //Meta Data update
+    Route::get('/homepage-meta-data', [MetaDataController::class, 'homeMeta'])->name('homeMeta');
+    Route::put('/homepage-meta-data', [MetaDataController::class, 'homeMetaUpdate'])->name('homeMeta.update');
 
 });

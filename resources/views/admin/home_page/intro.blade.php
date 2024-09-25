@@ -53,7 +53,7 @@
                   </div>
                   <div class="col-sm-12">
                     <div class="form-group">
-                      <label for="meta_image">Meta Image</label>
+                      <label for="meta_image">Banner Image</label>
                       <input type="file" id="meta_image" name="meta_image" class="form-control" onchange="previewMetaImage(event)" accept="image/*">
                       <img id="meta_image_preview" src="{{ old('meta_image', asset('images/meta_image/' . $homePageIntro->meta_image)) }}" alt="Meta Image Preview" class="pt-3" style="max-width: 250px; height: auto;"/>
                     </div>
