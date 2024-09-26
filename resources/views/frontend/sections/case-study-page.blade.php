@@ -14,13 +14,6 @@
 @foreach ($caseStudies as $caseStudy)
 <section class="mb-5">
     <div class="container mb-5 ">
-        <div class="row py-5 my-0 my-md-4">
-            <div class="col-md-12 py-5">
-                <div class="text-center">
-                    <h2 class="  txt-primary poppins-bold">{{$caseStudy->short_title}}</h2>
-                </div>
-            </div>
-        </div>
         {!!$caseStudy->long_description!!}
         <div class="col-md-12">
             <div class="text-center ">
@@ -29,4 +22,13 @@
         </div>
     </div>
 </section>
+@if (!($loop->last))
+<section class="py-3">
+    <div class="container-fluid my-5 bg-primary  ">
+        <div class="row py-5">
+            <div class="col-lg-12 py-3"></div>
+        </div>
+    </div>
+</section>
+@endif
 @endforeach
