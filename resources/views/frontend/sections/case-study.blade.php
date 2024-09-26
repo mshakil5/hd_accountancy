@@ -13,17 +13,19 @@
                 @foreach ($caseStudies as $item)
                 <div class="p-3">
                     <div class="row gx-3">
-                        <div class="col-lg-5">
-                            <img src="{{ asset($item->image) }}" class="img-fluid rounded-3 shadow" alt="" style="width: 450px; height: 300px; object-fit: cover;">
+                        <div class="col-lg-6">
+                            <img src="{{ asset($item->image) }}" class="img-fluid rounded-4 shadow" alt="" style="width: 100%; height: 250px; object-fit: cover;">
                         </div>
-                        <div class="col-lg-7 p-3">
-                            <div class="theme-b bg-primary rounded-4 p-3">
-                                <h3 class="poppins-bold text-light">{{ $item->short_title }}</h3>
-                                <small class="text-light">
-                                    {{ $item->long_title }}
-                                </small>
-                                <p class="text-end mb-0">
-                                    <a href="{{ route('frontend.caseStudy') }}" class=" poppins-medium btn-theme rounded-3">See More</a>
+                        <div class="col-lg-6 d-flex align-items-stretch">
+                            <div class="theme-b bg-primary rounded-4 p-3 d-flex flex-column justify-content-between" style="height: 250px;">
+                                <div>
+                                    <h3 class="poppins-bold text-light">{{ $item->short_title }}</h3>
+                                    <small class="text-light">
+                                        {{ $item->long_title }}
+                                    </small>
+                                </div>
+                                <p class="text-end mb-0 mt-auto">
+                                    <a href="{{ route('frontend.caseStudy') }}" class="poppins-medium btn-theme rounded-3" style="font-weight: bold;">See More</a>
                                 </p>
                             </div>
                         </div>
