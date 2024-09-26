@@ -17,7 +17,7 @@
     </div>
 </section>
 
-<section class="py-3 mt-3 bg-light">
+<section class="py-5 bg-light">
     <div class="container">
         <div class="row py-2 d-flex flex-wrap justify-content-center">
             @foreach($data as $testimonial)
