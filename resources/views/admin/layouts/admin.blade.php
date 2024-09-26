@@ -47,10 +47,13 @@
   
   <!-- header -->
 
-  <!-- Sidebar -->
-  
-   @include('admin.partials.sidebar')
-  <!-- Sidebar-->
+  @if (Auth::user() && Auth::user()->sidebar == 1)
+      <!-- Web Sidebar -->
+      @include('admin.partials.web_sidebar')
+  @else
+      <!-- Software Sidebar-->
+      @include('admin.partials.software_sidebar')   
+  @endif
 
   <!-- Main -->
   <main id="main" class="main mt-3">

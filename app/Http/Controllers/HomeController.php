@@ -296,4 +296,13 @@ class HomeController extends Controller
         } 
     }
 
+    public function toggleSidebar(Request $request)
+    {
+        $user = Auth::user();
+        $user->sidebar = $request->input('sidebar');
+        $user->save();
+
+        return redirect()->route('admin.home');
+    }
+
 }

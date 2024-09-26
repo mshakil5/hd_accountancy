@@ -531,4 +531,7 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/terms-meta-data', [MetaDataController::class, 'termsMeta'])->name('termsMeta');
     Route::put('/terms-meta-data', [MetaDataController::class, 'termsMetaUpdate'])->name('termsMeta.update');
 
+    //Toggle sidebar
+    Route::post('/toggle-sidebar', [HomeController::class, 'toggleSidebar'])->name('toggle.sidebar');
+
 });
