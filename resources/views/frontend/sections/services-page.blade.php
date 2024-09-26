@@ -41,10 +41,10 @@
                         <h6 class="txt-primary poppins-bold">{{ $solution->short_title }}</h6>
 
                         <p class="txt-primary justify">
-                            {!! $solution->long_description !!}
+                            {!! $solution->long_title !!}
                         </p>
 
-                        <a href="{{ route('frontend.getQuotation') }}#get-qoutation" class="mx-auto d-inline bg-primary text-light py-1 px-1 w-75 rounded-3">Get Started</a>
+                        <a href="{{ route('frontend.service.show', ['slug' => $solution->slug]) }}" class="mx-auto d-inline bg-primary text-light py-1 px-1 w-75 rounded-3">Get Started</a>
                     </div>
                 </div>
             @endforeach

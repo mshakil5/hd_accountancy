@@ -73,6 +73,9 @@ route::get('/business-services/{slug}', [FrontendController::class, 'businessSer
 // Latest Insight Details
 route::get('/latest-insights/{slug}', [FrontendController::class, 'latestInsightDetails'])->name('latest-insights.show');
 
+// Service Details
+Route::get('/service/{slug}', [FrontendController::class, 'showServiceDetails'])->name('frontend.service.show');
+
 // Cloud Accounting
 Route::get('/cloud-accounting', [FrontendController::class, 'cloudAccounting'])->name('frontend.cloudAccounting');
 

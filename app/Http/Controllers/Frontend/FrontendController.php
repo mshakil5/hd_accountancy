@@ -429,4 +429,10 @@ class FrontendController extends Controller
         return view('frontend.terms-conditions.index', compact('termsConditions', 'meta'));
     }
 
+    public function showServiceDetails($slug)
+    {
+        $service = BusinessValue::where('slug', $slug)->first();
+        return view('frontend.service-details.details', compact('service'));
+    }
+
 }
