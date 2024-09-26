@@ -93,6 +93,37 @@
     </div>
 </section>
 
+<style>
+    @media (max-width: 768px) {
+        .tab-customize {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+        }
+        .nav-item {
+            flex: 1;
+            display: flex;
+            align-items: stretch;
+        }
+        .nav-link {
+            width: 100%;
+            text-align: center;
+            padding: 10px 20px;
+            border-radius: 15px 15px 0 0 !important;
+            border: none;
+        }
+        .nav-link:hover,
+        .nav-link:focus {
+            color: #4154f1;
+        }
+        .nav-link.active {
+            background-color: #fff;
+            color: #4154f1;
+            border-bottom: 2px solid #4154f1;
+            border-radius: 15px 15px 0 0 !important;
+        }
+    }
+</style>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const radios = document.querySelectorAll('input[type="radio"]');

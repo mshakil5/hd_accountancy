@@ -79,5 +79,14 @@
         .col-lg-4 {
             width: 100%;
         }
+        .col-lg-3 {
+            flex: 1;
+        }
+    }
+
+    @media (max-width: 992px) {
+        .col-lg-3 {
+            flex: 1;
+        }
     }
 </style>

@@ -101,34 +101,33 @@
             </div>
             <div class="col-lg-6 ">
                 <div class="row g-3">
-                    <div class="col-6">
+                    <div class="col-12 col-md-6">
                         <div class="border p-3 d-flex align-items-center justify-content-center gap-3 hover-card">
                             <div class="poppins-bold display-3 txt-primary mb-0">1200</div>
                             <div class="poppins-medium txt-primary fw-semi-bold">Existing <br> Clients</div>
                         </div>
                     </div>
-                    <div class="col-6">
+                    <div class="col-12 col-md-6">
                         <div class="border p-3 d-flex align-items-center justify-content-center gap-3 hover-card">
                             <div class="poppins-bold display-3 txt-primary mb-0">7</div>
-                            <div class="poppins-medium txt-primary fw-bold">Years in <br> Operation  </div>
+                            <div class="poppins-medium txt-primary fw-bold">Years in <br> Operation</div>
                         </div>
                     </div>
-                    <div class="col-6">
+                    <div class="col-12 col-md-6">
                         <div class="border p-3 d-flex align-items-center justify-content-center gap-3 hover-card">
                             <div class="poppins-bold display-3 txt-primary mb-0">13</div>
                             <div class="poppins-medium txt-primary fw-bold">Full time <br> Employee</div>
                         </div>
                     </div>
-                    <div class="col-6">
+                    <div class="col-12 col-md-6">
                         <div class="border p-3 d-flex align-items-center justify-content-center gap-3 hover-card">
                             <div class="poppins-bold display-3 txt-primary mb-0">2</div>
                             <div class="poppins-medium txt-primary fw-bold">Office <br> Nationwide</div>
                         </div>
                     </div>
                     <div class="col-12 text-center mt-4">
-                       <a href="{{route('frontend.ourTeam')}}" class="btn btn-theme-outline d-inline w-50 mx-auto rounded-3 fs-6">Meet our team</a>
+                        <a href="{{route('frontend.ourTeam')}}" class="btn btn-theme-outline d-inline w-50 mx-auto rounded-3 fs-6">Meet our team</a>
                     </div>
-
                 </div>
             </div>
         </div>
@@ -155,12 +154,27 @@
         box-shadow: 0 0 0 1px #8095C580;
         background-color: #c7e968;
     }
-    /* .poppins-medium {
-        line-height: 24px;
-    } */
 
     .fw-semi-bold {
-    font-weight: 600;
+        font-weight: 600;
+    }
+
+    @media (max-width: 992px) {
+        .mobile-col {
+            width: 50%;
+            flex: 0 0 50%;
+        }
+        .col-lg-4 {
+            padding: 10px;
+        }
+        .package-card {
+            margin: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .row {
+            flex-direction: row;
+        }
     }
 
     @media (max-width: 768px) {
