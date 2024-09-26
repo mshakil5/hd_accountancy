@@ -17,29 +17,28 @@
     </div>
 </section>
 
-<section class="py-2 bg-light">
+<section class="py-3 mt-3 bg-light">
     <div class="container">
-        <div class="row py-2 col-lg-12 mx-auto py-3 d-flex flex-wrap justify-content-center">
-            <div class="testimonial">
-                @foreach($data as $testimonial)
-                    @if($testimonial->video)
-                        <div class="p-3">
+        <div class="row py-2 d-flex flex-wrap justify-content-center">
+            @foreach($data as $testimonial)
+                @if($testimonial->video)
+                    <div class="col-md-6 col-lg-4 p-3">
                         <img src="{{ asset($testimonial->thumbnail) }}" 
-                            class="rounded-4 video-thumbnail lazy-video-thumbnail" 
-                            data-video-src="{{ asset($testimonial->video) }}" 
-                            alt="Client Testimonial Thumbnail" 
-                            width="320" height="240" 
-                            style="object-fit: cover; width: 100%; height: 100%; border-radius: 0.5rem;">
-                            <h5 class="txt-primary poppins-medium my-2 ms-4 text-center text-md-start">{{ $testimonial->description }}</h5>
-                        </div>
-                    @endif
-                @endforeach
-            </div>
-            <div class="col-lg-12 text-center mt-5">
-                <h2 class="txt-primary text-center text-capitalize poppins-bold mb-4">If you want to grow your business</h2>
-                <a href="{{ route('frontend.getQuotation') }}" class="btn bg-primary py-2 px-5 poppins-bold text-white"style="border: none;"> Book your Appointment</a>
-
-            </div>
+                             class="rounded-4 video-thumbnail lazy-video-thumbnail" 
+                             data-video-src="{{ asset($testimonial->video) }}" 
+                             alt="Client Testimonial Thumbnail" 
+                             width="320" height="240" 
+                             style="object-fit: cover; width: 100%; height: auto; border-radius: 0.5rem;">
+                        <h5 class="txt-primary poppins-medium my-2 text-center">{{ $testimonial->description }}</h5>
+                    </div>
+                @endif
+            @endforeach
         </div>
+
+        <div class="col-lg-12 text-center mt-5">
+            <h2 class="txt-primary text-center text-capitalize poppins-bold mb-4">If you want to grow your business</h2>
+            <a href="{{ route('frontend.getQuotation') }}" class="btn bg-primary py-2 px-5 poppins-bold text-white" style="border: none;">Book your Appointment</a>
+        </div>
+        
     </div>
 </section>

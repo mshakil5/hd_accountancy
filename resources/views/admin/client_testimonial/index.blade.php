@@ -47,7 +47,7 @@
                 <div class="col-sm-12">
                   <div class="form-group">
                         <label>Description</label>
-                        <textarea class="form-control summernote" id="description" name="description" placeholder="Enter long description"></textarea>
+                        <textarea class="form-control" id="description" name="description" placeholder="Enter long description" rows="3"></textarea>
                     </div>
                 </div>
                 <div class="col-sm-12">
@@ -151,12 +151,6 @@
         output.style.display = 'block';
     }
 
-    $(document).ready(function() {
-        $('.summernote').summernote({
-            height: 200, 
-        });
-    });
-
     function previewVideo(event) {
         var video = document.getElementById('video');
         var videoPreview = document.getElementById('video_preview');
@@ -196,7 +190,7 @@
               var form_data = new FormData();
               form_data.append("title", $("#title").val());
               form_data.append("link", $("#link").val());
-              form_data.append("description", $("#description").summernote('code'));
+              form_data.append("description", $("#description").val());
               form_data.append("thumbnail", $("#thumbnail")[0].files[0]);
               form_data.append("video", $("#video")[0].files[0]);
               $.ajax({
@@ -230,7 +224,7 @@
               var form_data = new FormData();
               form_data.append("title", $("#title").val());
               form_data.append("link", $("#link").val());
-              form_data.append("description", $("#description").summernote('code'));
+              form_data.append("description", $("#description").val());
               form_data.append("thumbnail", $("#thumbnail")[0].files[0]);
               form_data.append("video", $("#video")[0].files[0]);
               form_data.append("codeid", $("#codeid").val());
@@ -304,7 +298,7 @@
       function populateForm(data){
         $("#link").val(data.link);
         $("#title").val(data.title);
-        $("#description").summernote('code', data.description);
+        $("#description").val(data.description);
         if (data.thumbnail) {
             $("#image_preview").attr("src", data.thumbnail).show();
         } else {
@@ -324,7 +318,6 @@
       function clearform(){
         $('#createThisForm')[0].reset();
         $("#addBtn").val('Create');
-        $("#description").summernote('code', '');
         $('#image_preview').attr('src', '#').hide();
         $('#video_preview').hide();
       }
