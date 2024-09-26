@@ -16,7 +16,7 @@
                         <div class="col-lg-6">
                             <img src="{{ asset($item->image) }}" class="img-fluid rounded-3 shadow" alt="">
                         </div>
-                        <div class="col-lg-6">
+                        <div class="col-lg-6 p-3">
                             <div class="theme-b bg-primary rounded-4 p-3">
                                 <h3 class="poppins-bold text-light">{{ $item->short_title }}</h3>
                                 <small class="text-light">

@@ -67,4 +67,17 @@
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
         border-color: #007bff;
     }
+
+    @media (max-width: 768px) {
+        .service-card {
+            margin: 10px;
+            padding: 15px;
+        }
+        .row {
+            flex-direction: column;
+        }
+        .col-lg-4 {
+            width: 100%;
+        }
+    }
 </style>

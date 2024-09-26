@@ -162,4 +162,24 @@
     .fw-semi-bold {
     font-weight: 600;
     }
+
+    @media (max-width: 768px) {
+        .package-card {
+            margin: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .row {
+            flex-direction: column;
+        }
+        .col-lg-4 {
+            width: 100%;
+        }
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+        .package-card:hover {
+            background-color: #c7e968;
+        }
+    }
 </style>
