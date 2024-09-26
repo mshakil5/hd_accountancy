@@ -13,10 +13,10 @@
                 @foreach ($caseStudies as $item)
                 <div class="p-3">
                     <div class="row gx-3">
-                        <div class="col-lg-6">
-                            <img src="{{ asset($item->image) }}" class="img-fluid rounded-3 shadow" alt="">
+                        <div class="col-lg-5">
+                            <img src="{{ asset($item->image) }}" class="img-fluid rounded-3 shadow" alt="" style="width: 450px; height: 300px; object-fit: cover;">
                         </div>
-                        <div class="col-lg-6 p-3">
+                        <div class="col-lg-7 p-3">
                             <div class="theme-b bg-primary rounded-4 p-3">
                                 <h3 class="poppins-bold text-light">{{ $item->short_title }}</h3>
                                 <small class="text-light">
