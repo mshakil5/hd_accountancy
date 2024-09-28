@@ -150,7 +150,7 @@
         outline: none;
         cursor: pointer;
         position: relative;
-        transition: all 0.2s ease;
+        transition: all 0.1s ease;
     }
 
     input.largerRadiobox:checked {

@@ -51,7 +51,7 @@ class FrontendController extends Controller
         $businessValues = BusinessValue::where('accounting_solution', 0)
         ->where('tax_solution', 0)->orderBy('id', 'asc')->get();
 
-        $clientTestimonial = ClientTestimonial::orderBy('id', 'desc')->take(5)->get();
+        $clientTestimonials = ClientTestimonial::orderBy('id', 'desc')->take(5)->get();
 
         $caseStudies = CaseStudy::orderBy('id', 'desc')->get();
 
@@ -63,7 +63,7 @@ class FrontendController extends Controller
 
         $meta = Master::where('name', 'Homepage Meta')->select('meta_title', 'meta_description', 'meta_image')->first();
         
-        return view('frontend.homepage.index', compact('homePageIntro', 'homeOurValues', 'timeSlots', 'packages', 'businessServices', 'businessValues', 'clientTestimonial', 'caseStudies', 'latestInsights', 'weWorkWithImages', 'googleReviews', 'meta'));
+        return view('frontend.homepage.index', compact('homePageIntro', 'homeOurValues', 'timeSlots', 'packages', 'businessServices', 'businessValues', 'clientTestimonials', 'caseStudies', 'latestInsights', 'weWorkWithImages', 'googleReviews', 'meta'));
     }
 
     public function contact()

@@ -30,7 +30,7 @@
         </div>
 
         <p align="center" class="mt-4">
-            <a href="" class="mx-auto">
+            <a href="https://maps.app.goo.gl/YdwshR7HabGbGg9N9" class="mx-auto" target="_blank">
                 <img src="{{ asset('assets/frontend/images/Google Review.png') }}" alt="">
             </a>
         </p>
