@@ -11,7 +11,7 @@
         <div class="testimonial">
             @foreach($clientTestimonials as $testimonial)
                 @if($testimonial->video)
-                    <div class="p-3">
+                    <div class="p-4">
                         <img src="{{ asset($testimonial->thumbnail) }}" 
                             class="rounded-4 video-thumbnail lazy-video-thumbnail" 
                             data-video-src="{{ asset($testimonial->video) }}" 
