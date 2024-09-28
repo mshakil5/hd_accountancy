@@ -10,7 +10,7 @@ class TimeslotController extends Controller
 {
     public function index()
     {
-        $data = TimeSlot::orderBy('id', 'DESC')->get();
+        $data = TimeSlot::orderBy('start_time', 'asc')->get();
         return view('admin.timeslot.index', compact('data'));
     }
 
