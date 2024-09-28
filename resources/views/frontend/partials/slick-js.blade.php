@@ -11,7 +11,8 @@
                     slidesToShow: 1,
                     slidesToScroll: 1,
                     infinite: true,
-                    // dots: true
+                    dots: true,
+                    arrows: false,
                 }
             },
             {
@@ -39,6 +40,8 @@
     });
     $('.testimonial').slick({
         // dots: true,
+        centerMode: true,
+        initialSlide: 1,
         infinite: false,
         speed: 300,
         slidesToShow: 3,
@@ -49,6 +52,7 @@
                     slidesToShow: 3,
                     slidesToScroll: 3,
                     infinite: true,
+                    initialSlide: 1,
                     // dots: true
                 }
             },
@@ -59,6 +63,7 @@
                     slidesToScroll: 1,
                     dots: true,
                     arrows: false,
+                    initialSlide: 1,
                 }
             },
             {
@@ -68,6 +73,7 @@
                     slidesToScroll: 1,
                     dots: true,
                     arrows: false,
+                    initialSlide: 1,
                 }
             }
             // You can unslick at a given breakpoint now by adding:

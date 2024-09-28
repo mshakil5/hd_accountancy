@@ -82,16 +82,16 @@
                                     <h6 class="txt-primary poppins-bold">How would you like to meet?</h6>
                                     <div class="custom-select-container">
                                         <label class="custom-radio">
-                                            <input type="radio" name="meet" value="Video Conference" class="largerRadiobox">
-                                            <span>Video Conference</span>
+                                        <input type="radio" name="meet" value="Video Conference" class="largerRadiobox">
+                                        <span>Video Conference</span>
                                         </label>
                                         <label class="custom-radio">
-                                            <input type="radio" name="meet" value="Phone" class="largerRadiobox">
-                                            <span>Phone</span>
+                                        <input type="radio" name="meet" value="Phone" class="largerRadiobox">
+                                        <span>Phone</span>
                                         </label>
                                         <label class="custom-radio">
-                                            <input type="radio" name="meet" value="Face to face" class="largerRadiobox">
-                                            <span>Face to face</span>
+                                        <input type="radio" name="meet" value="Face to face" class="largerRadiobox">
+                                        <span>Face to face</span>
                                         </label>
                                     </div>
                                 </div>
@@ -137,24 +137,36 @@
     </div>
 </div>
 
-<!-- <style>
+<style>
     input.largerRadiobox {
-        width: 25px;
-        height: 25px;
+        width: 24px;
+        height: 24px;
         background-color: white;
-        border-radius: 5%;
+        border-radius: 5%; 
         vertical-align: middle;
-        border: 1px solid #9c9999;
+        border: 2px solid #9c9999;
         appearance: none;
         -webkit-appearance: none;
         outline: none;
         cursor: pointer;
+        position: relative;
+        transition: all 0.2s ease;
     }
 
-    .largerRadiobox:checked {
-        background-color:#193d5b;
-}
-</style> -->
+    input.largerRadiobox:checked {
+        background-color: #193d5b;
+        border-color: #193d5b;
+    }
+
+    input.largerRadiobox:checked::before {
+        content: '\2713';
+        color: white;
+        font-size: 18px;
+        position: absolute;
+        top: -2px;
+        left: 4px;
+    }
+</style>
 
 <script>
     document.getElementById('submitBtn').addEventListener('click', function() {
