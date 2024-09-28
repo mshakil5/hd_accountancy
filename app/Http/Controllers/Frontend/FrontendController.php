@@ -261,40 +261,10 @@ class FrontendController extends Controller
         return view('frontend.case-study.index', compact('caseStudy', 'caseStudies'));
     }
 
-    public function cloudAccounting()
-    {
-        return view('frontend.cloud-accounting.index');
-    }
-
-    public function digitalBookkeeping()
-    {
-        return view('frontend.digital-bookkeeping.index');
-    }
-
-    public function growBusiness()
-    {
-        return view('frontend.grow-business.index');
-    }
-
-    public function monthlyAccountManagement()
-    {
-        return view('frontend.monthly-account-management.index');
-    }
-
-    public function payroll()
-    {
-        return view('frontend.payroll.index');
-    }
-
     public function videoTestimonial()
     {
         $data = ClientTestimonial::orderBy('id', 'DESC')->get();
         return view('frontend.video-testimonial.index', compact('data'));
-    }
-
-    public function yearEndAccount()
-    {
-        return view('frontend.year-end-account.index');
     }
 
     public function storeSchedule(Request $request)

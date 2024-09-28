@@ -76,26 +76,8 @@ route::get('/latest-insights/{slug}', [FrontendController::class, 'latestInsight
 // Service Details
 Route::get('/service/{slug}', [FrontendController::class, 'showServiceDetails'])->name('frontend.service.show');
 
-// Cloud Accounting
-Route::get('/cloud-accounting', [FrontendController::class, 'cloudAccounting'])->name('frontend.cloudAccounting');
-
-// Digital Bookkeeping
-Route::get('/digital-bookkeeping', [FrontendController::class, 'digitalBookkeeping'])->name('frontend.digitalBookkeeping');
-
-// Grow Business
-Route::get('/grow-business', [FrontendController::class, 'growBusiness'])->name('frontend.growBusiness');
-
-// Monthly Account Management
-Route::get('/monthly-account-management', [FrontendController::class, 'monthlyAccountManagement'])->name('frontend.monthlyAccountManagement');
-
-// Grow Business
-Route::get('/payroll', [FrontendController::class, 'payroll'])->name('frontend.payroll');
-
 // Video Testimonial
 Route::get('/video-testimonials', [FrontendController::class, 'videoTestimonial'])->name('frontend.videoTestimonial');
-
-// Year End Account
-Route::get('/year-end-account', [FrontendController::class, 'yearEndAccount'])->name('frontend.yearEndAccount');
 
 // FAQ
 Route::get('/faq', [FrontendController::class, 'faq'])->name('frontend.faq');
