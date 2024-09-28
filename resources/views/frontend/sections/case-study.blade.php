@@ -12,13 +12,13 @@
                 <div class="p-3">
                     <div class="row gx-3">
                         <div class="col-lg-6 col-md-12">
-                            <img src="{{ asset($item->image) }}" class="img-fluid rounded-4 shadow" alt="" style="width: 100%; height: 250px; object-fit: cover;">
+                            <img src="{{ asset($item->image) }}" class="img-fluid rounded-4 shadow" alt="" style="width: 100%; height: 350px; object-fit: cover;">
                         </div>
                         <div class="col-lg-6 col-md-12 d-flex align-items-stretch mt-3 mt-lg-0">
                             <div class="theme-b bg-primary rounded-4 p-3 d-flex flex-column justify-content-between">
                                 <div>
                                     <h3 class="poppins-bold text-light">{{ $item->short_title }}</h3>
-                                    <small class="text-light">{{ $item->long_title }}</small>
+                                    <small class="text-light" style="display: block; text-align: justify; font-size: 18px;">{{ $item->long_title }}</small>
                                 </div>
                                 <p class="text-end mb-0 mt-auto">
                                     <a href="{{ route('frontend.caseStudy') }}" class="poppins-medium btn-theme rounded-3" style="font-weight: bold;">See More</a>
