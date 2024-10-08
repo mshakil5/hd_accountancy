@@ -53,10 +53,22 @@
                                         $features = \App\Models\PackageFeature::whereIn('id', $featureIds)->select('name', 'is_checked')->get()->toArray();
                                     @endphp
                                     <div class="mb-2">
-                                        
-                                        <input @if($key === 0) checked @endif type="radio" class="timepick invisible" name="timepick-{{ $index }}" id="turnover-{{ $turnover->id }}" data-price="{{ $turnover->price }}" data-index="{{ $index }}" data-features="{{ json_encode($features) }}">
+                                    @php
+                                        $isChecked = false;
+                                        foreach($package->turnOvers as $k => $t) {
+                                            if($t->status == 1) {
+                                                $isChecked = ($k == $key);
+                                                break;
+                                            }
+                                        }
+                                    @endphp
+                                    <input @if($isChecked) checked @endif type="radio" class="timepick invisible" name="timepick-{{ $index }}" id="turnover-{{ $turnover->id }}" data-price="{{ $turnover->price }}" data-index="{{ $index }}" data-features="{{ json_encode($features) }}">
+                                    @if($turnover->status == 0)
+                                        <label for="turnover-{{ $turnover->id }}" style="pointer-events: none; opacity: 0.75;">{{ $turnover->price_range }}</label>
+                                    @else
                                         <label for="turnover-{{ $turnover->id }}">{{ $turnover->price_range }}</label>
-                                    </div>
+                                    @endif
+                                </div>
                                     @endforeach
                                     <div class="mb-2">
                                         <a href="{{ route('frontend.getQuotation') }}#get-qoutation" class="btn bg-primary text-light mx-auto rounded-3" style="border: none;">Get Customized Quote</a>
@@ -68,20 +80,27 @@
                             <div class="col-lg-12">
                                 <h5 class="txt-primary poppins-medium my-4 ms-4 text-center text-md-start">You can customize your requirements from below</h5>
                                 <ul class="list-theme txt-primary align-items-center" id="feature-list-{{ $index }}">
-                                    @if($turnover->features)
-                                    @foreach($features as $feature)
-                                    <li class="border border-start-0 border-end-0 border-bottom-0 py-3">
-                                        <div class="d-flex justify-content-between">
-                                            {{ $feature['name'] }}
-                                            <span class="float-end">
-                                                @if($feature['is_checked'] === 1)
-                                                <iconify-icon class="fs-3" icon="icon-park-outline:check-one"></iconify-icon>
-                                                @endif
-                                            </span>
-                                        </div>
-                                    </li>
+                                    @foreach($package->turnOvers as $turnover)
+                                        @if($turnover->status == 1)
+                                            @php
+                                                $featureIds = explode(',', trim($turnover->features, '"'));
+                                                $features = \App\Models\PackageFeature::whereIn('id', $featureIds)->select('name', 'is_checked')->get()->toArray();
+                                            @endphp
+                                            @foreach($features as $feature)
+                                                <li class="border border-start-0 border-end-0 border-bottom-0 py-3">
+                                                    <div class="d-flex justify-content-between">
+                                                        {{ $feature['name'] }}
+                                                        <span class="float-end">
+                                                            @if($feature['is_checked'] === 1)
+                                                                <iconify-icon class="fs-3" icon="icon-park-outline:check-one"></iconify-icon>
+                                                            @endif
+                                                        </span>
+                                                    </div>
+                                                </li>
+                                            @endforeach
+                                            @break
+                                        @endif
                                     @endforeach
-                                    @endif
                                 </ul>
                             </div>
                         </div>
