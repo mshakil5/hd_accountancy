@@ -6,7 +6,7 @@
 
             </div>
             <div class="col-8 mx-auto">
-                <p class="mt-3 txt-primary text-capitalize" style="font-size: 20px; font-weight: 400;">We are incredibly grateful to our clients for their unwavering trust, loyalty, and confidence over the years. But don’t just take our word for it—check out some of our client testimonials and 60+ five-star Google reviews and see what they say</p>
+                <p class="mt-3 txt-primary text-capitalize text-justify-sm" style="font-size: 20px; font-weight: 400;">We are incredibly grateful to our clients for their unwavering trust, loyalty, and confidence over the years. But don’t just take our word for it—check out some of our client testimonials and 60+ five-star Google reviews and see what they say</p>
             </div>
             
 
@@ -36,3 +36,14 @@
         </p>
     </div>
 </section>
+
+<style>
+    @media (max-width: 576px) {
+        .text-justify-sm {
+            font-size: 15px;
+        }
+        .col-8 {
+            width: 83.3333%;
+        }
+    }
+</style>

@@ -1,5 +1,5 @@
 <section>
-    <div class="  mb-5  position-relative">
+    <div class="mb-5 position-relative">
         <div class="section-title text-center">
             <div class="txt-primary position-relative h2 lh-1 text-center poppins-bold mx-auto d-inline" style="background-color: #f7f8fe;">
                 “WE DON'T JUST BALANCE BOOKS
@@ -89,4 +89,18 @@
             flex: 1;
         }
     }
+
+
+    @media (max-width: 576px) {
+        .txt-primary {
+            display: block !important;
+        }
+    }
+
+    @media (min-width: 577px) {
+        .txt-primary {
+            display: inline !important;
+        }
+    }
+
 </style>
