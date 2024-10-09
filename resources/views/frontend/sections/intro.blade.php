@@ -8,6 +8,7 @@
                     <br>
                     {{ $homePageIntro->long_title }}
                 </h1>
+                    <br>
                     <p class="text-center text-md-start txt-primary ">
                     {!! $homePageIntro->long_description !!}
                     </p>
