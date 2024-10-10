@@ -11,7 +11,7 @@
             @foreach($latestInsights as $item)
                 <div class="col-lg-4">
                     <a href="{{ route('latest-insights.show', $item->slug) }}">
-                        <img src="{{ asset($item->image) }}" class="img-fluid">
+                        <img src="{{ asset($item->image) }}" class="img-fluid mb-3">
                         <h5 class="poppins-medium txt-primary my-3">
                             {{ $item->short_title }}
                         </h5>
