@@ -42,6 +42,7 @@ use App\Http\Controllers\Admin\FAQController;
 use App\Http\Controllers\Admin\GoogleReviewController;
 use App\Http\Controllers\Admin\MetaDataController;
 use App\Http\Controllers\Admin\ContactMailController;
+use App\Http\Controllers\Admin\MailContentController;
 
 //Fallback route
 Route::fallback(function () {
@@ -538,5 +539,10 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     //Contact Mail
     Route::get('/contact-mail', [ContactMailController::class, 'contactMail'])->name('contactMail');
     Route::post('/contact-mail', [ContactMailController::class, 'contactMailUpdate'])->name('contactMail.update');
+
+    // mail content
+    Route::get('/mail-content', [MailContentController::class, 'index'])->name('admin.mail-content');
+    Route::get('/mail-content/{id}/edit', [MailContentController::class, 'edit']);
+    Route::put('/mail-content/{id}', [MailContentController::class, 'update']);
 
 });
