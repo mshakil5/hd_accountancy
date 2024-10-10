@@ -44,6 +44,13 @@
                   data-callback="onCaptchaSuccess">
               </div>
           </div>
+
+            <div id="loader3" class="text-center" style="display: none;">
+                  <div class="spinner-border text-primary" role="status">
+                      <span class="visually-hidden">Loading...</span>
+                  </div>
+            </div>
+
           <div class="col-lg-12 text-center">
            <button id="submitBtn" type="submit" class="btn  bg-primary text-light py-1 px-3">Submit</button>
           </div>
@@ -124,6 +131,10 @@
       data: formData,
       headers: {
         'X-CSRF-TOKEN': csrfToken
+      },
+
+      beforeSend: function() {
+          document.getElementById('loader3').style.display = 'block';
       },
       contentType: false,
       processData: false,

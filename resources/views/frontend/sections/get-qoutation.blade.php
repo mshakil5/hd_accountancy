@@ -84,6 +84,13 @@
                      <label for="bank_accounts" class="txt-primary">How many bank accounts do you have?<span class="text-danger">*</span></label>
                      <input type="number" id="bank_accounts" name="bank_accounts" class="form-control">
                   </div>
+
+                  <div id="loader2" class="text-center" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                           <span class="visually-hidden">Loading...</span>
+                        </div>
+                  </div>
+
                   <div class="col-lg-12 text-center my-4">
                      <button type="button" id="submitForm" class="btn bg-primary text-light py-1 px-3">Submit</button>
                   </div>
@@ -134,8 +141,12 @@
             headers: {
                'X-CSRF-TOKEN': csrfToken
             },
+            beforeSend: function() {
+               document.getElementById('loader2').style.display = 'block';
+            },
             success: function(data) {
                if (data.success) {
+                  document.getElementById('loader2').style.display = 'none';
                   swal({
                      icon: 'success',
                      title: 'Success',
@@ -144,6 +155,7 @@
                   });
                   document.getElementById('contactForm').reset();
                } else {
+                  document.getElementById('loader2').style.display = 'none';
                   swal({
                      icon: 'error',
                      title: 'Submission Error',

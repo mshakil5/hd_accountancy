@@ -119,6 +119,13 @@
                                         </label>
                                         <textarea name="discussion" id="discussion" class="form-control" style="height: 160px;" placeholder="Describe your meeting agenda"></textarea>
                                     </div>
+
+                                    <div id="loader1" class="text-center" style="display: none;">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                    </div>
+
                                     <div class="col-lg-12 text-center">
                                         <button type="button" id="submitBtn" class="btn btn-theme-outline text-light py-2 px-3">Schedule your meeting</button>
                                     </div>
@@ -245,7 +252,11 @@
             headers: {
                 'X-CSRF-TOKEN': csrfToken
             },
+            beforeSend: function() {
+                document.getElementById('loader1').style.display = 'block';
+            },
             success: function(response) {
+                document.getElementById('loader1').style.display = 'none';
                 swal({
                     icon: 'success',
                     title: 'Success',
@@ -265,6 +276,7 @@
                 $('#discussion').val('');
             },
             error: function(xhr, status, error) {
+                document.getElementById('loader1').style.display = 'none';
 
                 // console.log(xhr.responseText);
                 swal({

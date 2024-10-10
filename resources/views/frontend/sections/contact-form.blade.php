@@ -121,6 +121,12 @@
               </div>
           </div>
 
+          <div id="loader" class="text-center" style="display: none;">
+              <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Loading...</span>
+              </div>
+          </div>
+
           <div class="col-lg-12 text-center">
             <button type="submit" id="submit_button" class="btn bg-primary text-light py-1 px-3" disabled>Submit</button>
           </div>
@@ -130,6 +136,12 @@
     </div>
   </div>
 </section>
+
+<script>
+    document.querySelector('form').addEventListener('submit', function() {
+        document.getElementById('loader').style.display = 'block';
+    });
+</script>
 
 <script>
   document.addEventListener('DOMContentLoaded', function () {
