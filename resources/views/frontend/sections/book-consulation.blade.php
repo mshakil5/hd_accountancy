@@ -176,15 +176,49 @@
         let meet_type = document.querySelector('input[name="meet"]:checked');
         let first_name = document.querySelector('input[name="first_name"]').value;
         let last_name = document.querySelector('input[name="last_name"]').value;
-        let email = document.querySelector('input[name="email"]').value;
-        let phone = document.querySelector('input[name="phone"]').value;
-        let discussion = document.querySelector('textarea[name="discussion"]').value;
+        let email = document.getElementById('email').value;
+        let phone = document.getElementById('phone').value;
+        let discussion = document.getElementById('discussion').value;
+
+        let phoneRegex = /^44[0-9\s-]{9,10}$/;
+        let emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        let today = new Date().toISOString().split('T')[0];
 
         if (!date || !time || !time_zone || !meet_type || !first_name || !last_name || !email || !phone || !discussion) {
             swal({
                 icon: 'warning',
                 title: 'Error',
                 text: 'Please fill out all required fields.',
+                button: 'OK'
+            });
+            return;
+        }
+
+        if (date < today) {
+            swal({
+                icon: 'warning',
+                title: 'Invalid Date',
+                text: 'The selected date must be today or a future date.',
+                button: 'OK'
+            });
+            return;
+        }
+
+        if (!emailRegex.test(email)) {
+            swal({
+                icon: 'warning',
+                title: 'Invalid Email',
+                text: 'Please enter a valid email address.',
+                button: 'OK'
+            });
+            return;
+        }
+
+        if (!phoneRegex.test(phone)) {
+            swal({
+                icon: 'warning',
+                title: 'Invalid Phone Number',
+                text: 'The phone number must be in UK format and start with 44, followed by 9 or 10 digits.',
                 button: 'OK'
             });
             return;
@@ -231,6 +265,8 @@
                 $('#discussion').val('');
             },
             error: function(xhr, status, error) {
+
+                // console.log(xhr.responseText);
                 swal({
                     icon: 'error',
                     title: 'Error',

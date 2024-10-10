@@ -26,6 +26,7 @@ use App\Models\TurnOver;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\QuotationMail;
 use App\Mail\ContactMail;
+use App\Mail\ScheduleMail;
 
 class FrontendController extends Controller
 {
@@ -299,6 +300,10 @@ class FrontendController extends Controller
         ]);
 
         ClientSchedule::create($validatedData);
+
+        Mail::to('admin@gmail.com')->send(new ScheduleMail($validatedData));
+
+        Mail::to($validatedData['email'])->send(new ScheduleMail($validatedData));
 
         return response()->json(['message' => 'Meeting scheduled successfully!']);
     }
