@@ -25,6 +25,7 @@ use App\Models\GoogleReview;
 use App\Models\TurnOver;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\QuotationMail;
+use App\Mail\ContactMail;
 
 class FrontendController extends Controller
 {
@@ -111,6 +112,20 @@ class FrontendController extends Controller
             'interested_service' => json_encode($request->input('interested_service')),
             'message' => $request->input('message')
         ]);
+
+        $contactData = [
+            'name' => $request->input('name'),
+            'email' => $request->input('email'),
+            'phone' => $request->input('phone'),
+            'business_name' => $request->input('business_name'),
+            'yearly_turnover' => $request->input('yearly_turnover'),
+            'interested_service' => json_encode($request->input('interested_service')),
+            'message' => $request->input('message'),
+        ];
+
+        Mail::to('admin@gmail.com')->send(new ContactMail($contactData));
+
+        Mail::to($request->input('email'))->send(new ContactMail($contactData));
 
         return redirect()->back()->with('success', 'Message sent successfully!');
     }
