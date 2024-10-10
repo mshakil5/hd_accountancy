@@ -47,7 +47,7 @@
                         <img src="{{ asset('/' . $businessValue->image) }}" width="70">
                     </div>
                     <br> <br>
-                    <h5 class="d-block txt-primary"><b>{{ $businessValue->short_title }} </b></h5>
+                    <h5 class="d-block txt-primary"><b>{{ $businessValue->short_title }} </b></h5> <br>
                     <small class="txt-primary my-3" style="text-align: justify;">{!! $businessValue->long_description !!}</small>
                 </div>
             </div>
