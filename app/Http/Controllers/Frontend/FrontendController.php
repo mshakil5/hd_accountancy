@@ -124,7 +124,7 @@ class FrontendController extends Controller
             'message' => $request->input('message'),
         ];
 
-        Mail::to('admin@gmail.com')->send(new ContactMail($contactData));
+        Mail::to('towhid10@gmail.com')->send(new ContactMail($contactData));
 
         Mail::to($request->input('email'))->send(new ContactMail($contactData));
 
@@ -301,7 +301,7 @@ class FrontendController extends Controller
 
         ClientSchedule::create($validatedData);
 
-        Mail::to('admin@gmail.com')->send(new ScheduleMail($validatedData));
+        Mail::to('towhid10@gmail.com')->send(new ScheduleMail($validatedData));
 
         Mail::to($validatedData['email'])->send(new ScheduleMail($validatedData));
 
@@ -342,7 +342,7 @@ class FrontendController extends Controller
             'created_by' => auth()->id() ?? null,
         ]);
 
-        Mail::to('admin@gmail.com')->send(new QuotationMail($quotation));
+        Mail::to('towhid10@gmail.com')->send(new QuotationMail($quotation));
 
         Mail::to($request->input('email'))->send(new QuotationMail($quotation));
 
