@@ -3,6 +3,7 @@
         <div class="row text-center">
             <div class="title-with-sub-title" style="background-color: #f7f8fe;">
                 <h2 class="poppins-bold txt-primary text-capitalize">clients testimonials</h2>
+                <br>
                 <h5 class="poppins-medium txt-primary txt-primary text-capitalize">Your voice, Our Inspirations</h5>
             </div>
         </div>
