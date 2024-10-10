@@ -23,6 +23,8 @@ use App\Models\WeWorkWithImage;
 use App\Models\FaqQuestion;
 use App\Models\GoogleReview;
 use App\Models\TurnOver;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\QuotationMail;
 
 class FrontendController extends Controller
 {
@@ -319,6 +321,10 @@ class FrontendController extends Controller
             'status' => 1,
             'created_by' => auth()->id() ?? null,
         ]);
+
+        Mail::to('admin@gmail.com')->send(new QuotationMail($quotation));
+
+        Mail::to($request->input('email'))->send(new QuotationMail($quotation));
 
         return response()->json(['success' => true]);
     }
