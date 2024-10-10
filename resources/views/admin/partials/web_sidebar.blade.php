@@ -342,6 +342,13 @@
             </ul>
         </li>
 
+        <li class="nav-item {{ request()->routeIs('contactMail') ? 'active' : '' }}">
+            <a class="nav-link collapsed" href="{{ route('contactMail') }}">
+                <i class="fas fa-envelope"></i>
+                <span>Contact Mail</span>
+            </a>
+        </li>
+
         <li class="nav-item">
             <a class="nav-link collapsed" href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                 <i class="bi bi-box-arrow-right"></i>

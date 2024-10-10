@@ -41,6 +41,7 @@ use App\Http\Controllers\Admin\CareerController;
 use App\Http\Controllers\Admin\FAQController;
 use App\Http\Controllers\Admin\GoogleReviewController;
 use App\Http\Controllers\Admin\MetaDataController;
+use App\Http\Controllers\Admin\ContactMailController;
 
 //Fallback route
 Route::fallback(function () {
@@ -533,5 +534,9 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
 
     //Toggle sidebar
     Route::post('/toggle-sidebar', [HomeController::class, 'toggleSidebar'])->name('toggle.sidebar');
+
+    //Contact Mail
+    Route::get('/contact-mail', [ContactMailController::class, 'contactMail'])->name('contactMail');
+    Route::post('/contact-mail', [ContactMailController::class, 'contactMailUpdate'])->name('contactMail.update');
 
 });
