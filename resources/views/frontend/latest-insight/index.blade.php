@@ -21,6 +21,7 @@
                             {{ $item->short_title }}
                         </h5>
                     </a>
+                    <br>
                     <p class="txt-primary">
                         {{ $item->short_description }}
                     </p>
