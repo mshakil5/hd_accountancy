@@ -23,10 +23,11 @@ use App\Models\WeWorkWithImage;
 use App\Models\FaqQuestion;
 use App\Models\GoogleReview;
 use App\Models\TurnOver;
-use Illuminate\Support\Facades\Mail;
+use App\Models\ContactMail;
 use App\Mail\QuotationMail;
-use App\Mail\ContactMail;
+use App\Mail\ContactFormMail;
 use App\Mail\ScheduleMail;
+use Illuminate\Support\Facades\Mail;
 
 class FrontendController extends Controller
 {
@@ -124,9 +125,11 @@ class FrontendController extends Controller
             'message' => $request->input('message'),
         ];
 
-        Mail::to('towhid10@gmail.com')->send(new ContactMail($contactData));
+        $mail = ContactMail::first();
 
-        Mail::to($request->input('email'))->send(new ContactMail($contactData));
+        Mail::to($mail->email)->send(new ContactFormMail($contactData));
+
+        Mail::to($request->input('email'))->send(new ContactFormMail($contactData));
 
         return redirect()->back()->with('success', 'Message sent successfully!');
     }
@@ -301,7 +304,9 @@ class FrontendController extends Controller
 
         ClientSchedule::create($validatedData);
 
-        Mail::to('towhid10@gmail.com')->send(new ScheduleMail($validatedData));
+        $mail = ContactMail::first();
+
+        Mail::to($mail->email)->send(new ScheduleMail($validatedData));
 
         Mail::to($validatedData['email'])->send(new ScheduleMail($validatedData));
 
@@ -342,7 +347,9 @@ class FrontendController extends Controller
             'created_by' => auth()->id() ?? null,
         ]);
 
-        Mail::to('towhid10@gmail.com')->send(new QuotationMail($quotation));
+        $mail = ContactMail::first();
+
+        Mail::to($mail->email)->send(new QuotationMail($quotation));
 
         Mail::to($request->input('email'))->send(new QuotationMail($quotation));
 
