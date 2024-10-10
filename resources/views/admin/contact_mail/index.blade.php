@@ -32,16 +32,6 @@
                       @enderror
                     </div>
                   </div>
-
-                  <div class="col-sm-12">
-                    <div class="form-group">
-                      <label for="status">Status</label>
-                      <select name="status" id="status" class="form-control">
-                        <option value="1" {{ $contactMail->status ? 'selected' : '' }}>Active</option>
-                        <option value="0" {{ !$contactMail->status ? 'selected' : '' }}>Inactive</option>
-                      </select>
-                    </div>
-                  </div>
                 </div>
               </form>
             @else

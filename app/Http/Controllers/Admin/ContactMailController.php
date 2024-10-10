@@ -18,13 +18,11 @@ class ContactMailController extends Controller
     {
         $request->validate([
             'email' => 'required',
-            'status' => 'boolean',
         ]);
 
         $contactMail = ContactMail::findOrFail($request->id);
         $contactMail->update([
             'email' => $request->email,
-            'status' => $request->status,
         ]);
 
         return redirect()->back()->with('success', 'Contact mail updated successfully.');
