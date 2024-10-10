@@ -13,81 +13,89 @@
 
         <div class="row">
           <div class="col-lg-6 mb-4">
-            <input type="text" name="name" placeholder="Name*" class="form-control @error('name') is-invalid @enderror" value="{{ old('name') ?? (Auth::check() ? Auth::user()->first_name . ' ' . Auth::user()->last_name : '') }}" required>
-            @error('name')
+            <div class="mb-4">
+              <input type="text" name="name" placeholder="Name*" class="form-control @error('name') is-invalid @enderror" value="{{ old('name') ?? (Auth::check() ? Auth::user()->first_name . ' ' . Auth::user()->last_name : '') }}" required>
+              @error('name')
               <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
-          </div>
-          <div class="col-lg-6 mb-4">
-            <input type="email" name="email" placeholder="Email*" class="form-control @error('email') is-invalid @enderror" value="{{ old('email') ?? (Auth::check() ? Auth::user()->email : '') }}" required>
-            @error('email')
-              <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
-          </div>
-          <div class="col-lg-6 mb-4">
-            <input type="number" name="phone" placeholder="Phone*" class="form-control @error('phone') is-invalid @enderror" value="{{ old('phone') ?? (Auth::check() ? Auth::user()->phone : '') }}" required>
-            @error('phone')
-              <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
-          </div>
-          <div class="col-lg-6 mb-4">
-            <input type="text" name="business_name" placeholder="Business Name" class="form-control @error('business_name') is-invalid @enderror" value="{{ old('business_name') }}">
-            @error('business_name')
-              <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
-          </div>
-          <div class="col-lg-6 mb-4">
-              <select name="yearly_turnover" class="form-control @error('yearly_turnover') is-invalid @enderror">
-                  <option value="">Select Yearly Turnover</option>
-                  <option value="₤1 - ₤50K">₤1 - ₤50K</option>
-                  <option value="₤51K - ₤90K">₤51K - ₤90K</option>
-                  <option value="₤91K - ₤150K">₤91K - ₤150K</option>
-                  <option value="₤151K - ₤250K">₤151K - ₤250K</option>
-                  <option value="Over ₤251K">Over ₤251K</option>
-                  {{--  
-                  @foreach($turnoverRanges as $range)
-                      <option value="{{ $range->price_range }}" {{ old('yearly_turnover') == $range->price_range ? 'selected' : '' }}>
-                          {{ $range->price_range }}
-                      </option>
-                  @endforeach
-                  --}}
-              </select>
-              @error('yearly_turnover')
-                  <div class="invalid-feedback">{{ $message }}</div>
               @enderror
+            </div>
+
+            <div class="mb-4">
+              <input type="number" name="phone" placeholder="Phone*" class="form-control @error('phone') is-invalid @enderror" value="{{ old('phone') ?? (Auth::check() ? Auth::user()->phone : '') }}" required>
+              @error('phone')
+                <div class="invalid-feedback">{{ $message }}</div>
+              @enderror
+            </div>
+            
+            <div class="mb-4">
+              <input type="text" name="business_name" placeholder="Business Name" class="form-control @error('business_name') is-invalid @enderror" value="{{ old('business_name') }}">
+              @error('business_name')
+                <div class="invalid-feedback">{{ $message }}</div>
+              @enderror
+            </div>
+
+            <div class="mb-4">
+                <select name="yearly_turnover" class="form-control @error('yearly_turnover') is-invalid @enderror">
+                    <option value="">Select Yearly Turnover</option>
+                    <option value="₤1 - ₤50K">₤1 - ₤50K</option>
+                    <option value="₤51K - ₤90K">₤51K - ₤90K</option>
+                    <option value="₤91K - ₤150K">₤91K - ₤150K</option>
+                    <option value="₤151K - ₤250K">₤151K - ₤250K</option>
+                    <option value="Over ₤251K">Over ₤251K</option>
+                    {{--  
+                    @foreach($turnoverRanges as $range)
+                        <option value="{{ $range->price_range }}" {{ old('yearly_turnover') == $range->price_range ? 'selected' : '' }}>
+                            {{ $range->price_range }}
+                        </option>
+                    @endforeach
+                    --}}
+                </select>
+                @error('yearly_turnover')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
           </div>
 
           <div class="col-lg-6 mb-4">
-            <p class="txt-primary mb-3 poppins-medium">
-                The service you are interested in
-            </p>
-            <label for="accounting" class="txt-primary poppins-medium">
-                <input type="checkbox" name="interested_service[]" value="Accounting"> Accounting
-            </label> <br>
-            <label for="tax" class="txt-primary poppins-medium">
-                <input type="checkbox" name="interested_service[]" value="Tax"> TAX 
-            </label> <br>
-            <label for="digital_bookkeeping" class="txt-primary poppins-medium">
-                <input type="checkbox" name="interested_service[]" value="Digital Bookkeeping Service"> Digital Bookkeeping Service 
-            </label> <br>
-            <label for="cloud_accounting" class="txt-primary poppins-medium">
-                <input type="checkbox" name="interested_service[]" value="Cloud Accounting"> Cloud Accounting 
-            </label> <br>
-            <label for="payroll_service" class="txt-primary poppins-medium">
-                <input type="checkbox" name="interested_service[]" value="Payroll Service"> Payroll Service 
-            </label> <br>
-            <label for="management_account" class="txt-primary poppins-medium">
-                <input type="checkbox" name="interested_service[]" value="Management Account"> Management Account 
-            </label> <br>
-            <label for="year_end_account" class="txt-primary poppins-medium">
-                <input type="checkbox" name="interested_service[]" value="Year End Account"> Year End Account 
-            </label>
-            @if ($errors->has('interested_service'))
-                <div class="invalid-feedback d-block">
-                    {{ $errors->first('interested_service') }}
-                </div>
-            @endif
-        </div>
+            <div class="mb-4">
+              <input type="email" name="email" placeholder="Email*" class="form-control @error('email') is-invalid @enderror" value="{{ old('email') ?? (Auth::check() ? Auth::user()->email : '') }}" required>
+              @error('email')
+                <div class="invalid-feedback">{{ $message }}</div>
+              @enderror
+            </div>
+
+            <div class="mb-4">
+              <p class="txt-primary mb-3 poppins-medium">
+                  The service you are interested in
+              </p>
+              <label for="accounting" class="txt-primary poppins-medium">
+                  <input type="checkbox" name="interested_service[]" value="Accounting"> Accounting
+              </label> <br>
+              <label for="tax" class="txt-primary poppins-medium">
+                  <input type="checkbox" name="interested_service[]" value="Tax"> TAX 
+              </label> <br>
+              <label for="digital_bookkeeping" class="txt-primary poppins-medium">
+                  <input type="checkbox" name="interested_service[]" value="Digital Bookkeeping Service"> Digital Bookkeeping Service 
+              </label> <br>
+              <label for="cloud_accounting" class="txt-primary poppins-medium">
+                  <input type="checkbox" name="interested_service[]" value="Cloud Accounting"> Cloud Accounting 
+              </label> <br>
+              <label for="payroll_service" class="txt-primary poppins-medium">
+                  <input type="checkbox" name="interested_service[]" value="Payroll Service"> Payroll Service 
+              </label> <br>
+              <label for="management_account" class="txt-primary poppins-medium">
+                  <input type="checkbox" name="interested_service[]" value="Management Account"> Management Account 
+              </label> <br>
+              <label for="year_end_account" class="txt-primary poppins-medium">
+                  <input type="checkbox" name="interested_service[]" value="Year End Account"> Year End Account 
+              </label>
+              @if ($errors->has('interested_service'))
+                  <div class="invalid-feedback d-block">
+                      {{ $errors->first('interested_service') }}
+                  </div>
+              @endif
+            </div>
+          </div>
 
           <div class="col-lg-12 mb-4">
             <label for="" class="txt-primary mb-3  poppins-medium">
