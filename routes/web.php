@@ -91,6 +91,9 @@ Route::get('/client-testimonials', [FrontendController::class, 'clientTestimonia
 // Privacy Policy
 Route::get('/privacy-policy', [FrontendController::class, 'privacyPolicy'])->name('frontend.privacyPolicy');
 
+// All Google Reviews
+Route::get('/reviews', [FrontendController::class, 'reviews'])->name('frontend.reviews');
+
 // Terms and Conditions
 Route::get('/terms-and-conditions', [FrontendController::class, 'termsConditions'])->name('frontend.termsConditions');
 

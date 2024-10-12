@@ -64,7 +64,7 @@ class FrontendController extends Controller
 
         $weWorkWithImages = WeWorkWithImage::orderBy('id', 'asc')->get();
 
-        $googleReviews = GoogleReview::orderBy('id', 'asc')->get();
+        $googleReviews = GoogleReview::orderBy('id', 'asc')->whereNotNull('image')->get();
 
         $meta = Master::where('name', 'Homepage Meta')->select('meta_title', 'meta_description', 'meta_image')->first();
         
@@ -434,6 +434,12 @@ class FrontendController extends Controller
     {
         $service = BusinessValue::where('slug', $slug)->first();
         return view('frontend.service-details.details', compact('service'));
+    }
+
+    public function reviews()
+    {
+        $googleReviews = GoogleReview::orderBy('id', 'asc')->get();
+        return view('frontend.google_reviews.index', compact('googleReviews'));
     }
 
 }

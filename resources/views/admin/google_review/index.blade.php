@@ -108,7 +108,9 @@
                   @foreach ($data as $key => $data)
                   <tr>
                     <td style="text-align: center">{{ $key + 1 }}</td>
-                    <td style="text-align: center">{{$data->name}} , {{$data->position}}</td>
+                    <td style="text-align: center">
+                      {{ $data->name }}{{ $data->position ? ', ' . $data->position : '' }}
+                    </td>
                     <td style="text-align: center">
                         @if($data->image && file_exists(public_path($data->image)))
                             <img src="{{ asset($data->image) }}" style="max-width: 100px; height: auto;" />

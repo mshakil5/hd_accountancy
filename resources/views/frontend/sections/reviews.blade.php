@@ -30,10 +30,17 @@
         </div>
 
         <p align="center" class="mt-4">
+
+
+
             <a href="https://maps.app.goo.gl/YdwshR7HabGbGg9N9" class="mx-auto" target="_blank">
                 <img src="{{ asset('assets/frontend/images/Google Review.png') }}" alt="">
             </a>
         </p>
+
+        <div class="col-12 text-center mt-3">
+            <a href="{{ route('frontend.reviews') }}" class="btn btn-theme-outline d-inline w-50 mx-auto rounded-3 fs-6">See More Reviews</a>
+        </div>
     </div>
 </section>
 
