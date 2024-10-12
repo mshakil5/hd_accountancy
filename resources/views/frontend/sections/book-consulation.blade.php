@@ -254,9 +254,11 @@
             },
             beforeSend: function() {
                 document.getElementById('loader1').style.display = 'block';
+                document.getElementById('submitBtn').disabled = true;
             },
             success: function(response) {
                 document.getElementById('loader1').style.display = 'none';
+                document.getElementById('submitBtn').disabled = false;
                 swal({
                     icon: 'success',
                     title: 'Success',
@@ -277,6 +279,7 @@
             },
             error: function(xhr, status, error) {
                 document.getElementById('loader1').style.display = 'none';
+                document.getElementById('submitBtn').disabled = false;
 
                 // console.log(xhr.responseText);
                 swal({

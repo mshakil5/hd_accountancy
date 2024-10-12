@@ -18,7 +18,7 @@
           </div>
           <div class="col-lg-12 mb-4">
               <label for="cv" class="txt-primary mb-3 poppins-medium">
-                  Upload Your Updated CV
+                  Upload Your Updated CV * (Only .pdf, .docx, .doc, and max 5 MB)
               </label>
               <div class="position-relative">
                   <input type="file" id="cv" name="cv" class="form-control opacity-0" accept=".pdf, .docx, .doc">
@@ -135,10 +135,13 @@
 
       beforeSend: function() {
           document.getElementById('loader3').style.display = 'block';
+          document.getElementById('submitBtn').disabled = true;
       },
       contentType: false,
       processData: false,
       success: function(response) {
+        document.getElementById('loader3').style.display = 'none';
+        document.getElementById('submitBtn').disabled = false;
         swal({
           icon: 'success',
           title: 'Success',
@@ -155,7 +158,16 @@
         document.getElementById('file-preview').innerHTML = '';
       },
       error: function(xhr, status, error) {
-              console.error(xhr.responseText);
+          document.getElementById('loader3').style.display = 'none';
+          document.getElementById('submitBtn').disabled = false;
+              // console.error(xhr.responseText);
+
+            swal({
+                  icon: 'error',
+                  title: 'Error',
+                  text: 'An error occurred. Please try again.',
+                  button: 'OK'
+              });
         }
     });
   });

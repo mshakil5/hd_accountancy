@@ -140,6 +140,13 @@
 <script>
     document.querySelector('form').addEventListener('submit', function() {
         document.getElementById('loader').style.display = 'block';
+        document.getElementById('submit_button').disabled = true;
+    });
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        document.getElementById('submit_button').disabled = false;
     });
 </script>
 

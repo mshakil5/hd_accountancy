@@ -143,10 +143,12 @@
             },
             beforeSend: function() {
                document.getElementById('loader2').style.display = 'block';
+               document.getElementById('submitForm').disabled = true;
             },
             success: function(data) {
                if (data.success) {
                   document.getElementById('loader2').style.display = 'none';
+                  document.getElementById('submitForm').disabled = false;
                   swal({
                      icon: 'success',
                      title: 'Success',
@@ -156,6 +158,7 @@
                   document.getElementById('contactForm').reset();
                } else {
                   document.getElementById('loader2').style.display = 'none';
+                  document.getElementById('submitForm').disabled = false;
                   swal({
                      icon: 'error',
                      title: 'Submission Error',
