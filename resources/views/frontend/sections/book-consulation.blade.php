@@ -187,7 +187,6 @@
         let phone = document.getElementById('phone').value;
         let discussion = document.getElementById('discussion').value;
 
-        let phoneRegex = /^44[0-9\s-]{9,10}$/;
         let emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         let today = new Date().toISOString().split('T')[0];
 
@@ -216,16 +215,6 @@
                 icon: 'warning',
                 title: 'Invalid Email',
                 text: 'Please enter a valid email address.',
-                button: 'OK'
-            });
-            return;
-        }
-
-        if (!phoneRegex.test(phone)) {
-            swal({
-                icon: 'warning',
-                title: 'Invalid Phone Number',
-                text: 'The phone number must be in UK format and start with 44, followed by 9 or 10 digits.',
                 button: 'OK'
             });
             return;

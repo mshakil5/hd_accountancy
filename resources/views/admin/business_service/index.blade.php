@@ -71,6 +71,11 @@
           <div class="card-footer">
             <button type="submit" id="addBtn" class="btn btn-secondary" value="Create">Create</button>
             <button type="submit" id="FormCloseBtn" class="btn btn-default">Cancel</button>
+              <div class="loader text-center" style="display: none;">
+                  <div class="spinner-border text-primary" role="status">
+                      <span class="visually-hidden">Loading...</span>
+                  </div>
+              </div>
           </div>
           <!-- /.card-footer -->
           <!-- /.card-body -->
@@ -189,7 +194,13 @@
                 contentType: false,
                 processData: false,
                 data:form_data,
+                beforeSend: function() {
+                  document.querySelector('.loader').style.display = 'block';
+                  document.getElementById('addBtn').disabled = true;
+              },
                 success: function (d) {
+                    document.querySelector('.loader').style.display = 'none';
+                    document.getElementById('addBtn').disabled = false;
                     if (d.status == 303) {
                         $(".ermsg").html(d.message);
                     }else if(d.status == 300){
@@ -204,6 +215,8 @@
                       }
                 },
                 error: function(xhr, status, error) {
+                    document.querySelector('.loader')('loader').style.display = 'none';
+                    document.getElementById('addBtn').disabled = false;
                      console.error(xhr.responseText);
                 }
             });
@@ -226,7 +239,13 @@
                   contentType: false,
                   processData: false,
                   data:form_data,
+                  beforeSend: function() {
+                      document.querySelector('.loader').style.display = 'block';
+                      document.getElementById('addBtn').disabled = true;
+                  },
                   success: function(d){
+                    document.querySelector('.loader').style.display = 'none';
+                    document.getElementById('addBtn').disabled = false;
                       console.log(d);
                       if (d.status == 303) {
                         $(".ermsg").html(d.message);
@@ -241,7 +260,9 @@
                       }
                   },
                   error: function(xhr, status, error) {
-                     console.error(xhr.responseText);
+                    document.querySelector('.loader').style.display = 'none';
+                    document.getElementById('addBtn').disabled = false;
+                    //  console.error(xhr.responseText);
                 }
               });
           }

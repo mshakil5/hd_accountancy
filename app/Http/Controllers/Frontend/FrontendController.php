@@ -92,13 +92,11 @@ class FrontendController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255',
-            'phone' => 'required|regex:/^44[0-9\s-]{9,10}$/',
+            'phone' => 'required|string',
             'business_name' => 'nullable|string|max:255',
             'yearly_turnover' => 'required',
             'interested_service' => 'required|array',
             'message' => 'required|string',
-        ], [
-            'phone.regex' => 'The phone number must be in UK format and start with 44, followed by 9 or 10 digits.',
         ]);        
 
         if ($validator->fails()) {

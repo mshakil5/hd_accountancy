@@ -67,6 +67,11 @@
           <div class="card-footer">
             @if($homePageOurValues)
               <button type="submit" id="updateBtn" class="btn btn-secondary" value="Update" form="updateThisForm">Update</button>
+              <div class="loader text-center" style="display: none;">
+                  <div class="spinner-border text-primary" role="status">
+                      <span class="visually-hidden">Loading...</span>
+                  </div>
+              </div>
             @endif
           </div>
         </div>
@@ -90,6 +95,13 @@
         $('.summernote').summernote({
             height: 200, 
         });
+    });
+</script>
+
+<script>
+    document.querySelector('#updateThisForm').addEventListener('submit', function() {
+        document.querySelector('.loader').style.display = 'block';
+        document.querySelector('#updateBtn').disabled = true;
     });
 </script>
 
