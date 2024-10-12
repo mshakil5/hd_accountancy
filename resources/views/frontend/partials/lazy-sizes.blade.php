@@ -1,7 +1,9 @@
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
+    const videoModalElement = document.getElementById('videoModal');
+    if (videoModalElement) {
         const videoThumbnails = document.querySelectorAll('.video-thumbnail');
-        const videoModal = new bootstrap.Modal(document.getElementById('videoModal'));
+        const videoModal = new bootstrap.Modal(videoModalElement);
         const videoPlayer = document.getElementById('modalVideoPlayer');
         const videoSource = videoPlayer.querySelector('source');
 
@@ -15,8 +17,9 @@
                 videoPlayer.play();
             });
         });
-        document.getElementById('videoModal').addEventListener('hidden.bs.modal', function () {
+        videoModalElement.addEventListener('hidden.bs.modal', function () {
             videoPlayer.pause();
         });
-    });
+    }
+});
 </script>
