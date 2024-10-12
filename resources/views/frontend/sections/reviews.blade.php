@@ -14,7 +14,7 @@
             @foreach($googleReviews as $review)
                 <div class="p-4">
                     <div class="card rounded-5 text-center p-4 position-relative border-theme">
-                    <img src="{{ asset($review->image ?? 'assets/frontend/images/male.png') }}" class="position-absolute top-0 start-50 translate-middle border border-1 border-secondary rounded-circle" width="120" height="120" class="rounded-circle" alt="">
+                    <img src="{{ asset($review->image ?? 'assets/frontend/images/male.png') }}" class="position-absolute top-0 start-50 translate-middle border border-1 border-secondary rounded-circle" width="120" height="120" @if(!$review->image ) style="object-fit: contain; padding: 7px;" @endif alt="">
                         <p style="color:#233969B2;" class="mt-5 text-italic text-capitalize poppins-medium fst-italic">
                             {!! $review->message !!}
                         </p>
