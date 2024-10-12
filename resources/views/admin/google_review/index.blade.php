@@ -47,7 +47,7 @@
                 <div class="col-sm-12">
                     <div class="form-group">
                         <label>Review</label>
-                        <textarea name="message" id="message" class="form-control summernote"></textarea>
+                        <textarea name="message" id="message" class="form-control" placeholder="Enter review" rows="5"></textarea>
                     </div>
                 </div>
                 <div class="col-sm-12">
@@ -155,12 +155,6 @@
         output.src = URL.createObjectURL(event.target.files[0]);
         output.style.display = 'block';
     }
-
-    $(document).ready(function() {
-        $('.summernote').summernote({
-            height: 200, 
-        });
-    });
 </script>
 
 <script>
@@ -187,7 +181,7 @@
               var form_data = new FormData();
               form_data.append("name", $("#name").val());
               form_data.append("position", $("#position").val());
-              form_data.append("message", $("#message").summernote('code'));
+              form_data.append("message", $("#message").val());
               form_data.append("image", $("#image")[0].files[0]);
               $.ajax({
                 url: url,
@@ -228,7 +222,7 @@
               var form_data = new FormData();
               form_data.append("name", $("#name").val());
               form_data.append("position", $("#position").val());
-              form_data.append("message", $("#message").summernote('code'));
+              form_data.append("message", $("#message").val());
               form_data.append("image", $("#image")[0].files[0]);
               form_data.append("codeid", $("#codeid").val());
               
@@ -306,7 +300,7 @@
       function populateForm(data){
         $("#name").val(data.name);
         $("#position").val(data.position);
-        $("#message").summernote('code', data.message);
+        $("#message").val(data.message);
         if (data.image) {
             $("#image_preview").attr("src", data.image).show();
         } else {
@@ -321,7 +315,6 @@
       function clearform(){
         $('#createThisForm')[0].reset();
         $("#addBtn").val('Create');
-        $("#message").summernote('code', '');
         $('#image_preview').attr('src', '#').hide();
       }
   });
