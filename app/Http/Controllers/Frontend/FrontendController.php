@@ -28,6 +28,7 @@ use App\Mail\QuotationMail;
 use App\Mail\ContactFormMail;
 use App\Mail\ScheduleMail;
 use Illuminate\Support\Facades\Mail;
+use App\Mail\CareerFormMail;
 
 class FrontendController extends Controller
 {
@@ -374,6 +375,21 @@ class FrontendController extends Controller
 
         Career::create($validatedData);
 
+        $careerData = [
+            'name' => $validatedData['name'],
+            'email' => $validatedData['email'],
+            'phone' => $validatedData['phone'],
+            'linkedin_profile' => $validatedData['linkedin_profile'],
+            'about_yourself' => $validatedData['about_yourself'],
+            'cv' => $cvFileName
+        ];
+    
+        $mail = ContactMail::first();
+    
+        Mail::to($mail->email)->send(new CareerFormMail($careerData, $cvFileName));
+    
+        Mail::to($request->input('email'))->send(new CareerFormMail($careerData, $cvFileName));
+    
         return response()->json(['message' => 'Career form submitted successfully!']);
     }
 
