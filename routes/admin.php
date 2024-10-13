@@ -332,7 +332,7 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::post('/prorota', [ProrotaController::class, 'store']);
     Route::post('/prorota/update', [ProrotaController::class, 'update']);
     Route::get('/prorota/details/{id}', [ProrotaController::class,'showDetails'])->name('prorota.details');
-    Route::delete('/delete-prorota/{id}', [ProrotaController::class, 'deleteData'])->name('delete.staff');
+    Route::delete('/delete-prorota/{id}', [ProrotaController::class, 'deleteData'])->name('delete.prorota');
     Route::get('/prorota/edit/{id}', [ProrotaController::class,'edit'])->name('prorota.edit');
 
     
@@ -343,7 +343,7 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::post('/holiday', [HolidayController::class, 'store']);
     Route::post('/holiday/update', [HolidayController::class, 'update']);
     Route::get('/holiday/details/{id}', [HolidayController::class,'showDetails'])->name('holiday.details');
-    Route::delete('/delete-holiday/{id}', [HolidayController::class, 'deleteData'])->name('delete.staff');
+    Route::delete('/delete-holiday/{id}', [HolidayController::class, 'deleteData'])->name('delete.holiday');
     Route::get('/holiday/edit/{id}', [HolidayController::class,'edit'])->name('holiday.edit');
     Route::post('/store-holiday', [HolidayController::class, 'storeHoliday'])->name('store.holiday');
     Route::get('/edit-holiday/{id}', [HolidayController::class,'editHoliday'])->name('editHoliday');
