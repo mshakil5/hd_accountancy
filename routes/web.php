@@ -160,7 +160,7 @@ Route::middleware(['auth', 'user-access:manager'])->group(function () {
      Route::get('/manager/get-completed-services-modal', [ServiceController::class, 'getCompetedServicesModal']);
 
      // Note and additional work
-     Route::post('/manager/save-notes', [ServiceController::class, 'saveNotes'])->name('saveNotes');
+     Route::post('/manager/save-notes', [ServiceController::class, 'saveNotes'])->name('saveNotes.manager');
 
      //  Client list
     Route::get('/manager/client', [ClientController::class, 'indexManager'])->name('allClientManager');
@@ -222,7 +222,7 @@ Route::middleware(['auth', 'user-access:staff'])->group(function () {
      Route::get('/staff/get-completed-services-modal', [StaffServiceController::class, 'getCompetedServicesModal']);
 
      // Note and additional work
-     Route::post('/staff/save-notes', [StaffServiceController::class, 'saveNotes'])->name('saveNotes');
+     Route::post('/staff/save-notes', [StaffServiceController::class, 'saveNotes'])->name('saveNotes.staff');
 
     //  Client list
     Route::get('/staff/client', [ClientController::class, 'indexStaff'])->name('allClientStaff');
