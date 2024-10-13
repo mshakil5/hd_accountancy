@@ -9,6 +9,8 @@ class Master extends Model
 {
     use HasFactory;
 
+    protected $guarded = [];
+
     public function softcode()
     {
         return $this->belongsTo(Softcode::class, 'softcode_id');

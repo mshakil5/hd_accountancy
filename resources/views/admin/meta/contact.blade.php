@@ -50,6 +50,9 @@
                             <label for="meta_image">Meta Image</label>
                             <input type="file" id="meta_image" name="meta_image" class="form-control" onchange="previewMetaImage(event)" accept="image/*">
                             <img id="meta_image_preview" src="{{ old('meta_image', optional($data)->meta_image ? asset('images/meta_image/' . $data->meta_image) : '') }}" alt="Meta Image Preview" class="pt-3" style="max-width: 250px; height: auto;"/>
+                            @error('meta_image')
+                                <span class="invalid-feedback d-block">{{ $message }}</span>
+                            @enderror
                         </div>
                     </div>
                 </div>

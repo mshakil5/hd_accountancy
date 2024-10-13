@@ -26,7 +26,7 @@ class MetaDataController extends Controller
         $request->validate([
             'meta_title' => 'required|string|max:255',
             'meta_description' => 'required|string',
-            'meta_image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'meta_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
         $softcode = Softcode::where('name', 'Homepage Meta')->first();
@@ -78,7 +78,7 @@ class MetaDataController extends Controller
         $request->validate([
             'meta_title' => 'required|string|max:255',
             'meta_description' => 'required|string',
-            'meta_image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'meta_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
         $softcode = Softcode::where('name', 'Servicepage Meta')->first();
@@ -130,7 +130,7 @@ class MetaDataController extends Controller
         $request->validate([
             'meta_title' => 'required|string|max:255',
             'meta_description' => 'required|string',
-            'meta_image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'meta_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
         $softcode = Softcode::where('name', 'Packagepage Meta')->first();
@@ -182,7 +182,7 @@ class MetaDataController extends Controller
         $request->validate([
             'meta_title' => 'required|string|max:255',
             'meta_description' => 'required|string',
-            'meta_image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'meta_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
         $softcode = Softcode::where('name', 'Contactpage Meta')->first();
@@ -234,7 +234,7 @@ class MetaDataController extends Controller
         $request->validate([
             'meta_title' => 'required|string|max:255',
             'meta_description' => 'required|string',
-            'meta_image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'meta_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
         $softcode = Softcode::where('name', 'Getquotationpage Meta')->first();
@@ -286,7 +286,7 @@ class MetaDataController extends Controller
         $request->validate([
             'meta_title' => 'required|string|max:255',
             'meta_description' => 'required|string',
-            'meta_image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'meta_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
         $softcode = Softcode::where('name', 'Careerpage Meta')->first();
@@ -338,7 +338,7 @@ class MetaDataController extends Controller
         $request->validate([
             'meta_title' => 'required|string|max:255',
             'meta_description' => 'required|string',
-            'meta_image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'meta_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
         $softcode = Softcode::where('name', 'Ourteampage Meta')->first();
@@ -390,7 +390,7 @@ class MetaDataController extends Controller
         $request->validate([
             'meta_title' => 'required|string|max:255',
             'meta_description' => 'required|string',
-            'meta_image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'meta_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
         $softcode = Softcode::where('name', 'Faqpage Meta')->first();
@@ -442,7 +442,7 @@ class MetaDataController extends Controller
         $request->validate([
             'meta_title' => 'required|string|max:255',
             'meta_description' => 'required|string',
-            'meta_image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'meta_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
         $softcode = Softcode::where('name', 'Privacypage Meta')->first();
@@ -494,7 +494,7 @@ class MetaDataController extends Controller
         $request->validate([
             'meta_title' => 'required|string|max:255',
             'meta_description' => 'required|string',
-            'meta_image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'meta_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
         $softcode = Softcode::where('name', 'Termspage Meta')->first();

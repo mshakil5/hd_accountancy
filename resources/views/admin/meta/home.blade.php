@@ -26,7 +26,7 @@
                     <div class="col-sm-12">
                         <div class="form-group">
                             <label for="meta_title">Meta Title</label>
-                            <input type="text" class="form-control @error('meta_title') is-invalid @enderror" id="meta_title" name="meta_title" value="{{ old('meta_title', $data->meta_title ?? '') }}" placeholder="Enter meta title">
+                            <input type="text" class="form-control @error('meta_title') is-invalid @enderror" id="meta_title" name="meta_title" value="{{ $data->meta_title ?? '' }}" placeholder="Enter meta title">
                             @error('meta_title')
                                 <span class="invalid-feedback d-block">{{ $message }}</span>
                             @enderror
@@ -50,6 +50,10 @@
                             <label for="meta_image">Meta Image</label>
                             <input type="file" id="meta_image" name="meta_image" class="form-control" onchange="previewMetaImage(event)" accept="image/*">
                             <img id="meta_image_preview" src="{{ old('meta_image', optional($data)->meta_image ? asset('images/meta_image/' . $data->meta_image) : '') }}" alt="Meta Image Preview" class="pt-3" style="max-width: 250px; height: auto;"/>
+
+                            @error('meta_image')
+                                <span class="invalid-feedback d-block">{{ $message }}</span>
+                            @enderror
                         </div>
                     </div>
                 </div>
