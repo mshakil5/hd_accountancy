@@ -126,9 +126,9 @@ class FrontendController extends Controller
 
         $mail = ContactMail::first();
 
-        // Mail::to($mail->email)->send(new ContactFormMail($contactData));
+        Mail::to($mail->email)->send(new ContactFormMail($contactData));
 
-        // Mail::to($request->input('email'))->send(new ContactFormMail($contactData));
+        Mail::to($request->input('email'))->send(new ContactFormMail($contactData));
 
         return redirect()->back()->with('success', 'Message sent successfully!');
     }
