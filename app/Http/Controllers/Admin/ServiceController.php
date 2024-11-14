@@ -435,7 +435,7 @@ class ServiceController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'clientId' => 'required|integer',
-            'services' => 'array',
+            'services' => 'nullable|array',
         ]);
 
         if ($validator->fails()) {
