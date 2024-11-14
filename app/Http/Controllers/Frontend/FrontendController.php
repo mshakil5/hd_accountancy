@@ -305,9 +305,9 @@ class FrontendController extends Controller
 
         $mail = ContactMail::first();
 
-        Mail::to($mail->email)->send(new ScheduleMail($validatedData));
+        // Mail::to($mail->email)->send(new ScheduleMail($validatedData));
 
-        Mail::to($validatedData['email'])->send(new ScheduleMail($validatedData));
+        // Mail::to($validatedData['email'])->send(new ScheduleMail($validatedData));
 
         return response()->json(['message' => 'Meeting scheduled successfully!']);
     }
@@ -348,9 +348,9 @@ class FrontendController extends Controller
 
         $mail = ContactMail::first();
 
-        Mail::to($mail->email)->send(new QuotationMail($quotation));
+        // Mail::to($mail->email)->send(new QuotationMail($quotation));
 
-        Mail::to($request->input('email'))->send(new QuotationMail($quotation));
+        // Mail::to($request->input('email'))->send(new QuotationMail($quotation));
 
         return response()->json(['success' => true]);
     }
@@ -386,9 +386,9 @@ class FrontendController extends Controller
     
         $mail = ContactMail::first();
     
-        Mail::to($mail->email)->send(new CareerFormMail($careerData, $cvFileName));
+        // Mail::to($mail->email)->send(new CareerFormMail($careerData, $cvFileName));
     
-        Mail::to($request->input('email'))->send(new CareerFormMail($careerData, $cvFileName));
+        // Mail::to($request->input('email'))->send(new CareerFormMail($careerData, $cvFileName));
     
         return response()->json(['message' => 'Career form submitted successfully!']);
     }
