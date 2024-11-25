@@ -38,6 +38,16 @@
                 </select>
             </div>
         </div>
+        <div class="col-lg-4">
+            <label for="">HMRC Authorisation</label>
+            <div class="mt-2">
+                <select class="form-control my-2" name="hmrc_authorisation" id="hmrc_authorisation">
+                    <!-- <option value="" selected>Select status</option> -->
+                    <option value="0" {{ isset($client->businessInfo) && $client->businessInfo->status == '0' ? 'selected' : '' }}>No</option>
+                    <option value="1" {{ isset($client->businessInfo) && $client->businessInfo->status == '1' ? 'selected' : '' }}>Yes</option>
+                </select>
+            </div>
+        </div>
     </div>
     <div class="row">
         <div class="col-lg-4 mx-auto text-center">
