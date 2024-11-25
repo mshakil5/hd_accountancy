@@ -77,7 +77,7 @@
                                 <li class="nav-item flex-fill" role="presentation">
                                     <button class="nav-link w-100" id="contact-info-tab" data-bs-toggle="tab" data-bs-target="#contact-info" type="button" role="tab" aria-controls="contact-info" aria-selected="false">Contact-info</button>
                                 </li>
-                                <li class="nav-item flex-fill" role="presentation">
+                                <li class="nav-item flex-fill d-none" role="presentation">
                                     <button class="nav-link w-100" id="custom-field-tab" data-bs-toggle="tab" data-bs-target="#custom-field" type="button" role="tab" aria-controls="custom-field" aria-selected="false">Custom-field</button>
                                 </li>
                                 <li class="nav-item flex-fill" role="presentation">
@@ -159,6 +159,12 @@
                                                     style="right: 8px;"></i>
                                                 </div>
                                             </div>
+
+                                            <div class="col-lg-4">
+                                                <label for="">Reference ID</label>
+                                                <input type="text" class="form-control my-2" id="reference_id" name="reference_id" placeholder="Enter reference id" value="{{ isset($client) && isset($client->refid) ? $client->refid : '' }}">
+                                            </div>
+                                            
                                         </div>
                                         <div class="row">
                                             <div class="col-lg-4 mx-auto text-center">
@@ -643,7 +649,7 @@
                         </div>
                     </div>
                     <div class="col-md-2 text-center">
-                        <h5 class="mb-3">Legal Deadline</h5>
+                        <h5 class="mb-3">Target Deadline</h5>
                         <div class="form-check">
                             <input type="date" class="form-control legalDeadline" id="legalDeadline" name="legalDeadline">
                         </div>

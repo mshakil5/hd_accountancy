@@ -67,7 +67,7 @@
                                 <li class="nav-item flex-fill" role="presentation">
                                     <button  class="nav-link w-100" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">Business Info</button>
                                 </li>
-                                <li class="nav-item flex-fill" role="presentation">
+                                <li class="nav-item flex-fill" role="presentation" id="directorLI">
                                     <button class="nav-link w-100" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab" aria-controls="contact" aria-selected="false">Director Info</button>
                                 </li>
                                 <li class="nav-item flex-fill" role="presentation">
@@ -76,7 +76,7 @@
                                 <li class="nav-item flex-fill" role="presentation">
                                     <button class="nav-link w-100" id="contact-info-tab" data-bs-toggle="tab" data-bs-target="#contact-info" type="button" role="tab" aria-controls="contact-info" aria-selected="false">Contact-info</button>
                                 </li>
-                                <li class="nav-item flex-fill" role="presentation">
+                                <li class="nav-item flex-fill d-none" role="presentation">
                                     <button class="nav-link w-100" id="custom-field-tab" data-bs-toggle="tab" data-bs-target="#custom-field" type="button" role="tab" aria-controls="custom-field" aria-selected="false">Custom-field</button>
                                 </li>
                                 <li class="nav-item flex-fill" role="presentation">
@@ -161,6 +161,12 @@
                                                 <i class="bi bi-paperclip position-absolute top-50 translate-middle-y"
                                                     style="right: 8px;"></i>
                                                 </div>
+                                            </div>
+
+                                            
+                                            <div class="col-lg-4">
+                                                <label for="">Reference ID</label>
+                                                <input type="text" class="form-control my-2" id="reference_id" name="reference_id" placeholder="Enter reference id" value="{{ isset($client) && isset($client->refid) ? $client->refid : '' }}">
                                             </div>
 
                                         </div>
@@ -811,7 +817,7 @@
                         </div>
                     </div>
                     <div class="col-md-2 text-center">
-                        <h5 class="mb-3">Legal Deadline</h5>
+                        <h5 class="mb-3">Target Deadline</h5>
                         <div class="form-check">
                             <input type="date" class="form-control legalDeadline" id="legalDeadline" name="legalDeadline">
                         </div>
@@ -1243,6 +1249,13 @@
                 });
             }
         });
+    });
+    $('#client_type_id').on('change', function () {
+        if ($(this).val() === '7') {
+            $('#directorLI').addClass('d-none');
+        } else {
+            $('#directorLI').removeClass('d-none');
+        }
     });
 </script>
 <!-- Delete contact end-->

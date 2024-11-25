@@ -116,7 +116,8 @@ class ClientController extends Controller
         $data = new Client;
 
         $data->name = $request->name;
-        $data->refid = mt_rand(100000, 999999);
+        // $data->refid = mt_rand(100000, 999999);
+        $data->refid = $request->reference_id;
         $data->client_type_id = $request->client_type_id;
         $data->manager_id = $request->manager_id;
         $data->email = $request->email;
@@ -325,6 +326,7 @@ class ClientController extends Controller
         }
 
         $client->name = $request->name;
+        $client->refid = $request->reference_id;
         $client->client_type_id = $request->client_type_id;
         $client->manager_id = $request->manager_id;
         $client->email = $request->email;

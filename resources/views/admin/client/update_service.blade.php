@@ -68,7 +68,7 @@
                                         </div>
                                     </div>
                                     <div class="col-md-2 text-center">
-                                        <h5 class="mb-3">Legal Deadline</h5>
+                                        <h5 class="mb-3">Target Deadline</h5>
                                         <div class="form-check">
                                             <input type="date" class="form-control legalDeadline" name="legalDeadline" id="legalDeadline" value="{{ isset($clientService) ? $clientService->legal_deadline : '' }}">
                                         </div>

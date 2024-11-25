@@ -22,7 +22,7 @@
         </div>
         <div class="col-lg-4">
             <label for="">Authorization Code</label>
-            <input type="number" class="form-control my-2" id="authorization_code" name="authorization_code" placeholder="Enter authorization code" value="@isset($client->businessInfo){{ $client->businessInfo->authorization_code }}@endisset">
+            <input type="text" class="form-control my-2" id="authorization_code" name="authorization_code" placeholder="Enter authorization code" value="@isset($client->businessInfo){{ $client->businessInfo->authorization_code }}@endisset">
         </div>
         <div class="col-lg-4">
             <label for="">Company UTR</label>
