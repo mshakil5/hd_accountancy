@@ -48,6 +48,12 @@
                 </select>
             </div>
         </div>
+        <div class="col-lg-4">
+            <label for="">VAT</label>
+            <input type="number" class="form-control my-2" id="vat_number" name="vat_number" placeholder="Enter vat number" value="@isset($client->businessInfo){{ $client->businessInfo->vat_number }}@endisset">
+        </div>
+
+
     </div>
     <div class="row">
         <div class="col-lg-4 mx-auto text-center">

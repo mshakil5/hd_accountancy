@@ -401,6 +401,8 @@ class ClientController extends Controller
         $businessInfo->confirmation_due_date = $request->confirmation_due_date;
         $businessInfo->authorization_code = $request->authorization_code;
         $businessInfo->company_utr = $request->company_utr;
+        $businessInfo->hmrc_authorisation = $request->hmrc_authorisation;
+        $businessInfo->vat_number = $request->vat_number;
         $businessInfo->status = $request->status;
         $businessInfo->updated_by = Auth::id();
 

@@ -54,6 +54,7 @@ class BusinessInfoController extends Controller
         $data->authorization_code = $request->authorization_code;
         $data->company_utr = $request->company_utr;
         $data->status = $request->status;
+        $data->vat_number = $request->vat_number;
         $data->created_by = Auth::id();
 
         if ($data->save()) {
@@ -129,6 +130,8 @@ class BusinessInfoController extends Controller
         $data->confirmation_due_date = $request->confirmation_due_date;
         $data->authorization_code = $request->authorization_code;
         $data->company_utr = $request->company_utr;
+        $data->hmrc_authorisation = $request->hmrc_authorisation;
+        $data->vat_number = $request->vat_number;
         $data->status = $request->status;
         $data->updated_by = Auth::id();
         if ($data->save()) {
