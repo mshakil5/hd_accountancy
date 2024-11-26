@@ -23,7 +23,7 @@
         <!-- general form elements disabled -->
         <div class="card card-secondary">
             <div class="card-header">
-            <h3 class="card-title">Add new service</h3>
+            <h3 class="card-title" id="cardTitle">Add new service</h3>
             </div>
             <!-- /.card-header -->
             <div class="card-body">
@@ -137,6 +137,11 @@
 </section>
 <!-- /.content -->
 
+<style>
+    .is-invalid {
+        border-color: red;
+    }
+</style>
 
 @endsection
 @section('script')
@@ -160,7 +165,6 @@
           $("#addThisFormContainer").hide(200);
           $("#newBtn").show(100);
           clearform();
-          window.location.reload();
       });
       //header for csrf-token is must in laravel
       $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') } });
@@ -169,7 +173,6 @@
       var upurl = "{{URL::to('/admin/service-update')}}";
       // console.log(url);
       $("#addBtn").click(function(){
-      //   alert("#addBtn");
           if($(this).val() == 'Create') {
               var form_data = new FormData();
               form_data.append("name", $("#name").val());
@@ -224,9 +227,24 @@
                 }
             });
           }
-          //create  end
-          //Update
+
           if($(this).val() == 'Update'){
+
+            var allValid = true;
+            $('input[name="sub_services[]"]').each(function() {
+                if ($(this).val().trim() === '') {
+                    allValid = false;
+                        $(this).addClass('is-invalid');
+                    } else {
+                        $(this).removeClass('is-invalid');
+                    }
+                });
+
+                if (!allValid) {
+                    $(".ermsg").html("Please fill in all sub service fields.");
+                    return;
+                }
+
               var form_data = new FormData();
               form_data.append("name", $("#name").val());
               form_data.append("codeid", $("#codeid").val());
@@ -274,7 +292,6 @@
                   }
               });
           }
-          //Update
       });
       //Edit
       $("#contentContainer").on('click','#EditBtn', function(){
@@ -290,7 +307,7 @@
       });
       //Edit  end
       //Delete 
-      $("#contentContainer").on('click','#deleteBtn', function(){
+        $("#contentContainer").on('click','#deleteBtn', function(){
             if(!confirm('Sure?')) return;
             codeid = $(this).attr('rid');
             info_url = url + '/'+codeid;
@@ -312,8 +329,18 @@
                          window.setTimeout(function(){location.reload()},2000)
                     }
                 },
-                error:function(d){
-                    console.log(d);
+                error: function(xhr) {
+                    let errorMessage = "An error occurred.";
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    
+                    swal({
+                        title: "Error!",
+                        text: errorMessage,
+                        icon: "error",
+                        button: "OK",
+                    });
                 }
             });
         });
@@ -324,6 +351,7 @@
           $("#codeid").val(data.id);
           $("#addBtn").val('Update');
           $("#addBtn").html('Update');
+          $("#cardTitle").html('Update this service');
           $("#addThisFormContainer").show(300);
           $("#newBtn").hide(100);
           $('#subServicesContainer').empty();
@@ -347,6 +375,8 @@
       function clearform(){
           $('#createThisForm')[0].reset();
           $("#addBtn").val('Create');
+          $("#cardTitle").html('Add new service');
+          $('#subServicesContainer').empty();
       }
   });
 </script>
@@ -356,7 +386,7 @@
     $(document).ready(function () {
         $(document).on('click', '.add-sub-service', function () {
             var inputField = '<div class="input-group mb-3">' +
-                '<input type="text" class="form-control" name="sub_services[]">' +
+                '<input type="text" class="form-control" name="sub_services[]" required>' +
                 '<div class="input-group-append">' +
                 '<button class="btn btn-secondary remove-sub-service" style="margin-left: 10px;" type="button">-</button>' +
                 '</div>' +
@@ -365,7 +395,29 @@
         });
 
         $(document).on('click', '.remove-sub-service', function () {
-            $(this).closest('.input-group').remove();
+            var $this = $(this);
+            var subServiceId = $this.closest('.input-group').find('input[name="sub_services_id[]"]').val();
+            var csrfToken = $('meta[name="csrf-token"]').attr('content');
+            $.ajax({
+                url: '/admin/check-sub-service-assignment',
+                method: 'POST',
+                data: { id: subServiceId, _token: csrfToken },
+                success: function(response) {
+                    if (response.assigned) {
+                        swal({
+                            title: "Error!",
+                            text: "You can't remove this sub-service as it is assigned to a client.",
+                            icon: "error",
+                            button: "OK",
+                        });
+                    } else {
+                        $this.closest('.input-group').remove();
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error(xhr.responseText);
+                }
+            });
         });
     });
 </script>

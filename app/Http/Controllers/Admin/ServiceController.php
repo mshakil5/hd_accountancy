@@ -123,11 +123,30 @@ class ServiceController extends Controller
         } 
     }
 
+    public function checkAssignment(Request $request)
+    {
+        $subServiceId = $request->input('id');
+
+        $isAssigned = DB::table('client_sub_services')
+            ->where('sub_service_id', $subServiceId)
+            ->exists();
+
+        return response()->json(['assigned' => $isAssigned]);
+    }
+
     public function delete($id)
     {
         $service = Service::find($id);
 
         if ($service) {
+            $hasAssignedSubServices = DB::table('client_sub_services')
+                ->where('sub_service_id', $service->subServices()->pluck('id')->toArray())
+                ->exists();
+    
+            if ($hasAssignedSubServices) {
+                return response()->json(['success' => false, 'message' => 'Cannot delete service because one or more sub-services are assigned to clients.'], 403);
+            }
+    
             $service->subServices()->delete();
             $service->delete();
             return response()->json(['success' => true, 'message' => 'Data has been deleted successfully']);
