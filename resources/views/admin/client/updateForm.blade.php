@@ -329,6 +329,7 @@
                         });
                     },
                     error: function(xhr, status, error) {
+                        console.error(  xhr.responseText);
                          var errorMessage = "";
                          if (xhr.responseJSON && xhr.responseJSON.errors){
                             $.each(xhr.responseJSON.errors, function (key, value) {
