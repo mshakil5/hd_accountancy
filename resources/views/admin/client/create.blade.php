@@ -27,13 +27,13 @@
             <!-- Top 3 -->
             <div class="row my-4 px-3">
                 <div class="col-lg-3">
-                    <label for="">Client Name</label>
+                    <label for="">Client Name <span class="text-danger">*</span></label>
                     <input for="myForm" type="text" value="{{ isset($client->name) ? $client->name : '' }}" class="form-control mt-2" name="name" id="name">
                 </div>
                 <div class="col-lg-3">
                     <label for="">Client Type</label>
                     <div class="mt-2">
-                    <select name="client_type_id" class="form-control mt-2 select2" id="client_type_id">
+                    <select name="client_type_id" class="form-control mt-2" id="client_type_id">
                         <option value="" selected>Select client</option>
                             @foreach($clientTypes as $clientType)
                                 <option value="{{ $clientType->id }}" {{ isset($client->clientType) && $client->clientType->id == $clientType->id ? 'selected' : '' }}>{{ $clientType->name }}</option>
@@ -44,7 +44,7 @@
                 <div class="col-lg-3">
                     <label for="">Client Manager</label>
                         <div class="mt-2">
-                            <select class="form-control mt-2 select2" name="manager_id" id="manager_id">
+                            <select class="form-control mt-2" name="manager_id" id="manager_id">
                                 <option value="" selected>Select manager</option>
                                 @foreach($managers as $manager)
                                     <option value="{{ $manager->id }}" {{ isset($client->manager) && $client->manager->id == $manager->id ? 'selected' : '' }}>{{ $manager->first_name }}</option>
@@ -108,7 +108,7 @@
                                                 <input type="file" id="pic" name="photo" class="invisible">
                                             </div>
                                             <div class="col-lg-4">
-                                                <label for="">Email</label>
+                                                <label for="">Email <span class="text-danger">*</span></label>
                                                 <input type="email" class="form-control my-2" id="email" name="email" value="{{ isset($client) && isset($client->email) ? $client->email : '' }}"placeholder="Enter email">
                                             </div>
                                             <div class="col-lg-4">
@@ -802,11 +802,12 @@
                         <div class="form-check">
                             <select class="form-control mt-2 select2 serviceFrequency" id="serviceFrequency" name="service_frequency">
                             <option value="">Select</option>
-                            <option>Daily</option>
-                            <option>Weekly</option>
-                            <option>Monthly</option>
-                            <option>Quarterly</option>
-                            <option>Yearly</option>
+                            <option>1 Week</option>
+                            <option>2 Week</option>
+                            <option>4 Week</option>
+                            <option>1 Month</option>
+                            <option>3 Month</option>
+                            <option>Annual</option>
                             </select>
                         </div>
                     </div>
