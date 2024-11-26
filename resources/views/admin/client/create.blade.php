@@ -157,8 +157,9 @@
                                             <div class="col-lg-4">
                                                 <label for="" class="mb-2">Upload Photo Id </label>
                                                 <div class="position-relative">
-                                                <input type="number" class="form-control" name="photo_id" id="photo_id" value="{{ isset($client) && isset($client->photo_id) ? $client->photo_id : '' }}" placeholder="Upload photo id">
-                                                <i class="bi bi-paperclip position-absolute top-50 translate-middle-y"
+                                                    <input type="file" class="form-control" name="photo_id" id="photo_id" 
+                                                        accept="image/*" placeholder="Upload photo id">
+                                                    <i class="bi bi-paperclip position-absolute top-50 translate-middle-y"
                                                     style="right: 8px;"></i>
                                                 </div>
                                             </div>

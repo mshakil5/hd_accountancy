@@ -106,7 +106,7 @@ class ClientController extends Controller
             // 'postcode' => 'required|string',
             // 'country' => 'required|string|max:255',
             'photo' => 'nullable|mimes:jpeg,png,jpg,gif,svg,pdf|max:8048',
-            'photo_id' => 'nullable|numeric',
+            'photo_id' => 'nullable|mimes:jpeg,png,jpg,gif,svg,pdf|max:8048'
         ]);
 
         if ($validator->fails()) {
@@ -137,6 +137,12 @@ class ClientController extends Controller
             $imageName = time() . '_' . $request->photo->getClientOriginalName();
             $request->photo->move(public_path('images/client'), $imageName);
             $data->photo = $imageName;
+        }
+
+        if ($request->hasFile('photo_id')) {
+            $photoIdName = time() . '_' . $request->photo_id->getClientOriginalName();
+            $request->photo_id->move(public_path('images/client_photo_id'), $photoIdName);
+            $data->photo_id = $photoIdName;
         }
 
         if ($data->save()) {
