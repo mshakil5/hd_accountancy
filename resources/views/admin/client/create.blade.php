@@ -65,22 +65,22 @@
                                     <button class="nav-link w-100 active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">Client Details</button>
                                 </li>
                                 <li class="nav-item flex-fill" role="presentation">
-                                    <button  class="nav-link w-100" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">Business Info</button>
+                                    <button  class="nav-link w-100 @if(!isset($client->id)) disabled @endif" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">Business Info</button>
                                 </li>
                                 <li class="nav-item flex-fill" role="presentation" id="directorLI">
-                                    <button class="nav-link w-100" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab" aria-controls="contact" aria-selected="false">Director Info</button>
+                                    <button class="nav-link w-100 @if(!isset($client->id)) disabled @endif" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab" aria-controls="contact" aria-selected="false">Director Info</button>
                                 </li>
                                 <li class="nav-item flex-fill" role="presentation">
-                                    <button class="nav-link w-100" id="service-tab" data-bs-toggle="tab" data-bs-target="#service" type="button" role="tab" aria-controls="service" aria-selected="false">Service list</button>
+                                    <button class="nav-link w-100 @if(!isset($client->id)) disabled @endif" id="service-tab" data-bs-toggle="tab" data-bs-target="#service" type="button" role="tab" aria-controls="service" aria-selected="false">Service list</button>
                                 </li>
                                 <li class="nav-item flex-fill" role="presentation">
-                                    <button class="nav-link w-100" id="contact-info-tab" data-bs-toggle="tab" data-bs-target="#contact-info" type="button" role="tab" aria-controls="contact-info" aria-selected="false">Contact-info</button>
+                                    <button class="nav-link w-100 @if(!isset($client->id)) disabled @endif" id="contact-info-tab" data-bs-toggle="tab" data-bs-target="#contact-info" type="button" role="tab" aria-controls="contact-info" aria-selected="false">Contact-info</button>
                                 </li>
                                 <li class="nav-item flex-fill d-none" role="presentation">
-                                    <button class="nav-link w-100" id="custom-field-tab" data-bs-toggle="tab" data-bs-target="#custom-field" type="button" role="tab" aria-controls="custom-field" aria-selected="false">Custom-field</button>
+                                    <button class="nav-link w-100 @if(!isset($client->id)) disabled @endif" id="custom-field-tab" data-bs-toggle="tab" data-bs-target="#custom-field" type="button" role="tab" aria-controls="custom-field" aria-selected="false">Custom-field</button>
                                 </li>
                                 <li class="nav-item flex-fill" role="presentation">
-                                    <button class="nav-link w-100" id="recent-update-tab" data-bs-toggle="tab" data-bs-target="#recent-update" type="button" role="tab" aria-controls="recent-update" aria-selected="false">Recent-update</button>
+                                    <button class="nav-link w-100 @if(!isset($client->id)) disabled @endif" id="recent-update-tab" data-bs-toggle="tab" data-bs-target="#recent-update" type="button" role="tab" aria-controls="recent-update" aria-selected="false">Recent-update</button>
                                 </li>
                             </ul>
                             <!-- Tabs end -->
@@ -176,7 +176,7 @@
                                                  <button id="details-updateButton" class="btn btn-sm bg-theme text-light btn-outline-dark">Update</button>
                                                  @else
                                                 <button id="details-clearButton" class="btn btn-sm btn-outline-dark">Clear</button>
-                                                <button id="details-saveButton" class="btn btn-sm bg-theme text-light btn-outline-dark">Save</button>
+                                                <button id="details-saveButton" class="btn btn-sm bg-theme text-light btn-outline-dark"><span id="save-details-span">Save</span></button>
                                                  @endif
                                             </div>
                                         </div>
@@ -238,6 +238,17 @@
 <!-- CSRF Token -->
 <script>
     $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') } });
+
+    function scrollToTop() {
+        $('html, body').animate({ scrollTop: 0 }, 'fast');
+    }
+
+    function showErrorMessage(message, duration) {
+        $('#errorMessage').html(message).show();
+        setTimeout(function() {
+            $('#errorMessage').fadeOut();
+        }, duration);
+    }
 </script>
 <!-- CSRF Token -->
 
@@ -263,8 +274,10 @@
         $('#details-saveButton').click(function (event) {
             event.preventDefault();
             var saveButton = $(this);
+            $('#save-details-span').prepend('<i class="fa fa-spinner fa-spin"></i>');
+            $('#save-details-span').addClass('text-dark');
             saveButton.prop('disabled', true);
-            
+
             var name = $('#name').val();
             var clientTypeId = $('#client_type_id').val();
             var managerId = $('#manager_id').val();
@@ -284,6 +297,9 @@
                 contentType: false,
                 processData: false,
                 success: function (response) {
+                    saveButton.find('.fa-spinner').remove();
+                    $('#save-details-span').removeClass('text-dark');
+                    saveButton.prop('disabled', false);
                     if (response.status === 200) {
                         swal({
                             title: "Success!",
@@ -293,7 +309,6 @@
                         });
                         $('#successMessage').show();
                         $('#errorMessage').hide();
-                        saveButton.prop('disabled', false);
                         clientId = response.client_id;
                         window.setTimeout(function(){window.location.href = "/admin/create-client/" + clientId},2000);
                     } else {
@@ -303,6 +318,10 @@
                     }
                 },
                 error: function(xhr, status, error) {
+                    scrollToTop();
+                    saveButton.find('.fa-spinner').remove();
+                    $('#save-details-span').removeClass('text-dark');
+                    saveButton.prop('disabled', false);
                     var errorMessage = "";
                     if (xhr.responseJSON && xhr.responseJSON.errors){
                         $.each(xhr.responseJSON.errors, function (key, value) {
@@ -311,11 +330,8 @@
                     } else {
                         errorMessage = "An error occurred. Please try again later.";
                     }
-                    $('#errorMessage').html(errorMessage);
-                    $('#errorMessage').show();
+                    showErrorMessage(errorMessage, 5000);
                     $('#successMessage').hide();
-                    console.error("Error occurred: " + error);
-                    console.error(xhr.responseText);
                 },
                 cache: false,
                 contentType: false,
@@ -341,6 +357,7 @@
         $('#details-updateButton').click(function(event) {
             event.preventDefault();
             var saveButton = $(this);
+            saveButton.prepend('<i class="fa fa-spinner fa-spin"></i>');
             saveButton.prop('disabled', true);
 
             var name = $('#name').val();
@@ -400,6 +417,9 @@
 <script>
     $(document).ready(function () {
         $('#business-saveButton').click(function (event) {
+            var saveButton = $(this);
+            saveButton.prepend('<i class="fa fa-spinner fa-spin"></i>');
+            saveButton.prop('disabled', true);
             event.preventDefault();
             var saveButton = $(this);
             saveButton.prop('disabled', true);
@@ -417,6 +437,8 @@
                 contentType: false,
                 processData: false,
                 success: function (response) {
+                    saveButton.find('.fa-spinner').remove();
+                    saveButton.prop('disabled', false);
                     if (response.status === 200) {
                         swal({
                             title: "Success!",
@@ -433,6 +455,9 @@
                     }
                 },
                 error: function(xhr, status, error) {
+                    scrollToTop();
+                    saveButton.find('.fa-spinner').remove();
+                    saveButton.prop('disabled', false);
                     var errorMessage = "";
                     if (xhr.responseJSON && xhr.responseJSON.errors){
                         $.each(xhr.responseJSON.errors, function (key, value) {

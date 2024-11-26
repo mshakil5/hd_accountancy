@@ -26,14 +26,14 @@
 
              <div class="row my-4 px-3">
                 <div class="col-lg-3">
-                    <label for="">Client Name</label>
+                    <label for="">Client Name <span class="text-danger">*</span></label>
                     <input type="text" class="form-control my-2" id="name" value="{{ $client->name }}"name="name">
                 </div>
 
                 <div class="col-lg-3">
-                    <label for="country">Clien Type</label>
+                    <label for="country">Client Type</label>
                     <div class="mt-2">
-                        <select class="form-control select2 my-2" id="client_type_id" name="client_type_id">
+                        <select class="form-control my-2" id="client_type_id" name="client_type_id">
                             <option value="" selected disabled>Choose Client Type</option>
                             @foreach($clientTypes as $clientType)
                                 <option value="{{ $clientType->id }}" {{ $client->client_type_id == $clientType->id ? 'selected' : '' }}>{{ $clientType->name }}</option>
@@ -45,7 +45,7 @@
                 <div class="col-lg-3">
                     <label for="">Client Manager</label>
                     <div class="mt-2">
-                        <select class="form-control select2 my-2" name="manager_id" id="manager_id">
+                        <select class="form-control my-2" name="manager_id" id="manager_id">
                             <option value="">Please select</option>
                             @foreach($managers as $manager)
                                 <option value="{{ $manager->id }}" data-id-number="{{ $manager->id_number }}" {{ $client->manager_id == $manager->id ? 'selected' : '' }}>{{ $manager->first_name }} {{ $manager->last_name }}</option>
@@ -105,7 +105,7 @@
                                                 <input type="file" id="pic" name="photo" class="invisible">
                                             </div>
                                             <div class="col-lg-4">
-                                                <label for="">Email</label>
+                                                <label for="">Email <span class="text-danger">*</span></label>
                                                 <input type="email" class="form-control my-2" id="email" name="email" placeholder="Enter email" value="{{ $client->email }}">
                                             </div>
                                             <div class="col-lg-4">
