@@ -634,13 +634,13 @@
                         <h5 class="mb-3">Frequency</h5>
                         <div class="form-check">
                             <select class="form-control mt-2 select2 serviceFrequency" id="serviceFrequency" name="service_frequency">
-                            <option value="">Select</option>
-                            <option>1 Week</option>
-                            <option>2 Week</option>
-                            <option>4 Week</option>
-                            <option>1 Month</option>
-                            <option>3 Month</option>
-                            <option>Annual</option>
+                            <option value="">Select Frequency</option>
+                            <option>Weekly</option>
+                            <option>2 Weekly</option>
+                            <option>4 Weekly</option>
+                            <option>Monthly</option>
+                            <option>Quarterly</option>
+                            <option>Annually</option>
                             </select>
                         </div>
                     </div>

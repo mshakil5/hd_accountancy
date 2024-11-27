@@ -53,11 +53,12 @@
                                         <div class="form-check">
                                             <select id="serviceFrequency" class="form-control serviceFrequency" name="service_frequency">
                                                 <option value="">Select Frequency</option>
-                                                <option {{ isset($clientService) && $clientService->service_frequency == 'Daily' ? 'selected' : '' }}>Daily</option>
                                                 <option {{ isset($clientService) && $clientService->service_frequency == 'Weekly' ? 'selected' : '' }}>Weekly</option>
+                                                <option {{ isset($clientService) && $clientService->service_frequency == '2 Weekly' ? 'selected' : '' }}>2 Weekly</option>
+                                                <option {{ isset($clientService) && $clientService->service_frequency == '4 Weekly' ? 'selected' : '' }}>4 Weekly</option>
                                                 <option {{ isset($clientService) && $clientService->service_frequency == 'Monthly' ? 'selected' : '' }}>Monthly</option>
-                                                <option {{ isset($clientService) && $clientService->service_frequency == 'Quarterly' ? 'selected' : '' }}>Quarterly</option> 
-                                                <option {{ isset($clientService) && $clientService->service_frequency == 'Yearly' ? 'selected' : '' }}>Yearly</option>
+                                                <option {{ isset($clientService) && $clientService->service_frequency == 'Quarterly' ? 'selected' : '' }}>Quarterly</option>
+                                                <option {{ isset($clientService) && $clientService->service_frequency == 'Annually' ? 'selected' : '' }}>Annually</option>
                                             </select>
                                         </div>
                                     </div>
