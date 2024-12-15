@@ -50,7 +50,7 @@
             {data: 'DT_RowIndex', name: 'DT_RowIndex'},
             {data: 'refid', name: 'refid'},
             {data: 'name', name: 'name'},
-            {data: 'manager.first_name', name: 'manager.first_name'},
+            {data: 'manager_first_name', name: 'manager_first_name'},
             {data: 'phone', name: 'phone'},
             {data: 'email', name: 'email'},
             {

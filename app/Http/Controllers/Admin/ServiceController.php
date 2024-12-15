@@ -656,8 +656,8 @@ class ServiceController extends Controller
     {
         if ($request->ajax()) {
             $data = ClientService::with('clientSubServices')
-                ->where('service_deadline', '>=', now()->startOfDay())
-                ->where('service_deadline', '<=', now()->addDays(30)->endOfDay())
+                ->where('due_date', '>=', now()->startOfDay())
+                ->where('due_date', '<=', now()->addDays(30)->endOfDay())
                 ->whereHas('clientSubServices', function ($query) {
                     $query->whereNotNull('staff_id');
                 })

@@ -32,6 +32,10 @@ class ClientController extends Controller
             $data = Client::with(['clientType', 'manager'])->orderBy('id', 'desc')->get();
             return Datatables::of($data)
                 ->addIndexColumn()
+                ->addColumn('manager_first_name', function ($row) {
+                    return $row->manager->first_name ?? '';
+                })
+                ->rawColumns(['manager_first_name'])
                 ->make(true);
         }
     }

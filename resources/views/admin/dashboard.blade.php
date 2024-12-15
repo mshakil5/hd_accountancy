@@ -131,11 +131,12 @@
                       <div class="form-check">
                           <select id="service_frequency" class="form-control mt-2" name="service_frequency">
                               <option value="" selected disabled>Select Frequency</option>
-                              <option >Daily</option>
                               <option>Weekly</option>
-                              <option >Monthly</option>
-                              <option >Quarterly</option> 
-                              <option >Yearly</option>
+                              <option>2 Weekly</option>
+                              <option>4 Weekly</option>
+                              <option>Monthly</option>
+                              <option>Quarterly</option>
+                            <option>Annually</option>
                           </select>
                       </div>
                   </div>   

@@ -164,7 +164,8 @@
       $("#FormCloseBtn").click(function(){
           $("#addThisFormContainer").hide(200);
           $("#newBtn").show(100);
-          clearform();
+        //   clearform();
+        location.reload();
       });
       //header for csrf-token is must in laravel
       $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') } });
@@ -354,7 +355,6 @@
           $("#cardTitle").html('Update this service');
           $("#addThisFormContainer").show(300);
           $("#newBtn").hide(100);
-          $('#subServicesContainer').empty();
 
             (data.sub_services || []).forEach(function(subService) {
                 var inputField = '<div class="input-group mb-3">' +
@@ -376,7 +376,6 @@
           $('#createThisForm')[0].reset();
           $("#addBtn").val('Create');
           $("#cardTitle").html('Add new service');
-          $('#subServicesContainer').empty();
       }
   });
 </script>
