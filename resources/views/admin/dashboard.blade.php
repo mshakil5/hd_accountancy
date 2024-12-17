@@ -505,8 +505,9 @@
                       <tr>
                           <th scope="col">Client Name</th>
                           <th scope="col">Service Name</th>
+                          <th scope="col">Due Date</th>
+                          <th scope="col">Target Deadline</th>
                           <th scope="col">Deadline</th>
-                          <th scope="col">Frequency</th>
                           <th scope="col">Action</th>
                       </tr>
                   </thead>
@@ -935,13 +936,47 @@
               { data: 'clientname', name: 'clientname' },
               { data: 'servicename', name: 'servicename' },
               {
-                  data: 'service_deadline',
-                  name: 'service_deadline',
+                  data: 'due_date',
+                  name: 'due_date',
                   render: function(data, type, row) {
                       return moment(data).format('DD.MM.YY');
                   }
               },
-              { data: 'service_frequency', name: 'service_frequency' },
+              {
+                data: 'legal_deadline',
+                name: 'legal_deadline',
+                render: function(data, type, row) {
+                    if (!data.original) {
+                        return 'N/A';
+                    }
+                    var formattedDate = data.formatted;
+                    var today = moment().startOf('day');
+                    var deadline = moment(data.original).startOf('day');
+                    if (deadline.isBefore(today)) {
+                        return '<span class="bg-warning">' + formattedDate + '</span>';
+                    }
+                    return formattedDate;
+                }
+              },
+              {
+                data: 'service_deadline',
+                name: 'service_deadline',
+                render: function(data, type, row) {
+                    if (!data.original) {
+                        return 'N/A';
+                    }
+
+                    var formattedDate = data.formatted;
+
+                    var today = moment().startOf('day');
+                    var deadline = moment(data.original).startOf('day');
+                    if (deadline.isBefore(today)) {
+                        return '<span class="bg-danger">' + formattedDate + '</span>';
+                    }
+
+                    return formattedDate;
+                }
+              },
               {
                   data: 'action',
                   name: 'action',
@@ -960,11 +995,10 @@
               var serviceName = rowData.servicename;
               var frequency = rowData.service_frequency;
               var deadline = rowData.service_deadline;
-
               $('#service_name2').val(serviceName);
               $('#manager_name2').val(managerFirstName);
               $('#service_frequency2').val(frequency);
-              $('#service_deadline2').val(deadline);
+              $('#service_deadline2').val(deadline.original);
 
               $.ajax({
                   url: '/admin/getClientSubService/' + clientserviceId,

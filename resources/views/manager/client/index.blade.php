@@ -43,7 +43,13 @@
             {data: 'DT_RowIndex', name: 'DT_RowIndex'},
             {data: 'refid', name: 'refid'},
             {data: 'name', name: 'name'},
-            {data: 'manager.first_name', name: 'manager.first_name'},
+            {
+                data: 'manager.first_name', 
+                name: 'manager.first_name',
+                render: function(data, type, row) {
+                    return data ? data : '';
+                }
+            },
             {data: 'phone', name: 'phone'},
             {data: 'email', name: 'email'},
         ]

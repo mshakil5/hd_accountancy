@@ -25,25 +25,28 @@ class ServiceController extends Controller
             if ($request->ajax()) {
             $data = ClientService::with('clientSubServices')
                 ->where('manager_id', $currentUserId)
-                ->where('service_deadline', '>=', now()->startOfDay())
-                ->where('service_deadline', '<=', now()->addDays(30)->endOfDay())
-                ->whereHas('clientSubServices', function ($query) {
-                    $query->whereIn('sequence_status', [0, 1]);
-                })
+                ->where('due_date', '<=', now()->endOfDay())
+                ->orderBy('id', 'desc')
+                // ->whereHas('clientSubServices', function ($query) {
+                //     $query->whereIn('sequence_status', [0, 1]);
+                // })
                 ->orderBy('id', 'desc')
                 ->get();
 
             return DataTables::of($data)
             
                 ->addColumn('clientname', function(ClientService $clientservice) {
-                    return $clientservice->client->name;
+                    return $clientservice->client ? $clientservice->client->name : '';
                 })
                 ->addColumn('servicename', function(ClientService $clientservice) {
-                    return $clientservice->service->name;
+                    return $clientservice->service ? $clientservice->service->name : '';
+                })
+                ->addColumn('status', function(ClientService $clientservice) {
+                    return $clientservice->status;
                 })
                 ->addColumn('action', function(ClientService $clientservice) {
                     $managerFirstName = $clientservice->manager->first_name;
-                    return '<button class="btn btn-secondary change-status" data-id="'. $clientservice->id. '" data-manager-firstname="'. $managerFirstName. '">Change Status</button>';
+                    return '<button class="btn btn-secondary change-status" data-id="'. $clientservice->id. '" data-manager-firstname="'. $managerFirstName. '">Details</button>';
                 })
                 ->make(true);
         }
@@ -500,5 +503,23 @@ class ServiceController extends Controller
         } else {
             return response()->json(['error' => 'Client sub-service not found'], 404);
         }
+    }
+
+    public function changeServiceStatus(Request $request)
+    {
+        $request->validate([
+            'id' => 'required',
+            'status' => 'required|in:0,2',
+        ]);
+
+        $clientService = ClientService::findOrFail($request->id);
+
+        $clientService->status = $request->status;
+        $clientService->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status updated successfully.'
+        ]);
     }
 }

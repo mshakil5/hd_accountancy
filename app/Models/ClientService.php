@@ -13,16 +13,7 @@ class ClientService extends Model
     use HasFactory;
     protected $table = 'client_service';
 
-     protected $fillable = [
-        'client_id',
-        'service_id',
-        'unique_id',
-        'manager_id',
-        'service_frequency',
-        'service_deadline',
-        'due_date',
-        'legal_deadline',
-    ];
+    protected $guarded = [];
 
     public function client()
     {

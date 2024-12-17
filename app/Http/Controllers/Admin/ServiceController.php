@@ -393,7 +393,7 @@ class ServiceController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'clientId' => 'required|integer',
-            'services' => 'required|array',
+            // 'services' => 'required|array',
         ]);
 
         if ($validator->fails()) {
@@ -655,22 +655,56 @@ class ServiceController extends Controller
     public function getAssignedService(Request $request)
     {
         if ($request->ajax()) {
+            // $data = ClientService::with('clientSubServices')
+            //     ->where('due_date', '>=', now()->startOfDay())
+            //     ->where('due_date', '<=', now()->addDays(30)->endOfDay())
+            //     // ->whereHas('clientSubServices', function ($query) {
+            //     //     $query->whereNotNull('staff_id');
+            //     // })
+            //     ->orderBy('id', 'desc')
+            //     ->get();
+
             $data = ClientService::with('clientSubServices')
-                ->where('due_date', '>=', now()->startOfDay())
-                ->where('due_date', '<=', now()->addDays(30)->endOfDay())
-                // ->whereHas('clientSubServices', function ($query) {
-                //     $query->whereNotNull('staff_id');
-                // })
+                ->where('status', 1)
+                ->where('due_date', '<=', now()->endOfDay())
                 ->orderBy('id', 'desc')
                 ->get();
 
             return DataTables::of($data)
             
                 ->addColumn('clientname', function(ClientService $clientservice) {
-                    return $clientservice->client->name;
+                    return $clientservice->client ? $clientservice->client->name : '';
                 })
                 ->addColumn('servicename', function(ClientService $clientservice) {
-                    return $clientservice->service->name;
+                    return $clientservice->service ? $clientservice->service->name : '';
+                })
+                ->addColumn('legal_deadline', function(ClientService $clientservice) {
+                    $legalDeadline = $clientservice->legal_deadline;
+                    if ($legalDeadline) {
+                        return [
+                            'formatted' => \Carbon\Carbon::parse($legalDeadline)->format('d.m.y'),
+                            'original' => $legalDeadline
+                        ];
+                    }
+
+                    return [
+                        'formatted' => 'N/A',
+                        'original' => null
+                    ];
+                })
+                ->addColumn('service_deadline', function(ClientService $clientservice) {
+                    $serviceDeadline = $clientservice->service_deadline;
+                
+                    if ($serviceDeadline) {
+                        return [
+                            'formatted' => \Carbon\Carbon::parse($serviceDeadline)->format('d.m.y'),
+                            'original' => $serviceDeadline
+                        ];
+                    }
+                    return [
+                        'formatted' => 'N/A',
+                        'original' => null
+                    ];
                 })
                 ->addColumn('action', function(ClientService $clientservice) {
                     $managerFirstName = $clientservice->manager->first_name;

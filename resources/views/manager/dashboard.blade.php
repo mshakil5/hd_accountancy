@@ -282,8 +282,10 @@
                                 <tr>
                                     <th scope="col">Client Name</th>
                                     <th scope="col">Service Name</th>
+                                    <th scope="col">Due Date</th>
+                                    <th scope="col">Target Deadline</th>
                                     <th scope="col">Deadline</th>
-                                    <th scope="col">Frequency</th>
+                                    <th scope="col">Status</th>
                                     <th scope="col">Action</th>
                                 </tr>
                             </thead>
@@ -418,15 +420,85 @@
                 { data: 'clientname', name: 'clientname' },
                 { data: 'servicename', name: 'servicename' },
                 { 
+                    data: 'due_date', 
+                    name: 'due_date',
+                    render: function(data, type, row) {
+                        return moment(data).format('DD.MM.YY');
+                    }
+                },
+                { 
+                    data: 'legal_deadline', 
+                    name: 'legal_deadline',
+                    render: function(data, type, row) {
+                        return moment(data).format('DD.MM.YY');
+                    }
+                },
+                { 
                     data: 'service_deadline', 
                     name: 'service_deadline',
                     render: function(data, type, row) {
                         return moment(data).format('DD.MM.YY');
                     }
                 },
-                { data: 'service_frequency', name: 'service_frequency' },
+                {
+                    data: 'status',
+                    name: 'status',
+                    orderable: false,
+                    searchable: false,
+                    render: function(data, type, row) {
+                        var statusOptions = {
+                            0: 'Processing',
+                            2: 'Completed'
+                        };
+                        var select = '<select class="form-control status-change" data-id="' + row.id + '">';
+                        for (var value in statusOptions) {
+                            var selected = (data == value) ? 'selected' : '';
+                            select += '<option value="' + value + '" ' + selected + '>' + statusOptions[value] + '</option>';
+                        }
+                        select += '</select>';
+                        return select;
+                    }
+                },
                 { data: 'action', name: 'action', orderable: false, searchable: false }
             ]
+        });
+
+        $(document).on('change', '.status-change', function() {
+            var newStatus = $(this).val();
+            var itemId = $(this).data('id');
+
+            swal({
+                title: "Change Status?",
+                text: "Are you sure you want to change the status?",
+                icon: 'warning',
+                buttons: true,
+                dangerMode: true,
+            }).then((result) => {
+                if (result) {
+                    $.ajax({
+                        type: 'POST',
+                        url: '/manager/client-service-change-status',
+                        data: {
+                            id: itemId,
+                            status: newStatus,
+                            _token: $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                swal("Success!", response.message, "success");
+                                setTimeout(function() {
+                                    location.reload();
+                                }, 2000);
+                            } else {
+                                swal("Error!", response.message, "error");
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error(xhr.responseText);
+                        }
+                    });
+                }
+            });
         });
 
         $(document).on('click', '.change-status', function() {

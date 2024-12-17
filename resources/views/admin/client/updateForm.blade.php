@@ -718,34 +718,47 @@
             e.preventDefault(); 
 
             var clientId = "{{ $client->id ?? '' }}";
-            var serviceId = $('#serviceDropdown').val();
-            var managerId = $('#managerDropdown').val(); 
-            var service_frequency = $('#service_frequency').val(); 
-            var service_deadline = $('#service_deadline').val(); 
-            var subServices = [];
+            var services = [];
+            $('.subServiceDetails').each(function() {
+                var serviceId = $('#serviceDropdown').val();
 
-            $('#serviceDetailsTable tr').each(function() {
-                var subServiceId = $(this).find('.sub-service-id').attr('data-sub-service-id');
-                var deadline = $(this).find('input[type="date"]').val();
-                var note = $(this).find('textarea').val();
-                var staffId = $(this).find('.staffDropdown').val();
-                
-                subServices.push({
-                    subServiceId: subServiceId,
-                    deadline: deadline,
-                    note: note,
-                    staffId: staffId
+                var managerId = $(this).find('.managerDropdown').val();
+                var service_frequency = $(this).find('.serviceFrequency').val();
+                var service_deadline = $(this).find('.serviceDeadline').val();
+                var due_date = $(this).find('.dueDate').val();
+                var legal_deadline = $(this).find('.legalDeadline').val();
+                var subServices = [];
+
+                $(this).find('tbody tr').each(function() {
+                    var subServiceId = $(this).find('.sub-service-id').attr('data-sub-service-id'); 
+                    var deadline = $(this).find('input[type="date"]').val();
+                    var note = $(this).find('textarea').val();
+                    var staffId = $(this).find('.staffDropdown').val();
+
+                    subServices.push({
+                        subServiceId: subServiceId,
+                        deadline: deadline,
+                        note: note,
+                        staffId: staffId
+                    });
+                });
+
+                services.push({
+                    serviceId: serviceId,
+                    managerId: managerId,
+                    service_frequency: service_frequency,
+                    service_deadline: service_deadline,
+                    subServices: subServices,
+                    due_date: due_date,
+                    legal_deadline: legal_deadline,
                 });
             });
 
             var data = {
                 clientId: clientId,
-                serviceId: serviceId,
-                managerId: managerId,
-                service_frequency: service_frequency,
-                service_deadline: service_deadline,
-                subServices: subServices
+                services: services
             };
+            // console.log(data);
 
             $.ajax({
                 url: '/admin/store-service',
