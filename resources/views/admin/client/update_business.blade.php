@@ -32,7 +32,6 @@
             <label for="status">Company status</label>
             <div class="mt-2">
                 <select class="form-control my-2" name="status" id="status">
-                    <!-- <option value="" selected disabled>Select status</option> -->
                     <option value="0" {{ isset($businessInfo->status) && $businessInfo->status == 0 ? 'selected' : '' }}>Inactive</option>
                     <option value="1" {{ isset($businessInfo->status) && $businessInfo->status == 1 ? 'selected' : '' }}>Active</option>
                 </select>
@@ -42,7 +41,6 @@
             <label for="">HMRC Authorisation</label>
             <div class="mt-2">
                 <select class="form-control my-2" name="hmrc_authorisation" id="hmrc_authorisation">
-                    <!-- <option value="" selected>Select status</option> -->
                     <option value="0" {{ isset($client->businessInfo) && $client->businessInfo->status == '0' ? 'selected' : '' }}>No</option>
                     <option value="1" {{ isset($client->businessInfo) && $client->businessInfo->status == '1' ? 'selected' : '' }}>Yes</option>
                 </select>
@@ -55,7 +53,7 @@
     </div>
     <div class="row">
         <div class="col-lg-4 mx-auto text-center">
-            <button  id="business-saveButton" class="btn btn-sm bg-theme text-light btn-outline-dark">Update</button>
+            <button id="business-saveButton" class="btn btn-sm bg-theme text-light btn-outline-dark">Update</button>
         </div>
     </div>
 </form>

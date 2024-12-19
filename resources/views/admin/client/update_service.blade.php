@@ -38,7 +38,7 @@
                                     <div class="col-md-2 text-center">
                                         <h5 class="mb-3">Manager</h5>
                                         <div class="form-check">
-                                            <select class="form-control mt-2 select2 managerDropdown" name="manager_id" style="width:100%">
+                                            <select class="form-control mt-2 managerDropdown" name="manager_id" style="width:100%">
                                                 <option value="">Select</option>
                                                 @foreach($managers as $manager)
                                                     <option value="{{ $manager->id }}" {{ isset($clientService) && $clientService->manager_id == $manager->id ? 'selected' : '' }}>
@@ -108,7 +108,7 @@
                                             <input type="date" id="deadline" name="deadline" class="form-control" value="{{ isset($clientSubService->deadline) ? $clientSubService->deadline : '' }}">
                                         </td>
                                         <td>
-                                            <select class="form-control select2 staffDropdown" id="selectedStaff"name="staff_id" style="width:100%">
+                                            <select class="form-control staffDropdown" id="selectedStaff"name="staff_id" style="width:100%">
                                                 <option value="">Select Staff</option>
                                                 @foreach($staffs as $staff)
                                                     <option value="{{ $staff->id }}" {{ isset($clientSubService->staff_id) && $clientSubService->staff_id == $staff->id ? 'selected' : '' }}>

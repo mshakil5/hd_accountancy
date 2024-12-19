@@ -94,15 +94,10 @@
                     },
                     success: function(response) {
                         if (response.status === 200) {
-                            // Toastify({
-                            //     text: "Client deleted successfully!"
-                            // }).showToast();
-                            swal({
-                                title: "Success!",
-                                text: "Client deleted successfully",
-                                icon: "success",
-                                button: "OK",
-                            });
+                            Toastify({
+                                text: "Client deleted successfully!"
+                            }).showToast();
+                            
                             $('#clientsTable').DataTable().ajax.reload();
                         } else {
                             Toastify({

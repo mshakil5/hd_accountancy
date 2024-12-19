@@ -119,14 +119,10 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/client', [ClientController::class, 'index'])->name('allClient');
     Route::get('/client-list', [ClientController::class, 'getClients'])->name('get.Clients');
     Route::get('/create-client', [ClientController::class, 'create'])->name('createClient');
-    Route::get('/create-client/{id}', [ClientController::class, 'create1'])->name('createNewClient');
     Route::post('/client', [ClientController::class, 'store']);
-    Route::get('/client/{id}/edit', [ClientController::class, 'edit']);
-    Route::post('/client-update', [ClientController::class, 'update']);
-    Route::get('/client/{id}', [ClientController::class, 'delete']);
 
     //Client Delete
-    Route::delete('/delete-client/{id}', [ClientController::class, 'deleteContact'])->name('delete.client');
+    Route::delete('/delete-client/{id}', [ClientController::class, 'deleteClient'])->name('delete.client');
 
     //Client status change
     Route::post('/client-change-status', [ClientController::class,'changeStatus'])->name('client.change.status');
@@ -169,7 +165,7 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/contact-info/{id}', [ContactInfoController::class, 'delete']);
 
     //Fetch all services
-     Route::get('/all-services', [ServiceController::class, 'getAllServices']);
+    Route::get('/all-services', [ServiceController::class, 'getAllServices']);
 
      //Create specific service
      Route::post('/create-specific-service', [ServiceController::class, 'createSpecificService']);

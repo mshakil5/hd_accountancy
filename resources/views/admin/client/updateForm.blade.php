@@ -9,34 +9,19 @@
                 <i class='bx bxs-user-plus fs-4 me-2'></i> Client Update
             </p>
 
-            <!-- Success and Error message -->
             <div class="row my-4 px-3">
-                <div class="col-lg-12">
-                    <div id="successMessage" class="alert alert-success" style="display: none;">
-                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                        <b></b>
-                    </div>
-                    <div id="errorMessage" class="alert alert-danger" style="display: none;">
-                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                        <b></b>
-                    </div>
-                </div>
-            </div>
-            <!-- Success and Error message -->
-
-             <div class="row my-4 px-3">
                 <div class="col-lg-3">
                     <label for="">Client Name <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control my-2" id="name" value="{{ $client->name }}"name="name">
+                    <input type="text" class="form-control my-2" id="name" value="{{ $client->name }}" name="name">
                 </div>
 
                 <div class="col-lg-3">
                     <label for="country">Client Type</label>
                     <div class="mt-2">
                         <select class="form-control my-2" id="client_type_id" name="client_type_id">
-                            <option value="" selected disabled>Choose Client Type</option>
+                            <option value="">Please select</option>
                             @foreach($clientTypes as $clientType)
-                                <option value="{{ $clientType->id }}" {{ $client->client_type_id == $clientType->id ? 'selected' : '' }}>{{ $clientType->name }}</option>
+                            <option value="{{ $clientType->id }}" {{ $client->client_type_id == $clientType->id ? 'selected' : '' }}>{{ $clientType->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -48,13 +33,13 @@
                         <select class="form-control my-2" name="manager_id" id="manager_id">
                             <option value="">Please select</option>
                             @foreach($managers as $manager)
-                                <option value="{{ $manager->id }}" data-id-number="{{ $manager->id_number }}" {{ $client->manager_id == $manager->id ? 'selected' : '' }}>{{ $manager->first_name }} {{ $manager->last_name }}</option>
+                            <option value="{{ $manager->id }}" data-id-number="{{ $manager->id_number }}" {{ $client->manager_id == $manager->id ? 'selected' : '' }}>{{ $manager->first_name }} {{ $manager->last_name }}</option>
                             @endforeach
                         </select>
                     </div>
                 </div>
             </div>
-            
+
             <div class="row px-3">
                 <div class="col-lg-12">
                     <div class="card">
@@ -66,7 +51,7 @@
                                     <button class="nav-link w-100 active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">Client Details</button>
                                 </li>
                                 <li class="nav-item flex-fill" role="presentation">
-                                    <button  class="nav-link w-100" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">Business Info</button>
+                                    <button class="nav-link w-100" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">Business Info</button>
                                 </li>
                                 <li class="nav-item flex-fill" role="presentation">
                                     <button class="nav-link w-100" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab" aria-controls="contact" aria-selected="false">Director Info</button>
@@ -96,7 +81,7 @@
                                             </div>
                                             <div class="col-lg-3 text-center">
                                                 <div class="img mb-2">
-                                                    <img src="{{ $client->photo ? asset('images/client/' . $client->photo) : asset('assets/img/human-placeholder.jpg') }}" id="imagePreview" width="150" class="border-theme border-2 rounded-3">                    
+                                                    <img src="{{ $client->photo ? asset('images/client/' . $client->photo) : asset('assets/img/human-placeholder.jpg') }}" id="imagePreview" width="150" class="border-theme border-2 rounded-3">
                                                 </div>
                                                 <label for="pic" class="mb-0" style="cursor: pointer;">
                                                     <i class="bi bi-cloud-upload"></i>
@@ -154,9 +139,10 @@
                                             <div class="col-lg-4">
                                                 <label for="" class="mb-2">Upload Photo Id </label>
                                                 <div class="position-relative">
-                                                <input type="number" class="form-control" name="photo_id" id="photo_id" value="{{ $client->photo_id }}" placeholder="Upload photo id">
-                                                <i class="bi bi-paperclip position-absolute top-50 translate-middle-y"
-                                                    style="right: 8px;"></i>
+                                                    <input type="file" class="form-control" name="photo_id" id="photo_id"
+                                                        accept="image/*" placeholder="Upload photo id">
+                                                    <i class="bi bi-paperclip position-absolute top-50 translate-middle-y"
+                                                        style="right: 8px;"></i>
                                                 </div>
                                             </div>
 
@@ -164,7 +150,7 @@
                                                 <label for="">Reference ID</label>
                                                 <input type="text" class="form-control my-2" id="reference_id" name="reference_id" placeholder="Enter reference id" value="{{ isset($client) && isset($client->refid) ? $client->refid : '' }}">
                                             </div>
-                                            
+
                                         </div>
                                         <div class="row">
                                             <div class="col-lg-4 mx-auto text-center">
@@ -201,16 +187,15 @@
 
                                 <!-- Custom Field -->
                                 <div class="tab-pane fade" id="custom-field" role="tabpanel" aria-labelledby="custom-field-tab">
-                                custom-field
+                                    custom-field
                                 </div>
                                 <!-- Custom Field -->
 
                                 <!-- Recent Update -->
                                 <div class="tab-pane fade" id="recent-update" role="tabpanel" aria-labelledby="recent-update-tab">
-                                recent-update
                                 </div>
                                 <!-- Recent Update -->
-                                                         
+
                             </div>
 
                             <!-- All Form End -->
@@ -227,7 +212,11 @@
 @section('script')
 
 <script>
-    $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') } });
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
 </script>
 
 <!-- Image preview start -->
@@ -258,19 +247,17 @@
             var formData = new FormData($('#detailsForm')[0]);
             var clientId = "{{ $client->id ?? '' }}";
 
-            formData.append('name', name);
-            formData.append('client_type_id', clientTypeId);
-            formData.append('manager_id', managerId);
+            formData.append('name', $('#name').val());
+            formData.append('client_type_id', $('#client_type_id').val());
+            formData.append('manager_id', $('#manager_id').val());
 
-            if(clientId) {
+            if (clientId) {
                 $.ajax({
                     url: "/admin/client-details-update/" + clientId,
                     type: 'POST',
                     data: formData,
                     async: false,
                     success: function(response) {
-                        // $('#successMessage b').text(response.message);
-                        // $('#successMessage').show();
                         swal({
                             title: "Success!",
                             text: "Client details updated successfully",
@@ -279,17 +266,17 @@
                         });
                     },
                     error: function(xhr, status, error) {
-                         var errorMessage = "";
-                         if (xhr.responseJSON && xhr.responseJSON.errors){
-                            $.each(xhr.responseJSON.errors, function (key, value) {
-                            errorMessage += key + ": " + value.join(", ") + "<br>";
-                            });
-                         }else{
-                            errorMessage = "An error occurred. Please try again later.";
-                         }
-                        $('#errorMessage').html(errorMessage);
-                        $('#errorMessage').show();
-                        $('#successMessage').hide();
+                        console.error(xhr.responseText);
+                        var errorMessage = "An error occurred. Please try again later.";
+                        if (xhr.responseJSON && xhr.responseJSON.errors) {
+                            errorMessage = Object.values(xhr.responseJSON.errors).join(", ");
+                        }
+                        swal({
+                            title: "Error",
+                            text: errorMessage,
+                            icon: "error",
+                            button: "OK",
+                        });
                     },
                     cache: false,
                     contentType: false,
@@ -311,16 +298,13 @@
             var formData = new FormData($('#businessForm')[0]);
             var clientId = "{{ $client->id ?? '' }}";
 
-            if(clientId) {
+            if (clientId) {
                 $.ajax({
                     url: "/admin/client-businessinfo-update/" + clientId,
                     type: 'POST',
                     data: formData,
                     async: false,
                     success: function(response) {
-                        // $('#successMessage b').text(response.message);
-                        // $('#successMessage').show();
-                        // $('#errorMessage').hide();
                         swal({
                             title: "Success!",
                             text: "Business Info updated successfully",
@@ -329,18 +313,16 @@
                         });
                     },
                     error: function(xhr, status, error) {
-                        console.error(  xhr.responseText);
-                         var errorMessage = "";
-                         if (xhr.responseJSON && xhr.responseJSON.errors){
-                            $.each(xhr.responseJSON.errors, function (key, value) {
-                            errorMessage += key + ": " + value.join(", ") + "<br>";
-                            });
-                         }else{
-                            errorMessage = "An error occurred. Please try again later.";
-                         }
-                        $('#errorMessage').html(errorMessage);
-                        $('#errorMessage').show();
-                        $('#successMessage').hide();
+                        var errorMessage = "An error occurred. Please try again later.";
+                        if (xhr.responseJSON && xhr.responseJSON.errors) {
+                            errorMessage = Object.values(xhr.responseJSON.errors).join(", ");
+                        }
+                        swal({
+                            title: "Error",
+                            text: errorMessage,
+                            icon: "error",
+                            button: "OK",
+                        });
                     },
                     cache: false,
                     contentType: false,
@@ -365,7 +347,7 @@
         });
 
         $('#directorTable').on('click', '.edit-director', function(event) {
-            event.preventDefault(); 
+            event.preventDefault();
             var directorInfo = JSON.parse($(this).closest('tr').attr('data-director-info'));
 
             $('#dir-name').val(directorInfo.name);
@@ -422,17 +404,16 @@
                     }, 2000);
                 },
                 error: function(xhr, status, error) {
-                    var errorMessage = "";
-                    if (xhr.responseJSON && xhr.responseJSON.errors){
-                        $.each(xhr.responseJSON.errors, function (key, value) {
-                            errorMessage += key + ": " + value.join(", ") + "<br>";
-                        });
-                    } else {
-                        errorMessage = "An error occurred. Please try again later.";
+                    var errorMessage = "An error occurred. Please try again later.";
+                    if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        errorMessage = Object.values(xhr.responseJSON.errors).join(", ");
                     }
-                    $('#errorMessage').html(errorMessage);
-                    $('#errorMessage').show();
-                    $('#successMessage').hide();
+                    swal({
+                        title: "Error",
+                        text: errorMessage,
+                        icon: "error",
+                        button: "OK",
+                    });
                 },
                 cache: false,
                 contentType: false,
@@ -450,38 +431,34 @@
     $(document).ready(function() {
         $('#directorTable').on('click', '.delete-director', function() {
             var directorId = $(this).closest('tr').data('director-id');
-        
+
             if (confirm("Are you sure you want to delete this director?")) {
                 $.ajax({
                     url: '/admin/delete-director/' + directorId,
                     type: 'DELETE',
                     success: function(response) {
-                            // $('#successMessage b').text(response.message);
-                            // $('#successMessage').show();
-                            // $('#errorMessage').hide();
-                            swal({
-                                title: "Success!",
-                                text: "Director Info deleted successfully",
-                                icon: "success",
-                                button: "OK",
-                            });
-                            
-                            setTimeout(function() {
-                                location.reload();
-                            }, 2000);  
+                        swal({
+                            title: "Success!",
+                            text: "Director Info deleted successfully",
+                            icon: "success",
+                            button: "OK",
+                        });
+
+                        setTimeout(function() {
+                            location.reload();
+                        }, 2000);
                     },
                     error: function(xhr, status, error) {
-                        var errorMessage = "";
+                        var errorMessage = "An error occurred. Please try again later.";
                         if (xhr.responseJSON && xhr.responseJSON.errors) {
-                            $.each(xhr.responseJSON.errors, function (key, value) {
-                                errorMessage += key + ": " + value.join(", ") + "<br>";
-                            });
-                        } else {
-                            errorMessage = "An error occurred. Please try again later.";
+                            errorMessage = Object.values(xhr.responseJSON.errors).join(", ");
                         }
-                        $('#errorMessage').html(errorMessage);
-                        $('#errorMessage').show();
-                        $('#successMessage').hide();
+                        swal({
+                            title: "Error",
+                            text: errorMessage,
+                            icon: "error",
+                            button: "OK",
+                        });
                     },
                     cache: false,
                     contentType: false,
@@ -495,8 +472,8 @@
 
 <!-- Director Info create Start -->
 <script>
-    $(document).ready(function () {
-        $('#director-saveButton').click(function (event) {
+    $(document).ready(function() {
+        $('#director-saveButton').click(function(event) {
             event.preventDefault();
             var clientId = "{{ $client->id ?? '' }}";
 
@@ -508,7 +485,7 @@
                 type: 'POST',
                 data: formData,
                 async: false,
-                success: function (response) {
+                success: function(response) {
                     if (response.status === 200) {
                         swal({
                             title: "Success!",
@@ -519,24 +496,19 @@
                         setTimeout(function() {
                             location.reload();
                         }, 2000);
-                    } else {
-                        $('#errorMessage b').text(response.message);
-                        $('#errorMessage').show();
-                        $('#successMessage').hide();
                     }
                 },
-                error: function (xhr, status, error) {
-                    var errorMessage = "";
-                        if (xhr.responseJSON && xhr.responseJSON.errors) {
-                            $.each(xhr.responseJSON.errors, function (key, value) {
-                                errorMessage += key + ": " + value.join(", ") + "<br>";
-                            });
-                        } else {
-                            errorMessage = "An error occurred. Please try again later.";
-                        }
-                        $('#errorMessage').html(errorMessage);
-                        $('#errorMessage').show();
-                        $('#successMessage').hide();
+                error: function(xhr, status, error) {
+                    var errorMessage = "An error occurred. Please try again later.";
+                    if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        errorMessage = Object.values(xhr.responseJSON.errors).join(", ");
+                    }
+                    swal({
+                        title: "Error",
+                        text: errorMessage,
+                        icon: "error",
+                        button: "OK",
+                    });
                 },
                 cache: false,
                 contentType: false,
@@ -545,7 +517,7 @@
             return false;
         });
 
-        $('#director-clearButton').click(function () {
+        $('#director-clearButton').click(function() {
             event.preventDefault();
             $('#directorForm')[0].reset();
         });
@@ -555,159 +527,161 @@
 
 <!-- Fetching sub services and putting on table start -->
 <script>
-  $(document).ready(function() {
-    $('#serviceDropdown').change(function() {
-      var serviceId = $(this).val();
-      if(serviceId) {
+    $(document).ready(function() {
+        $('#serviceDropdown').change(function() {
+            var serviceId = $(this).val();
+            if (serviceId) {
 
-        var exists = false;
+                var exists = false;
 
-        $('.subServiceDetails').each(function() {
-                if ($(this).find('input[name="service_id"]').val() == serviceId) {
-                    exists = true;
-                    return false;
+                $('.subServiceDetails').each(function() {
+                    if ($(this).find('input[name="service_id"]').val() == serviceId) {
+                        exists = true;
+                        return false;
+                    }
+                });
+                if (exists) {
+                    alert('This service is already added.');
+                    return;
                 }
-            });
-        if (exists) {
-            alert('This service is already added.');
-            return;
-        }
 
-        $.ajax({
-          url: '/admin/getSubServices/' + serviceId,
-          type: "GET",
-          dataType: "json",
-          success: function(data) {
-            var subServiceDetailsTemplate = `
-              <div class="row mt-4 subServiceDetails">
-                <div class="col-12">
-                  <h5 class="p-2 bg-theme text-white mb-0 text-capitalize">Services Details</h5>
-                  <div class="border-theme p-3 border-1">
-                    <div class="row mt-2">
-                      <!-- Sub-service details -->
-                    </div>
-                    <table class="table mt-3">
-                      <thead>
-                        <tr>
-                          <th>Sub Service</th>
-                          <th>Deadline</th>
-                          <th>Staff</th>
-                          <th>Note</th>
-                          <th>Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <!-- Sub-service rows  -->
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            `;
+                $.ajax({
+                    url: '/admin/getSubServices/' + serviceId,
+                    type: "GET",
+                    dataType: "json",
+                    success: function(data) {
+                        var subServiceDetailsTemplate = `
+                            <div class="row mt-4 subServiceDetails">
+                                <div class="col-12">
+                                <h5 class="p-2 bg-theme text-white mb-0 text-capitalize">Services Details</h5>
+                                <div class="border-theme p-3 border-1">
+                                    <div class="row mt-2">
+                                    <!-- Sub-service details -->
+                                    </div>
+                                    <table class="table mt-3">
+                                    <thead>
+                                        <tr>
+                                        <th>Sub Service</th>
+                                        <th>Deadline</th>
+                                        <th>Staff</th>
+                                        <th>Note</th>
+                                        <th style="text-align: center;">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Sub-service rows  -->
+                                    </tbody>
+                                    </table>
+                                </div>
+                                </div>
+                            </div>
+                            `;
 
-            $('#serviceForm').append(subServiceDetailsTemplate);
+                        $('#serviceForm').append(subServiceDetailsTemplate);
 
-            var serviceName = $('#serviceDropdown option:selected').text();
+                        var serviceName = $('#serviceDropdown option:selected').text();
 
-            var serviceFields = `
-              <div class="row">
-                <div class="col-md-12">
-                  <div class="row">
-                    <div class="col-md-1 text-center">
-                      <h5 class="mb-3">Service</h5>
-                      <p> <b>${serviceName}</b> </p>
-                      <input type="hidden" name="service_id" value="${serviceId}">
-                      <input type="hidden" name="client_service_id[]" value="">
-                    </div>
-                    <div class="col-md-2 text-center">
-                        <h5 class="mb-3">Manager</h5>
-                        <div class="form-check">
-                            <select class="form-control mt-2 select2 managerDropdown" name="manager_id">
-                            <option value="">Select</option>
-                            @foreach($managers as $manager)
-                            <option value="{{ $manager->id }}">{{ $manager->first_name }}</option>
-                            @endforeach
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-2 text-center">
-                        <h5 class="mb-3">Frequency</h5>
-                        <div class="form-check">
-                            <select class="form-control mt-2 select2 serviceFrequency" id="serviceFrequency" name="service_frequency">
-                            <option value="">Select Frequency</option>
-                            <option>Weekly</option>
-                            <option>2 Weekly</option>
-                            <option>4 Weekly</option>
-                            <option>Monthly</option>
-                            <option>Quarterly</option>
-                            <option>Annually</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-2 text-center">
-                        <h5 class="mb-3">Due Date</h5>
-                        <div class="form-check">
-                            <input type="date" class="form-control dueDate" id="dueDate" name="dueDate">
-                        </div>
-                    </div>
-                    <div class="col-md-2 text-center">
-                        <h5 class="mb-3">Target Deadline</h5>
-                        <div class="form-check">
-                            <input type="date" class="form-control legalDeadline" id="legalDeadline" name="legalDeadline">
-                        </div>
-                    </div>
-                    <div class="col-md-2 text-center">
-                        <h5 class="mb-3">Deadline</h5>
-                        <div class="form-check">
-                            <input type="date" class="form-control serviceDeadline" id="serviceDeadline" name="service_deadline">
-                        </div>
-                    </div>
-                    <div class="col-md-1 text-center">
-                      <h5 class="mb-1">Action</h5>
-                      <span class="removeSubServiceDetails" style="cursor: pointer; font-size: 24px; color: red;">&#10006;</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            `;
-            $('.subServiceDetails:last').find('.row:first').after(serviceFields);
+                        var serviceFields = `
+                            <div class="row">
+                                <div class="col-md-12">
+                                <div class="row">
+                                    <div class="col-md-1 text-center">
+                                    <h5 class="mb-3">Service</h5>
+                                    <p> <b>${serviceName}</b> </p>
+                                    <input type="hidden" name="service_id" value="${serviceId}">
+                                    <input type="hidden" name="client_service_id[]" value="">
+                                    </div>
+                                    <div class="col-md-2 text-center">
+                                        <h5 class="mb-3">Manager</h5>
+                                        <div class="form-check">
+                                            <select class="form-control mt-2 managerDropdown" name="manager_id">
+                                            <option value="">Select</option>
+                                            @foreach($managers as $manager)
+                                            <option value="{{ $manager->id }}">{{ $manager->first_name }}</option>
+                                            @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 text-center">
+                                        <h5 class="mb-3">Frequency</h5>
+                                        <div class="form-check">
+                                            <select class="form-control mt-2 serviceFrequency" id="serviceFrequency" name="service_frequency">
+                                            <option value="">Select Frequency</option>
+                                            <option>Weekly</option>
+                                            <option>2 Weekly</option>
+                                            <option>4 Weekly</option>
+                                            <option>Monthly</option>
+                                            <option>Quarterly</option>
+                                            <option>Annually</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 text-center">
+                                        <h5 class="mb-3">Due Date</h5>
+                                        <div class="form-check">
+                                            <input type="date" class="form-control dueDate" id="dueDate" name="dueDate">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 text-center">
+                                        <h5 class="mb-3">Target Deadline</h5>
+                                        <div class="form-check">
+                                            <input type="date" class="form-control legalDeadline" id="legalDeadline" name="legalDeadline">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 text-center">
+                                        <h5 class="mb-3">Deadline</h5>
+                                        <div class="form-check">
+                                            <input type="date" class="form-control serviceDeadline" id="serviceDeadline" name="service_deadline">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-1 text-center">
+                                    <h5 class="mb-1">Action</h5>
+                                    <span class="removeSubServiceDetails" style="cursor: pointer; font-size: 24px; color: red;">&#10006;</span>
+                                    </div>
+                                </div>
+                                </div>
+                            </div>
+                            `;
+                        $('.subServiceDetails:last').find('.row:first').after(serviceFields);
 
-            $('.subServiceDetails:last').find('tbody').empty();
-            $.each(data, function(key, value) {
-              var newRow = `
-                <tr>
-                  <td>${value.name}</td>
-                  <td><input type="date" id="deadline" name="deadline" class="form-control"></td>
-                  <td>
-                    <select class="form-control select2 staffDropdown" id="selectedStaff" name="staff_id">
-                      <option value="">Select Staff</option>
-                      @foreach($staffs as $staff)
-                      <option value="{{ $staff->id }}">{{ $staff->first_name }}</option>
-                      @endforeach
-                    </select>
-                  </td>
-                  <td><textarea name="note" id="note" rows="1" class="form-control" placeholder="Note for this task"></textarea></td>
-                   <td><span class="removeSubServiceRow" style="cursor: pointer; font-size: 24px; color: red;">&#10006;</span></td>
-                   <input type="hidden" class="sub-service-id" data-sub-service-id="${value.id}">
-                   <input type="hidden" name="sub_service_id[]" value="${value.id}">
-                   <input type="hidden" name="client_sub_service_id[]" value="">
-                </tr>
-              `;
-              $('.subServiceDetails:last').find('tbody').append(newRow);
-            });
-          }
+                        $('.subServiceDetails:last').find('tbody').empty();
+                        $.each(data, function(key, value) {
+                            var newRow = `
+                                    <tr>
+                                    <td>${value.name}</td>
+                                    <td><input type="date" id="deadline" name="deadline" class="form-control"></td>
+                                    <td>
+                                        <select class="form-control staffDropdown" id="selectedStaff" name="staff_id">
+                                        <option value="">Select Staff</option>
+                                        @foreach($staffs as $staff)
+                                        <option value="{{ $staff->id }}">{{ $staff->first_name }}</option>
+                                        @endforeach
+                                        </select>
+                                    </td>
+                                    <td><textarea name="note" id="note" rows="1" class="form-control" placeholder="Note for this task"></textarea></td>
+                                    <td style="text-align: center;">
+                                        <span class="removeSubServiceRow" style="cursor: pointer; font-size: 24px; color: red;">&#10006;</span>
+                                    </td>
+                                    <input type="hidden" class="sub-service-id" data-sub-service-id="${value.id}">
+                                    <input type="hidden" name="sub_service_id[]" value="${value.id}">
+                                    <input type="hidden" name="client_sub_service_id[]" value="">
+                                    </tr>
+                                `;
+                            $('.subServiceDetails:last').find('tbody').append(newRow);
+                        });
+                    }
+                });
+            }
         });
-      }
-    });
-    
-    $(document).on('click', '.removeSubServiceRow', function() {
-        $(this).closest('tr').remove();
-    });
 
-    $(document).on('click', '.removeSubServiceDetails', function() {
-      $(this).closest('.subServiceDetails').remove();
+        $(document).on('click', '.removeSubServiceRow', function() {
+            $(this).closest('tr').remove();
+        });
+
+        $(document).on('click', '.removeSubServiceDetails', function() {
+            $(this).closest('.subServiceDetails').remove();
+        });
     });
-  });
 </script>
 <!-- Fetching sub services and putting on table end -->
 
@@ -715,7 +689,7 @@
 <script>
     $(document).ready(function() {
         $('#service-saveButton').click(function(e) {
-            e.preventDefault(); 
+            e.preventDefault();
 
             var clientId = "{{ $client->id ?? '' }}";
             var services = [];
@@ -730,7 +704,7 @@
                 var subServices = [];
 
                 $(this).find('tbody tr').each(function() {
-                    var subServiceId = $(this).find('.sub-service-id').attr('data-sub-service-id'); 
+                    var subServiceId = $(this).find('.sub-service-id').attr('data-sub-service-id');
                     var deadline = $(this).find('input[type="date"]').val();
                     var note = $(this).find('textarea').val();
                     var staffId = $(this).find('.staffDropdown').val();
@@ -776,20 +750,17 @@
                     }, 2000);
                 },
                 error: function(xhr, status, error) {
-                    var errorMessage = "";
-                    if (xhr.responseJSON && xhr.responseJSON.errors){
-                        $.each(xhr.responseJSON.errors, function (key, value) {
-                            errorMessage += key + ": " + value.join(", ") + "<br>";
-                        });
-                    } else {
-                        errorMessage = "An error occurred. Please try again later.";
+                    var errorMessage = "An error occurred. Please try again later.";
+                    if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        errorMessage = Object.values(xhr.responseJSON.errors).join(", ");
                     }
-                    $('#errorMessage').html(errorMessage);
-                    $('#errorMessage').show();
-                    $('#successMessage').hide();
-                    console.error("Error occurred: " + error);
-                    console.error(xhr.responseText);
-                }
+                    swal({
+                        title: "Error",
+                        text: errorMessage,
+                        icon: "error",
+                        button: "OK",
+                    });
+                },
             });
         });
     });
@@ -799,7 +770,7 @@
 <!-- Updating services and sub services start -->
 <script>
     $(document).ready(function() {
-        $(document).on('click', '#service-updateButton', function(e) { 
+        $(document).on('click', '#service-updateButton', function(e) {
             e.preventDefault();
 
             var clientId = "{{ $client->id ?? '' }}";
@@ -865,20 +836,17 @@
                     }, 2000);
                 },
                 error: function(xhr, status, error) {
-                    var errorMessage = "";
-                    if (xhr.responseJSON && xhr.responseJSON.errors){
-                        $.each(xhr.responseJSON.errors, function (key, value) {
-                            errorMessage += key + ": " + value.join(", ") + "<br>";
-                        });
-                    } else {
-                        errorMessage = "An error occurred. Please try again later.";
+                    var errorMessage = "An error occurred. Please try again later.";
+                    if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        errorMessage = Object.values(xhr.responseJSON.errors).join(", ");
                     }
-                    $('#errorMessage').html(errorMessage);
-                    $('#errorMessage').show();
-                    $('#successMessage').hide();
-                    console.error("Error occurred: " + error);
-                    console.error(xhr.responseText);
-                }
+                    swal({
+                        title: "Error",
+                        text: errorMessage,
+                        icon: "error",
+                        button: "OK",
+                    });
+                },
             });
         });
     });
@@ -887,8 +855,8 @@
 
 <!-- Contact Info create Start -->
 <script>
-    $(document).ready(function () {
-        $('#contact-saveButton').click(function (event) {
+    $(document).ready(function() {
+        $('#contact-saveButton').click(function(event) {
             event.preventDefault();
             var clientId = "{{ $client->id ?? '' }}";
 
@@ -900,11 +868,8 @@
                 type: 'POST',
                 data: formData,
                 async: false,
-                success: function (response) {
+                success: function(response) {
                     if (response.status === 200) {
-                        // $('#successMessage b').text(response.message);
-                        // $('#successMessage').show();
-                        // $('#errorMessage').hide();
                         swal({
                             title: "Success!",
                             text: "Contact Info created successfully",
@@ -914,24 +879,19 @@
                         setTimeout(function() {
                             location.reload();
                         }, 2000);
-                    } else {
-                        $('#errorMessage b').text(response.message);
-                        $('#errorMessage').show();
-                        $('#successMessage').hide();
                     }
                 },
-                error: function (xhr, status, error) {
-                    var errorMessage = "";
+                error: function(xhr, status, error) {
+                    var errorMessage = "An error occurred. Please try again later.";
                     if (xhr.responseJSON && xhr.responseJSON.errors) {
-                        $.each(xhr.responseJSON.errors, function (key, value) {
-                            errorMessage += key + ": " + value.join(", ") + "<br>";
-                        });
-                    } else {
-                        errorMessage = "An error occurred. Please try again later.";
+                        errorMessage = Object.values(xhr.responseJSON.errors).join(", ");
                     }
-                    $('#errorMessage').html(errorMessage);
-                    $('#errorMessage').show();
-                    $('#successMessage').hide();
+                    swal({
+                        title: "Error",
+                        text: errorMessage,
+                        icon: "error",
+                        button: "OK",
+                    });
                 },
                 cache: false,
                 contentType: false,
@@ -939,7 +899,7 @@
             });
         });
 
-        $('#contact-clearButton').click(function () {
+        $('#contact-clearButton').click(function() {
             event.preventDefault();
             $('#contactForm')[0].reset();
         });
@@ -1013,17 +973,16 @@
                     }, 2000);
                 },
                 error: function(xhr, status, error) {
-                    var errorMessage = "";
-                    if (xhr.responseJSON && xhr.responseJSON.errors){
-                        $.each(xhr.responseJSON.errors, function (key, value) {
-                            errorMessage += key + ": " + value.join(", ") + "<br>";
-                        });
-                    } else {
-                        errorMessage = "An error occurred. Please try again later.";
+                    var errorMessage = "An error occurred. Please try again later.";
+                    if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        errorMessage = Object.values(xhr.responseJSON.errors).join(", ");
                     }
-                    $('#errorMessage').html(errorMessage);
-                    $('#errorMessage').show();
-                    $('#successMessage').hide();
+                    swal({
+                        title: "Error",
+                        text: errorMessage,
+                        icon: "error",
+                        button: "OK",
+                    });
                 },
                 cache: false,
                 contentType: false,
@@ -1041,37 +1000,33 @@
     $(document).ready(function() {
         $('#contactTable').on('click', '.delete-contact', function() {
             var contactId = $(this).closest('tr').data('contact-id');
-        
+
             if (confirm("Are you sure you want to delete this conatct?")) {
                 $.ajax({
                     url: '/admin/delete-contact/' + contactId,
                     type: 'DELETE',
                     success: function(response) {
-                            // $('#successMessage b').text(response.message);
-                            // $('#successMessage').show();
-                            // $('#errorMessage').hide();
-                            swal({
-                                title: "Success!",
-                                text: "Contact Info deleted successfully",
-                                icon: "success",
-                                button: "OK",
-                            });
-                            setTimeout(function() {
-                                location.reload();
-                            }, 2000); 
+                        swal({
+                            title: "Success!",
+                            text: "Contact Info deleted successfully",
+                            icon: "success",
+                            button: "OK",
+                        });
+                        setTimeout(function() {
+                            location.reload();
+                        }, 2000);
                     },
                     error: function(xhr, status, error) {
-                        var errorMessage = "";
+                        var errorMessage = "An error occurred. Please try again later.";
                         if (xhr.responseJSON && xhr.responseJSON.errors) {
-                            $.each(xhr.responseJSON.errors, function (key, value) {
-                                errorMessage += key + ": " + value.join(", ") + "<br>";
-                            });
-                        } else {
-                            errorMessage = "An error occurred. Please try again later.";
+                            errorMessage = Object.values(xhr.responseJSON.errors).join(", ");
                         }
-                        $('#errorMessage').html(errorMessage);
-                        $('#errorMessage').show();
-                        $('#successMessage').hide();
+                        swal({
+                            title: "Error",
+                            text: errorMessage,
+                            icon: "error",
+                            button: "OK",
+                        });
                     },
                     cache: false,
                     contentType: false,
@@ -1086,8 +1041,7 @@
 <!-- Data table initialize -->
 <script>
     $(document).ready(function() {
-         $("#directorTable, #contactTable").DataTable({
-        });
+        $("#directorTable, #contactTable").DataTable({});
     });
 </script>
 <!-- Data table initialize -->
