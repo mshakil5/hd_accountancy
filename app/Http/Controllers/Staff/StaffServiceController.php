@@ -37,10 +37,10 @@ class StaffServiceController extends Controller
             return DataTables::of($data)
             
                 ->addColumn('clientname', function(ClientService $clientservice) {
-                    return $clientservice->client_id ? $clientservice->client->name : " ";
+                    return $clientservice->client ? $clientservice->client->name : " ";
                 })
                 ->addColumn('servicename', function(ClientService $clientservice) {
-                    return $clientservice->service_id ? $clientservice->service->name : " ";
+                    return $clientservice->service ? $clientservice->service->name : " ";
                 })
                 ->addColumn('action', function(ClientService $clientservice) {
                     $managerFirstName = $clientservice->manager->first_name;
