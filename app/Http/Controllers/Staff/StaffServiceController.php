@@ -25,8 +25,8 @@ class StaffServiceController extends Controller
     {
             if ($request->ajax()) {
                 $data = ClientService::with('clientSubServices')
-                ->where('service_deadline', '>=', now()->startOfDay())
-                ->where('service_deadline', '<=', now()->addDays(30)->endOfDay())
+                // ->where('service_deadline', '>=', now()->startOfDay())
+                // ->where('service_deadline', '<=', now()->addDays(30)->endOfDay())
                 ->whereHas('clientSubServices', function ($query) {
                     $query->whereIn('sequence_status', [0, 1])
                         ->where('staff_id', Auth::id());
