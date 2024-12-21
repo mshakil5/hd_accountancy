@@ -117,12 +117,12 @@ class ServiceController extends Controller
 
             $existingSubServiceIds = SubService::where('service_id', $request->codeid)->pluck('id')->toArray();
 
-            $updatedSubServiceIds = isset($request->current_sub_service_ids) && is_array($request->current_sub_service_ids) 
-                ? $request->current_sub_service_ids 
+            $updatedSubServiceIds = isset($request->current_sub_service_ids) && is_array($request->current_sub_service_ids)
+                ? $request->current_sub_service_ids
                 : [];
 
-            $newlyCreatedSubServiceIds = isset($newlyCreatedSubServiceIds) && is_array($newlyCreatedSubServiceIds) 
-                ? $newlyCreatedSubServiceIds 
+            $newlyCreatedSubServiceIds = isset($newlyCreatedSubServiceIds) && is_array($newlyCreatedSubServiceIds)
+                ? $newlyCreatedSubServiceIds
                 : [];
 
             $subServicesToDelete = array_diff($existingSubServiceIds, $updatedSubServiceIds, $newlyCreatedSubServiceIds);
@@ -380,7 +380,7 @@ class ServiceController extends Controller
                     return $clientservice->service->name;
                 })
                 ->addColumn('action', function (ClientService $clientservice) {
-                    $managerFirstName = $clientservice->manager->first_name;
+                    $managerFirstName = $clientservice->manager ? $clientservice->manager->first_name . ' ' . $clientservice->manager->last_name : 'N/A';
                     return '<button class="btn btn-secondary task-details" data-id="' . $clientservice->id . '" data-manager-firstname="' . $managerFirstName . '">Details</button>';
                 })
                 ->make(true);
@@ -722,7 +722,7 @@ class ServiceController extends Controller
                     ];
                 })
                 ->addColumn('action', function (ClientService $clientservice) {
-                    $managerFirstName = $clientservice->manager->first_name;
+                    $managerFirstName = $clientservice->manager ? $clientservice->manager->first_name . ' ' . $clientservice->manager->last_name : 'N/A';
                     return '<button class="btn btn-secondary task-detail" data-id="' . $clientservice->id . '" data-manager-firstname="' . $managerFirstName . '">Details</button>';
                 })
                 ->make(true);
@@ -749,7 +749,7 @@ class ServiceController extends Controller
                     return $clientservice->service->name;
                 })
                 ->addColumn('action', function (ClientService $clientservice) {
-                    $managerFirstName = $clientservice->manager->first_name;
+                    $managerFirstName = $clientservice->manager ? $clientservice->manager->first_name . ' ' . $clientservice->manager->last_name : 'N/A';
                     return '<button class="btn btn-secondary task" data-id="' . $clientservice->id . '" data-manager-firstname="' . $managerFirstName . '">Details</button>';
                 })
                 ->make(true);

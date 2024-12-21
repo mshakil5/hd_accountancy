@@ -593,11 +593,12 @@
                         <table id="completedServices" class="table cell-border table-striped" style="width:100%">
                             <thead>
                                 <tr>
-                                    <th scope="col">Client Name</th>
-                                    <th scope="col">Service Name</th>
-                                    <th scope="col">Deadline</th>
-                                    <th scope="col">Frequency</th>
-                                    <th scope="col">Action</th>
+                                    <th>Client Name</th>
+                                    <th>Service Name</th>
+                                    <th>Due Date</th>
+                                    <th>Target Deadline</th>
+                                    <th>Deadline</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -792,15 +793,25 @@
                     name: 'servicename'
                 },
                 {
-                    data: 'service_deadline',
-                    name: 'service_deadline',
+                    data: 'due_date',
+                    name: 'due_date',
                     render: function(data, type, row) {
                         return moment(data).format('DD.MM.YY');
                     }
                 },
                 {
-                    data: 'service_frequency',
-                    name: 'service_frequency'
+                    data: 'legal_deadline',
+                    name: 'legal_deadline',
+                    render: function(data, type, row) {
+                        return moment(data).format('DD.MM.YY');
+                    }
+                },
+                {
+                    data: 'service_deadline',
+                    name: 'service_deadline',
+                    render: function(data, type, row) {
+                        return moment(data).format('DD.MM.YY');
+                    }
                 },
                 {
                     data: 'action',
@@ -849,7 +860,7 @@
                     return staff.id === subService.staff_id;
                 });
 
-                var staffName = staff ? staff.first_name : 'N/A';
+                var staffName = staff ? (staff.first_name + ' ' + (staff.last_name || '')).trim() : 'N/A';
                 var duration = '';
                 var firstWorkTime = subService.work_times.filter(workTime => workTime.is_break === 0)
                     .reduce(function(acc, workTime) {
@@ -1057,7 +1068,7 @@
                     return staff.id === subService.staff_id;
                 });
 
-                var staffName = staff ? staff.first_name : 'N/A';
+                var staffName = staff ? (staff.first_name + ' ' + (staff.last_name || '')).trim() : 'N/A';
 
                 var newRow = `
                   <tr>
@@ -1095,15 +1106,14 @@
                 url: '/admin/get-todays-deadline-service',
                 type: 'GET',
             },
-            columns: [
-                {
+            columns: [{
                     data: 'servicename',
                     name: 'servicename'
                 },
                 {
                     data: 'clientname',
                     name: 'clientname'
-                },  
+                },
                 {
                     data: 'action',
                     name: 'action',
@@ -1157,7 +1167,7 @@
                     return staff.id === subService.staff_id;
                 });
 
-                var staffName = staff ? staff.first_name : 'N/A';
+                var staffName = staff ? (staff.first_name + ' ' + (staff.last_name || '')).trim() : 'N/A';
 
                 var newRow = `
                   <tr>
