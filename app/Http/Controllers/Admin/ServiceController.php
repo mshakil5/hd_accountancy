@@ -20,22 +20,22 @@ class ServiceController extends Controller
     public function index()
     {
         $data = Service::with('subServices')->orderBy('id', 'DESC')->get();
-        $allsubServices = SubService::orderby('id','DESC')->get();
-        return view('admin.service.index', compact('data','allsubServices'));
+        $allsubServices = SubService::orderby('id', 'DESC')->get();
+        return view('admin.service.index', compact('data', 'allsubServices'));
     }
 
     public function store(Request $request)
     {
-        if(empty($request->name)){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Name \" field..!</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
+        if (empty($request->name)) {
+            $message = "<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Name \" field..!</b></div>";
+            return response()->json(['status' => 303, 'message' => $message]);
             exit();
         }
 
-        $chkname = Service::where('name',$request->name)->first();
-        if($chkname){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>This name already added.</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
+        $chkname = Service::where('name', $request->name)->first();
+        if ($chkname) {
+            $message = "<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>This name already added.</b></div>";
+            return response()->json(['status' => 303, 'message' => $message]);
             exit();
         }
         $data = new Service;
@@ -43,17 +43,17 @@ class ServiceController extends Controller
         $data->created_by = Auth::id();
         if ($data->save()) {
             $serviceId = $data->id;
-            $message ="<div class='alert alert-success'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Data Created Successfully.</b></div>";
-             return response()->json(['status' => 300, 'message' => $message, 'service_id' => $serviceId]);
-        }else{
-            return response()->json(['status'=> 303,'message'=>'Server Error!!']);
+            $message = "<div class='alert alert-success'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Data Created Successfully.</b></div>";
+            return response()->json(['status' => 300, 'message' => $message, 'service_id' => $serviceId]);
+        } else {
+            return response()->json(['status' => 303, 'message' => 'Server Error!!']);
         }
     }
 
     public function edit($id)
     {
         $where = [
-            'id'=>$id
+            'id' => $id
         ];
         $info = Service::with('subServices')->find($id);
         return response()->json($info);
@@ -61,16 +61,16 @@ class ServiceController extends Controller
 
     public function update(Request $request)
     {
-        if(empty($request->name)){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Username \" field..!</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
+        if (empty($request->name)) {
+            $message = "<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Username \" field..!</b></div>";
+            return response()->json(['status' => 303, 'message' => $message]);
             exit();
         }
 
-        $duplicatename = Service::where('name',$request->name)->where('id','!=', $request->codeid)->first();
-        if($duplicatename){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>This name already added.</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
+        $duplicatename = Service::where('name', $request->name)->where('id', '!=', $request->codeid)->first();
+        if ($duplicatename) {
+            $message = "<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>This name already added.</b></div>";
+            return response()->json(['status' => 303, 'message' => $message]);
             exit();
         }
 
@@ -80,26 +80,32 @@ class ServiceController extends Controller
         if ($data->save()) {
 
             $newlyCreatedSubServiceIds = [];
-            foreach ($request->current_sub_service_names as $index => $name) {
-                if (isset($request->current_sub_service_ids[$index])) {
-                    $id = $request->current_sub_service_ids[$index];
+            if (isset($request->current_sub_service_names) && is_array($request->current_sub_service_names)) {
+                foreach ($request->current_sub_service_names as $index => $name) {
+                    if (isset($request->current_sub_service_ids[$index])) {
+                        $id = $request->current_sub_service_ids[$index];
 
-                    $subService = SubService::find($id);
-                    // editing sub services
-                    if ($subService) {
-                        $subService->name = $name;
-                        $subService->save();
+                        $subService = SubService::find($id);
+                        if ($subService) {
+                            $subService->name = $name;
+                            $subService->save();
+                        }
                     }
                 }
             }
 
-            //if that subservice not found in databse
             $existingSubServiceNames = SubService::where('service_id', $request->codeid)->pluck('name')->toArray();
-            $newSubServiceNames = array_diff($request->current_sub_service_names, $existingSubServiceNames);
+
+            $currentSubServiceNames = isset($request->current_sub_service_names) && is_array($request->current_sub_service_names)
+                ? $request->current_sub_service_names
+                : [];
+
+            $newSubServiceNames = array_diff($currentSubServiceNames, $existingSubServiceNames);
+
+            $newlyCreatedSubServiceIds = [];
 
             foreach ($newSubServiceNames as $name) {
                 $existingSubService = SubService::where('service_id', $request->codeid)->where('name', $name)->first();
-                // create new sub service
                 if (!$existingSubService) {
                     $newSubService = new SubService();
                     $newSubService->service_id = $request->codeid;
@@ -109,18 +115,25 @@ class ServiceController extends Controller
                 }
             }
 
-            // deleting removed sub services
             $existingSubServiceIds = SubService::where('service_id', $request->codeid)->pluck('id')->toArray();
-            $updatedSubServiceIds = $request->current_sub_service_ids;
+
+            $updatedSubServiceIds = isset($request->current_sub_service_ids) && is_array($request->current_sub_service_ids) 
+                ? $request->current_sub_service_ids 
+                : [];
+
+            $newlyCreatedSubServiceIds = isset($newlyCreatedSubServiceIds) && is_array($newlyCreatedSubServiceIds) 
+                ? $newlyCreatedSubServiceIds 
+                : [];
+
             $subServicesToDelete = array_diff($existingSubServiceIds, $updatedSubServiceIds, $newlyCreatedSubServiceIds);
+
             SubService::whereIn('id', $subServicesToDelete)->delete();
 
-            $message ="<div class='alert alert-success'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Data Updated Successfully.</b></div>";
-            return response()->json(['status'=> 300,'message'=>$message]);
+            $message = "<div class='alert alert-success'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Data Updated Successfully.</b></div>";
+            return response()->json(['status' => 300, 'message' => $message]);
+        } else {
+            return response()->json(['status' => 303, 'message' => 'Server Error!!']);
         }
-        else{
-            return response()->json(['status'=> 303,'message'=>'Server Error!!']);
-        } 
     }
 
     public function checkAssignment(Request $request)
@@ -142,11 +155,11 @@ class ServiceController extends Controller
             $hasAssignedSubServices = DB::table('client_sub_services')
                 ->where('sub_service_id', $service->subServices()->pluck('id')->toArray())
                 ->exists();
-    
+
             if ($hasAssignedSubServices) {
                 return response()->json(['success' => false, 'message' => 'Cannot delete service because one or more sub-services are assigned to clients.'], 403);
             }
-    
+
             $service->subServices()->delete();
             $service->delete();
             return response()->json(['success' => true, 'message' => 'Data has been deleted successfully']);
@@ -221,48 +234,47 @@ class ServiceController extends Controller
             'deadline' => 'required|date',
             'note' => 'required|string',
             'assigned_services' => 'required',
-            ]);
+        ]);
 
-            if ($validator->fails()) {
-                return response()->json(['status' => 422, 'errors' => $validator->errors()], 422);
+        if ($validator->fails()) {
+            return response()->json(['status' => 422, 'errors' => $validator->errors()], 422);
+        }
+
+        $serviceStaff = new ServiceStaff;
+
+        $serviceStaff->client_id = $request->client_id;
+        $serviceStaff->staff_id = $request->staff_id;
+        $serviceStaff->assigned_services = $request->assigned_services;
+        $serviceStaff->deadline = $request->deadline;
+        $serviceStaff->note = $request->note;
+        $serviceStaff->created_by = auth()->user()->id;
+
+        if ($serviceStaff->save()) {
+
+            $clientServiceId = $request->client_service_id;
+
+            $clientService = ClientService::find($clientServiceId);
+            if ($clientService) {
+                $clientService->status = 0;
+                $clientService->save();
             }
 
-            $serviceStaff = new ServiceStaff;
-
-            $serviceStaff->client_id = $request->client_id;
-            $serviceStaff->staff_id = $request->staff_id;
-            $serviceStaff->assigned_services = $request->assigned_services;
-            $serviceStaff->deadline = $request->deadline;
-            $serviceStaff->note = $request->note;
-            $serviceStaff->created_by = auth()->user()->id;
-            
-            if ($serviceStaff->save()) {
-
-                $clientServiceId = $request->client_service_id;
-
-                $clientService = ClientService::find($clientServiceId);
-                    if ($clientService) {
-                        $clientService->status = 0;
-                        $clientService->save();
-                    }
-
-                return response()->json(['status' => 200, 'message' => 'Service staff assigned successfully.'], 200);
-            } else {
-                return response()->json(['status' => 500, 'message' => 'Failed to assign service staff.'], 500);
-            }
-
+            return response()->json(['status' => 200, 'message' => 'Service staff assigned successfully.'], 200);
+        } else {
+            return response()->json(['status' => 500, 'message' => 'Failed to assign service staff.'], 500);
+        }
     }
 
     public function getAllServices()
     {
-         $services = Service::orderBy('id', 'desc')->get();
-         return response()->json(['status' => 200, 'services' => $services], 200);
+        $services = Service::orderBy('id', 'desc')->get();
+        return response()->json(['status' => 200, 'services' => $services], 200);
     }
 
-    public function createSpecificService(Request $request) 
+    public function createSpecificService(Request $request)
     {
         $validator = Validator::make($request->all(), [
-           'name' => 'required|string|max:255|unique:services',
+            'name' => 'required|string|max:255|unique:services',
         ]);
 
         if ($validator->fails()) {
@@ -301,16 +313,16 @@ class ServiceController extends Controller
 
             return DataTables::of($data)
                 ->addIndexColumn()
-                ->addColumn('client_name', function($row) {
+                ->addColumn('client_name', function ($row) {
                     return $row->client ? $row->client->name : '';
                 })
-                ->addColumn('tasks', function($row) {
+                ->addColumn('tasks', function ($row) {
                     return $row->assigned_services;
                 })
-                ->addColumn('staff_name', function($row) {
+                ->addColumn('staff_name', function ($row) {
                     return $row->staff ? $row->staff->first_name : '';
                 })
-                ->addColumn('deadline', function($row) {
+                ->addColumn('deadline', function ($row) {
                     return $row->deadline;
                 })
                 ->rawColumns(['client_name', 'tasks', 'staff_name'])
@@ -322,13 +334,13 @@ class ServiceController extends Controller
     {
         if ($request->ajax()) {
             $data = ClientService::with('client', 'manager', 'service', 'clientSubServices')
-            ->where('status', 1)
-            ->whereDate('service_deadline', '<=', now()->addDays(30))
-            ->whereHas('clientSubServices', function ($query) {
-                $query->whereNull('staff_id');
-            })
-            ->orderBy('id', 'desc')
-            ->get();
+                ->where('status', 1)
+                ->whereDate('service_deadline', '<=', now()->addDays(30))
+                ->whereHas('clientSubServices', function ($query) {
+                    $query->whereNull('staff_id');
+                })
+                ->orderBy('id', 'desc')
+                ->get();
 
             return DataTables::of($data)
                 ->make(true);
@@ -360,32 +372,31 @@ class ServiceController extends Controller
                 ->get();
 
             return DataTables::of($data)
-            
-                ->addColumn('clientname', function(ClientService $clientservice) {
+
+                ->addColumn('clientname', function (ClientService $clientservice) {
                     return $clientservice->client->name;
                 })
-                ->addColumn('servicename', function(ClientService $clientservice) {
+                ->addColumn('servicename', function (ClientService $clientservice) {
                     return $clientservice->service->name;
                 })
-                ->addColumn('action', function(ClientService $clientservice) {
+                ->addColumn('action', function (ClientService $clientservice) {
                     $managerFirstName = $clientservice->manager->first_name;
-                    return '<button class="btn btn-secondary task-details" data-id="'. $clientservice->id. '" data-manager-firstname="'. $managerFirstName. '">Details</button>';
+                    return '<button class="btn btn-secondary task-details" data-id="' . $clientservice->id . '" data-manager-firstname="' . $managerFirstName . '">Details</button>';
                 })
                 ->make(true);
         }
-
     }
 
     public function getClientSubService($clientserviceId)
     {
-        $clientSubServices = ClientSubService::with('subService','serviceMessage','workTimes')->where('client_service_id', $clientserviceId)->get();
+        $clientSubServices = ClientSubService::with('subService', 'serviceMessage', 'workTimes')->where('client_service_id', $clientserviceId)->get();
         return response()->json($clientSubServices);
     }
 
     public function getSubServices($serviceId)
     {
         $service = Service::find($serviceId);
-        $subServices = SubService::where('service_id',$serviceId)->select('id', 'name')->get();
+        $subServices = SubService::where('service_id', $serviceId)->select('id', 'name')->get();
         return response()->json($subServices);
     }
 
@@ -465,14 +476,14 @@ class ServiceController extends Controller
             if (!isset($serviceData['client_service_id'])) {
                 $clientService = new ClientService();
                 $clientService->client_id = $request->clientId;
-                $clientService->service_id = $serviceData['serviceId']; 
+                $clientService->service_id = $serviceData['serviceId'];
                 $clientService->manager_id = $serviceData['managerId'];
                 $clientService->service_frequency = $serviceData['service_frequency'];
                 $clientService->service_deadline = $serviceData['service_deadline'];
                 $clientService->due_date = $serviceData['due_date'];
                 $clientService->legal_deadline = $serviceData['legal_deadline'];
                 $clientService->save();
-                
+
                 $serviceData['client_service_id'] = $clientService->id;
             } else {
                 $existingService = ClientService::find($serviceData['client_service_id']);
@@ -489,14 +500,14 @@ class ServiceController extends Controller
 
             $clientServiceIds = collect($request->services)->pluck('client_service_id')->toArray();
             ClientService::where('client_id', $request->clientId)
-                        ->whereNotIn('id', $clientServiceIds)
-                        ->delete();
+                ->whereNotIn('id', $clientServiceIds)
+                ->delete();
 
             if (isset($serviceData['subServices'])) {
                 foreach ($serviceData['subServices'] as $key => $subServiceData) {
                     if (!isset($subServiceData['client_sub_service_id'])) {
                         $clientSubService = new ClientSubService();
-                        $clientSubService->client_service_id = $serviceData['client_service_id']; 
+                        $clientSubService->client_service_id = $serviceData['client_service_id'];
                         $clientSubService->client_id = $request->clientId;
                         $clientSubService->sequence_id = $key + 1;
                         $clientSubService->sub_service_id = $subServiceData['subServiceId'];
@@ -519,13 +530,13 @@ class ServiceController extends Controller
 
             $clientSubServiceIds = collect($serviceData['subServices'])->pluck('client_sub_service_id')->toArray();
             ClientSubService::where('client_service_id', $serviceData['client_service_id'])
-                            ->whereNotIn('id', $clientSubServiceIds)
-                            ->delete();
+                ->whereNotIn('id', $clientSubServiceIds)
+                ->delete();
         }
 
         return response()->json(['status' => 200, 'message' => 'Data updated successfully']);
     }
-    
+
     public function updateStaffService(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -546,8 +557,8 @@ class ServiceController extends Controller
         }
 
         $clientService = ClientService::where('client_id', $request->clientId)
-                                        ->where('service_id', $request->serviceId)
-                                        ->first();
+            ->where('service_id', $request->serviceId)
+            ->first();
 
         if ($clientService) {
             $clientService->manager_id = $request->managerId;
@@ -562,8 +573,8 @@ class ServiceController extends Controller
             foreach ($request->subServices as $key => $subServiceData) {
                 $serialKey = $key + 1;
                 $clientSubService = ClientSubService::where('client_service_id', $clientService->id)
-                                                        ->where('sub_service_id', $subServiceData['subServiceId'])
-                                                        ->first();
+                    ->where('sub_service_id', $subServiceData['subServiceId'])
+                    ->first();
 
                 if (!$clientSubService) {
                     return response()->json(['status' => 404, 'message' => 'Client sub-service not found'], 404);
@@ -587,7 +598,7 @@ class ServiceController extends Controller
     //     return response()->json(['message' => 'Sub-service deleted successfully'], 200);
     // }
 
-     public function getClientSubServices($clientserviceId)
+    public function getClientSubServices($clientserviceId)
     {
         $clientSubServices = ClientSubService::with('subService')->where('client_service_id', $clientserviceId)->get();
         return response()->json($clientSubServices);
@@ -600,7 +611,7 @@ class ServiceController extends Controller
 
         foreach ($subServicesData as $subServiceData) {
             $clientSubService = ClientSubService::where('sub_service_id', $subServiceData['subServiceId'])
-                                                  ->first();
+                ->first();
 
             if ($clientSubService) {
                 $clientSubService->update([
@@ -622,7 +633,7 @@ class ServiceController extends Controller
         $completedTasks = ClientSubService::where('staff_id', $staffId)
             ->where('sequence_status', 2)
             ->whereNotNull('deadline')
-            ->with('subService','createdBy')
+            ->with('subService', 'createdBy')
             ->get();
 
         return response()->json(['completedTasks' => $completedTasks]);
@@ -634,7 +645,7 @@ class ServiceController extends Controller
         $inProgressTasks = ClientSubService::where('staff_id', $staffId)
             ->where('sequence_status', 0)
             ->whereNotNull('deadline')
-            ->with('subService','createdBy')
+            ->with('subService', 'createdBy')
             ->get();
 
         return response()->json(['inProgressTasks' => $inProgressTasks]);
@@ -646,7 +657,7 @@ class ServiceController extends Controller
         $dueTasks = ClientSubService::where('staff_id', $staffId)
             ->where('sequence_status', 1)
             ->whereNotNull('deadline')
-            ->with('subService','createdBy')
+            ->with('subService', 'createdBy')
             ->get();
 
         return response()->json(['dueTasks' => $dueTasks]);
@@ -671,14 +682,14 @@ class ServiceController extends Controller
                 ->get();
 
             return DataTables::of($data)
-            
-                ->addColumn('clientname', function(ClientService $clientservice) {
+
+                ->addColumn('clientname', function (ClientService $clientservice) {
                     return $clientservice->client ? $clientservice->client->name : '';
                 })
-                ->addColumn('servicename', function(ClientService $clientservice) {
+                ->addColumn('servicename', function (ClientService $clientservice) {
                     return $clientservice->service ? $clientservice->service->name : '';
                 })
-                ->addColumn('legal_deadline', function(ClientService $clientservice) {
+                ->addColumn('legal_deadline', function (ClientService $clientservice) {
                     $legalDeadline = $clientservice->legal_deadline;
                     if ($legalDeadline) {
                         return [
@@ -692,9 +703,9 @@ class ServiceController extends Controller
                         'original' => null
                     ];
                 })
-                ->addColumn('service_deadline', function(ClientService $clientservice) {
+                ->addColumn('service_deadline', function (ClientService $clientservice) {
                     $serviceDeadline = $clientservice->service_deadline;
-                
+
                     if ($serviceDeadline) {
                         return [
                             'formatted' => \Carbon\Carbon::parse($serviceDeadline)->format('d.m.y'),
@@ -706,13 +717,12 @@ class ServiceController extends Controller
                         'original' => null
                     ];
                 })
-                ->addColumn('action', function(ClientService $clientservice) {
+                ->addColumn('action', function (ClientService $clientservice) {
                     $managerFirstName = $clientservice->manager->first_name;
-                    return '<button class="btn btn-secondary task-detail" data-id="'. $clientservice->id. '" data-manager-firstname="'. $managerFirstName. '">Details</button>';
+                    return '<button class="btn btn-secondary task-detail" data-id="' . $clientservice->id . '" data-manager-firstname="' . $managerFirstName . '">Details</button>';
                 })
                 ->make(true);
         }
-
     }
 
     public function getTodaysDeadlineService(Request $request)
@@ -727,20 +737,19 @@ class ServiceController extends Controller
                 ->get();
 
             return DataTables::of($data)
-            
-                ->addColumn('clientname', function(ClientService $clientservice) {
+
+                ->addColumn('clientname', function (ClientService $clientservice) {
                     return $clientservice->client->name;
                 })
-                ->addColumn('servicename', function(ClientService $clientservice) {
+                ->addColumn('servicename', function (ClientService $clientservice) {
                     return $clientservice->service->name;
                 })
-                ->addColumn('action', function(ClientService $clientservice) {
+                ->addColumn('action', function (ClientService $clientservice) {
                     $managerFirstName = $clientservice->manager->first_name;
-                    return '<button class="btn btn-secondary task" data-id="'. $clientservice->id. '" data-manager-firstname="'. $managerFirstName. '">Details</button>';
+                    return '<button class="btn btn-secondary task" data-id="' . $clientservice->id . '" data-manager-firstname="' . $managerFirstName . '">Details</button>';
                 })
                 ->make(true);
         }
-
     }
 
     public function updateSubServiceStatus(Request $request)
@@ -760,5 +769,4 @@ class ServiceController extends Controller
             return response()->json(['error' => 'Client sub-service not found'], 404);
         }
     }
-
 }
