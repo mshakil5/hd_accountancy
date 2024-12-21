@@ -8,21 +8,6 @@
             <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center">
                 <i class='bx bxs-user-plus fs-4 me-2'></i> Update Profile
             </p>
-            
-            <!-- Success and Error message -->
-            <div class="row my-4 px-3">
-                <div class="col-lg-12">
-                    <div id="successMessage" class="alert alert-success" style="display: none;">
-                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                        <b></b>
-                    </div>
-                    <div id="errorMessage" class="alert alert-danger" style="display: none;">
-                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                        <b></b>
-                    </div>
-                </div>
-            </div>
-            <!-- Success and Error message -->
 
             <div class="row px-3">
                 <div class="col-lg-12">
@@ -114,11 +99,12 @@
 @section('script')
 
 <script>
-    $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') } });
-</script>
+    $.ajaxSetup({ 
+        headers: { 
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') 
+        } 
+    });
 
-<!-- Image preview start -->
-<script>
     document.getElementById('pic').addEventListener('change', function(event) {
         var file = event.target.files[0];
         var reader = new FileReader();
@@ -129,57 +115,48 @@
 
         reader.readAsDataURL(file);
     });
-</script>
-<!-- Image preview end -->
 
-<!-- Staff update -->
-<script>
-$(document).ready(function () {
-    $('#saveButton').click(function (event) {
-        event.preventDefault();
+    $(document).ready(function () {
+        $('#saveButton').click(function (event) {
+            event.preventDefault();
 
-        var formData = new FormData($('#myForm')[0]);
+            var formData = new FormData($('#myForm')[0]);
 
-        $.ajax({
-            url: "/manager/profile",
-            type: 'POST',
-            data: formData,
-            async: false,
-            success: function (response) {
+            $.ajax({
+                url: "/manager/profile",
+                type: 'POST',
+                data: formData,
+                async: false,
+                cache: false,
+                contentType: false,
+                processData: false
+            }).done(function (response) {
                 swal({
                     title: "Success!",
                     text: "Updated successfully",
                     icon: "success",
                     button: "OK",
                 });
-                 window.setTimeout(function(){location.reload()},2000)
-            },
-            error: function (xhr, status, error) {
-                    var errorMessage = "";
-                    if (xhr.responseJSON && xhr.responseJSON.errors) {
-                        $.each(xhr.responseJSON.errors, function (key, value) {
-                            errorMessage += key + ": " + value.join(", ") + "<br>";
-                        });
-                    } else {
-                        errorMessage = "An error occurred. Please try again later.";
-                    }
-                    $('#errorMessage').html(errorMessage);
-                    $('#errorMessage').show();
-                    $('#successMessage').hide();
-            },
-            cache: false,
-            contentType: false,
-            processData: false
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            console.error("Error occurred: " + errorThrown);
-            console.error(jqXHR.responseText);
+                window.setTimeout(function() {
+                    location.reload();
+                }, 2000);
+            }).fail(function (xhr) {
+                var errorMessage = "An error occurred. Please try again later.";
+                if (xhr.responseJSON && xhr.responseJSON.errors) {
+                    errorMessage = "Please fix the following errors:<br>";
+                    $.each(xhr.responseJSON.errors, function (key, value) {
+                        errorMessage += key + ": " + value.join(", ") + "<br>";
+                    });
+                }
+                swal({
+                    title: "Error!",
+                    text: errorMessage,
+                    icon: "error",
+                    button: "OK",
+                });
+            });
         });
-
-        return false;
     });
-});
-
 </script>
-<!-- Staff Update -->
 
 @endsection

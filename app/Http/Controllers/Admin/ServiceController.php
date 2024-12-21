@@ -514,6 +514,10 @@ class ServiceController extends Controller
                         $clientSubService->deadline = $subServiceData['deadline'];
                         $clientSubService->note = $subServiceData['note'];
                         $clientSubService->staff_id = $subServiceData['staffId'];
+                        $clientSubService->created_by = auth()->id();
+                        if ($key === 0) {
+                            $clientSubService->sequence_status = 0;
+                        }
                         $clientSubService->save();
                     } else {
                         $existingSubService = ClientSubService::find($subServiceData['client_sub_service_id']);
