@@ -25,8 +25,8 @@ class StaffServiceController extends Controller
     {
             if ($request->ajax()) {
                 $data = ClientService::with('clientSubServices')
-                ->where('service_deadline', '>=', now()->startOfDay())
-                ->where('service_deadline', '<=', now()->addDays(30)->endOfDay())
+                // ->where('service_deadline', '>=', now()->startOfDay())
+                // ->where('service_deadline', '<=', now()->addDays(30)->endOfDay())
                 ->whereHas('clientSubServices', function ($query) {
                     $query->whereIn('sequence_status', [0, 1])
                         ->where('staff_id', Auth::id());
@@ -37,10 +37,10 @@ class StaffServiceController extends Controller
             return DataTables::of($data)
             
                 ->addColumn('clientname', function(ClientService $clientservice) {
-                    return $clientservice->client->name;
+                    return $clientservice->client ? $clientservice->client->name : " ";
                 })
                 ->addColumn('servicename', function(ClientService $clientservice) {
-                    return $clientservice->service->name;
+                    return $clientservice->service ? $clientservice->service->name : " ";
                 })
                 ->addColumn('action', function(ClientService $clientservice) {
                     $managerFirstName = $clientservice->manager->first_name;
