@@ -3,80 +3,80 @@
 @section('content')
 
 <section class="section dashboard" id="breakSection">
-        <div class="row">
+    <div class="row">
 
-          <!-- Assigned service details section start -->
-          <div class="col-lg-12">
-              <div class="report-box border-theme sales-card p-4 mb-3 rounded-4 border-3" id="assignTaskSection" style="display: none;">
-                  <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                       Work Details
+        <!-- Assigned service details section start -->
+        <div class="col-lg-12">
+            <div class="report-box border-theme sales-card p-4 mb-3 rounded-4 border-3" id="assignTaskSection" style="display: none;">
+                <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                    Work Details
+                </div>
+
+                <!-- Success and Error message -->
+                <div class="row my-4 px-3">
+                    <div class="col-lg-12">
+                        <div id="successMessage" class="alert alert-success" style="display: none;">
+                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                            <b></b>
+                        </div>
+                        <div id="errorMessage" class="alert alert-danger" style="display: none;">
+                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                            <b></b>
+                        </div>
+                    </div>
+                </div>
+                <!-- Success and Error message -->
+
+                <div class="container-fluid">
+                    <div class="row mt-3">
+                        <div class="col-md-3 text-center">
+                            <h5 class="mb-3">Service</h5>
+                            <input type="text" id="service_name" class="form-control mt-2 text-center" readonly>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <h5 class="mb-3">Manager</h5>
+                            <input type="text" id="manager_name" class="form-control mt-2 text-center" value="" readonly>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <h5 class="mb-3">Frequency</h5>
+                            <input type="text" id="service_frequency" class="form-control mt-2 text-center" readonly>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <h5 class="mb-3">Deadline</h5>
+                            <input type="date" id="service_deadline" class="form-control mt-2 text-center" readonly>
+                        </div>
                     </div>
 
-                  <!-- Success and Error message -->
-                  <div class="row my-4 px-3">
-                      <div class="col-lg-12">
-                          <div id="successMessage" class="alert alert-success" style="display: none;">
-                              <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                              <b></b>
-                          </div>
-                          <div id="errorMessage" class="alert alert-danger" style="display: none;">
-                              <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                              <b></b>
-                          </div>
-                      </div>
-                  </div>
-                  <!-- Success and Error message -->
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Sub Service Name</th>
+                                        <th>Deadline</th>
+                                        <th>Staff</th>
+                                        <th>Note</th>
+                                        <th>Status</th>
+                                        <th>Comment</th>
+                                        <th>Timer</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="serviceDetailsTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
 
-                  <div class="container-fluid">
-                      <div class="row mt-3">
-                          <div class="col-md-3 text-center">
-                              <h5 class="mb-3">Service</h5>
-                              <input type="text" id="service_name" class="form-control mt-2 text-center" readonly>
-                          </div>    
-                          <div class="col-md-3 text-center">
-                              <h5 class="mb-3">Manager</h5>
-                              <input type="text" id="manager_name" class="form-control mt-2 text-center" value="" readonly>
-                          </div>  
-                          <div class="col-md-3 text-center">
-                              <h5 class="mb-3">Frequency</h5>
-                              <input type="text" id="service_frequency" class="form-control mt-2 text-center" readonly>
-                          </div>   
-                          <div class="col-md-3 text-center">
-                              <h5 class="mb-3">Deadline</h5>
-                              <input type="date" id="service_deadline" class="form-control mt-2 text-center" readonly>
-                          </div>
-                      </div>
+                    <div class="row mt-3 mb-3">
+                        <div class="col-lg-4 mx-auto text-center">
+                            <button id="sub-service-cancelButton" class="btn btn-sm btn-outline-dark">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Assigned service details section start -->
 
-                      <div class="row mt-3">
-                          <div class="col-md-12">
-                              <table class="table">
-                                  <thead>
-                                      <tr>
-                                          <th>Sub Service Name</th>
-                                          <th>Deadline</th>
-                                          <th>Staff</th>
-                                          <th>Note</th>
-                                          <th>Status</th>
-                                          <th>Comment</th>
-                                          <th>Timer</th>
-                                      </tr>
-                                  </thead>
-                                  <tbody id="serviceDetailsTable"></tbody>
-                              </table>
-                          </div>
-                      </div>
-
-                      <div class="row mt-3 mb-3">
-                          <div class="col-lg-4 mx-auto text-center">
-                              <button id="sub-service-cancelButton" class="btn btn-sm btn-outline-dark">Cancel</button>
-                          </div>
-                      </div>
-                  </div>
-              </div>
-          </div>
-          <!-- Assigned service details section start -->
-
-         {{--
+        {{--
         <div class="col-lg-4 mb-3">
             <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
                 <div class="card-body px-0">
@@ -112,153 +112,152 @@
                             <div class="fs-6 txt-theme fw-bold">Break Time</div>
                             <div class="text-center fs-2 txt-theme fw-bold">
                                    {{ $breakTime ?? 'N/A' }}
-                            </div>
-                        </div> --}}
                     </div>
-                    <div class="row mt-3 align-items-center justify-content-center">
-                        {{--  <div class="col-lg-6">
+                </div> --}}
+            </div>
+            <div class="row mt-3 align-items-center justify-content-center">
+                {{-- <div class="col-lg-6">
                             <a href="" class="p-2 border-theme text-center fs-6 d-block rounded-3 border-3 txt-theme fw-bold my-1">Clock in</a>
                         </div> --}}
-                        <div class="col-lg-12">
-                            <a id="takeBreakBtn" class="p-2 border-theme bg-theme text-center fs-6 d-block rounded-3 border-3 text-light fw-bold" style="cursor: pointer;">Take Break</a>
-                        </div>
-                    </div>
-                   <div class="row mt-3">
-                        <div class="col-lg-12">
-                            <a href="#" onclick="checkWorkTimeStatus();" class="p-2 border-theme bg-theme text-center fs-6 d-block rounded-3 border-3 text-light fw-bold">Clock out</a>
-                            <form id="logout-form" class="d-none">
-                            </form>
-                        </div>
-                    </div>
+                <div class="col-lg-12">
+                    <a id="takeBreakBtn" class="p-2 border-theme bg-theme text-center fs-6 d-block rounded-3 border-3 text-light fw-bold" style="cursor: pointer;">Take Break</a>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-lg-12">
+                    <a href="#" onclick="checkWorkTimeStatus();" class="p-2 border-theme bg-theme text-center fs-6 d-block rounded-3 border-3 text-light fw-bold">Clock out</a>
+                    <form id="logout-form" class="d-none">
+                    </form>
                 </div>
             </div>
         </div>
-        <!-- Login Time and button -->
+    </div>
+    </div>
+    <!-- Login Time and button -->
 
-        <!-- Note modal start -->
-        <div class="modal fade" id="noteModal" tabindex="-1" aria-labelledby="noteModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-xl mt-2">
-                <div class="modal-content">
-                    <div class="modal-body">
-                        <div class="row">
-                            <!-- Left Side Section -->
-                            <div class="col-lg-4">
-                                <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
-                                    <div class="card-body px-0">
-                                        <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                                            Your tasks
-                                        </div>
-                                    
-                                        <div class="mt-3">
-                                            <table class="table">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Active Time:</th>
-                                                        <th>Break Time:</th>
-                                                        <th>Total Work Time:</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr>
-                                                        <td><span id="loginTime"></span></td>
-                                                        <td><span id="totalBreakTime"></span></td>
-                                                        <td><span id="totalDuration"></span></td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
-
-                                        <div id="completedServices">
-                                            <table id="completedServicesTable" class="table">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Client Name</th>
-                                                        <th>Sub Service Name</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <!--  -->
-                                                </tbody>
-                                            </table>
-                                        </div>
+    <!-- Note modal start -->
+    <div class="modal fade" id="noteModal" tabindex="-1" aria-labelledby="noteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl mt-2">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="row">
+                        <!-- Left Side Section -->
+                        <div class="col-lg-4">
+                            <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+                                <div class="card-body px-0">
+                                    <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                                        Your tasks
                                     </div>
-                                </div>
-                            </div>
 
-                            <!-- Right Side Section -->
-                            <div class="col-lg-8">
-                                <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
-                                    <div class="card-body px-0">
-                                        <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                                            Add Note
-                                        </div>
-                                        <form id="noteForm" method="" action="#">
-                                            @csrf
-                                            <div class="form-group mt-4">
-                                                <label class="fw-bold mr-2">Note:</label>
-                                                <textarea class="form-control" id="noteInput" rows="3" name="note" placeholder="Your notes..."></textarea>
-                                            </div>
+                                    <div class="mt-3">
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Active Time:</th>
+                                                    <th>Break Time:</th>
+                                                    <th>Total Work Time:</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td><span id="loginTime"></span></td>
+                                                    <td><span id="totalBreakTime"></span></td>
+                                                    <td><span id="totalDuration"></span></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
 
-                                            <div class="form-group row mt-3 align-items-center">
-                                                <div class="col">
-                                                    <label class="fw-bold mr-2">Additional Work:</label>
-                                                </div>
-                                                <div class="col-auto">
-                                                    <button type="button" class="btn btn-primary" id="addNoteRowBtn">+</button>
-                                                </div>
-                                            </div>
-
-                                            <div id="additionalWorkRows">
-                                                <!-- Rows -->
-                                            </div>
-
-                                            <div class="text-right mt-3">
-                                                <button type="button" class="btn btn-primary bg-theme-light fs-4 border-theme border-2 fw-bold txt-theme" id="saveNoteBtn">Save Note And Log Out</button>
-                                            </div>
-                                        </form>
+                                    <div id="completedServices">
+                                        <table id="completedServicesTable" class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Client</th>
+                                                    <th>Task</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <!--  -->
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Note modal end -->
 
-        <!-- Service message modal start -->
-        <div class="modal fade" id="messageModal" tabindex="-1" role="dialog" aria-labelledby="messageModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg mt-2" role="document">
-                <div class="modal-content">
-                    <div class="modal-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
-                                    <div class="card-body px-0">
-                                        <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                                            Previous Comment
-                                        </div>
-                                        <div id="previousMessages" class="mt-4">
-                                            <!-- Previous messages -->
-                                        </div>
+                        <!-- Right Side Section -->
+                        <div class="col-lg-8">
+                            <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+                                <div class="card-body px-0">
+                                    <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                                        Add Note
                                     </div>
-                                </div>
-                            </div>
-                            <!--Message Input Section -->
-                            <div class="col-md-6">
-                                <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
-                                    <div class="card-body px-0">
-                                        <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                                           New Comment
-                                        </div>
-                                        <input type="hidden" id="hiddenStaffId" />
-                                        <input type="hidden" id="hiddenClientSubServiceId" />
+                                    <form id="noteForm" method="" action="#">
+                                        @csrf
                                         <div class="form-group mt-4">
-                                            <textarea class="form-control" id="service-message" rows="7" name="message" placeholder="Your comment..."></textarea>
+                                            <label class="fw-bold mr-2">Note:</label>
+                                            <textarea class="form-control" id="noteInput" rows="3" name="note" placeholder="Your notes..."></textarea>
                                         </div>
-                                        <div class="text-center">
-                                            <button type="button" class="mt-3 btn btn-primary bg-theme-light fs-4 border-theme border-2 fw-bold txt-theme" id="saveMessage">Send</button>
+
+                                        <div class="form-group row mt-3 align-items-center">
+                                            <div class="col">
+                                                <label class="fw-bold mr-2">Additional Work:</label>
+                                            </div>
+                                            <div class="col-auto">
+                                                <button type="button" class="btn btn-primary" id="addNoteRowBtn">+</button>
+                                            </div>
                                         </div>
+
+                                        <div id="additionalWorkRows">
+                                            <!-- Rows -->
+                                        </div>
+
+                                        <div class="text-right mt-3">
+                                            <button type="button" class="btn btn-primary bg-theme-light fs-4 border-theme border-2 fw-bold txt-theme" id="saveNoteBtn">Save Note And Log Out</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Note modal end -->
+
+    <!-- Service message modal start -->
+    <div class="modal fade" id="messageModal" tabindex="-1" role="dialog" aria-labelledby="messageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg mt-2" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+                                <div class="card-body px-0">
+                                    <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                                        Previous Comment
+                                    </div>
+                                    <div id="previousMessages" class="mt-4">
+                                        <!-- Previous messages -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!--Message Input Section -->
+                        <div class="col-md-6">
+                            <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+                                <div class="card-body px-0">
+                                    <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                                        New Comment
+                                    </div>
+                                    <input type="hidden" id="hiddenStaffId" />
+                                    <input type="hidden" id="hiddenClientSubServiceId" />
+                                    <div class="form-group mt-4">
+                                        <textarea class="form-control" id="service-message" rows="7" name="message" placeholder="Your comment..."></textarea>
+                                    </div>
+                                    <div class="text-center">
+                                        <button type="button" class="mt-3 btn btn-primary bg-theme-light fs-4 border-theme border-2 fw-bold txt-theme" id="saveMessage">Send</button>
                                     </div>
                                 </div>
                             </div>
@@ -267,115 +266,116 @@
                 </div>
             </div>
         </div>
-        <!-- Service message modal end -->
+    </div>
+    <!-- Service message modal end -->
 
-        <!-- Works assigned to a user and specified staff start-->
-        <div class="col-lg-8 mb-3">
-            <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
-                <div class="card-body px-0">
-                    <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                        Your Assigned Tasks
+    <!-- Works assigned to a user and specified staff start-->
+    <div class="col-lg-8 mb-3">
+        <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+            <div class="card-body px-0">
+                <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                    Your Assigned Tasks
+                </div>
+                <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
+                    <table id="serviceManagerTable" class="table cell-border table-striped" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th scope="col">Client Name</th>
+                                <th scope="col">Service Name</th>
+                                <th scope="col">Due Date</th>
+                                <th scope="col">Target Deadline</th>
+                                <th scope="col">Deadline</th>
+                                <th scope="col">Action</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Works assigned to a user and specified staff start-->
+
+    <!-- Completed service details section start -->
+    <div class="col-lg-12">
+        <div class="report-box border-theme sales-card p-4 mb-3 rounded-4 border-3" id="completedTaskSection" style="display: none;">
+            <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                Completed Work Details
+            </div>
+
+            <div class="container-fluid">
+                <div class="row mt-3">
+                    <div class="col-md-3 text-center">
+                        <h5 class="mb-3">Service</h5>
+                        <input type="text" id="service_name1" class="form-control mt-2 text-center" readonly>
                     </div>
-                        <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                        <table id="serviceManagerTable" class="table cell-border table-striped" style="width:100%">
+                    <div class="col-md-3 text-center">
+                        <h5 class="mb-3">Manager</h5>
+                        <input type="text" id="manager_name1" class="form-control mt-2 text-center" readonly>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h5 class="mb-3">Frequency</h5>
+                        <input type="text" id="service_frequency1" class="form-control mt-2 text-center" readonly>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h5 class="mb-3">Deadline</h5>
+                        <input type="date" id="service_deadline1" class="form-control mt-2 text-center" readonly>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <table class="table">
                             <thead>
                                 <tr>
-                                    <th scope="col">Client Name</th>
-                                    <th scope="col">Service Name</th>
-                                    <th scope="col">Due Date</th>
-                                    <th scope="col">Target Deadline</th>
-                                    <th scope="col">Deadline</th>
-                                    <th scope="col">Status</th>
-                                    <th scope="col">Action</th>
+                                    <th>Sub Service Name</th>
+                                    <th>Deadline</th>
+                                    <th>Staff</th>
+                                    <th>Note</th>
+                                    <th>Status</th>
+                                    <th>Comment</th>
+                                    <th>Timer</th>
                                 </tr>
                             </thead>
+                            <tbody id="completedServiceDetailsTable"></tbody>
                         </table>
+                    </div>
+                </div>
+
+                <div class="row mt-3 mb-3">
+                    <div class="col-lg-4 mx-auto text-center">
+                        <button id="completed-service-cancelButton" class="btn btn-sm btn-outline-dark">Cancel</button>
                     </div>
                 </div>
             </div>
         </div>
-        <!-- Works assigned to a user and specified staff start-->
+    </div>
+    <!-- Completed service details section end -->
 
-        <!-- Completed service details section start -->
-         <div class="col-lg-12">
-              <div class="report-box border-theme sales-card p-4 mb-3 rounded-4 border-3" id="completedTaskSection" style="display: none;">
-                  <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                       Completed Work Details
-                    </div>
-
-                  <div class="container-fluid">
-                      <div class="row mt-3">
-                          <div class="col-md-3 text-center">
-                              <h5 class="mb-3">Service</h5>
-                              <input type="text" id="service_name1" class="form-control mt-2 text-center" readonly>
-                          </div>    
-                          <div class="col-md-3 text-center">
-                              <h5 class="mb-3">Manager</h5>
-                              <input type="text" id="manager_name1" class="form-control mt-2 text-center" readonly>
-                          </div>  
-                          <div class="col-md-3 text-center">
-                              <h5 class="mb-3">Frequency</h5>
-                              <input type="text" id="service_frequency1" class="form-control mt-2 text-center" readonly>
-                          </div>   
-                          <div class="col-md-3 text-center">
-                              <h5 class="mb-3">Deadline</h5>
-                              <input type="date" id="service_deadline1" class="form-control mt-2 text-center" readonly>
-                          </div>
-                      </div>
-
-                      <div class="row mt-3">
-                          <div class="col-md-12">
-                              <table class="table">
-                                  <thead>
-                                      <tr>
-                                          <th>Sub Service Name</th>
-                                          <th>Deadline</th>
-                                          <th>Staff</th>
-                                          <th>Note</th>
-                                          <th>Status</th>
-                                          <th>Comment</th>
-                                          <th>Timer</th>
-                                      </tr>
-                                  </thead>
-                                  <tbody id="completedServiceDetailsTable"></tbody>
-                              </table>
-                          </div>
-                      </div>
-
-                      <div class="row mt-3 mb-3">
-                          <div class="col-lg-4 mx-auto text-center">
-                              <button id="completed-service-cancelButton" class="btn btn-sm btn-outline-dark">Cancel</button>
-                          </div>
-                      </div>
-                  </div>
-              </div>
-         </div>
-        <!-- Completed service details section end -->
-
-        <!-- Completed tasks table start-->
-        <div class="col-lg-8 mb-3">
-            <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
-                <div class="card-body px-0">
-                    <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                        Completed Tasks
-                    </div>
-                        <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                        <table id="completedTasksTable" class="table cell-border table-striped" style="width:100%">
-                            <thead>
-                                <tr>
-                                    <th scope="col">Client Name</th>
-                                    <th scope="col">Service Name</th>
-                                    <th scope="col">Deadline</th>
-                                    <th scope="col">Frequency</th>
-                                    <th scope="col">Action</th>
-                                </tr>
-                            </thead>
-                        </table>
-                    </div>
+    <!-- Completed tasks table start-->
+    <div class="col-lg-8 mb-3">
+        <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+            <div class="card-body px-0">
+                <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                    Completed Tasks
+                </div>
+                <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
+                    <table id="completedTasksTable" class="table cell-border table-striped" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th scope="col">Client Name</th>
+                                <th scope="col">Service Name</th>
+                                <th scope="col">Due Date</th>
+                                <th scope="col">Target Deadline</th>
+                                <th scope="col">Deadline</th>
+                                <th scope="col">Action</th>
+                            </tr>
+                        </thead>
+                    </table>
                 </div>
             </div>
         </div>
-        <!-- Completed tasks table end-->
+    </div>
+    <!-- Completed tasks table end-->
     </div>
 </section>
 
@@ -383,8 +383,8 @@
     <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100">
         <div class="card-body p-0">
             <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold" style="margin-bottom: 35px;">
-            Clock Out to Start Work 
-        </div>
+                Clock Out to Start Work
+            </div>
 
             <!-- Add some blank space -->
             <div style="margin-bottom: 10px;"></div>
@@ -416,89 +416,42 @@
                     console.error('DataTables error:', error, thrown);
                 }
             },
-            columns: [
-                { data: 'clientname', name: 'clientname' },
-                { data: 'servicename', name: 'servicename' },
-                { 
-                    data: 'due_date', 
+            columns: [{
+                    data: 'clientname',
+                    name: 'clientname'
+                },
+                {
+                    data: 'servicename',
+                    name: 'servicename'
+                },
+                {
+                    data: 'due_date',
                     name: 'due_date',
                     render: function(data, type, row) {
                         return moment(data).format('DD.MM.YY');
                     }
                 },
-                { 
-                    data: 'legal_deadline', 
+                {
+                    data: 'legal_deadline',
                     name: 'legal_deadline',
                     render: function(data, type, row) {
                         return moment(data).format('DD.MM.YY');
                     }
                 },
-                { 
-                    data: 'service_deadline', 
+                {
+                    data: 'service_deadline',
                     name: 'service_deadline',
                     render: function(data, type, row) {
                         return moment(data).format('DD.MM.YY');
                     }
                 },
                 {
-                    data: 'status',
-                    name: 'status',
+                    data: 'action',
+                    name: 'action',
                     orderable: false,
-                    searchable: false,
-                    render: function(data, type, row) {
-                        var statusOptions = {
-                            0: 'Processing',
-                            2: 'Completed'
-                        };
-                        var select = '<select class="form-control status-change" data-id="' + row.id + '">';
-                        for (var value in statusOptions) {
-                            var selected = (data == value) ? 'selected' : '';
-                            select += '<option value="' + value + '" ' + selected + '>' + statusOptions[value] + '</option>';
-                        }
-                        select += '</select>';
-                        return select;
-                    }
-                },
-                { data: 'action', name: 'action', orderable: false, searchable: false }
-            ]
-        });
-
-        $(document).on('change', '.status-change', function() {
-            var newStatus = $(this).val();
-            var itemId = $(this).data('id');
-
-            swal({
-                title: "Change Status?",
-                text: "Are you sure you want to change the status?",
-                icon: 'warning',
-                buttons: true,
-                dangerMode: true,
-            }).then((result) => {
-                if (result) {
-                    $.ajax({
-                        type: 'POST',
-                        url: '/manager/client-service-change-status',
-                        data: {
-                            id: itemId,
-                            status: newStatus,
-                            _token: $('meta[name="csrf-token"]').attr('content')
-                        },
-                        success: function(response) {
-                            if (response.success) {
-                                swal("Success!", response.message, "success");
-                                setTimeout(function() {
-                                    location.reload();
-                                }, 2000);
-                            } else {
-                                swal("Error!", response.message, "error");
-                            }
-                        },
-                        error: function(xhr, status, error) {
-                            console.error(xhr.responseText);
-                        }
-                    });
+                    searchable: false
                 }
-            });
+            ]
         });
 
         $(document).on('click', '.change-status', function() {
@@ -550,7 +503,7 @@
                     staffDropdown = staff ? staff.first_name : 'N/A';
                 }
 
-                var staffName = staff ? staff.first_name : 'N/A';
+                var staffName = staff ? (staff.first_name + ' ' + (staff.last_name || '')).trim() : 'N/A';
                 var isAuthUserStaff = authUserId === subService.staff_id;
                 var hasWorkTimes = subService.work_times && subService.work_times.length > 0;
 
@@ -572,36 +525,28 @@
 
                 var startButton = '';
                 var stopButton = '';
-                var startBreakButton = '';
-                var stopBreakButton = '';
                 var duration = '';
-                var firstWorkTime = subService.work_times.filter(workTime => workTime.is_break === 0)
+
+                var totalDurationInSeconds = subService.work_times.filter(workTime => workTime.is_break === 0)
                     .reduce(function(acc, workTime) {
-                            return acc + parseInt(workTime.duration);
-                        }, 0);
-                
-                if (subService.sequence_status === 2) {
-                    if (firstWorkTime) {
-                        var durationInSeconds = firstWorkTime;
-                        var hours = Math.floor(durationInSeconds / 3600);
-                        var minutes = Math.floor((durationInSeconds % 3600) / 60);
-                        var seconds = durationInSeconds % 60;
-                        duration = `<div>${hours}h ${minutes}m ${seconds}s</div>`;
-                    }
+                        return acc + parseInt(workTime.duration);
+                    }, 0);
+
+                if (totalDurationInSeconds > 0) {
+                    var hours = Math.floor(totalDurationInSeconds / 3600);
+                    var minutes = Math.floor((totalDurationInSeconds % 3600) / 60);
+                    var seconds = totalDurationInSeconds % 60;
+                    duration = `<div>${hours}h ${minutes}m ${seconds}s</div>`;
                 }
 
+                var hasActiveWorkTime = subService.work_times && subService.work_times.some(function(workTime) {
+                    return (workTime.end_time === null || workTime.end_time === "") && workTime.is_break === 0;
+                });
+
                 if (isAuthUserStaff && subService.sequence_status === 0) {
-                    if (subService.status === 2) {
-                        startBreakButton = `<button type="button" class="btn btn-secondary start-break" data-sub-service-id="${subService.id}">Start Break</button>`;
-                        stopButton = `<button type="button" class="btn btn-secondary stop-timer" data-sub-service-id="${subService.id}">Stop</button>`;
-                        
-                    } else if (subService.status === 3) {
-                        if (subService.work_times) {
-                            subService.work_times.forEach(function(work_time) {
-                                stopBreakButton = `<button type="button" class="btn btn-danger stop-break" data-sub-service-id="${subService.id}" data-work-times-id="${work_time.id}">Stop Break</button>`;
-                            });
-                        }
-                    } else if (subService.status === 1) {
+                    if (hasActiveWorkTime) {
+                        stopButton = `<button type="button" class="btn btn-danger stop-timer" data-sub-service-id="${subService.id}">Stop</button>`;
+                    } else {
                         startButton = `<button type="button" class="btn btn-secondary start-timer" data-sub-service-id="${subService.id}">Start</button>`;
                     }
                 }
@@ -619,11 +564,11 @@
                             </button>
                         </td>
                         <td>
-                            ${startButton}
-                            ${stopButton}
-                            {{--${startBreakButton}
-                            ${stopBreakButton}--}}
-                            ${duration}
+                            <div class="d-flex align-items-center gap-2">
+                                ${startButton}
+                                ${stopButton}
+                                <span class="badge bg-success">${duration}</span>
+                            </div>
                         </td>
                     </tr>
                 `;
@@ -649,15 +594,19 @@
                     newStaffId: newStaffId
                 },
                 success: function(response) {
-                    swal({
-                        title: "Success!",
-                        text: "Staff changed successfully",
-                        icon: "success",
-                        button: "OK",
-                    });
-                    setTimeout(function() {
-                        location.reload();
-                    }, 2000);
+                    Toastify({
+                        text: "Staff changed successfully!"
+                    }).showToast();
+                    $('#assignTaskSection').hide();
+                    $('#completedTaskSection').hide();
+
+                    if ($.fn.DataTable.isDataTable('#serviceManagerTable')) {
+                        $('#serviceManagerTable').DataTable().ajax.reload(null, false);
+                    }
+
+                    if ($.fn.DataTable.isDataTable('#')) {
+                        $('#completedTasksTable').DataTable().ajax.reload(null, false);
+                    }
                 },
                 error: function(xhr, status, error) {
                     console.error(xhr.responseText);
@@ -666,7 +615,7 @@
         });
 
 
-        $(document).on('click', '.open-modal', function(){
+        $(document).on('click', '.open-modal', function() {
             var staffId = $(this).data('staff-id');
             var clientSubServiceId = $(this).data('client-sub-service-id');
             $('#hiddenStaffId').val(staffId);
@@ -682,6 +631,7 @@
                 dataType: "json",
                 success: function(data) {
                     var managers = @json($managers);
+
                     function getManagerName(managerId) {
                         var manager = managers.find(manager => String(manager.id) === String(managerId));
                         return manager ? manager.first_name : '';
@@ -690,8 +640,8 @@
                     data.forEach(function(message) {
                         var messageDiv = $('<div>').addClass('message');
                         var managerName = getManagerName(message.created_by);
-                        var messageContent = message.message ? message.message : ''; 
-                        messageDiv.html('<span style="font-weight: bold;">' + managerName + ': </span>' + messageContent); 
+                        var messageContent = message.message ? message.message : '';
+                        messageDiv.html('<span style="font-weight: bold;">' + managerName + ': </span>' + messageContent);
                         $('#previousMessages').append(messageDiv);
                     });
                 },
@@ -704,7 +654,7 @@
         $('#saveMessage').click(function() {
             var message = $('#service-message').val();
             var staffId = $('#hiddenStaffId').val();
-            var clientSubServiceId = $('#hiddenClientSubServiceId').val(); 
+            var clientSubServiceId = $('#hiddenClientSubServiceId').val();
 
             $.ajax({
                 url: '/manager/store-message',
@@ -716,22 +666,14 @@
                     _token: "{{ csrf_token() }}"
                 },
                 success: function(response) {
-                    swal({
-                        title: "Success!",
-                        text: "Comment sent successfully",
-                        icon: "success",
-                        button: "OK",
-                    });
-                    setTimeout(function() {
-                        location.reload();
-                    }, 2000);
-                    $('#messageModal').modal('hide'); 
+                    $('#service-message').val('');
+                    populateMessage(clientSubServiceId);
                 },
                 error: function(xhr, status, error) {
                     console.error(error);
                     var errorMessage = "";
-                    if (xhr.responseJSON && xhr.responseJSON.errors){
-                        $.each(xhr.responseJSON.errors, function (key, value) {
+                    if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        $.each(xhr.responseJSON.errors, function(key, value) {
                             errorMessage += key + ": " + value.join(", ") + "<br>";
                         });
                     } else {
@@ -762,21 +704,26 @@
                     newStatus: newStatus
                 },
                 success: function(response) {
-                    swal({
-                        title: "Success!",
-                        text: "Status chnaged successfully",
-                        icon: "success",
-                        button: "OK",
-                    });
-                    setTimeout(function() {
-                        location.reload();
-                    }, 2000);
+                    Toastify({
+                        text: "Status changed successfully!"
+                    }).showToast();
+                    
+                    $('#assignTaskSection').hide();
+                    $('#completedTaskSection').hide();
+
+                    if ($.fn.DataTable.isDataTable('#serviceManagerTable')) {
+                        $('#serviceManagerTable').DataTable().ajax.reload(null, false);
+                    }
+
+                    if ($.fn.DataTable.isDataTable('#completedTasksTable')) {
+                        $('#completedTasksTable').DataTable().ajax.reload(null, false);
+                    }
                 },
                 error: function(xhr, status, error) {
                     console.error(error);
                     var errorMessage = "";
-                    if (xhr.responseJSON && xhr.responseJSON.errors){
-                        $.each(xhr.responseJSON.errors, function (key, value) {
+                    if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        $.each(xhr.responseJSON.errors, function(key, value) {
                             errorMessage += key + ": " + value.join(", ") + "<br>";
                         });
                     } else {
@@ -805,21 +752,26 @@
                     _token: "{{ csrf_token() }}"
                 },
                 success: function(response) {
-                    swal({
-                        title: "Success!",
-                        text: "Time has started successfully",
-                        icon: "success",
-                        button: "OK",
-                    });
-                    setTimeout(function() {
-                        location.reload();
-                    }, 2000);
+                    Toastify({
+                        text: "Work started successfully!"
+                    }).showToast();
+                    
+                    $('#assignTaskSection').hide();
+                    $('#completedTaskSection').hide();
+
+                    if ($.fn.DataTable.isDataTable('#serviceManagerTable')) {
+                        $('#serviceManagerTable').DataTable().ajax.reload(null, false);
+                    }
+
+                    if ($.fn.DataTable.isDataTable('#completedTasksTable')) {
+                        $('#completedTasksTable').DataTable().ajax.reload(null, false);
+                    }
                 },
                 error: function(xhr, status, error) {
                     console.error(xhr.responseText);
                 }
             });
-        }); 
+        });
 
         $(document).on('click', '.stop-timer', function() {
             var clientSubServiceId = $(this).data('sub-service-id');
@@ -828,18 +780,23 @@
                 url: '/manager/stop-work-time',
                 data: {
                     clientSubServiceId: clientSubServiceId,
-                    _token: "{{ csrf_token() }}" 
+                    _token: "{{ csrf_token() }}"
                 },
                 success: function(response) {
-                    swal({
-                        title: "Success!",
-                        text: "Time has been stopped successfully",
-                        icon: "success",
-                        button: "OK",
-                    });
-                    setTimeout(function() {
-                        location.reload();
-                    }, 2000);
+                    Toastify({
+                        text: "Work stopped successfully!"
+                    }).showToast();
+                    
+                    $('#assignTaskSection').hide();
+                    $('#completedTaskSection').hide();
+
+                    if ($.fn.DataTable.isDataTable('#serviceManagerTable')) {
+                        $('#serviceManagerTable').DataTable().ajax.reload(null, false);
+                    }
+
+                    if ($.fn.DataTable.isDataTable('#completedTasksTable')) {
+                        $('#completedTasksTable').DataTable().ajax.reload(null, false);
+                    }
                 },
                 error: function(xhr, status, error) {
                     console.error(xhr.responseText);
@@ -857,18 +814,21 @@
                     _token: "{{ csrf_token() }}"
                 },
                 success: function(response) {
-                    swal({
-                        title: "Success!",
-                        text: "Break time has started successfully",
-                        icon: "success",
-                        button: "OK",
-                    });
-                    setTimeout(function() {
-                        location.reload();
-                    }, 2000);
+                    Toastify({
+                        text: "Break time has started successfully!"
+                    }).showToast();
+
+                    $('#assignTaskSection').hide();
+
+                    if ($.fn.DataTable.isDataTable('#serviceManagerTable')) {
+                        $('#serviceManagerTable').DataTable().ajax.reload(null, false);
+                    }
+                    if ($.fn.DataTable.isDataTable('#completedTasksTable')) {
+                        $('#completedTasksTable').DataTable().ajax.reload(null, false);
+                    }
                 },
                 error: function(xhr, status, error) {
-                   console.error(xhr.responseText);
+                    console.error(xhr.responseText);
                 }
             });
         });
@@ -881,19 +841,22 @@
                 url: '/manager/stop-break',
                 data: {
                     clientSubServiceId: clientSubServiceId,
-                     workTimesId: workTimesId,
+                    workTimesId: workTimesId,
                     _token: "{{ csrf_token() }}"
                 },
                 success: function(response) {
-                    swal({
-                        title: "Success!",
-                        text: "Break time has stopped successfully",
-                        icon: "success",
-                        button: "OK",
-                    });
-                    setTimeout(function() {
-                        location.reload();
-                    }, 2000);
+                    Toastify({
+                        text: "Break time has stopped successfully!"
+                    }).showToast();
+
+                    $('#assignTaskSection').hide();
+
+                    if ($.fn.DataTable.isDataTable('#serviceManagerTable')) {
+                        $('#serviceManagerTable').DataTable().ajax.reload(null, false);
+                    }
+                    if ($.fn.DataTable.isDataTable('#completedTasksTable')) {
+                        $('#completedTasksTable').DataTable().ajax.reload(null, false);
+                    }
                 },
                 error: function(xhr, status, error) {
                     console.error(xhr.responseText);
@@ -918,22 +881,40 @@
                     console.error('DataTables error:', error, thrown);
                 }
             },
-            columns: [
-                { data: 'clientname', name: 'clientname' },
-                { data: 'servicename', name: 'servicename' },
-                { 
-                    data: 'service_deadline', 
+            columns: [{
+                    data: 'clientname',
+                    name: 'clientname'
+                },
+                {
+                    data: 'servicename',
+                    name: 'servicename'
+                },
+                {
+                    data: 'due_date',
+                    name: 'due_date',
+                    render: function(data, type, row) {
+                        return moment(data).format('DD.MM.YY');
+                    }
+                },
+                {
+                    data: 'legal_deadline',
+                    name: 'legal_deadline',
+                    render: function(data, type, row) {
+                        return moment(data).format('DD.MM.YY');
+                    }
+                },
+                {
+                    data: 'service_deadline',
                     name: 'service_deadline',
                     render: function(data, type, row) {
                         return moment(data).format('DD.MM.YY');
                     }
                 },
-                { data: 'service_frequency', name: 'service_frequency' },
-                { 
-                    data: 'action', 
+                {
+                    data: 'action',
                     name: 'action',
-                    orderable: false, 
-                    searchable: false 
+                    orderable: false,
+                    searchable: false
                 }
             ]
         });
@@ -977,21 +958,18 @@
 
                 var authUserId = {{ auth()->user()->id }};
                 var isAuthUserStaff = authUserId === subService.staff_id;
-                var staffName = staff ? staff.first_name : 'N/A';
-                var duration = '';
-                var firstWorkTime = subService.work_times.filter(workTime => workTime.is_break === 0)
-                    .reduce(function(acc, workTime) {
-                            return acc + parseInt(workTime.duration);
-                        }, 0);
+                var staffName = staff ? (staff.first_name + ' ' + (staff.last_name || '')).trim() : 'N/A';
 
-                if (subService.sequence_status === 2) {
-                    if (firstWorkTime) {
-                        var durationInSeconds = firstWorkTime;
-                        var hours = Math.floor(durationInSeconds / 3600);
-                        var minutes = Math.floor((durationInSeconds % 3600) / 60);
-                        var seconds = durationInSeconds % 60;
-                        duration = `<div>${hours}h ${minutes}m ${seconds}s</div>`;
-                    }
+                var totalDurationInSeconds = subService.work_times.filter(workTime => workTime.is_break === 0)
+                    .reduce(function(acc, workTime) {
+                        return acc + parseInt(workTime.duration);
+                    }, 0);
+
+                if (totalDurationInSeconds > 0) {
+                    var hours = Math.floor(totalDurationInSeconds / 3600);
+                    var minutes = Math.floor((totalDurationInSeconds % 3600) / 60);
+                    var seconds = totalDurationInSeconds % 60;
+                    duration = `<div>${hours}h ${minutes}m ${seconds}s</div>`;
                 }
 
                 var statusDropdown = `
@@ -1013,7 +991,7 @@
                             </button>
                         </td>
                          <td>
-                            <span class="timer-duration">${duration}</span>
+                            <span class="badge bg-success">${duration}</span>
                         </td>
                     </tr>
                 `;
@@ -1038,21 +1016,20 @@
                     newStatus: newStatus
                 },
                 success: function(response) {
-                    swal({
-                        title: "Success!",
-                        text: "Status chnaged successfully",
-                        icon: "success",
-                        button: "OK",
-                    });
-                    setTimeout(function() {
-                        location.reload();
-                    }, 2000);
+                    Toastify({
+                        text: "Status changed successfully!"
+                    }).showToast();
+                    $('#completedTaskSection').hide();
+
+                    if ($.fn.DataTable.isDataTable('#completedTasksTable')) {
+                        $('#completedTasksTable').DataTable().ajax.reload(null, false);
+                    }
                 },
                 error: function(xhr, status, error) {
                     console.error(error);
                     var errorMessage = "";
-                    if (xhr.responseJSON && xhr.responseJSON.errors){
-                        $.each(xhr.responseJSON.errors, function (key, value) {
+                    if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        $.each(xhr.responseJSON.errors, function(key, value) {
                             errorMessage += key + ": " + value.join(", ") + "<br>";
                         });
                     } else {
@@ -1077,12 +1054,13 @@
 <!-- Task Check before loggin out start -->
 <script>
     function checkWorkTimeStatus() {
+        fetchClientSubServices();
         $.ajax({
-            url: '/manager/check-work-time-status', 
+            url: '/manager/check-work-time-status',
             type: 'GET',
             success: function(response) {
                 if (response.status === 'ongoing') {
-                     swal({
+                    swal({
                         title: "Warning!",
                         text: "Please stop your break or work time before logging out.",
                         icon: "warning",
@@ -1137,7 +1115,9 @@
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
-                    data: { workTimeId: workTimeId },
+                    data: {
+                        workTimeId: workTimeId
+                    },
                     success: function(response) {
                         localStorage.setItem('isBreak', false);
                         $('#breakOutSection').hide();
@@ -1156,7 +1136,9 @@
             $.ajax({
                 url: '/manager/check-break-status',
                 type: 'GET',
-                data: { workTimeId: workTimeId },
+                data: {
+                    workTimeId: workTimeId
+                },
                 success: function(response) {
                     if (response.isBreak) {
                         localStorage.setItem('isBreak', true);
@@ -1205,7 +1187,7 @@
                     var hours = Math.floor(seconds / 3600);
                     var minutes = Math.floor((seconds % 3600) / 60);
                     var remainingSeconds = seconds % 60;
-                    
+
                     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
                 }
                 var duration = moment.duration(response.login_time, 'seconds');
@@ -1217,23 +1199,19 @@
 
 
                 var completedServicesHtml = '';
-                    $.each(response.completed_services, function(index, item) {
-                        completedServicesHtml += '<tr>';
-                        completedServicesHtml += '<td>' + item.client_name + '</td>';
-                        completedServicesHtml += '<td>' + item.sub_service_name + '</td>';
-                        completedServicesHtml += '</tr>';
-                    });
-                    $('#completedServicesTable tbody').html(completedServicesHtml);
+                $.each(response.completed_services, function(index, item) {
+                    completedServicesHtml += '<tr>';
+                    completedServicesHtml += '<td>' + item.client_name + '</td>';
+                    completedServicesHtml += '<td>' + item.sub_service_name + '</td>';
+                    completedServicesHtml += '</tr>';
+                });
+                $('#completedServicesTable tbody').html(completedServicesHtml);
             },
             error: function(xhr, status, error) {
                 console.error(xhr.responseText);
             }
         });
     }
-
-    $(document).ready(function() {
-        fetchClientSubServices();
-    });
 </script>
 <!-- Data showing in modal end  -->
 
@@ -1275,9 +1253,8 @@
                         <button type="button" class="btn btn-danger btn-remove-note-row">-</button>
                     </div>
                 </div>`;
-                
+
             $('#additionalWorkRows').append(newRowHtml);
-            $('.select2').select2();
         });
 
         $(document).on('click', '.btn-remove-note-row', function() {
@@ -1292,7 +1269,7 @@
                 client_ids: [],
                 sub_service_ids: [],
                 notes: [],
-                noteInput: '', 
+                noteInput: '',
                 start_times: [],
                 end_times: []
             };
@@ -1349,7 +1326,7 @@
     function updateActiveTime() {
         var activeTimeElement = document.getElementById('activeTime');
         var currentTime = activeTimeElement.textContent;
-        
+
         var timeArray = currentTime.split(':');
         var hours = parseInt(timeArray[0], 10);
         var minutes = parseInt(timeArray[1], 10);

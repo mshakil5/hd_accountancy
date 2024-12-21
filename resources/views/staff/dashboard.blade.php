@@ -174,7 +174,7 @@
                                 <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
                                     <div class="card-body px-0">
                                         <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                                            Your tasks
+                                            Your Tasks
                                         </div>
                                     
                                         <div class="mt-3">
@@ -202,7 +202,6 @@
                                                     <tr>
                                                         <th>Client:</th>
                                                         <th>Task:</th>
-                                                        <th>Duration:</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -859,6 +858,7 @@
 <!-- Task Check before loggin out start -->
 <script>
     function checkWorkTimeStatus() {
+        fetchClientSubServices();
         $.ajax({
             url: '/staff/check-work-time-status', 
             type: 'GET',
@@ -1187,11 +1187,9 @@
 
                 var completedServicesHtml = '';
                 $.each(response.completed_services, function(index, item) {
-                    var formattedDuration = formatDuration(item.duration);
                     completedServicesHtml += '<tr>';
                     completedServicesHtml += '<td>' + item.client_name + '</td>';
                     completedServicesHtml += '<td>' + item.sub_service_name + '</td>';
-                    completedServicesHtml += '<td>' + formattedDuration + '</td>';
                     completedServicesHtml += '</tr>';
                 });
                 $('#completedServicesTable tbody').html(completedServicesHtml);
@@ -1201,10 +1199,6 @@
             }
         });
     }
-
-    $(document).ready(function() {
-        fetchClientSubServices();
-    });
 </script>
 <!-- Data showing in modal end  -->
 
@@ -1248,7 +1242,6 @@
                 </div>`;
                 
             $('#additionalWorkRows').append(newRowHtml);
-            $('.select2').select2();
         });
 
         $(document).on('click', '.btn-remove-note-row', function() {
@@ -1351,7 +1344,7 @@
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
             },
             success: function(response) {
-                console.log('Idle time logged successfully.');
+                // console.log('Idle time logged successfully.');
             },
             error: function(xhr, status, error) {
                 console.error('Error logging idle time:', error);

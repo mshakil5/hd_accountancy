@@ -21,32 +21,32 @@ class ServiceController extends Controller
 {
     public function getAllAssignedServices(Request $request)
     {
-            $currentUserId = Auth::id();
-            if ($request->ajax()) {
+        $currentUserId = Auth::id();
+        if ($request->ajax()) {
             $data = ClientService::with('clientSubServices')
                 ->where('manager_id', $currentUserId)
                 ->where('due_date', '<=', now()->endOfDay())
                 ->orderBy('id', 'desc')
-                // ->whereHas('clientSubServices', function ($query) {
-                //     $query->whereIn('sequence_status', [0, 1]);
-                // })
+                ->whereHas('clientSubServices', function ($query) {
+                    $query->whereIn('sequence_status', [0, 1]);
+                })
                 ->orderBy('id', 'desc')
                 ->get();
 
             return DataTables::of($data)
-            
-                ->addColumn('clientname', function(ClientService $clientservice) {
+
+                ->addColumn('clientname', function (ClientService $clientservice) {
                     return $clientservice->client ? $clientservice->client->name : '';
                 })
-                ->addColumn('servicename', function(ClientService $clientservice) {
+                ->addColumn('servicename', function (ClientService $clientservice) {
                     return $clientservice->service ? $clientservice->service->name : '';
                 })
-                ->addColumn('status', function(ClientService $clientservice) {
+                ->addColumn('status', function (ClientService $clientservice) {
                     return $clientservice->status;
                 })
-                ->addColumn('action', function(ClientService $clientservice) {
-                    $managerFirstName = $clientservice->manager->first_name;
-                    return '<button class="btn btn-secondary change-status" data-id="'. $clientservice->id. '" data-manager-firstname="'. $managerFirstName. '">Details</button>';
+                ->addColumn('action', function (ClientService $clientservice) {
+                    $managerFirstName = $clientservice->manager ? $clientservice->manager->first_name . ' ' . $clientservice->manager->last_name : 'N/A';
+                    return '<button class="btn btn-secondary change-status" data-id="' . $clientservice->id . '" data-manager-firstname="' . $managerFirstName . '">Details</button>';
                 })
                 ->make(true);
         }
@@ -54,7 +54,7 @@ class ServiceController extends Controller
 
     public function getClientSubServices($clientserviceId)
     {
-        $clientSubServices = ClientSubService::with('subService','serviceMessage','workTimes')->where('client_service_id', $clientserviceId)->get();
+        $clientSubServices = ClientSubService::with('subService', 'serviceMessage', 'workTimes')->where('client_service_id', $clientserviceId)->get();
         return response()->json($clientSubServices);
     }
 
@@ -72,7 +72,7 @@ class ServiceController extends Controller
         $clientServiceId = $clientSubService->client_service_id;
         $serviceSequenceNo = $clientSubService->sequence_id;
         $nextService = $serviceSequenceNo + 1;
-         if ($clientSubService) {
+        if ($clientSubService) {
             $clientSubService->sequence_status = $newStatus;
             $clientSubService->updated_by = Auth::id();
             $clientSubService->save();
@@ -89,7 +89,6 @@ class ServiceController extends Controller
         } else {
             return response()->json(['error' => 'Client sub-service not found'], 404);
         }
-
     }
 
     public function storeMessage(Request $request)
@@ -103,14 +102,14 @@ class ServiceController extends Controller
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 422);
         }
-        
-            $serviceMessage = new ServiceMessage;
-            $serviceMessage->manager_id = auth()->id(); 
-            $serviceMessage->staff_id = $request->staff_id;
-            $serviceMessage->client_sub_service_id = $request->client_sub_service_id;
-            $serviceMessage->message = $request->message;
-            $serviceMessage->created_by = auth()->id();
-            $serviceMessage->save();
+
+        $serviceMessage = new ServiceMessage;
+        $serviceMessage->manager_id = auth()->id();
+        $serviceMessage->staff_id = $request->staff_id;
+        $serviceMessage->client_sub_service_id = $request->client_sub_service_id;
+        $serviceMessage->message = $request->message;
+        $serviceMessage->created_by = auth()->id();
+        $serviceMessage->save();
 
         return response()->json(['success' => 'Message saved successfully.']);
     }
@@ -135,14 +134,14 @@ class ServiceController extends Controller
                 ->get();
 
             return DataTables::of($data)
-            
-                ->addColumn('clientname', function(ClientService $clientservice) {
+
+                ->addColumn('clientname', function (ClientService $clientservice) {
                     return $clientservice->client->name;
                 })
-                ->addColumn('servicename', function(ClientService $clientservice) {
+                ->addColumn('servicename', function (ClientService $clientservice) {
                     return $clientservice->service->name;
                 })
-                ->addColumn('action', function(ClientService $clientservice) use ($managerName) {
+                ->addColumn('action', function (ClientService $clientservice) use ($managerName) {
                     return '<button class="btn btn-secondary task-details" data-id="' . $clientservice->id . '" data-manager="' . $managerName . '">Details</button>';
                 })
                 ->make(true);
@@ -191,21 +190,21 @@ class ServiceController extends Controller
 
         $clientSubServiceId = $request->clientSubServiceId;
         $workTime = WorkTime::where('client_sub_service_id', $clientSubServiceId)
-                    ->where('is_break', 0)
-                    ->orderBy('id', 'DESC')
-                    ->first();
+            ->where('is_break', 0)
+            ->orderBy('id', 'DESC')
+            ->first();
         $startDateTime = Carbon::parse($workTime->start_time);
         $endDateTime = Carbon::parse($workTime->end_time);
 
         $totalDurationExcludingBreaks = $startDateTime->diffInSeconds($endDateTime);
 
         $breaks = WorkTime::where('client_sub_service_id', $clientSubServiceId)
-                    ->where('is_break', 1)
-                    ->sum('duration');
+            ->where('is_break', 1)
+            ->sum('duration');
 
         $adjustedDuration = $totalDurationExcludingBreaks - $breaks;
         $workTime->duration = $adjustedDuration;
-        $workTime->end_time = Carbon::now(); 
+        $workTime->end_time = Carbon::now();
 
         if ($workTime->save()) {
             $changests = ClientSubService::find($clientSubServiceId);
@@ -230,8 +229,8 @@ class ServiceController extends Controller
         $clientSubServiceId = $request->clientSubServiceId;
         $staffId = Auth::id();
         $workTime = new WorkTime();
-        
-        
+
+
         $workTime->staff_id = $staffId;
         $workTime->client_sub_service_id = $clientSubServiceId;
         $workTime->start_time = Carbon::now();
@@ -253,7 +252,7 @@ class ServiceController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'clientSubServiceId' => 'required',
-            'workTimesId' => 'required', 
+            'workTimesId' => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -299,7 +298,8 @@ class ServiceController extends Controller
     public function takeBreak(Request $request)
     {
         $workTime = new WorkTime();
-        $workTime->manager_id = Auth::id();
+        // $workTime->manager_id = Auth::id();
+        $workTime->staff_id = Auth::id();
         $workTime->start_time = Carbon::now();
         $workTime->start_date = Carbon::today()->format('d-m-Y');
         $workTime->is_break = 1;
@@ -387,16 +387,15 @@ class ServiceController extends Controller
                     'start_time' => $workTime->start_time,
                     'end_time' => $workTime->end_time,
                 ];
-
             }
         }
 
-         $totalBreakDuration = WorkTime::where('staff_id', $staffId)
+        $totalBreakDuration = WorkTime::where('staff_id', $staffId)
             ->whereDate('start_time', $today)
             ->where('is_break', true)
             ->sum('duration');
 
-         $totalDuration = WorkTime::where('staff_id', $staffId)
+        $totalDuration = WorkTime::where('staff_id', $staffId)
             ->whereDate('start_time', $today)
             ->where('is_break', false)
             ->sum('duration');
@@ -444,23 +443,23 @@ class ServiceController extends Controller
             $attendanceLog->session_id = null;
             $attendanceLog->status = 1;
             $noteInput = $request->input('noteInput');
-            $attendanceLog->note = $noteInput; 
+            $attendanceLog->note = $noteInput;
             $attendanceLog->save();
         }
-        
+
         session()->flush();
         session()->regenerate();
-        
+
         return redirect()->route('login')->with('success', 'Notes saved successfully');
     }
 
     public function allTaskList()
     {
-        $staffs = User::whereIn('type', ['3','2'])->orderby('id','DESC')->get();
-        $managers = User::whereIn('type', ['3','2'])->orderby('id','DESC')->get();
-        $clients = Client::orderby('id','DESC')->get();
-        $subServices = SubService::orderby('id','DESC')->get();
-        return view('manager.task.index',compact('staffs','managers','clients','subServices'));
+        $staffs = User::whereIn('type', ['3', '2'])->orderby('id', 'DESC')->get();
+        $managers = User::whereIn('type', ['3', '2'])->orderby('id', 'DESC')->get();
+        $clients = Client::orderby('id', 'DESC')->get();
+        $subServices = SubService::orderby('id', 'DESC')->get();
+        return view('manager.task.index', compact('staffs', 'managers', 'clients', 'subServices'));
     }
 
     public function updateSubServiceStaff(Request $request)
@@ -476,15 +475,14 @@ class ServiceController extends Controller
             ], 422);
         }
 
-            $clientSubService = ClientSubService::findOrFail($request->clientSubServiceId);
+        $clientSubService = ClientSubService::findOrFail($request->clientSubServiceId);
 
-            $clientSubService->staff_id = $request->newStaffId;
-            $clientSubService->save();
+        $clientSubService->staff_id = $request->newStaffId;
+        $clientSubService->save();
 
-            return response()->json([
-                'message' => 'Staff updated successfully'
-            ], 200);
-        
+        return response()->json([
+            'message' => 'Staff updated successfully'
+        ], 200);
     }
 
     public function changeSubServiceStatus(Request $request)
