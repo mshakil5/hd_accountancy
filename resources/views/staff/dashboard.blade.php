@@ -5,6 +5,78 @@
 <section id="breakSection" class="section dashboard">
 
     <div class="row">
+
+        <!-- Assigned service details section start -->
+        <div class="col-lg-12">
+            <div class="report-box border-theme sales-card p-4 mb-3 rounded-4 border-3" id="assignTaskSection" style="display: none;">
+                <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                    Work Details
+                </div>
+
+                <!-- Success and Error message -->
+                <div class="row my-4 px-3">
+                    <div class="col-lg-12">
+                        <div id="successMessage" class="alert alert-success" style="display: none;">
+                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                            <b></b>
+                        </div>
+                        <div id="errorMessage" class="alert alert-danger" style="display: none;">
+                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                            <b></b>
+                        </div>
+                    </div>
+                </div>
+                <!-- Success and Error message -->
+
+                <div class="container-fluid">
+                    <div class="row mt-3">
+                        <div class="col-md-3 text-center">
+                            <h5 class="mb-3">Service</h5>
+                            <input type="text" id="service_name" class="form-control mt-2 text-center" readonly>
+                        </div>    
+                        <div class="col-md-3 text-center">
+                            <h5 class="mb-3">Manager</h5>
+                            <input type="text" id="manager_name" class="form-control mt-2 text-center" value="" readonly>
+                        </div>  
+                        <div class="col-md-3 text-center">
+                            <h5 class="mb-3">Frequency</h5>
+                            <input type="text" id="service_frequency" class="form-control mt-2 text-center" readonly>
+                        </div>   
+                        <div class="col-md-3 text-center">
+                            <h5 class="mb-3">Deadline</h5>
+                            <input type="date" id="service_deadline" class="form-control mt-2 text-center" readonly>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Sub Service Name</th>
+                                        <th>Deadline</th>
+                                        <th>Staff</th>
+                                        <th>Note</th>
+                                        <th>Status</th>
+                                        <th>Comment</th>
+                                        <th>Timer</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="serviceDetailsTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3 mb-3">
+                        <div class="col-lg-4 mx-auto text-center">
+                            <button id="sub-service-cancelButton" class="btn btn-sm btn-outline-dark">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Assigned service details section start -->
+
         <!-- Service message modal start -->
         <div class="modal fade" id="messageModal" tabindex="-1" role="dialog" aria-labelledby="messageModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg mt-2" role="document">
@@ -184,7 +256,7 @@
         <!-- Note modal end -->
 
         <!-- Whats happening start -->
-        <div class="col-lg-8 mb-3">
+        <div class="col-lg-8 mb-3 d-none">
             <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
                 <div class="card-body px-0">
                     <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
@@ -200,95 +272,6 @@
             </div>
         </div>
         <!-- Whats happening end -->
-    </div>
-
-    <!-- Assigned service details section start -->
-    <div class="col-lg-12">
-        <div class="report-box border-theme sales-card p-4 mb-3 rounded-4 border-3" id="assignTaskSection" style="display: none;">
-            <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                Assigned Task Details
-            </div>
-
-            <!-- Success and Error message -->
-            <div class="row my-4 px-3">
-                <div class="col-lg-12">
-                    <div id="successMessage" class="alert alert-success" style="display: none;">
-                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                        <b></b>
-                    </div>
-                    <div id="errorMessage" class="alert alert-danger" style="display: none;">
-                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                        <b></b>
-                    </div>
-                </div>
-            </div>
-            <!-- Success and Error message -->
-
-            <div class="container-fluid">
-                <div class="row mt-3">
-                    <div class="col-md-3 text-center">
-                        <h5 class="mb-3">Service</h5>
-                        <input type="text" id="service_name" class="form-control mt-2 text-center" readonly>
-                    </div>    
-                    <div class="col-md-3 text-center">
-                        <h5 class="mb-3">Manager</h5>
-                        <input type="text" id="manager_name" class="form-control mt-2 text-center" value="" readonly>
-                    </div>  
-                    <div class="col-md-3 text-center">
-                        <h5 class="mb-3">Frequency</h5>
-                        <input type="text" id="service_frequency" class="form-control mt-2 text-center" readonly>
-                    </div>   
-                    <div class="col-md-3 text-center">
-                        <h5 class="mb-3">Deadline</h5>
-                        <input type="date" id="service_deadline" class="form-control mt-2 text-center" readonly>
-                    </div>
-                </div>
-
-                <div class="row mt-3">
-                    <div class="col-md-12">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Sub Service Name</th>
-                                    <th>Deadline</th>
-                                    <th>Staff</th>
-                                    <th>Note</th>
-                                    <th>Status</th>
-                                    <th>Comment</th>
-                                    <th>Timer</th>
-                                </tr>
-                            </thead>
-                            <tbody id="serviceDetailsTable"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="row mt-3 mb-3">
-                    <div class="col-lg-4 mx-auto text-center">
-                        <button id="sub-service-cancelButton" class="btn btn-sm btn-outline-dark">Cancel</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Assigned service details section start -->
-
-    <div class="row">
-
-        <!-- your notes start -->
-        <div class="col-lg-4 mb-3">
-            <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
-                <div class="card-body px-0">
-                    <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                        Your Notes
-                    </div>
-                    <div class="mh250">
-                        <!-- Your notes content here -->
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- your notes end -->
 
         <!-- assigned tasks table start-->
         <div class="col-lg-8 mb-3">
@@ -298,14 +281,15 @@
                         Your Assigned Tasks
                     </div>
                 <!-- Works assigned to a user and specified staff -->
-                        <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
+                    <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
                         <table id="serviceStaffTable" class="table cell-border table-striped" style="width:100%">
                             <thead>
                                 <tr>
                                     <th scope="col">Client Name</th>
                                     <th scope="col">Service Name</th>
+                                    <th scope="col">Due Date</th>
+                                    <th scope="col">Target Deadline</th>
                                     <th scope="col">Deadline</th>
-                                    <th scope="col">Frequency</th>
                                     <th scope="col">Action</th>
                                 </tr>
                             </thead>
@@ -319,12 +303,30 @@
                                 </tr>
                             </tbody>
                         </table>
-                        </div>
+                    </div>
                 <!-- Works assigned to a user and specified staff -->
                 </div>
             </div>
         </div>
         <!-- assigned tasks table end-->
+    </div>
+
+    <div class="row">
+
+        <!-- your notes start -->
+        <div class="col-lg-4 mb-3 d-none">
+            <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+                <div class="card-body px-0">
+                    <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                        Your Notes
+                    </div>
+                    <div class="mh250">
+                        <!-- Your notes content here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- your notes end -->
 
         <!-- Completed service details section start -->
         <div class="col-lg-12">
@@ -395,8 +397,9 @@
                                 <tr>
                                     <th scope="col">Client Name</th>
                                     <th scope="col">Service Name</th>
+                                    <th scope="col">Due Date</th>
+                                    <th scope="col">Target Deadline</th>
                                     <th scope="col">Deadline</th>
-                                    <th scope="col">Frequency</th>
                                     <th scope="col">Action</th>
                                 </tr>
                             </thead>
@@ -456,13 +459,26 @@
                 { data: 'clientname', name: 'clientname' },
                 { data: 'servicename', name: 'servicename' },
                 { 
+                    data: 'due_date', 
+                    name: 'due_date',
+                    render: function(data, type, row) {
+                        return moment(data).format('DD.MM.YY');
+                    }
+                },
+                { 
+                    data: 'legal_deadline', 
+                    name: 'legal_deadline',
+                    render: function(data, type, row) {
+                        return moment(data).format('DD.MM.YY');
+                    }
+                },
+                { 
                     data: 'service_deadline', 
                     name: 'service_deadline',
                     render: function(data, type, row) {
                         return moment(data).format('DD.MM.YY');
                     }
                 },
-                { data: 'service_frequency', name: 'service_frequency' },
                 { data: 'action', name: 'action', orderable: false, searchable: false }
             ]
         });
@@ -506,7 +522,7 @@
                     return staff.id === subService.staff_id;
                 });
 
-                var staffName = staff ? staff.first_name : 'N/A';
+                var staffName = staff ? (staff.first_name + ' ' + (staff.last_name || '')).trim() : 'N/A';
                 var isAuthUserStaff = authUserId === subService.staff_id;
                 var hasWorkTimes = subService.work_times && subService.work_times.length > 0;
 
@@ -528,36 +544,28 @@
 
                 var startButton = '';
                 var stopButton = '';
-                var startBreakButton = '';
-                var stopBreakButton = '';
                 var duration = '';
-                var firstWorkTime = subService.work_times.filter(workTime => workTime.is_break === 0)
+                
+                var totalDurationInSeconds = subService.work_times.filter(workTime => workTime.is_break === 0)
                     .reduce(function(acc, workTime) {
-                            return acc + parseInt(workTime.duration);
-                        }, 0);
+                        return acc + parseInt(workTime.duration);
+                    }, 0);
 
-                  if (subService.sequence_status === 2) {
-                    if (firstWorkTime) {
-                        var durationInSeconds = firstWorkTime;
-                        var hours = Math.floor(durationInSeconds / 3600);
-                        var minutes = Math.floor((durationInSeconds % 3600) / 60);
-                        var seconds = durationInSeconds % 60;
-                        duration = `<div>${hours}h ${minutes}m ${seconds}s</div>`;
-                    }
+                if (totalDurationInSeconds > 0) {
+                    var hours = Math.floor(totalDurationInSeconds / 3600);
+                    var minutes = Math.floor((totalDurationInSeconds % 3600) / 60);
+                    var seconds = totalDurationInSeconds % 60;
+                    duration = `<div>${hours}h ${minutes}m ${seconds}s</div>`;
                 }
 
+                var hasActiveWorkTime = subService.work_times && subService.work_times.some(function(workTime) {
+                    return (workTime.end_time === null || workTime.end_time === "") && workTime.is_break === 0;
+                });
+
                 if (isAuthUserStaff && subService.sequence_status === 0) {
-                    if (subService.status === 2) {
-                        startBreakButton = `<button type="button" class="btn btn-secondary start-break" data-sub-service-id="${subService.id}">Start Break</button>`;
+                    if (hasActiveWorkTime) {
                         stopButton = `<button type="button" class="btn btn-danger stop-timer" data-sub-service-id="${subService.id}">Stop</button>`;
-                        
-                    } else if (subService.status === 3) {
-                        if (subService.work_times) {
-                            subService.work_times.forEach(function(work_time) {
-                                stopBreakButton = `<button type="button" class="btn btn-danger stop-break" data-sub-service-id="${subService.id}" data-work-times-id="${work_time.id}">Stop Break</button>`;
-                            });
-                        }
-                    } else if (subService.status === 1) {
+                    } else {
                         startButton = `<button type="button" class="btn btn-secondary start-timer" data-sub-service-id="${subService.id}">Start</button>`;
                     }
                 }
@@ -575,11 +583,11 @@
                             </button>
                         </td>
                         <td>
-                            ${startButton}
-                            ${stopButton}
-                            {{--${startBreakButton}
-                            ${stopBreakButton}--}}
-                            ${duration}
+                            <div class="d-flex align-items-center gap-2">
+                                ${startButton}
+                                ${stopButton}
+                                <span class="badge bg-success">${duration}</span>
+                            </div>
                         </td>
                     </tr>
                 `;
@@ -639,16 +647,8 @@
                     _token: "{{ csrf_token() }}"
                 },
                 success: function(response) {
-                    swal({
-                        title: "Success!",
-                        text: "Comment sent successfully",
-                        icon: "success",
-                        button: "OK",
-                    });
-                    setTimeout(function() {
-                        location.reload();
-                    }, 2000);
-                    $('#messageModal').modal('hide'); 
+                    $('#service-message').val('');
+                    populateMessage(clientSubServiceId);
                 },
                 error: function(xhr, status, error) {
                     console.error(error);
@@ -685,15 +685,21 @@
                     newStatus: newStatus
                 },
                 success: function(response) {
-                    swal({
-                        title: "Success!",
-                        text: "Status chnaged successfully",
-                        icon: "success",
-                        button: "OK",
-                    });
-                    setTimeout(function() {
-                        location.reload();
-                    }, 2000);
+                    Toastify({
+                        text: "Status changed successfully!"
+                    }).showToast();
+                    
+                    $('#assignTaskSection').hide();
+                    $('#completedTaskSection').hide();
+
+                    if ($.fn.DataTable.isDataTable('#serviceStaffTable')) {
+                        $('#serviceStaffTable').DataTable().ajax.reload(null, false);
+                    }
+
+                    if ($.fn.DataTable.isDataTable('#completedTasksTable')) {
+                        $('#completedTasksTable').DataTable().ajax.reload(null, false);
+                    }
+
                 },
                 error: function(xhr, status, error) {
                     console.error(error);
@@ -728,15 +734,21 @@
                         _token: "{{ csrf_token() }}"
                     },
                     success: function(response) {
-                        swal({
-                            title: "Success!",
-                            text: "Time has started successfully",
-                            icon: "success",
-                            button: "OK",
-                        });
-                        setTimeout(function() {
-                            location.reload();
-                        }, 2000);
+                        
+                        Toastify({
+                            text: "Time has started successfully!"
+                        }).showToast();
+
+                        $('#assignTaskSection').hide();
+                        $('#completedTaskSection').hide();
+
+                        if ($.fn.DataTable.isDataTable('#serviceStaffTable')) {
+                            $('#serviceStaffTable').DataTable().ajax.reload(null, false);
+                        }
+
+                        if ($.fn.DataTable.isDataTable('#completedTasksTable')) {
+                            $('#completedTasksTable').DataTable().ajax.reload(null, false);
+                        }
                     },
                     error: function(xhr, status, error) {
                        console.error(xhr.responseText);
@@ -754,15 +766,20 @@
                     _token: "{{ csrf_token() }}" 
                 },
                 success: function(response) {
-                    swal({
-                        title: "Success!",
-                        text: "Time has been stopped successfully",
-                        icon: "success",
-                        button: "OK",
-                    });
-                    setTimeout(function() {
-                        location.reload();
-                    }, 2000);
+                    Toastify({
+                        text: "Time has been stopped successfully!"
+                    }).showToast();
+
+                    $('#assignTaskSection').hide();
+                    $('#completedTaskSection').hide();
+
+                    if ($.fn.DataTable.isDataTable('#serviceStaffTable')) {
+                        $('#serviceStaffTable').DataTable().ajax.reload(null, false);
+                    }
+
+                    if ($.fn.DataTable.isDataTable('#completedTasksTable')) {
+                        $('#completedTasksTable').DataTable().ajax.reload(null, false);
+                    }
                 },
                 error: function(xhr, status, error) {
                     console.error(xhr.responseText);
@@ -780,15 +797,21 @@
                     _token: "{{ csrf_token() }}"
                 },
                 success: function(response) {
-                    swal({
-                        title: "Success!",
-                        text: "Break time has started successfully",
-                        icon: "success",
-                        button: "OK",
-                    });
-                    setTimeout(function() {
-                        location.reload();
-                    }, 2000);
+
+                    Toastify({
+                        text: "Break time has started successfully!"
+                    }).showToast();
+
+                    $('#assignTaskSection').hide();
+                    $('#completedTaskSection').hide();
+
+                    if ($.fn.DataTable.isDataTable('#serviceStaffTable')) {
+                        $('#serviceStaffTable').DataTable().ajax.reload(null, false);
+                    }
+
+                    if ($.fn.DataTable.isDataTable('#completedTasksTable')) {
+                        $('#completedTasksTable').DataTable().ajax.reload(null, false);
+                    }
                 },
                 error: function(xhr, status, error) {
                      console.error(xhr.responseText);
@@ -808,15 +831,21 @@
                     _token: "{{ csrf_token() }}"
                 },
                 success: function(response) {
-                    swal({
-                        title: "Success!",
-                        text: "Break time has stopped successfully",
-                        icon: "success",
-                        button: "OK",
-                    });
-                    setTimeout(function() {
-                        location.reload();
-                    }, 2000);
+
+                    Toastify({
+                        text: "Break time has stopped successfully!"
+                    }).showToast();
+
+                    $('#assignTaskSection').hide();
+                    $('#completedTaskSection').hide();
+
+                    if ($.fn.DataTable.isDataTable('#serviceStaffTable')) {
+                        $('#serviceStaffTable').DataTable().ajax.reload(null, false);
+                    }
+
+                    if ($.fn.DataTable.isDataTable('#completedTasksTable')) {
+                        $('#completedTasksTable').DataTable().ajax.reload(null, false);
+                    }
                 },
                 error: function(xhr, status, error) {
                    console.error(xhr.responseText);
@@ -871,13 +900,26 @@
                 { data: 'clientname', name: 'clientname' },
                 { data: 'servicename', name: 'servicename' },
                 { 
+                    data: 'due_date', 
+                    name: 'due_date',
+                    render: function(data, type, row) {
+                        return moment(data).format('DD.MM.YY');
+                    }
+                },
+                { 
+                    data: 'legal_deadline', 
+                    name: 'legal_deadline',
+                    render: function(data, type, row) {
+                        return moment(data).format('DD.MM.YY');
+                    }
+                },
+                { 
                     data: 'service_deadline', 
                     name: 'service_deadline',
                     render: function(data, type, row) {
                         return moment(data).format('DD.MM.YY');
                     }
                 },
-                { data: 'service_frequency', name: 'service_frequency' },
                 { 
                     data: 'action', 
                     name: 'action',
@@ -928,21 +970,18 @@
                 var authUserId = {{ auth()->user()->id }};
                 var isAuthUserStaff = authUserId === subService.staff_id;
 
-                var staffName = staff ? staff.first_name : 'N/A';
-                var duration = '';
-                var firstWorkTime = subService.work_times.filter(workTime => workTime.is_break === 0)
-                    .reduce(function(acc, workTime) {
-                            return acc + parseInt(workTime.duration);
-                        }, 0);
+                var staffName = staff ? (staff.first_name + ' ' + (staff.last_name || '')).trim() : 'N/A';
 
-                if (subService.sequence_status === 2) {
-                    if (firstWorkTime) {
-                        var durationInSeconds = firstWorkTime;
-                        var hours = Math.floor(durationInSeconds / 3600);
-                        var minutes = Math.floor((durationInSeconds % 3600) / 60);
-                        var seconds = durationInSeconds % 60;
-                        duration = `<div>${hours}h ${minutes}m ${seconds}s</div>`;
-                    }
+                var totalDurationInSeconds = subService.work_times.filter(workTime => workTime.is_break === 0)
+                    .reduce(function(acc, workTime) {
+                        return acc + parseInt(workTime.duration);
+                    }, 0);
+
+                if (totalDurationInSeconds > 0) {
+                    var hours = Math.floor(totalDurationInSeconds / 3600);
+                    var minutes = Math.floor((totalDurationInSeconds % 3600) / 60);
+                    var seconds = totalDurationInSeconds % 60;
+                    duration = `<div>${hours}h ${minutes}m ${seconds}s</div>`;
                 }
 
                 var statusDropdown = `
@@ -964,7 +1003,7 @@
                             </button>
                         </td>
                          <td>
-                            <span class="timer-duration">${duration}</span>
+                            <span class="badge bg-success">${duration}</span>
                         </td>
                     </tr>
                 `;
@@ -989,15 +1028,20 @@
                     newStatus: newStatus
                 },
                 success: function(response) {
-                    swal({
-                        title: "Success!",
-                        text: "Status chnaged successfully",
-                        icon: "success",
-                        button: "OK",
-                    });
-                    setTimeout(function() {
-                        location.reload();
-                    }, 2000);
+                    Toastify({
+                        text: "Status changed successfully!"
+                    }).showToast();
+
+                    $('#assignTaskSection').hide();
+                    $('#completedTaskSection').hide();
+
+                    if ($.fn.DataTable.isDataTable('#serviceStaffTable')) {
+                        $('#serviceStaffTable').DataTable().ajax.reload(null, false);
+                    }
+
+                    if ($.fn.DataTable.isDataTable('#completedTasksTable')) {
+                        $('#completedTasksTable').DataTable().ajax.reload(null, false);
+                    }
                 },
                 error: function(xhr, status, error) {
                     console.error(error);
@@ -1252,12 +1296,11 @@
                 type: 'POST',
                 data: formData,
                 success: function(response) {
-                    swal({
-                        title: "Success!",
-                        text: "Record saved and you will be logged out now",
-                        icon: "success",
-                        button: "OK",
-                    });
+                
+                    Toastify({
+                        text: "Record saved and you will be logged out now!"
+                    }).showToast();
+
                     setTimeout(function() {
                         location.reload();
                     }, 2000);
