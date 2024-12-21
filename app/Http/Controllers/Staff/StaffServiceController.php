@@ -23,8 +23,8 @@ class StaffServiceController extends Controller
 {
     public function getServicesClientStaff(Request $request)
     {
-            if ($request->ajax()) {
-                $data = ClientService::with('clientSubServices')
+        if ($request->ajax()) {
+            $data = ClientService::with('clientSubServices')
                 // ->where('service_deadline', '>=', now()->startOfDay())
                 // ->where('service_deadline', '<=', now()->addDays(30)->endOfDay())
                 ->whereHas('clientSubServices', function ($query) {
@@ -35,16 +35,16 @@ class StaffServiceController extends Controller
                 ->get();
 
             return DataTables::of($data)
-            
-                ->addColumn('clientname', function(ClientService $clientservice) {
+
+                ->addColumn('clientname', function (ClientService $clientservice) {
                     return $clientservice->client ? $clientservice->client->name : " ";
                 })
-                ->addColumn('servicename', function(ClientService $clientservice) {
+                ->addColumn('servicename', function (ClientService $clientservice) {
                     return $clientservice->service ? $clientservice->service->name : " ";
                 })
-                ->addColumn('action', function(ClientService $clientservice) {
-                    $managerFirstName = $clientservice->manager->first_name;
-                    return '<button class="btn btn-secondary change-status" data-id="'. $clientservice->id. '" data-manager-firstname="'. $managerFirstName. '">Change Status</button>';
+                ->addColumn('action', function (ClientService $clientservice) {
+                    $managerFirstName = $clientservice->manager ? $clientservice->manager->first_name . ' ' . $clientservice->manager->last_name : 'N/A';
+                    return '<button class="btn btn-secondary change-status" data-id="' . $clientservice->id . '" data-manager-firstname="' . $managerFirstName . '">Details</button>';
                 })
                 ->make(true);
         }
@@ -68,16 +68,16 @@ class StaffServiceController extends Controller
                 ->get();
 
             return DataTables::of($data)
-            
-                ->addColumn('clientname', function(ClientService $clientservice) {
+
+                ->addColumn('clientname', function (ClientService $clientservice) {
                     return $clientservice->client->name;
                 })
-                ->addColumn('servicename', function(ClientService $clientservice) {
+                ->addColumn('servicename', function (ClientService $clientservice) {
                     return $clientservice->service->name;
                 })
-                ->addColumn('action', function(ClientService $clientservice) {
-                    $managerFirstName = $clientservice->manager->first_name;
-                    return '<button class="btn btn-secondary task-details" data-id="'. $clientservice->id. '" data-manager-firstname="'. $managerFirstName. '">Details</button>';
+                ->addColumn('action', function (ClientService $clientservice) {
+                    $managerFirstName = $clientservice->manager ? $clientservice->manager->first_name . ' ' . $clientservice->manager->last_name : 'N/A';
+                    return '<button class="btn btn-secondary task-details" data-id="' . $clientservice->id . '" data-manager-firstname="' . $managerFirstName . '">Details</button>';
                 })
                 ->make(true);
         }
@@ -85,7 +85,7 @@ class StaffServiceController extends Controller
 
     public function getClientSubServices($clientserviceId)
     {
-        $clientSubServices = ClientSubService::with('subService','serviceMessage','workTimes')->where('client_service_id', $clientserviceId)->get();
+        $clientSubServices = ClientSubService::with('subService', 'serviceMessage', 'workTimes')->where('client_service_id', $clientserviceId)->get();
         return response()->json($clientSubServices);
     }
 
@@ -105,14 +105,14 @@ class StaffServiceController extends Controller
         if ($validator->fails()) {
             return response()->json(['error' => $validator->errors()], 422);
         }
-        
-            $serviceMessage = new ServiceMessage;
-            $serviceMessage->manager_id = auth()->id(); 
-            // $serviceMessage->staff_id = $request->staff_id;
-            $serviceMessage->client_sub_service_id = $request->client_sub_service_id;
-            $serviceMessage->message = $request->message;
-            $serviceMessage->created_by = auth()->id();
-            $serviceMessage->save();
+
+        $serviceMessage = new ServiceMessage;
+        $serviceMessage->manager_id = auth()->id();
+        // $serviceMessage->staff_id = $request->staff_id;
+        $serviceMessage->client_sub_service_id = $request->client_sub_service_id;
+        $serviceMessage->message = $request->message;
+        $serviceMessage->created_by = auth()->id();
+        $serviceMessage->save();
 
         return response()->json(['success' => 'Message saved successfully.']);
     }
@@ -125,7 +125,7 @@ class StaffServiceController extends Controller
         $clientServiceId = $clientSubService->client_service_id;
         $serviceSequenceNo = $clientSubService->sequence_id;
         $nextService = $serviceSequenceNo + 1;
-         if ($clientSubService) {
+        if ($clientSubService) {
             $clientSubService->sequence_status = $newStatus;
             $clientSubService->updated_by = Auth::id();
             $clientSubService->save();
@@ -142,7 +142,6 @@ class StaffServiceController extends Controller
         } else {
             return response()->json(['error' => 'Client sub-service not found'], 404);
         }
-
     }
 
     public function startWorkTime(Request $request)
@@ -175,6 +174,45 @@ class StaffServiceController extends Controller
         }
     }
 
+    // public function stopWorkTime(Request $request)
+    // {
+    //     $validator = Validator::make($request->all(), [
+    //         'clientSubServiceId' => 'required',
+    //     ]);
+
+    //     if ($validator->fails()) {
+    //         return response()->json(['errors' => $validator->errors()], 422);
+    //     }
+
+    //     $clientSubServiceId = $request->clientSubServiceId;
+    //     $workTime = WorkTime::where('client_sub_service_id', $clientSubServiceId)
+    //         ->where('is_break', 0)
+    //         ->orderBy('id', 'DESC')
+    //         ->first();
+
+    //     $startDateTime = Carbon::parse($workTime->start_time);
+    //     $endDateTime = Carbon::parse($workTime->end_time);
+
+    //     $totalDurationExcludingBreaks = $startDateTime->diffInSeconds($endDateTime);
+
+    //     $breaks = WorkTime::where('client_sub_service_id', $clientSubServiceId)
+    //         ->where('is_break', 1)
+    //         ->sum('duration');
+
+    //     $adjustedDuration = $totalDurationExcludingBreaks - $breaks;
+    //     $workTime->duration = $adjustedDuration;
+    //     $workTime->end_time = Carbon::now();
+
+    //     if ($workTime->save()) {
+    //         $changests = ClientSubService::find($clientSubServiceId);
+    //         $changests->status = 0;
+    //         $changests->save();
+    //         return response()->json(['message' => 'Work time stopped successfully'], 200);
+    //     } else {
+    //         return response()->json(['error' => 'Failed to stop work time.'], 422);
+    //     }
+    // }
+
     public function stopWorkTime(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -187,21 +225,23 @@ class StaffServiceController extends Controller
 
         $clientSubServiceId = $request->clientSubServiceId;
         $workTime = WorkTime::where('client_sub_service_id', $clientSubServiceId)
-                    ->where('is_break', 0)
-                    ->orderBy('id', 'DESC')
-                    ->first();
+            ->where('is_break', 0)
+            ->orderBy('id', 'DESC')
+            ->first();
+
+        if (!$workTime) {
+            return response()->json(['error' => 'No active work time found.'], 404);
+        }
+
         $startDateTime = Carbon::parse($workTime->start_time);
-        $endDateTime = Carbon::parse($workTime->end_time);
+        
+        $endDateTime = Carbon::now();
 
-        $totalDurationExcludingBreaks = $startDateTime->diffInSeconds($endDateTime);
+        $totalDuration = $startDateTime->diffInSeconds($endDateTime);
 
-        $breaks = WorkTime::where('client_sub_service_id', $clientSubServiceId)
-                    ->where('is_break', 1)
-                    ->sum('duration');
-
-        $adjustedDuration = $totalDurationExcludingBreaks - $breaks;
-        $workTime->duration = $adjustedDuration;
-        $workTime->end_time = Carbon::now(); 
+        $workTime->duration = $totalDuration;
+        $workTime->end_time = $endDateTime;
+        $workTime->updated_by = Auth::id();
 
         if ($workTime->save()) {
             $changests = ClientSubService::find($clientSubServiceId);
@@ -226,7 +266,7 @@ class StaffServiceController extends Controller
         $clientSubServiceId = $request->clientSubServiceId;
         $staffId = Auth::id();
         $workTime = new WorkTime();
-        
+
         $workTime->staff_id = $staffId;
         $workTime->client_sub_service_id = $clientSubServiceId;
         $workTime->start_time = Carbon::now();
@@ -248,7 +288,7 @@ class StaffServiceController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'clientSubServiceId' => 'required',
-            'workTimesId' => 'required', 
+            'workTimesId' => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -272,7 +312,6 @@ class StaffServiceController extends Controller
         } else {
             return response()->json(['error' => 'Failed to start work time.'], 422);
         }
-        
     }
 
     public function checkWorkTimeStatus()
@@ -296,7 +335,7 @@ class StaffServiceController extends Controller
     {
 
         $chkProcessingWork = WorkTime::whereNull('end_time')->where('staff_id', Auth::user()->id)->where('is_break', 0)->orderby('id', 'DESC')->first();
-        
+
         $workTime = new WorkTime();
         $workTime->staff_id = Auth::id();
         $workTime->start_time = Carbon::now();
@@ -304,7 +343,7 @@ class StaffServiceController extends Controller
         $workTime->is_break = 1;
         $workTime->created_by = Auth::id();
 
-        if(isset($chkProcessingWork)){
+        if (isset($chkProcessingWork)) {
             $workTime->client_sub_service_id = $chkProcessingWork->client_sub_service_id;
         }
 
@@ -451,23 +490,23 @@ class StaffServiceController extends Controller
             $attendanceLog->session_id = null;
             $attendanceLog->status = 1;
             $noteInput = $request->input('noteInput');
-            $attendanceLog->note = $noteInput; 
+            $attendanceLog->note = $noteInput;
             $attendanceLog->save();
         }
-        
+
         session()->flush();
         session()->regenerate();
-        
+
         return redirect()->route('login')->with('success', 'Notes saved successfully');
     }
 
     public function allTaskList()
     {
-        $staffs = User::whereIn('type', ['3','2'])->orderby('id','DESC')->get();
-        $managers = User::whereIn('type', ['3','2'])->orderby('id','DESC')->get();
-        $clients = Client::orderby('id','DESC')->get();
-        $subServices = SubService::orderby('id','DESC')->get();
-        return view('staff.task.index',compact('staffs','managers','clients','subServices'));
+        $staffs = User::whereIn('type', ['3', '2'])->orderby('id', 'DESC')->get();
+        $managers = User::whereIn('type', ['3', '2'])->orderby('id', 'DESC')->get();
+        $clients = Client::orderby('id', 'DESC')->get();
+        $subServices = SubService::orderby('id', 'DESC')->get();
+        return view('staff.task.index', compact('staffs', 'managers', 'clients', 'subServices'));
     }
 
     public function changeSubServiceStatus(Request $request)
@@ -509,6 +548,4 @@ class StaffServiceController extends Controller
 
         return response()->json(['message' => 'Idle time logged successfully'], 200);
     }
-
-
 }

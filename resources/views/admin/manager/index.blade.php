@@ -36,7 +36,7 @@
                   <div class="row">
                     <div class="col-sm-6">
                       <div class="form-group">
-                        <label>First Name</label>
+                        <label>First Name <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="first_name" name="first_name" placeholder="Enter first name">
                       </div>
                     </div>
@@ -57,7 +57,7 @@
                     </div>
                     <div class="col-sm-6">
                       <div class="form-group">
-                        <label>Email</label>
+                        <label>Email <span class="text-danger">*</span></label>
                         <input type="email" class="form-control" id="email" name="email" placeholder="Enter email">
                       </div>
                     </div>
@@ -115,24 +115,24 @@
               <table id="example1" class="table cell-border table-striped">
                 <thead>
                 <tr>
-                  <th style="text-align: center">Sl</th>
-                  <th style="text-align: center">First Name</th>
-                  <th style="text-align: center">Last Name</th>
-                  <th style="text-align: center">Phone</th>
-                  <th style="text-align: center">Email</th>
-                  <th style="text-align: center">Action</th>
+                  <th>Sl</th>
+                  <th>First Name</th>
+                  <th>Last Name</th>
+                  <th>Phone</th>
+                  <th>Email</th>
+                  <th>Action</th>
                 </tr>
                 </thead>
                 <tbody>
                   @foreach ($data as $key => $data)
                   <tr>
-                    <td style="text-align: center">{{ $key + 1 }}</td>
-                    <td style="text-align: center">{{$data->first_name}}</td>
-                    <td style="text-align: center">{{$data->last_name	}}</td>
-                    <td style="text-align: center">{{$data->phone}}</td>
-                    <td style="text-align: center">{{$data->email}}</td>
+                    <td>{{ $key + 1 }}</td>
+                    <td>{{$data->first_name}}</td>
+                    <td>{{$data->last_name	}}</td>
+                    <td>{{$data->phone}}</td>
+                    <td>{{$data->email}}</td>
                     
-                    <td style="text-align: center">
+                    <td>
                       <a class="btn btn-link" id="EditBtn" rid="{{$data->id}}"><i class="fa fa-edit" style="font-size: 20px;"></i></a>
                       @if (Auth::user()->id != $data->id)
                         <a class="btn btn-link" id="deleteBtn" rid="{{$data->id}}"><i class="fas fa-trash" style="color: red; font-size: 20px;"></i></a>

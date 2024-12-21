@@ -12,7 +12,7 @@ class ManagerController extends Controller
 {
     public function index()
     {
-        $data = User::where('type', '2')->orderby('id','DESC')->get();
+        $data = User::where('type', '2')->select('id', 'first_name', 'last_name', 'phone', 'email')->orderby('id','DESC')->get();
         return view('admin.manager.index', compact('data'));
     }
 
@@ -75,7 +75,7 @@ class ManagerController extends Controller
         $where = [
             'id'=>$id
         ];
-        $info = User::where($where)->get()->first();
+        $info = User::where($where)->select('id', 'first_name', 'last_name', 'phone', 'email')->first();
         return response()->json($info);
     }
 

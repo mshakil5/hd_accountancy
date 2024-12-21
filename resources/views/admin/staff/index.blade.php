@@ -38,7 +38,7 @@
             </div>
             <p class="sub-box-header" class="">
                 <i class='bx bxs-user-plus fs-4 me-2'></i>
-                <span>staff details</span>
+                <span>Staff Details</span>
             </p>
             <div class="row">
                 <div class="col-lg-6">
@@ -49,9 +49,6 @@
                                 <th scope="col">Sl</th>
                                 <th scope="col">Staff ID</th>
                                 <th scope="col">Name</th>
-                                <!-- <th scope="col">Phone</th> -->
-                                <!-- <th scope="col">Email</th> -->
-                                <!-- <th scope="col">Job Title</th> -->
                                 <th scope="col">Status</th> 
                                 <th scope="col">Action</th> 
                             </tr>
@@ -596,6 +593,7 @@
             fetchInProgressTasks(staffId);
             fetchCanceledTasks(staffId);
             fetchAndDisplayHolidays(staffId);
+            fetchAndDisplayStaffDetails(staffId);
         });
 
         var table = $('#staffsTable').DataTable({
@@ -672,9 +670,7 @@
         }
     }
 
-    $(document).on('click', '.edit-staff', function(e) {
-        e.preventDefault();
-        var staffId = $(this).data('staff-id');
+    function fetchAndDisplayStaffDetails(staffId) {
         $('#hiddenStaffId').val(staffId);
         toggleEdit(staffId);
         toggleEditJobInfo(staffId);
@@ -703,10 +699,8 @@
                 $('#joining_date').val(response.joining_date); 
                 $('#reporting_to').val(response.reporting_user ? response.reporting_user.first_name : '');
 
-
                 if (response.department && response.department.id) {
                     var departmentId = response.department.id;
-
                     var departmentOption = $('#department option[value="' + departmentId + '"]');
                     if (departmentOption.length > 0) {
                         departmentOption.prop('selected', true);
@@ -715,7 +709,6 @@
 
                 if (response.reporting_user && response.reporting_user.id) {
                     var managerId = response.reporting_user.id;
-
                     var managerOption = $('#reporting_to option[value="' + managerId + '"]');
                     if (managerOption.length > 0) {
                         managerOption.prop('selected', true);
@@ -724,19 +717,14 @@
 
                 var placeholderUrl = "{{ asset('assets/img/human-placeholder.jpg') }}";
                 var staffImageUrl = "{{ asset('images/staff') }}/";
-                if (response.image) {
-                    var imageUrl = staffImageUrl + response.image;
-                } else {
-                    var imageUrl = placeholderUrl;
-                }
+                var imageUrl = response.image ? staffImageUrl + response.image : placeholderUrl;
                 $('.user_image').attr('src', imageUrl);
-
             },
             error: function(xhr, status, error) {
                 console.error(xhr.responseText);
             }
         });
-    });
+    }
 
     $(document).on('click', '.update-personal-info', function(e) {
         e.preventDefault();
