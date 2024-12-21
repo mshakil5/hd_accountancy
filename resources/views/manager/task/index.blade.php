@@ -268,7 +268,7 @@
                     return staff.id === subService.staff_id;
                 });
 
-                var staffName = staff ? staff.first_name : 'N/A';
+                var staffName = staff ? (staff.first_name + ' ' + (staff.last_name || '')).trim() : 'N/A';
                 var isAuthUserStaff = authUserId === subService.staff_id;
 
                 if (subService.sequence_status === 0) {
@@ -581,7 +581,7 @@
                     return staff.id === subService.staff_id;
                 });
 
-                var staffName = staff ? staff.first_name : 'N/A';
+                var staffName = staff ? (staff.first_name + ' ' + (staff.last_name || '')).trim() : 'N/A';
                 var duration = '';
                 var firstWorkTime = subService.work_times[0];
 
