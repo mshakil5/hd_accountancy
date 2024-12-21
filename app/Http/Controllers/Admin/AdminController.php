@@ -13,7 +13,7 @@ class AdminController extends Controller
 {
     public function getAdmin()
     {
-        $data = User::where('type', '1')->orderby('id','DESC')->get();
+        $data = User::where('type', '1')->select('id', 'first_name', 'last_name', 'email', 'phone')->orderby('id','DESC')->get();
         return view('admin.admin.index', compact('data'));
     }
 
@@ -89,7 +89,7 @@ class AdminController extends Controller
         $where = [
             'id'=>$id
         ];
-        $info = User::where($where)->get()->first();
+        $info = User::where($where)->select('id', 'first_name', 'last_name', 'phone', 'email')->first();
         return response()->json($info);
     }
 
