@@ -1095,14 +1095,15 @@
                 url: '/admin/get-todays-deadline-service',
                 type: 'GET',
             },
-            columns: [{
-                    data: 'clientname',
-                    name: 'clientname'
-                },
+            columns: [
                 {
                     data: 'servicename',
                     name: 'servicename'
                 },
+                {
+                    data: 'clientname',
+                    name: 'clientname'
+                },  
                 {
                     data: 'action',
                     name: 'action',

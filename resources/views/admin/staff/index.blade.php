@@ -781,10 +781,9 @@
                     text: "Staff personal information updated successfully",
                     icon: "success",
                     button: "OK",
+                }).then(() => {
+                    $('#staffsTable').DataTable().ajax.reload(null, false);
                 });
-                setTimeout(function() {
-                    location.reload();
-                }, 2000);
             },
             error: function(xhr, status, error) {
                 console.error(xhr.responseText);
@@ -823,10 +822,9 @@
                     text: "Staff job details updated successfully",
                     icon: "success",
                     button: "OK",
+                }).then(() => {
+                    $('#staffsTable').DataTable().ajax.reload(null, false);
                 });
-                setTimeout(function() {
-                    location.reload();
-                }, 2000);
             },
             error: function(xhr, status, error) {
                 console.error(xhr.responseText);
