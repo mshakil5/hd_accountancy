@@ -18,8 +18,8 @@ class StaffController extends Controller
 {
     public function index()
     {
-        $departments = Department::orderby('id','DESC')->get();
-        $managers = User::where('type', '2')->orderby('id','DESC')->get();
+        $departments = Department::select('id', 'name')->orderby('id','DESC')->get();
+        $managers = User::where('type', '2')->select('id', 'id_number', 'first_name')->orderby('id','DESC')->get();
         return view('admin.staff.index', compact('managers','departments'));
     }
 
