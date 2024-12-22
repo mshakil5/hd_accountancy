@@ -187,12 +187,11 @@ class HomeController extends Controller
                     }
                 }
 
-        $clients = Client::orderBy('id', 'DESC')->get();
-        $staffs = User::whereIn('type', ['3', '2'])->orderBy('id', 'DESC')->get();
-        $managers = User::whereIn('type', ['3', '2'])->orderBy('id', 'DESC')->get();
-        $services = Service::orderBy('id', 'DESC')->get();
+        $staffs = User::whereIn('type', ['3', '2'])->select('id', 'first_name', 'last_name')->orderBy('id', 'DESC')->get();
+        $managers = User::whereIn('type', ['3', '2'])->select('id', 'first_name', 'last_name')->orderBy('id', 'DESC')->get();
+        $services = Service::orderBy('id', 'DESC')->select('id', 'name')->get();
 
-        return view('admin.dashboard', compact('clients', 'staffs', 'loggedStaff', 'managers', 'services', 'lateStaff', 'absentStaff','filteredLogs','totalAbsentStaffCount'));
+        return view('admin.dashboard', compact('staffs', 'loggedStaff', 'managers', 'services', 'lateStaff', 'absentStaff','filteredLogs','totalAbsentStaffCount'));
     }
 
     /**
@@ -202,11 +201,10 @@ class HomeController extends Controller
      */
     public function managerHome(): View
     {
-        $clients = Client::orderBy('id', 'DESC')->get();
-        $subServices = SubService::orderby('id','DESC')->get();
-        $staffs = User::whereIn('type', ['3','2'])->orderby('id','DESC')->get();
-        $managers = User::whereIn('type', ['3','2'])->orderby('id','DESC')->get();
-        $user = Auth::user();
+        $clients = Client::orderBy('id', 'DESC')->select('id', 'name')->get();
+        $subServices = SubService::orderby('id','DESC')->select('id', 'name')->get();
+        $staffs = User::whereIn('type', ['3','2'])->select('id', 'first_name', 'last_name')->orderby('id','DESC')->get();
+        $managers = User::whereIn('type', ['3','2'])->select('id', 'first_name', 'last_name')->orderby('id','DESC')->get();
         $userId = auth()->id();
         $startOfDay = Carbon::today()->startOfDay();
 
@@ -238,11 +236,10 @@ class HomeController extends Controller
 
     public function staffHome(): View
     {
-        $staffs = User::whereIn('type', ['3','2'])->orderby('id','DESC')->get();
-        $managers = User::whereIn('type', ['3','2'])->orderby('id','DESC')->get();
-        $clients = Client::orderby('id','DESC')->get();
-        $subServices = SubService::orderby('id','DESC')->get();
-        $user = Auth::user();
+        $staffs = User::whereIn('type', ['3','2'])->select('id', 'first_name', 'last_name')->orderby('id','DESC')->get();
+        $managers = User::whereIn('type', ['3','2'])->select('id', 'first_name', 'last_name')->orderby('id','DESC')->get();
+        $clients = Client::orderby('id','DESC')->select('id', 'name')->get();
+        $subServices = SubService::orderby('id','DESC')->select('id', 'name')->get();
         
         $userId = auth()->id();
         $startOfDay = Carbon::today()->startOfDay();
@@ -264,7 +261,6 @@ class HomeController extends Controller
         }
 
         $activeTimeFormatted = gmdate('H:i:s', $activeTimeInSeconds);
-
 
         return view('staff.dashboard', compact('activeTimeFormatted','staffs','managers','clients','subServices'));
     }
