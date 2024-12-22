@@ -52,12 +52,22 @@ class ClientController extends Controller
     public function getClientsStaff(Request $request)
     {
         if ($request->ajax()) {
-            $data = Client::with(['clientType', 'manager'])->orderBy('id', 'desc')->get();
+            $authUserId = auth()->id();
+            $data = Client::with(['clientType', 'manager'])
+                ->whereHas('clientSubServices', function ($query) use ($authUserId) {
+                    $query->where('staff_id', $authUserId);
+                })
+                ->orderBy('id', 'desc')
+                ->get();
+    
             return Datatables::of($data)
                 ->addIndexColumn()
+                ->editColumn('manager.first_name', function ($row) {
+                    return $row->manager->first_name ?? '';
+                })
                 ->make(true);
         }
-    }
+    }    
 
     public function indexManager()
     {

@@ -54,4 +54,9 @@ class Client extends Model
         return $this->hasMany(ContactInfo::class);
     }
 
+    public function clientSubServices()
+    {
+        return $this->hasMany(ClientSubService::class, 'client_id', 'id');
+    }
+
 }

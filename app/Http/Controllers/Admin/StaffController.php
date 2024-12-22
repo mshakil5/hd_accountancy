@@ -473,7 +473,7 @@ class StaffController extends Controller
             'ni_number' => 'required|regex:/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]+$/',
             'date_of_birth' => 'required|date',
             'address_line1' => 'required|string|max:255',
-            'address_line2' => 'string|max:255',
+            'address_line2' => 'nullable|string|max:255',
             'town' => 'required|string|max:255',
             'postcode' => 'required|string|max:255',
             'image' => 'nullable|mimes:jpeg,png,jpg,gif,svg,pdf|max:8048',
