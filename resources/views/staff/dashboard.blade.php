@@ -507,8 +507,12 @@
                 var isAuthUserStaff = authUserId === subService.staff_id;
                 var hasWorkTimes = subService.work_times && subService.work_times.length > 0;
 
+                var hasActiveWorkTime = subService.work_times && subService.work_times.some(function(workTime) {
+                    return (workTime.end_time === null || workTime.end_time === "") && workTime.is_break === 0;
+                });
+
                 if (subService.sequence_status === 0) {
-                    if (isAuthUserStaff && hasWorkTimes) {
+                    if (isAuthUserStaff && !hasActiveWorkTime) {
                         statusDropdown = `
                             <select class="form-select change-service-status" data-sub-service-id="${subService.id}">
                                 <option value="0" selected>Processing</option>
@@ -538,10 +542,6 @@
                     var seconds = totalDurationInSeconds % 60;
                     duration = `<div>${hours}h ${minutes}m ${seconds}s</div>`;
                 }
-
-                var hasActiveWorkTime = subService.work_times && subService.work_times.some(function(workTime) {
-                    return (workTime.end_time === null || workTime.end_time === "") && workTime.is_break === 0;
-                });
 
                 if (isAuthUserStaff && subService.sequence_status === 0) {
                     if (hasActiveWorkTime) {

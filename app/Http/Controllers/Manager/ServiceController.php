@@ -22,20 +22,24 @@ class ServiceController extends Controller
     public function getAllAssignedServices(Request $request)
     {
         $currentUserId = Auth::id();
+    
         if ($request->ajax()) {
-            $data = ClientService::with('clientSubServices')
-                // ->where('manager_id', $currentUserId)
-                // ->where('due_date', '<=', now()->endOfDay())
-                ->orderBy('id', 'desc')
-                ->whereHas('clientSubServices', function ($query) {
-                    $query->whereIn('sequence_status', [0, 1])
-                    ->where('staff_id', Auth::id());
+            $data = ClientService::with(['clientSubServices' => function ($query) {
+                    $query->where('staff_id', Auth::id())
+                          ->whereIn('sequence_status', [0, 1]);
+                }])
+                ->where(function ($query) use ($currentUserId) {
+                    $query->where('manager_id', $currentUserId)
+                          ->orWhereHas('clientSubServices', function ($subQuery) use ($currentUserId) {
+                              $subQuery->where('staff_id', $currentUserId)
+                                       ->whereIn('sequence_status', [0, 1]);
+                          });
                 })
+                ->distinct()
                 ->orderBy('id', 'desc')
                 ->get();
-
+    
             return DataTables::of($data)
-
                 ->addColumn('clientname', function (ClientService $clientservice) {
                     return $clientservice->client ? $clientservice->client->name : '';
                 })
@@ -46,12 +50,15 @@ class ServiceController extends Controller
                     return $clientservice->status;
                 })
                 ->addColumn('action', function (ClientService $clientservice) {
-                    $managerFirstName = $clientservice->manager ? $clientservice->manager->first_name . ' ' . $clientservice->manager->last_name : 'N/A';
-                    return '<button class="btn btn-secondary change-status" data-id="' . $clientservice->id . '" data-manager-firstname="' . $managerFirstName . '">Details</button>';
+                    $managerFirstName = $clientservice->manager 
+                        ? $clientservice->manager->first_name . ' ' . $clientservice->manager->last_name 
+                        : 'N/A';
+                    return '<button class="btn btn-secondary change-status" data-id="' 
+                        . $clientservice->id . '" data-manager-firstname="' . $managerFirstName . '">Details</button>';
                 })
                 ->make(true);
         }
-    }
+    }    
 
     public function getAllServices(Request $request)
     {
@@ -81,7 +88,7 @@ class ServiceController extends Controller
 
     public function getClientSubServices($clientserviceId)
     {
-        $clientSubServices = ClientSubService::with('subService', 'serviceMessage', 'workTimes')->where('client_service_id', $clientserviceId)->get();
+        $clientSubServices = ClientSubService::with('subService', 'serviceMessage', 'workTimes', 'clientService')->where('client_service_id', $clientserviceId)->get();
         return response()->json($clientSubServices);
     }
 
@@ -157,10 +164,10 @@ class ServiceController extends Controller
             return DataTables::of($data)
 
                 ->addColumn('clientname', function (ClientService $clientservice) {
-                    return $clientservice->client->name;
+                    return $clientservice->client ? $clientservice->client->name : '';
                 })
                 ->addColumn('servicename', function (ClientService $clientservice) {
-                    return $clientservice->service->name;
+                    return $clientservice->service ? $clientservice->service->name : '';
                 })
                 ->addColumn('action', function (ClientService $clientservice) use ($managerName) {
                     return '<button class="btn btn-secondary task-details" data-id="' . $clientservice->id . '" data-manager="' . $managerName . '">Details</button>';

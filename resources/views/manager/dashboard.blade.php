@@ -468,22 +468,30 @@
                     return staff.id === subService.staff_id;
                 });
 
+                var staffDropdown = '';
+
                 if (subService.sequence_status === 0 || subService.sequence_status === 1) {
-                    staffDropdown = '<select class="form-select change-staff" data-sub-service-id="' + subService.id + '">';
-                    staffs.forEach(function(staffMember) {
-                        staffDropdown += '<option value="' + staffMember.id + '" ' + (staffMember.id === subService.staff_id ? 'selected' : '') + '>' + staffMember.first_name + '</option>';
-                    });
-                    staffDropdown += '</select>';
+                    if (subService.client_service && subService.client_service.manager_id === authUserId) {
+                        staffDropdown = '<select class="form-select change-staff" data-sub-service-id="' + subService.id + '">';
+                        staffs.forEach(function(staffMember) {
+                            staffDropdown += '<option value="' + staffMember.id + '" ' + (staffMember.id === subService.staff_id ? 'selected' : '') + '>' + staffMember.first_name + '</option>';
+                        });
+                        staffDropdown += '</select>';
+                    }
                 } else {
-                    staffDropdown = staff ? staff.first_name : 'N/A';
+                    staffDropdown = staff ? (staff.first_name + ' ' + (staff.last_name || '')).trim() : 'N/A';
                 }
 
                 var staffName = staff ? (staff.first_name + ' ' + (staff.last_name || '')).trim() : 'N/A';
                 var isAuthUserStaff = authUserId === subService.staff_id;
                 var hasWorkTimes = subService.work_times && subService.work_times.length > 0;
 
+                var hasActiveWorkTime = subService.work_times && subService.work_times.some(function(workTime) {
+                    return (workTime.end_time === null || workTime.end_time === "") && workTime.is_break === 0;
+                });
+
                 if (subService.sequence_status === 0) {
-                    if (isAuthUserStaff && hasWorkTimes) {
+                    if (isAuthUserStaff && !hasActiveWorkTime) {
                         statusDropdown = `
                             <select class="form-select change-service-status" data-sub-service-id="${subService.id}">
                                 <option value="0" selected>Processing</option>
@@ -513,10 +521,6 @@
                     var seconds = totalDurationInSeconds % 60;
                     duration = `<div>${hours}h ${minutes}m ${seconds}s</div>`;
                 }
-
-                var hasActiveWorkTime = subService.work_times && subService.work_times.some(function(workTime) {
-                    return (workTime.end_time === null || workTime.end_time === "") && workTime.is_break === 0;
-                });
 
                 if (isAuthUserStaff && subService.sequence_status === 0) {
                     if (hasActiveWorkTime) {
