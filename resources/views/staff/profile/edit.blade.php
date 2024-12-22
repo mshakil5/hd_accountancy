@@ -60,7 +60,7 @@
                                             <label for="">Address line 2</label>
                                             <input type="text" class="form-control my-2" id="address_line2" name="address_line2" value="{{ $staff->address_line2}}" placeholder="Enter address line 2">
                                         </div>
-                                        <div class="col-lg-4">
+                                        <div class="col-lg-4 d-none">
                                             <label for="">Address line 3</label>
                                             <input type="text" class="form-control my-2" id="address_line3" name="address_line3" value="{{ $staff->address_line3}}" placeholder="Enter address line 3">
                                         </div>
@@ -82,7 +82,7 @@
                                         </div>
                                     </div>
                                     <div class="row">
-                                        <div class="col-lg-4 mx-auto text-center">
+                                        <div class="col-lg-4 my-2 mx-auto text-center">
                                             <button id="saveButton" class="btn btn-sm bg-theme text-light btn-outline-dark">Update</button>
                                         </div>
                                     </div>

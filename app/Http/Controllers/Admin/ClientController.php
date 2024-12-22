@@ -76,10 +76,24 @@ class ClientController extends Controller
 
     public function getClientsManager(Request $request)
     {
+        $authUserId = auth()->id();
         if ($request->ajax()) {
-            $data = Client::with(['clientType', 'manager'])->orderBy('id', 'desc')->get();
+            $data = Client::with(['clientType', 'manager'])
+                ->where(function ($query) use ($authUserId) {
+                    $query->where('manager_id', $authUserId)
+                          ->orWhereHas('clientSubServices', function ($subQuery) use ($authUserId) {
+                              $subQuery->where('staff_id', $authUserId);
+                          });
+                })
+                ->distinct()
+                ->orderBy('id', 'desc')
+                ->get();
+    
             return Datatables::of($data)
                 ->addIndexColumn()
+                ->editColumn('manager.first_name', function ($row) {
+                    return $row->manager->first_name ?? '';
+                })
                 ->make(true);
         }
     }

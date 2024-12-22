@@ -159,7 +159,7 @@
 <!-- Assigned Work List Start-->
 <script>
     $(document).ready(function() {
-      $('#serviceStaffTable').DataTable({
+        $('#serviceStaffTable').DataTable({
           processing: true,
           serverSide: true,
           ajax: {
@@ -358,56 +358,11 @@
             });
         });
 
-        $(document).on('change', '.change-service-status', function() {
-            var clientSubServiceId = $(this).data('sub-service-id');
-            var newStatus = $(this).val();
-
-            $.ajax({
-                url: '/staff/update-sub-service-status',
-                type: 'POST',
-                dataType: 'json',
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                data: {
-                    clientSubServiceId: clientSubServiceId,
-                    newStatus: newStatus
-                },
-                success: function(response) {
-                    swal({
-                        title: "Success!",
-                        text: "Status chnaged successfully",
-                        icon: "success",
-                        button: "OK",
-                    });
-                    setTimeout(function() {
-                        location.reload();
-                    }, 2000);
-                },
-                error: function(xhr, status, error) {
-                    console.error(error);
-                    var errorMessage = "";
-                    if (xhr.responseJSON && xhr.responseJSON.errors){
-                        $.each(xhr.responseJSON.errors, function (key, value) {
-                            errorMessage += key + ": " + value.join(", ") + "<br>";
-                        });
-                    } else {
-                        errorMessage = "An error occurred. Please try again later.";
-                    }
-                    $('#errorMessage').html(errorMessage);
-                    $('#errorMessage').show();
-                    $('#successMessage').hide();
-                    console.error("Error occurred: " + error);
-                    console.error(xhr.responseText);
-                }
-            });
-        });
-
         $('#sub-service-cancelButton').click(function() {
             $('#assignTaskSection').hide();
         });
 
-  });
+    });
 </script>
 <!-- Assigned Work List End-->
 

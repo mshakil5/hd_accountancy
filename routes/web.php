@@ -115,8 +115,11 @@ Route::middleware(['auth', 'user-access:manager'])->group(function () {
     Route::get('/manager/profile/edit', [ManagerController::class, 'editProfile'])->name('manager.profile.edit');
     Route::post('/manager/profile', [ManagerController::class, 'updateProfile']);
 
-    // Fetch all services by manager
-    Route::get('/manager/get-all-services', [ServiceController::class, 'getAllAssignedServices']);
+    // Fetch assigned services by manager
+    Route::get('/manager/get-assigned-services', [ServiceController::class, 'getAllAssignedServices']);
+
+    //  All task list
+    Route::get('/manager/get-all-services', [ServiceController::class, 'getAllServices']);
 
     // Fetch completed services by manager
     Route::get('/manager/get-completed-services', [ServiceController::class, 'getCompetedServices']);

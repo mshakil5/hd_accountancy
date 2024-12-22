@@ -9,7 +9,7 @@
         <div class="col-lg-12">
             <div class="report-box border-theme sales-card p-4 mb-3 rounded-4 border-3" id="assignTaskSection" style="display: none;">
                 <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                    Work Details
+                    Task Details
                 </div>
 
                 <!-- Success and Error message -->
@@ -76,22 +76,6 @@
         </div>
         <!-- Assigned service details section start -->
 
-        {{--
-        <div class="col-lg-4 mb-3">
-            <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
-                <div class="card-body px-0">
-                    <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                        Your Notes
-                    </div>
-                    <div class="mh250">
-                        <!-- Your notes content here -->
-                    </div>
-                </div>
-            </div>
-        </div>
-        --}}
-
-
         <!-- Login Time and button -->
         <div class="col-lg-4 mb-3">
             <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100">
@@ -108,17 +92,8 @@
                                 </div>
                             </div>
                         </div>
-                        {{-- <div class="text-center border-start border-3 ps-3 flex-fill">
-                            <div class="fs-6 txt-theme fw-bold">Break Time</div>
-                            <div class="text-center fs-2 txt-theme fw-bold">
-                                   {{ $breakTime ?? 'N/A' }}
                     </div>
-                </div> --}}
-            </div>
             <div class="row mt-3 align-items-center justify-content-center">
-                {{-- <div class="col-lg-6">
-                            <a href="" class="p-2 border-theme text-center fs-6 d-block rounded-3 border-3 txt-theme fw-bold my-1">Clock in</a>
-                        </div> --}}
                 <div class="col-lg-12">
                     <a id="takeBreakBtn" class="p-2 border-theme bg-theme text-center fs-6 d-block rounded-3 border-3 text-light fw-bold" style="cursor: pointer;">Take Break</a>
                 </div>
@@ -299,7 +274,7 @@
     <div class="col-lg-12">
         <div class="report-box border-theme sales-card p-4 mb-3 rounded-4 border-3" id="completedTaskSection" style="display: none;">
             <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                Completed Work Details
+                Task Details
             </div>
 
             <div class="container-fluid">
@@ -409,7 +384,7 @@
             processing: true,
             serverSide: true,
             ajax: {
-                url: '/manager/get-all-services',
+                url: '/manager/get-assigned-services',
                 type: 'GET',
                 dataSrc: 'data',
                 error: function(xhr, error, thrown) {
@@ -613,7 +588,6 @@
                 }
             });
         });
-
 
         $(document).on('click', '.open-modal', function() {
             var staffId = $(this).data('staff-id');
@@ -1020,6 +994,10 @@
                         text: "Status changed successfully!"
                     }).showToast();
                     $('#completedTaskSection').hide();
+
+                    if ($.fn.DataTable.isDataTable('#serviceManagerTable')) {
+                        $('#serviceManagerTable').DataTable().ajax.reload(null, false);
+                    }
 
                     if ($.fn.DataTable.isDataTable('#completedTasksTable')) {
                         $('#completedTasksTable').DataTable().ajax.reload(null, false);

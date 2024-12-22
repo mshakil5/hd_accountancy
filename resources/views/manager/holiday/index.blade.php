@@ -30,14 +30,6 @@
                             </div>
                         </div>
                     </div>
-                    {{-- <div class="row mt-3">
-                        <div class="col-lg-6">
-                            <a href="" class="p-2 border-theme text-center fs-6 d-block rounded-3 border-3 txt-theme fw-bold my-1">Clock in</a>
-                        </div>
-                        <div class="col-lg-6">
-                            <a href="" class="p-2 border-theme text-center fs-6 d-block rounded-3 border-3 txt-theme fw-bold my-1">Take Break</a>
-                        </div>
-                    </div> --}}
                 </div>
             </div>
         </div>

@@ -9,7 +9,7 @@
                 <i class='bx bxs-user-plus fs-4 me-2'></i> Update Profile
             </p>
 
-            <div class="row px-3">
+            <div class="row px-3 py-3">
                 <div class="col-lg-12">
                     <div class="card">
                         <div class="card-body">
@@ -28,47 +28,47 @@
                                         <input type="file" id="pic" name="image" class="invisible">
                                     </div>
                                     <div class="col-lg-4">
-                                        <label for="">First Name</label>
+                                        <label for="">First Name <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control my-2" id="first_name" name="first_name" value="{{ $manager->first_name }}" placeholder="Enter first name">
                                     </div>
                                     <div class="col-lg-4">
-                                        <label for="">Last Name</label>
+                                        <label for="">Last Name <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control my-2" id="last_name" name="last_name" value="{{ $manager->last_name }}" placeholder="Enter last name">
                                     </div>
                                     <div class="col-lg-4">
-                                        <label for="">Phone</label>
+                                        <label for="">Phone <span class="text-danger">*</span></label>
                                         <input type="number" class="form-control my-2" id="phone" name="phone" value="{{ $manager->phone }}" placeholder="Enter phone">
                                     </div>
                                     <div class="col-lg-4">
-                                        <label for="">Email</label>
+                                        <label for="">Email <span class="text-danger">*</span></label>
                                         <input type="email" class="form-control my-2" id="email" name="email" value="{{ $manager->email }}" placeholder="Enter email">
                                     </div>
                                     <div class="col-lg-4">
-                                        <label for="">NI Number</label>
+                                        <label for="">NI Number <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control my-2" id="ni_number" name="ni_number" value="{{ $manager->ni_number }}" placeholder="Enter NI number">
                                     </div>
                                     <div class="col-lg-4">
-                                        <label for="">Date of Birth</label>
+                                        <label for="">Date of Birth <span class="text-danger">*</span></label>
                                         <input type="date" class="form-control my-2" id="date_of_birth" name="date_of_birth" value="{{ $manager->date_of_birth }}" placeholder="Enter date of birth">
                                     </div>
                                     <div class="col-lg-4">
-                                        <label for="">Address line 1</label>
+                                        <label for="">Address line 1 <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control my-2" id="address_line1" name="address_line1" value="{{ $manager->address_line1}}" placeholder="Enter address line 1">
                                     </div>
                                     <div class="col-lg-4">
                                         <label for="">Address line 2</label>
                                         <input type="text" class="form-control my-2" id="address_line2" name="address_line2" value="{{ $manager->address_line2}}" placeholder="Enter address line 2">
                                     </div>
-                                    <div class="col-lg-4">
+                                    <div class="col-lg-4 d-none">
                                         <label for="">Address line 3</label>
                                         <input type="text" class="form-control my-2" id="address_line3" name="address_line3" value="{{ $manager->address_line3}}" placeholder="Enter address line 3">
                                     </div>
                                     <div class="col-lg-4">
-                                        <label for="">Town</label>
+                                        <label for="">Town <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control my-2" id="town" name="town" value="{{ $manager->town}}" placeholder="Enter town">
                                     </div>
                                     <div class="col-lg-4">
-                                        <label for="">Post Code</label>
+                                        <label for="">Post Code <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control my-2" id="postcode" name="postcode" value="{{ $manager->postcode}}" placeholder="Enter post code">
                                     </div>
                                     <div class="col-lg-4">
@@ -131,29 +131,34 @@
                 contentType: false,
                 processData: false
             }).done(function (response) {
-                swal({
-                    title: "Success!",
-                    text: "Updated successfully",
-                    icon: "success",
-                    button: "OK",
-                });
+                Toastify({
+                    text: "Updated successfully!",
+                    duration: 3000,
+                    close: true,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "green",
+                }).showToast();
+
                 window.setTimeout(function() {
                     location.reload();
                 }, 2000);
-            }).fail(function (xhr) {
-                var errorMessage = "An error occurred. Please try again later.";
+            }).fail(function(xhr) {
+                let errorMessage = "An error occurred. Please try again later.";
+
                 if (xhr.responseJSON && xhr.responseJSON.errors) {
-                    errorMessage = "Please fix the following errors:<br>";
-                    $.each(xhr.responseJSON.errors, function (key, value) {
-                        errorMessage += key + ": " + value.join(", ") + "<br>";
-                    });
+                    const firstErrorKey = Object.keys(xhr.responseJSON.errors)[0];
+                    errorMessage = xhr.responseJSON.errors[firstErrorKey][0];
                 }
-                swal({
-                    title: "Error!",
+
+                Toastify({
                     text: errorMessage,
-                    icon: "error",
-                    button: "OK",
-                });
+                    duration: 4000,
+                    close: true,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "red",
+                }).showToast();
             });
         });
     });
