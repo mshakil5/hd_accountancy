@@ -425,7 +425,7 @@
 <!-- Assigned Work List Start-->
 <script>
     $(document).ready(function() {
-      $('#serviceStaffTable').DataTable({
+        $('#serviceStaffTable').DataTable({
           processing: true,
           serverSide: true,
           ajax: {
@@ -846,12 +846,9 @@
             type: 'GET',
             success: function(response) {
                 if (response.status === 'ongoing') {
-                     swal({
-                        title: "Warning!",
-                        text: "Please stop your break or work time before logging out.",
-                        icon: "warning",
-                        button: "OK",
-                    });
+                     Toastify({
+                        text: "You have ongoing work time. Please stop it before logging out."
+                    }).showToast();
                 } else {
                     $('#noteModal').modal('show');
                 }
