@@ -474,6 +474,7 @@
                                             <th>Staff</th>
                                             <th>Note</th>
                                             <th>Status</th>
+                                            <th>Comment</th>
                                         </tr>
                                     </thead>
                                     <tbody id="assignedServiceDetailsTable"></tbody>
@@ -617,6 +618,49 @@
             <!-- Completed Work List -->
 
         </div>
+
+        <!-- Service message modal start -->
+        <div class="modal fade" id="messageModal" tabindex="-1" role="dialog" aria-labelledby="messageModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg mt-2" role="document">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+                                    <div class="card-body px-0">
+                                        <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                                            Previous Comment
+                                        </div>
+                                        <div id="previousMessages" class="mt-4">
+                                            <!-- Previous messages -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--Message Input Section -->
+                            <div class="col-md-6">
+                                <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+                                    <div class="card-body px-0">
+                                        <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                                            New Comment
+                                        </div>
+                                        <input type="hidden" id="hiddenClientSubServiceId" />
+                                        <div class="form-group mt-4">
+                                            <textarea class="form-control" id="service-message" rows="7" name="message" placeholder="Your comment..."></textarea>
+                                        </div>
+                                        <div class="text-center">
+                                            <button type="button" class="mt-3 btn btn-primary bg-theme-light fs-4 border-theme border-2 fw-bold txt-theme" id="saveMessage">Send</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Service message modal end -->
+
 </section>
 
 @endsection
@@ -1083,11 +1127,66 @@
                               : 'N/A'
                           }
                       </td>
+                      <td>
+                            <button type="button" class="btn btn-secondary open-modal" data-toggle="modal" data-target="#messageModal" data-client-sub-service-id="${subService.id}">
+                                <i class="fas fa-plus-circle"></i>
+                            </button>
+                        </td>
                   </tr>
               `;
                 completedServiceDetailsTable.append(newRow);
             });
         }
+
+        $(document).on('click', '.open-modal', function() {
+            var clientSubServiceId = $(this).data('client-sub-service-id');
+            $('#hiddenClientSubServiceId').val(clientSubServiceId);
+            populateMessage(clientSubServiceId);
+            $('#messageModal').modal('show');
+        });
+
+        function populateMessage(clientSubServiceId) {
+            $.ajax({
+                url: '/admin/getServiceMessage/' + clientSubServiceId,
+                type: "GET",
+                dataType: "json",
+                success: function(data) {
+                    $('#previousMessages').empty();
+                    data.forEach(function(message) {
+                        var messageDiv = $('<div>').addClass('message');
+                        var userName = message.userName;
+                        var messageContent = message.messageContent ? message.messageContent : '';
+
+                        messageDiv.html('<span style="font-weight: bold;">' + userName + ': </span>' + messageContent);
+                        $('#previousMessages').append(messageDiv);
+                    });
+                },
+                error: function(xhr, error, thrown) {
+                    console.error('Error fetching previous messages:', error, thrown);
+                }
+            });
+        }
+
+        $('#saveMessage').click(function() {
+            var message = $('#service-message').val();
+            var clientSubServiceId = $('#hiddenClientSubServiceId').val();
+
+            $.ajax({
+                url: '/admin/store-message',
+                type: "POST",
+                data: {
+                    message: message,
+                    client_sub_service_id: clientSubServiceId,
+                    _token: "{{ csrf_token() }}"
+                },
+                success: function(response) {
+                    $('#service-message').val('');
+                    populateMessage(clientSubServiceId);
+                },
+                error: function(xhr, status, error) {
+                }
+            });
+        });
 
         $('#assigned-cancelButton').click(function() {
             $('#assignedTaskSection').hide();

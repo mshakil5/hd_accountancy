@@ -12,6 +12,7 @@ use App\Models\ClientService;
 use App\Models\ClientSubService;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Models\ServiceMessage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
@@ -773,4 +774,37 @@ class ServiceController extends Controller
             return response()->json(['error' => 'Client sub-service not found'], 404);
         }
     }
+
+    public function getServiceMessage($clientSubServiceId)
+    {
+        $messages = ServiceMessage::with('user:id,first_name')
+            ->select('created_by', 'message')
+            ->where('client_sub_service_id', $clientSubServiceId)
+            ->get()
+            ->map(function($message) {
+                return [
+                    'userName' => $message->user->first_name,
+                    'messageContent' => $message->message,
+                ];
+            });
+    
+        return response()->json($messages);
+    }
+
+    public function storeMessage(Request $request)
+    {
+        $validated = $request->validate([
+            'message' => 'required|string',
+            'client_sub_service_id' => 'required|integer',
+        ]);
+
+        $serviceMessage = new ServiceMessage();
+        $serviceMessage->message = $validated['message'];
+        $serviceMessage->client_sub_service_id = $validated['client_sub_service_id'];
+        $serviceMessage->created_by = auth()->id();
+        $serviceMessage->save();
+
+        return response()->json(['success' => true, 'message' => 'Message saved successfully']);
+    }
+
 }

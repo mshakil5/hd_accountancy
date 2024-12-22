@@ -300,17 +300,13 @@
                 type: "GET",
                 dataType: "json",
                 success: function(data) {
-                    var managers = @json($managers);
-                    function getManagerName(managerId) {
-                        var manager = managers.find(manager => String(manager.id) === String(managerId));
-                        return manager ? manager.first_name : '';
-                    }
                     $('#previousMessages').empty();
                     data.forEach(function(message) {
                         var messageDiv = $('<div>').addClass('message');
-                        var managerName = getManagerName(message.created_by);
-                        var messageContent = message.message ? message.message : ''; 
-                        messageDiv.html('<span style="font-weight: bold;">' + managerName + ': </span>' + messageContent); 
+                        var userName = message.userName;
+                        var messageContent = message.messageContent ? message.messageContent : '';
+
+                        messageDiv.html('<span style="font-weight: bold;">' + userName + ': </span>' + messageContent);
                         $('#previousMessages').append(messageDiv);
                     });
                 },

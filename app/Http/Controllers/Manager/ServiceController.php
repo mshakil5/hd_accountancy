@@ -94,7 +94,17 @@ class ServiceController extends Controller
 
     public function getServiceMessages($clientSubServiceId)
     {
-        $messages = ServiceMessage::where('client_sub_service_id', $clientSubServiceId)->get();
+        $messages = ServiceMessage::with('user:id,first_name')
+            ->select('created_by', 'message')
+            ->where('client_sub_service_id', $clientSubServiceId)
+            ->get()
+            ->map(function($message) {
+                return [
+                    'userName' => $message->user->first_name,
+                    'messageContent' => $message->message,
+                ];
+            });
+    
         return response()->json($messages);
     }
 

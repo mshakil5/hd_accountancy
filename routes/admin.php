@@ -179,6 +179,11 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
      //Fetch assigned services
      Route::get('/get-assigned-services/{client_id}', [ServiceController::class, 'getAssignedServices']);
 
+     //Fetch assigned services
+     Route::get('/getServiceMessage/{clientSubServiceId}', [ServiceController::class, 'getServiceMessage']);
+
+     Route::post('/store-message', [ServiceController::class, 'storeMessage']);
+
      //Store fetched services + staff
      Route::post('/assign-service-staff', [ServiceController::class, 'assignServiceStaff']);
 
