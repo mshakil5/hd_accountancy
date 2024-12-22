@@ -182,8 +182,11 @@ Route::middleware(['auth', 'user-access:staff'])->group(function () {
     Route::get('/staff/profile/edit', [StaffController::class, 'editProfile'])->name('staff.profile.edit');
     Route::post('/staff/profile', [StaffController::class, 'updateProfile']);
 
-    //  Task list
-     Route::get('/staff/get-all-services', [StaffServiceController::class, 'getServicesClientStaff']);
+     //  Task list
+     Route::get('/staff/get-assigned-services', [StaffServiceController::class, 'getServicesClientStaff']);
+
+     //  All task list
+     Route::get('/staff/get-all-services', [StaffServiceController::class, 'getAllServicesClientStaff']);
 
      //  completed list
      Route::get('/staff/get-completed-services', [StaffServiceController::class, 'getCompetedServices']);

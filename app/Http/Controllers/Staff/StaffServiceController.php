@@ -25,8 +25,6 @@ class StaffServiceController extends Controller
     {
         if ($request->ajax()) {
             $data = ClientService::with('clientSubServices')
-                // ->where('service_deadline', '>=', now()->startOfDay())
-                // ->where('service_deadline', '<=', now()->addDays(30)->endOfDay())
                 ->whereHas('clientSubServices', function ($query) {
                     $query->whereIn('sequence_status', [0, 1])
                         ->where('staff_id', Auth::id());
@@ -50,19 +48,39 @@ class StaffServiceController extends Controller
         }
     }
 
-    public function getCompetedServices(Request $request)
+    public function getAllServicesClientStaff(Request $request)
     {
-        $startOfDay = Carbon::today()->startOfDay();
-        $endOfDay = Carbon::today()->endOfDay();
-
         if ($request->ajax()) {
             $data = ClientService::with('clientSubServices')
-                ->where('service_deadline', '>=', now()->startOfDay())
-                ->where('service_deadline', '<=', now()->addDays(30)->endOfDay())
-                ->whereHas('clientSubServices', function ($query) use ($startOfDay, $endOfDay) {
+                ->whereHas('clientSubServices', function ($query) {
+                    $query->where('staff_id', Auth::id());
+                })
+                ->orderBy('id', 'desc')
+                ->get();
+
+            return DataTables::of($data)
+
+                ->addColumn('clientname', function (ClientService $clientservice) {
+                    return $clientservice->client ? $clientservice->client->name : " ";
+                })
+                ->addColumn('servicename', function (ClientService $clientservice) {
+                    return $clientservice->service ? $clientservice->service->name : " ";
+                })
+                ->addColumn('action', function (ClientService $clientservice) {
+                    $managerFirstName = $clientservice->manager ? $clientservice->manager->first_name . ' ' . $clientservice->manager->last_name : 'N/A';
+                    return '<button class="btn btn-secondary change-status" data-id="' . $clientservice->id . '" data-manager-firstname="' . $managerFirstName . '">Details</button>';
+                })
+                ->make(true);
+        }
+    }
+
+    public function getCompetedServices(Request $request)
+    {
+        if ($request->ajax()) {
+            $data = ClientService::with('clientSubServices')
+                ->whereHas('clientSubServices', function ($query)  {
                     $query->where('sequence_status', 2)
-                        ->where('staff_id', Auth::id())
-                        ->whereBetween('updated_at', [$startOfDay, $endOfDay]);
+                        ->where('staff_id', Auth::id());
                 })
                 ->orderBy('id', 'desc')
                 ->get();

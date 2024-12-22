@@ -130,11 +130,11 @@
                         <table id="holidayRequestsTable" class="table cell-border table-striped" style="width:100%">
                             <thead>
                                 <tr>
-                                    <th scope="col">Start Date</th>
-                                    <th scope="col">End Date</th>
-                                    <th scope="col">Admin Note</th>
-                                    <th scope="col">Total Days</th>
-                                    <th scope="col">Status</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Admin Note</th>
+                                    <th>Total Days</th>
+                                    <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -143,7 +143,7 @@
                                     <td>{{ \Carbon\Carbon::parse($request->start_date)->format('d F Y') }}</td>
                                     <td>{{ \Carbon\Carbon::parse($request->end_date)->format('d F Y') }}</td>
                                     <td>{!! $request->admin_note !!}</td>
-                                    <td>{{ $request->total_day }}</td>
+                                    <td class="text-center">{{ $request->total_day }}</td>
                                     <td>
                                         @if($request->status == 0)
                                             Processing

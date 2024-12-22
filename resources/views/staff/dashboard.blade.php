@@ -10,7 +10,7 @@
         <div class="col-lg-12">
             <div class="report-box border-theme sales-card p-4 mb-3 rounded-4 border-3" id="assignTaskSection" style="display: none;">
                 <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                    Work Details
+                    Task Details
                 </div>
 
                 <!-- Success and Error message -->
@@ -136,17 +136,8 @@
                                 </div>
                             </div>
                         </div>
-                         {{-- <div class="text-center border-start border-3 ps-3 flex-fill">
-                            <div class="fs-6 txt-theme fw-bold">Break Time</div>
-                            <div class="text-center fs-2 txt-theme fw-bold">
-                                   {{ $breakTime ?? 'N/A' }}
-                            </div>
-                        </div> --}}
                     </div>
                     <div class="row mt-3 align-items-center justify-content-center">
-                        {{-- <div class="col-lg-6">
-                            <a href="" class="p-2 border-theme text-center fs-6 d-block rounded-3 border-3 txt-theme fw-bold my-1">Clock in</a>
-                        </div> --}}
                         <div class="col-lg-12">
                             <a id="takeBreakBtn" class="p-2 border-theme bg-theme text-center fs-6 d-block rounded-3 border-3 text-light fw-bold" style="cursor: pointer;">Take Break</a>
                         </div>
@@ -277,7 +268,7 @@
             <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
                 <div class="card-body px-0">
                     <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                        Your Assigned Tasks
+                        Assigned Tasks
                     </div>
                 <!-- Works assigned to a user and specified staff -->
                     <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
@@ -292,15 +283,6 @@
                                     <th scope="col">Action</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <tr>
-                                    <th scope="row">1</th>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-                            </tbody>
                         </table>
                     </div>
                 <!-- Works assigned to a user and specified staff -->
@@ -331,7 +313,7 @@
         <div class="col-lg-12">
             <div class="report-box border-theme sales-card p-4 mb-3 rounded-4 border-3" id="completedTaskSection" style="display: none;">
                 <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                Today's Completed Task Details
+                Task Details
                 </div>
 
                 <div class="container-fluid">
@@ -388,7 +370,7 @@
             <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
                 <div class="card-body px-0">
                     <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                        Today's Completed Tasks
+                        Completed Tasks
                     </div>
                         <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
                         <table id="completedTasksTable" class="table cell-border table-striped" style="width:100%">
@@ -447,7 +429,7 @@
           processing: true,
           serverSide: true,
           ajax: {
-              url: '/staff/get-all-services',
+              url: '/staff/get-assigned-services',
               type: 'GET',
               dataSrc: 'data',
               error: function(xhr, error, thrown) {
@@ -893,6 +875,7 @@
                 type: 'GET',
                 dataSrc: 'data',
                 error: function(xhr, error, thrown) {
+                    console
                     console.error('DataTables error:', error, thrown);
                 }
             },
