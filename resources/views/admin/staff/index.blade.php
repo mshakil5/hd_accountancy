@@ -314,7 +314,7 @@
                                         <table class="w-100 txt-theme text-capitalize">
                                             <tr>
                                                 <td><b>Reporting ID:</b></td>
-                                                <td><input type="number" id="reporting_id" readonly></td>
+                                                <td><input type="number" id="reporting_id" readonly disabled></td>
                                             </tr>
                                             <tr>
                                                 <td><b>Joining Date:</b></td>

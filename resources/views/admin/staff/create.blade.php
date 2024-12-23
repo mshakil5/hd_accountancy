@@ -9,21 +9,6 @@
                 <i class='bx bxs-user-plus fs-4 me-2'></i> New Staff Entry
             </p>
 
-            <!-- Success and Error message -->
-            <div class="row my-4 px-3">
-                <div class="col-lg-12">
-                    <div id="successMessage" class="alert alert-success" style="display: none;">
-                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                        <b></b>
-                    </div>
-                    <div id="errorMessage" class="alert alert-danger" style="display: none;">
-                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                        <b></b>
-                    </div>
-                </div>
-            </div>
-            <!-- Success and Error message -->
-
             <div class="row px-3">
                 <div class="col-lg-12">
                     <div class="card">
@@ -49,31 +34,31 @@
                                             </div>
 
                                             <div class="col-lg-4">
-                                                <label for="">First Name</label>
+                                                <label for="">First Name <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control my-2" id="first_name" name="first_name" placeholder="Enter first name">
                                             </div>
                                             <div class="col-lg-4">
-                                                <label for="">Last Name</label>
+                                                <label for="">Last Name <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control my-2" id="last_name" name="last_name" placeholder="Enter last name">
                                             </div>
                                             <div class="col-lg-4">
-                                                <label for="">Phone</label>
+                                                <label for="">Phone <span class="text-danger">*</span></label>
                                                 <input type="number" class="form-control my-2" id="phone" name="phone" placeholder="Enter phone">
                                             </div>
                                             <div class="col-lg-4">
-                                                <label for="">Email</label>
+                                                <label for="">Email <span class="text-danger">*</span></label>
                                                 <input type="email" class="form-control my-2" id="email" name="email" placeholder="Enter email">
                                             </div>
                                             <div class="col-lg-4">
-                                                <label for="">NI Number</label>
+                                                <label for="">NI Number <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control my-2" id="ni_number" name="ni_number" placeholder="Enter NI number">
                                             </div>
                                             <div class="col-lg-4">
-                                                <label for="">Date of Birth</label>
+                                                <label for="">Date of Birth <span class="text-danger">*</span></label>
                                                 <input type="date" class="form-control my-2" id="date_of_birth" name="date_of_birth" placeholder="Enter date of birth">
                                             </div>
                                             <div class="col-lg-4">
-                                                <label for="">Address line 1</label>
+                                                <label for="">Address line 1 <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control my-2" id="address_line1" name="address_line1" placeholder="Enter address line 1">
                                             </div>
                                             <div class="col-lg-4">
@@ -85,15 +70,15 @@
                                                 <input type="text" class="form-control my-2" id="address_line3" name="address_line3" placeholder="Enter address line 3">
                                             </div> -->
                                             <div class="col-lg-4">
-                                                <label for="">Town</label>
+                                                <label for="">Town <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control my-2" id="town" name="town" placeholder="Enter town">
                                             </div>
-                                                                                                                            <div class="col-lg-4">
-                                                <label for="">Post Code</label>
+                                                                                                                                                                <div class="col-lg-4">
+                                                <label for="">Post Code <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control my-2" id="postcode" name="postcode" placeholder="Enter post code">
                                             </div>
                                             <div class="col-lg-4">
-                                                <label for="country">Department</label>
+                                                <label for="country">Department <span class="text-danger">*</span></label>
                                                 <div class="mt-2">
                                                 <select class="form-control my-2" id="department_id" name="department_id">
                                                     <option value="" selected disabled>Choose Department</option>
@@ -104,7 +89,7 @@
                                                 </div>
                                             </div>
                                             <div class="col-lg-4">
-                                                <label for="">Job Title</label>
+                                                <label for="">Job Title <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control my-2" id="job_title" name="job_title" placeholder="Enter job title">
                                             </div>
                                             <div class="col-lg-4">
@@ -116,7 +101,7 @@
                                                 <input type="date" class="form-control my-2" id="joining_date" name="joining_date" placeholder="Enter joining date">
                                             </div>
                                             <div class="col-lg-4">
-                                                <label for="">Reporting To</label>
+                                                <label for="">Reporting To <span class="text-danger">*</span></label>
                                                   <div class="mt-2">
                                                     <select class="form-control my-2" name="reporting_to" id="reporting_to">
                                                         <option value="">Please select</option>
@@ -127,7 +112,7 @@
                                                 </div>
                                             </div>
                                             <div class="col-lg-4">
-                                                <label for="">Reporting Employee ID</label>
+                                                <label for="">Reporting Employee ID <span class="text-danger">*</span></label>
                                                 <input type="number" class="form-control my-2" id="reporting_employee_id" name="reporting_employee_id" placeholder="Reporting Employee ID" readonly>
                                             </div>
                                             <div class="col-lg-4">
@@ -214,20 +199,18 @@
                     }, 2000);
                 },
                 error: function (xhr, status, error) {
-                    console.error("Error occurred: " + error);
-                    console.error(xhr.responseText); 
-                    var errorMessage = "";
-                        if (xhr.responseJSON && xhr.responseJSON.errors) {
-                            $.each(xhr.responseJSON.errors, function (key, value) {
-                                errorMessage += key + ": " + value.join(", ") + "<br>";
-                            });
-                        } else {
-                            errorMessage = "An error occurred. Please try again later.";
-                        }
-                        $('#errorMessage').html(errorMessage);
-                        $('#errorMessage').show();
-                        $('#successMessage').hide();
+                    var errorMessage = "An error occurred. Please try again later.";
+                    if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
+                    }
                         saveButton.prop('disabled', false);
+
+                        swal({
+                            title: "Error",
+                            text: errorMessage,
+                            icon: "error",
+                            button: "OK",
+                        });
                 },
                 cache: false,
                 contentType: false,
