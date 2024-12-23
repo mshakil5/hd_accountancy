@@ -1117,6 +1117,7 @@
                 var staff = staffs.find(function(staff) {
                     return staff.id === subService.staff_id;
                 });
+                console.log('Staff name:' + staff);
 
                 var staffName = staff ? (staff.first_name + ' ' + (staff.last_name || '')).trim() : 'N/A';
 
