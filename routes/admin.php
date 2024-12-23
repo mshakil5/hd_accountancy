@@ -151,9 +151,6 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     // Fetch sssigned and non assigned services together
     Route::get('/client-services/{clientId}', [ClientController::class, 'getClientServices']);
 
-    //Contactinfo update
-    Route::post('/client-contactinfo-update/{id}', [ClientController::class,'updateClientContactInfo']);
-
     //Clinet assigned services update
     Route::post('/client-services-update/{id}', [ClientController::class,'updateClientServices']);
 

@@ -77,7 +77,7 @@
         <!-- Assigned service details section start -->
 
         <!-- Login Time and button -->
-        <div class="col-lg-4 mb-3">
+        <div class="col-lg-3 mb-3">
             <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100">
                 <div class="card-body p-0">
                     <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
@@ -245,7 +245,7 @@
     <!-- Service message modal end -->
 
     <!-- Works assigned to a user and specified staff start-->
-    <div class="col-lg-8 mb-3">
+    <div class="col-lg-9 mb-3">
         <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
             <div class="card-body px-0">
                 <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
@@ -260,6 +260,7 @@
                                 <th scope="col">Due Date</th>
                                 <th scope="col">Target Deadline</th>
                                 <th scope="col">Deadline</th>
+                                <th scope="col">Status</th>
                                 <th scope="col">Action</th>
                             </tr>
                         </thead>
@@ -378,6 +379,7 @@
 @section('script')
 
 <!-- Assigned tasks list start -->
+
 <script>
     $(document).ready(function() {
         $('#serviceManagerTable').DataTable({
@@ -421,6 +423,31 @@
                     }
                 },
                 {
+                        data: 'status',
+                        name: 'status',
+                        render: function(data, type, row) {
+                            const currentUserId = {{ Auth::id() }};
+
+                            if (row.manager_id === currentUserId) {
+                                return `
+                                    <select class="form-control status-change" data-id="${row.id}">
+                                        <option value="1" ${data === 1 ? 'selected' : ''}>Not Started</option>
+                                        <option value="0" ${data === 0 ? 'selected' : ''}>Processing</option>
+                                        <option value="2" ${data === 2 ? 'selected' : ''}>Completed</option>
+                                    </select>
+                                `;
+                            }
+
+                            const statusMap = {
+                                1: 'Not Started',
+                                0: 'Processing',
+                                2: 'Completed'
+                            };
+
+                            return statusMap[data] ?? 'Unknown Status';
+                        }
+                    },
+                {
                     data: 'action',
                     name: 'action',
                     orderable: false,
@@ -428,6 +455,47 @@
                 }
             ]
         });
+
+        $(document).on('change', '.status-change', function() {
+            const serviceId = $(this).data('id');
+            const newStatus = $(this).val();
+
+            $.ajax({
+                url: '/manager/client-service-change-status',
+                method: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    id: serviceId,
+                    status: newStatus
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Toastify({
+                        text: "Status changed successfully!"
+                    }).showToast();
+
+                    if ($.fn.DataTable.isDataTable('#serviceManagerTable')) {
+                        $('#serviceManagerTable').DataTable().ajax.reload(null, false);
+                    }
+
+                    if ($.fn.DataTable.isDataTable('#completedTasksTable')) {
+                        $('#completedTasksTable').DataTable().ajax.reload(null, false);
+                    }
+                    
+                    } else {
+                        Toastify({
+                            text: "An error occurred!"
+                        }).showToast();
+                    }
+                },
+                error: function(xhr, status, error) {
+                    Toastify({
+                        text: "An error occurred!"
+                    }).showToast();
+                }
+            });
+        });
+
 
         $(document).on('click', '.change-status', function() {
             var clientserviceId = $(this).data('id');
@@ -583,7 +651,7 @@
                         $('#serviceManagerTable').DataTable().ajax.reload(null, false);
                     }
 
-                    if ($.fn.DataTable.isDataTable('#')) {
+                    if ($.fn.DataTable.isDataTable('#completedTasksTable')) {
                         $('#completedTasksTable').DataTable().ajax.reload(null, false);
                     }
                 },
@@ -1037,12 +1105,9 @@
             type: 'GET',
             success: function(response) {
                 if (response.status === 'ongoing') {
-                    swal({
-                        title: "Warning!",
-                        text: "Please stop your break or work time before logging out.",
-                        icon: "warning",
-                        button: "OK",
-                    });
+                   Toastify({
+                        text: "You have an ongoing task. Please complete it before logging out!"
+                    }).showToast(); 
                 } else {
                     $('#noteModal').modal('show');
                 }
@@ -1279,12 +1344,10 @@
                 type: 'POST',
                 data: formData,
                 success: function(response) {
-                    swal({
-                        title: "Success!",
-                        text: "Record saved and you will be logged out now",
-                        icon: "success",
-                        button: "OK",
-                    });
+                    Toastify({
+                        text: "Record saved and you will be logged out now!"
+                    }).showToast();
+
                     setTimeout(function() {
                         location.reload();
                     }, 1000);

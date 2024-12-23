@@ -365,10 +365,11 @@ class ServiceController extends Controller
     {
         if ($request->ajax()) {
             $data = ClientService::with('clientSubServices')
-                ->whereDate('service_deadline', '<=', now()->addDays(30))
-                ->whereHas('clientSubServices', function ($query) {
-                    $query->where('sequence_status', 2);
-                })
+                ->where('status', 2)
+                ->where('due_date', '<=', now()->endOfDay())
+                // ->whereHas('clientSubServices', function ($query) {
+                //     $query->where('sequence_status', 2);
+                // })
                 ->orderBy('id', 'desc')
                 ->get();
 

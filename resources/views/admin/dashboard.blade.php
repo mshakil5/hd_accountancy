@@ -565,6 +565,7 @@
                                             <th>Note</th>
                                             <th>Status</th>
                                             <th>Timer</th>
+                                            <th>Comment</th>
                                         </tr>
                                     </thead>
                                     <tbody id="completedServiceDetailsTable"></tbody>
@@ -937,6 +938,11 @@
                          <td>${statusDropdown}</td>
                         <td>
                             <span class="timer-duration">${duration}</span>
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-secondary open-modal" data-toggle="modal" data-target="#messageModal" data-client-sub-service-id="${subService.id}">
+                                <i class="fas fa-plus-circle"></i>
+                            </button>
                         </td>
                     </tr>
                 `;
