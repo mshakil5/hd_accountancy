@@ -905,7 +905,8 @@
                     return staff.id === subService.staff_id;
                 });
 
-                var staffName = staff ? (staff.first_name + ' ' + (staff.last_name || '')).trim() : 'N/A';
+                var staffName = subService.staff ? (subService.staff.first_name + ' ' + (subService.staff.last_name || '')).trim() : 'N/A';
+
                 var duration = '';
                 var firstWorkTime = subService.work_times.filter(workTime => workTime.is_break === 0)
                     .reduce(function(acc, workTime) {
@@ -1112,15 +1113,10 @@
             completedServiceDetailsTable.empty();
 
             var staffs = @json($staffs);
-            console.log('Staffs:' + staffs);
 
             $.each(subServices, function(index, subService) {
-                var staff = staffs.find(function(staff) {
-                    return staff.id === subService.staff_id;
-                });
-                console.log('Staff name:' + staff);
 
-                var staffName = staff ? (staff.first_name + ' ' + (staff.last_name || '')).trim() : 'N/A';
+                var staffName = subService.staff ? (subService.staff.first_name + ' ' + (subService.staff.last_name || '')).trim() : 'N/A';
 
                 var newRow = `
                   <tr>
@@ -1274,7 +1270,7 @@
                     return staff.id === subService.staff_id;
                 });
 
-                var staffName = staff ? (staff.first_name + ' ' + (staff.last_name || '')).trim() : 'N/A';
+                var staffName = subService.staff ? (subService.staff.first_name + ' ' + (subService.staff.last_name || '')).trim() : 'N/A';
 
                 var newRow = `
                   <tr>

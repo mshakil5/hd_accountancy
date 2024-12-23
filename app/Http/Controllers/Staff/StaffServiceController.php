@@ -103,7 +103,7 @@ class StaffServiceController extends Controller
 
     public function getClientSubServices($clientserviceId)
     {
-        $clientSubServices = ClientSubService::with('subService', 'serviceMessage', 'workTimes')->where('client_service_id', $clientserviceId)->get();
+        $clientSubServices = ClientSubService::with('subService', 'serviceMessage', 'workTimes', 'staff')->where('client_service_id', $clientserviceId)->get();
         return response()->json($clientSubServices);
     }
 

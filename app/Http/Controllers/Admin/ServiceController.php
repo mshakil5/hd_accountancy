@@ -391,7 +391,7 @@ class ServiceController extends Controller
 
     public function getClientSubService($clientserviceId)
     {
-        $clientSubServices = ClientSubService::with('subService', 'serviceMessage', 'workTimes')->where('client_service_id', $clientserviceId)->get();
+        $clientSubServices = ClientSubService::with('subService', 'serviceMessage', 'workTimes', 'staff')->where('client_service_id', $clientserviceId)->get();
         return response()->json($clientSubServices);
     }
 

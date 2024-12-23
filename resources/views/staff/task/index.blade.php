@@ -237,7 +237,7 @@
                     return staff.id === subService.staff_id;
                 });
 
-                var staffName = staff ? (staff.first_name + ' ' + (staff.last_name || '')).trim() : 'N/A';
+                var staffName = subService.staff ? (subService.staff.first_name + ' ' + (subService.staff.last_name || '')).trim() : 'N/A';
                 var isAuthUserStaff = authUserId === subService.staff_id;
                 var hasWorkTimes = subService.work_times && subService.work_times.length > 0;
 
