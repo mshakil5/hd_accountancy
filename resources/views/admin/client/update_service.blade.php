@@ -4,7 +4,7 @@
       <div class="row mt-3">
         <div class="col-3">
           <div class="form-check">
-            <h5 class="mb-2">Choose Service</h5>
+            <h5 class="mb-2">Choose Service <span class="text-danger">*</span></h5>
             <select id="serviceDropdown" class="form-control mt-1 select2" style="width:100%">
               <option value="" selected >Select Service</option>
               @foreach($services as $service)

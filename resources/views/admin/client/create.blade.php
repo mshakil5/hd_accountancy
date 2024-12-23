@@ -31,7 +31,7 @@
                     <input for="myForm" type="text" value="{{ isset($client->name) ? $client->name : '' }}" class="form-control mt-2" name="name" id="name" required placeholder="Enter client name">
                 </div>
                 <div class="col-lg-3">
-                    <label for="">Client Type</label>
+                    <label for="">Client Type <span class="text-danger">*</span></label>
                     <div class="mt-2">
                         <select name="client_type_id" class="form-control mt-2" id="client_type_id">
                             <option value="" selected>Select client</option>
@@ -42,7 +42,7 @@
                     </div>
                 </div>
                 <div class="col-lg-3">
-                    <label for="">Client Manager</label>
+                    <label for="">Client Manager <span class="text-danger">*</span></label>
                     <div class="mt-2">
                         <select class="form-control mt-2" name="manager_id" id="manager_id">
                             <option value="" selected>Select manager</option>
@@ -112,11 +112,11 @@
                                                 <input type="email" class="form-control my-2" id="email" name="email" value="{{ isset($client) && isset($client->email) ? $client->email : '' }}" placeholder="Enter email" required>
                                             </div>
                                             <div class="col-lg-4">
-                                                <label for="">Phone</label>
+                                                <label for="">Phone <span class="text-danger">*</span></label>
                                                 <input type="number" class="form-control my-2" id="phone" name="phone" value="{{ isset($client) && isset($client->phone) ? $client->phone : '' }}" placeholder="Enter phone">
                                             </div>
                                             <div class="col-lg-4">
-                                                <label for="">Address Line 1</label>
+                                                <label for="">Address Line 1 <span class="text-danger">*</span></label>
                                                 <textarea class="form-control my-2" id="address_line1" name="address_line1" placeholder="Enter address line 1">{{ isset($client) && isset($client->address_line1) ? $client->address_line1 : '' }}</textarea>
                                             </div>
                                             <div class="col-lg-4">
@@ -132,22 +132,22 @@
                                                 <textarea class="form-control my-2" id="trading_address" name="trading_address" placeholder="Enter trading address">{{ isset($client) && isset($client->trading_address) ? $client->trading_address : '' }}</textarea>
                                             </div>
                                             <div class="col-lg-4">
-                                                <label for="">City</label>
+                                                <label for="">City <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control my-2" id="city" name="city" value="{{ isset($client) && isset($client->city) ? $client->city : '' }}" placeholder="Enter city">
                                             </div>
                                             <div class="col-lg-4">
-                                                <label for="">Town</label>
+                                                <label for="">Town <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control my-2" id="town" name="town" placeholder="Enter town" value="{{ isset($client) && isset($client->town) ? $client->town : '' }}">
                                             </div>
                                             <div class="col-lg-4">
-                                                <label for="">Postal Code</label>
+                                                <label for="">Postal Code <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control my-2" id="postcode" name="postcode" placeholder="Enter postal code" value="{{ isset($client) && isset($client->postcode) ? $client->postcode : '' }}">
                                             </div>
                                             <div class="col-lg-4">
                                                 <label for="country">Country</label>
                                                 <div class="mt-2">
                                                     <select class="form-control my-2" id="country" name="country">
-                                                        <option value="" disabled>Choose Country</option>
+                                                        <option value="" >Choose Country</option>
                                                         @isset($client)
                                                         <option value="UK" {{ isset($client->country) && $client->country == 'UK' ? 'selected' : '' }}>UK</option>
                                                         @endisset
@@ -165,7 +165,7 @@
                                             </div>
 
                                             <div class="col-lg-4">
-                                                <label for="">Reference ID</label>
+                                                <label for="">Reference ID <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control my-2" id="reference_id" name="reference_id" placeholder="Enter reference id" value="{{ isset($client) && isset($client->refid) ? $client->refid : '' }}">
                                             </div>
 
@@ -296,7 +296,7 @@
                     } else {
                         swal({
                             title: "Error",
-                            text: response.message,
+                            text: response.message[Object.keys(response.message)[0]],
                             icon: "error",
                             button: "OK",
                         });
@@ -309,7 +309,7 @@
 
                     var errorMessage = "An error occurred. Please try again later.";
                     if (xhr.responseJSON && xhr.responseJSON.errors) {
-                        errorMessage = Object.values(xhr.responseJSON.errors).join(", ");
+                        errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
                     }
 
                     swal({

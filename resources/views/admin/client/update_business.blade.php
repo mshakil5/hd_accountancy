@@ -1,11 +1,11 @@
 <form id="businessForm">
     <div class="row my-4">
         <div class="col-lg-4">
-            <label for="nature_of_business">Nature Of Business</label>
+            <label for="nature_of_business">Nature Of Business <span class="text-danger">*</span></label>
             <input type="text" class="form-control my-2" id="nature_of_business" name="nature_of_business" placeholder="Enter nature of business" value="{{ $businessInfo->nature_of_business ?? '' }}">
         </div>
         <div class="col-lg-4">
-            <label for="company_number">Company Number</label>
+            <label for="company_number">Company Number <span class="text-danger">*</span></label>
             <input type="number" class="form-control my-2" id="company_number" name="company_number" placeholder="Enter company number" value="{{ $businessInfo->company_number ?? '' }}">
         </div>
         <div class="col-lg-4">
@@ -29,15 +29,6 @@
             <input type="number" class="form-control my-2" id="company_utr" name="company_utr" placeholder="Enter UTR number" value="{{ $businessInfo->company_utr ?? '' }}">
         </div>
         <div class="col-lg-4">
-            <label for="status">Company status</label>
-            <div class="mt-2">
-                <select class="form-control my-2" name="status" id="status">
-                    <option value="0" {{ isset($businessInfo->status) && $businessInfo->status == 0 ? 'selected' : '' }}>Inactive</option>
-                    <option value="1" {{ isset($businessInfo->status) && $businessInfo->status == 1 ? 'selected' : '' }}>Active</option>
-                </select>
-            </div>
-        </div>
-        <div class="col-lg-4">
             <label for="">HMRC Authorisation</label>
             <div class="mt-2">
                 <select class="form-control my-2" name="hmrc_authorisation" id="hmrc_authorisation">
@@ -49,6 +40,15 @@
         <div class="col-lg-4">
             <label for="">VAT</label>
             <input type="number" class="form-control my-2" id="vat_number" name="vat_number" placeholder="Enter vat number" value="@isset($client->businessInfo){{ $client->businessInfo->vat_number }}@endisset">
+        </div>
+        <div class="col-lg-4">
+            <label for="status">Company status <span class="text-danger">*</span></label>
+            <div class="mt-2">
+                <select class="form-control my-2" name="status" id="status">
+                    <option value="0" {{ isset($businessInfo->status) && $businessInfo->status == 0 ? 'selected' : '' }}>Inactive</option>
+                    <option value="1" {{ isset($businessInfo->status) && $businessInfo->status == 1 ? 'selected' : '' }}>Active</option>
+                </select>
+            </div>
         </div>
     </div>
     <div class="row">

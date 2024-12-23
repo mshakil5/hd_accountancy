@@ -12,31 +12,31 @@
                     <form id="contactForm">
                         <input type="hidden" id="contactIdInput" name="contact_id">
                         <div class="form-group">
-                            <label for="greeting">Greeting</label>
+                            <label for="greeting">Greeting <span class="text-danger">*</span></label>
                             <select class="form-control my-2" name="greeting" id="greeting">
-                                <option value="" selected disabled>Choose greeting</option>
+                                <option value="">Choose greeting</option>
                                 <option value="Mr.">Mr.</option>
                                 <option value="Ms.">Ms.</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="first_name">First Name</label>
+                            <label for="first_name">First Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control my-2" id="first_name" name="first_name" placeholder="Enter first name">
                         </div>
                         <div class="form-group">
-                            <label for="last_name">Last Name</label>
+                            <label for="last_name">Last Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control my-2" id="last_name" name="last_name" placeholder="Enter last name">
                         </div>
                         <div class="form-group">
-                            <label for="job_title">Job Title</label>
+                            <label for="job_title">Job Title <span class="text-danger">*</span></label>
                             <input type="text" class="form-control my-2" id="job_title" name="job_title" placeholder="Enter job title">
                         </div>
                         <div class="form-group">
-                            <label for="contact-email">Email</label>
+                            <label for="contact-email">Email <span class="text-danger">*</span></label>
                             <input type="email" class="form-control my-2" id="contact-email" name="email" placeholder="Enter email">
                         </div>
                         <div class="form-group">
-                            <label for="contact-phone">Phone</label>
+                            <label for="contact-phone">Phone <span class="text-danger">*</span></label>
                             <input type="number" class="form-control my-2" id="contact-phone" name="phone" placeholder="Enter phone number">
                         </div>
                         <div class="text-center">

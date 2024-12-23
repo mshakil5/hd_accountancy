@@ -12,15 +12,15 @@
                     <form id="directorForm">
                         <input type="hidden" id="directorIdInput" name="director_id">
                         <div class="form-group">
-                            <label for="name">Director Name</label>
+                            <label for="name">Director Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control my-2" id="dir-name" name="name" placeholder="Enter name">
                         </div>
                         <div class="form-group">
-                            <label for="phone">Director Phone</label>
+                            <label for="phone">Director Phone <span class="text-danger">*</span></label>
                             <input type="number" class="form-control my-2" id="dir-phone" name="phone" placeholder="Enter phone number">
                         </div>
                         <div class="form-group">
-                            <label for="email">Director Email</label>
+                            <label for="email">Director Email <span class="text-danger">*</span></label>
                             <input type="email" class="form-control my-2" id="dir-email" name="email" placeholder="Enter email">
                         </div>
                         <div class="form-group">

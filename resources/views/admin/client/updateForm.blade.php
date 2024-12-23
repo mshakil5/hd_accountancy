@@ -16,7 +16,7 @@
                 </div>
 
                 <div class="col-lg-3">
-                    <label for="country">Client Type</label>
+                    <label for="country">Client Type <span class="text-danger">*</span></label>
                     <div class="mt-2">
                         <select class="form-control my-2" id="client_type_id" name="client_type_id">
                             <option value="">Please select</option>
@@ -28,7 +28,7 @@
                 </div>
 
                 <div class="col-lg-3">
-                    <label for="">Client Manager</label>
+                    <label for="">Client Manager <span class="text-danger">*</span></label>
                     <div class="mt-2">
                         <select class="form-control my-2" name="manager_id" id="manager_id">
                             <option value="">Please select</option>
@@ -147,7 +147,7 @@
                                             </div>
 
                                             <div class="col-lg-4">
-                                                <label for="">Reference ID</label>
+                                                <label for="">Reference ID <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control my-2" id="reference_id" name="reference_id" placeholder="Enter reference id" value="{{ isset($client) && isset($client->refid) ? $client->refid : '' }}">
                                             </div>
 
@@ -269,7 +269,7 @@
                         console.error(xhr.responseText);
                         var errorMessage = "An error occurred. Please try again later.";
                         if (xhr.responseJSON && xhr.responseJSON.errors) {
-                            errorMessage = Object.values(xhr.responseJSON.errors).join(", ");
+                            errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
                         }
                         swal({
                             title: "Error",
@@ -315,7 +315,7 @@
                     error: function(xhr, status, error) {
                         var errorMessage = "An error occurred. Please try again later.";
                         if (xhr.responseJSON && xhr.responseJSON.errors) {
-                            errorMessage = Object.values(xhr.responseJSON.errors).join(", ");
+                            errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
                         }
                         swal({
                             title: "Error",
@@ -406,7 +406,7 @@
                 error: function(xhr, status, error) {
                     var errorMessage = "An error occurred. Please try again later.";
                     if (xhr.responseJSON && xhr.responseJSON.errors) {
-                        errorMessage = Object.values(xhr.responseJSON.errors).join(", ");
+                        errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
                     }
                     swal({
                         title: "Error",
@@ -451,7 +451,7 @@
                     error: function(xhr, status, error) {
                         var errorMessage = "An error occurred. Please try again later.";
                         if (xhr.responseJSON && xhr.responseJSON.errors) {
-                            errorMessage = Object.values(xhr.responseJSON.errors).join(", ");
+                            errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
                         }
                         swal({
                             title: "Error",
@@ -501,7 +501,7 @@
                 error: function(xhr, status, error) {
                     var errorMessage = "An error occurred. Please try again later.";
                     if (xhr.responseJSON && xhr.responseJSON.errors) {
-                        errorMessage = Object.values(xhr.responseJSON.errors).join(", ");
+                        errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
                     }
                     swal({
                         title: "Error",
@@ -752,7 +752,7 @@
                 error: function(xhr, status, error) {
                     var errorMessage = "An error occurred. Please try again later.";
                     if (xhr.responseJSON && xhr.responseJSON.errors) {
-                        errorMessage = Object.values(xhr.responseJSON.errors).join(", ");
+                        errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
                     }
                     swal({
                         title: "Error",
@@ -838,7 +838,7 @@
                 error: function(xhr, status, error) {
                     var errorMessage = "An error occurred. Please try again later.";
                     if (xhr.responseJSON && xhr.responseJSON.errors) {
-                        errorMessage = Object.values(xhr.responseJSON.errors).join(", ");
+                        errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
                     }
                     swal({
                         title: "Error",
@@ -884,7 +884,7 @@
                 error: function(xhr, status, error) {
                     var errorMessage = "An error occurred. Please try again later.";
                     if (xhr.responseJSON && xhr.responseJSON.errors) {
-                        errorMessage = Object.values(xhr.responseJSON.errors).join(", ");
+                        errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
                     }
                     swal({
                         title: "Error",
@@ -975,7 +975,7 @@
                 error: function(xhr, status, error) {
                     var errorMessage = "An error occurred. Please try again later.";
                     if (xhr.responseJSON && xhr.responseJSON.errors) {
-                        errorMessage = Object.values(xhr.responseJSON.errors).join(", ");
+                        errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
                     }
                     swal({
                         title: "Error",
@@ -1019,7 +1019,7 @@
                     error: function(xhr, status, error) {
                         var errorMessage = "An error occurred. Please try again later.";
                         if (xhr.responseJSON && xhr.responseJSON.errors) {
-                            errorMessage = Object.values(xhr.responseJSON.errors).join(", ");
+                            errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
                         }
                         swal({
                             title: "Error",
