@@ -336,10 +336,10 @@ class ServiceController extends Controller
         if ($request->ajax()) {
             $data = ClientService::with('client', 'manager', 'service', 'clientSubServices')
                 ->where('status', 1)
-                ->whereDate('service_deadline', '<=', now()->addDays(30))
-                ->whereHas('clientSubServices', function ($query) {
-                    $query->whereNull('staff_id');
-                })
+                // ->whereDate('service_deadline', '<=', now()->addDays(30))
+                // ->whereHas('clientSubServices', function ($query) {
+                //     $query->whereNull('staff_id');
+                // })
                 ->orderBy('id', 'desc')
                 ->get();
 
@@ -555,7 +555,7 @@ class ServiceController extends Controller
             'subServices.*.subServiceId' => 'required|integer',
             'subServices.*.deadline' => 'required',
             'subServices.*.staffId' => 'required|integer',
-            'subServices.*.note' => 'required',
+            'subServices.*.note' => 'nullable',
         ]);
 
         if ($validator->fails()) {
@@ -682,7 +682,7 @@ class ServiceController extends Controller
             //     ->get();
 
             $data = ClientService::with('clientSubServices')
-                ->where('status', 1)
+                ->whereIn('status', [0, 1])
                 ->where('due_date', '<=', now()->endOfDay())
                 ->orderBy('id', 'desc')
                 ->get();

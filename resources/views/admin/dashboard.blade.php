@@ -937,7 +937,7 @@
                         <td>${subService.note ? subService.note : ''}</td>
                          <td>${statusDropdown}</td>
                         <td>
-                            <span class="timer-duration">${duration}</span>
+                            <span class="badge bg-success">${duration}</span>
                         </td>
                         <td>
                             <button type="button" class="btn btn-secondary open-modal" data-toggle="modal" data-target="#messageModal" data-client-sub-service-id="${subService.id}">
@@ -1488,9 +1488,10 @@
                         icon: "success",
                         button: "OK",
                     });
-                    setTimeout(function() {
-                        location.reload();
-                    }, 2000);
+                    $('#servicesTable').DataTable().ajax.reload();
+                    $('#completedServices').DataTable().ajax.reload();
+                    $('#serviceStaffTable').DataTable().ajax.reload();
+                    $('#assignedServices').DataTable().ajax.reload();
                 },
                 error: function(xhr, status, error) {
                     console.error(error);
