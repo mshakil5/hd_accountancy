@@ -1112,6 +1112,7 @@
             completedServiceDetailsTable.empty();
 
             var staffs = @json($staffs);
+            console.log('Staffs:' + staffs);
 
             $.each(subServices, function(index, subService) {
                 var staff = staffs.find(function(staff) {
