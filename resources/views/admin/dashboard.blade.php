@@ -886,7 +886,7 @@
                 dataType: "json",
                 success: function(data) {
                     populateCompletedForm(data);
-                    // console.log(data);
+                    console.log(data);
                 },
                 error: function(xhr, error, thrown) {
                     console.error('Error fetching sub-services:', error, thrown);
@@ -1095,7 +1095,7 @@
                     dataType: "json",
                     success: function(data) {
                         populateCompletedForm(data);
-                        // console.log(data);
+                        console.log(data);
                     },
                     error: function(xhr, error, thrown) {
                         console.error('Error fetching sub-services:', error, thrown);
@@ -1125,9 +1125,9 @@
                       <td>${staffName}</td>
                       <td>${subService.note ? subService.note : ''}</td>
                       <td>
-                          ${  subService.sequence_status === 2 ? 'Work is completed' 
-                              : subService.sequence_status === 1 ? 'Not Started' 
-                              : subService.sequence_status === 0 ? 'Processing'
+                          ${  subService.sequence_status == 2 ? 'Work is completed' 
+                              : subService.sequence_status == 1 ? 'Not Started' 
+                              : subService.sequence_status == 0 ? 'Processing'
                               : 'N/A'
                           }
                       </td>
