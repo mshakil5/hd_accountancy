@@ -23,9 +23,9 @@ class DirectorInfoController extends Controller
         // dd($request->all());
         $validator = Validator::make($request->all(), [
             'client_id' => 'required',
-            // 'name' => 'required|string',
-            // 'phone' => 'required|numeric|digits:11',
-            // 'email' => 'required',
+            'name' => 'required|string',
+            'phone' => 'required',
+            'email' => 'required',
             // 'address' => 'required',
             // 'dob' => 'required',
             // 'ni_number' => 'required', 

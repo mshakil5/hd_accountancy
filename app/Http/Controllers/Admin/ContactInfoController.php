@@ -22,12 +22,12 @@ class ContactInfoController extends Controller
     {
         $validator = Validator::make($request->all(),[
         'client_id' => 'required',
-        // 'greeting' => 'required',
-        // 'first_name' => 'required',
-        // 'last_name' => 'required',
-        // 'job_title' => 'required',
-        // 'email' => 'required',
-        // 'phone' => 'required|numeric|digits:11',
+        'greeting' => 'required',
+        'first_name' => 'required',
+        'last_name' => 'required',
+        'job_title' => 'required',
+        'email' => 'required',
+        'phone' => 'required',
         
         ],[
             'client_id.required' => 'The client reference id field is required.',

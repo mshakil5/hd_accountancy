@@ -112,17 +112,18 @@ class ClientController extends Controller
     {
          $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            // 'client_type_id' => 'required',
-            // 'manager_id' => 'required',
+            'client_type_id' => 'required',
+            'manager_id' => 'required',
             'email' => 'required|email|unique:clients',
-            // 'phone' => 'required|numeric|digits:11',
-            // 'address_line1' => 'required|string|max:255',
-            // 'address_line2' => 'required|string|max:255',
-            // 'trading_address' => 'required|string|max:255',
-            // 'city' => 'required|string|max:255',
-            // 'town' => 'required|string|max:255',
-            // 'postcode' => 'required|string',
-            // 'country' => 'required|string|max:255',
+            'phone' => 'required|numeric|digits:11',
+            'address_line1' => 'required|string|max:255',
+            'address_line2' => 'nullable|string|max:255',
+            'trading_address' => 'nullable|string|max:255',
+            'city' => 'required|string|max:255',
+            'town' => 'required|string|max:255',
+            'reference_id' => 'required',
+            'postcode' => 'required|string',
+            'country' => 'nullable|string|max:255',
             'photo' => 'nullable|mimes:jpeg,png,jpg,gif,svg,pdf|max:8048',
             'photo_id' => 'nullable|mimes:jpeg,png,jpg,gif,svg,pdf|max:8048'
         ]);
@@ -207,17 +208,18 @@ class ClientController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            // 'client_type_id' => 'required',
-            // 'manager_id' => 'required',
-            // 'email' => 'required|email',
-            // 'phone' => 'required|numeric|digits:11',
-            // 'address_line1' => 'required|string|max:255',
-            // 'address_line2' => 'required|string|max:255',
-            // 'trading_address' => 'required|string|max:255',
-            // 'city' => 'required|string|max:255',
-            // 'town' => 'required|string|max:255',
-            // 'postcode' => 'required|string',
-            // 'country' => 'required|string|max:255',
+            'client_type_id' => 'required',
+            'manager_id' => 'required',
+            'reference_id' => 'required',
+            'email' => 'required|email',
+            'phone' => 'required|numeric|digits:11',
+            'address_line1' => 'required|string|max:255',
+            'address_line2' => 'nullable|string|max:255',
+            'trading_address' => 'nullable|string|max:255',
+            'city' => 'required|string|max:255',
+            'town' => 'required|string|max:255',
+            'postcode' => 'required|string',
+            'country' => 'required|string|max:255',
             'photo' => 'nullable|mimes:jpeg,png,jpg,gif,svg,pdf|max:8048',
             'photo_id' => 'nullable|mimes:jpeg,png,jpg,gif,svg,pdf|max:8048'
         ]);
@@ -285,14 +287,14 @@ class ClientController extends Controller
     public function updateClientBusinessInfo(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'nature_of_business' => 'nullable|string',
-            'company_number' => 'nullable|string',
+            'nature_of_business' => 'required|string',
+            'company_number' => 'required|string',
             'year_end_date' => 'nullable|date',
             'due_date' => 'nullable|date',
             'confirmation_due_date' => 'nullable|date|same:due_date',
             'authorization_code' => 'nullable|string',
             'company_utr' => 'nullable|string',
-            'status' => 'nullable',
+            'status' => 'required',
         ]);
     
         if ($validator->fails()) {
@@ -332,17 +334,17 @@ class ClientController extends Controller
     public function updateClientDirectorInfo(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            // 'name' => 'required|string',
-            // 'phone' => 'required|numeric|digits:11',
-            // 'email' => 'required',
-            // 'address' => 'required',
-            // 'dob' => 'required',
-            // 'ni_number' => 'required', 
-            // 'utr_number' => 'required', 
-            // 'utr_authorization' => 'required', 
-            // 'nino' => 'required', 
+            'name' => 'required|string',
+            'phone' => 'required',
+            'email' => 'required',
+            'address' => 'nullable',
+            'dob' => 'nullable',
+            'ni_number' => 'nullable', 
+            'utr_number' => 'nullable', 
+            'utr_authorization' => 'nullable', 
+            'nino' => 'nullable', 
         ], [
-            // 'client_id.required' => 'The client reference id field is required.',
+            'client_id.required' => 'The client reference id field is required.',
         ]);
 
         if ($validator->fails()) {
@@ -431,12 +433,12 @@ class ClientController extends Controller
     public function updateClientContactInfo(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            // 'greeting' => 'required',
-            // 'first_name' => 'required',
-            // 'last_name' => 'required',
-            // 'job_title' => 'required',
-            // 'email' => 'required|email',
-            // 'phone' => 'required|numeric|digits:11',
+            'greeting' => 'required',
+            'first_name' => 'required',
+            'last_name' => 'required',
+            'job_title' => 'required',
+            'email' => 'required|email',
+            'phone' => 'required',
         ]);
 
         if ($validator->fails()) {
