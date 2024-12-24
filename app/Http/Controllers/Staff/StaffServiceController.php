@@ -150,22 +150,29 @@ class StaffServiceController extends Controller
         $clientSubServiceId = $request->input('clientSubServiceId');
         $newStatus = $request->input('newStatus');
         $clientSubService = ClientSubService::find($clientSubServiceId);
-        $clientServiceId = $clientSubService->client_service_id;
-        $serviceSequenceNo = $clientSubService->sequence_id;
-        $nextService = $serviceSequenceNo + 1;
         if ($clientSubService) {
+            $clientServiceId = $clientSubService->client_service_id;
+            $serviceSequenceNo = $clientSubService->sequence_id;
+            $nextService = $serviceSequenceNo + 1;
+    
             $clientSubService->sequence_status = $newStatus;
             $clientSubService->updated_by = Auth::id();
             $clientSubService->save();
 
-            $nextTask = ClientSubService::where('client_service_id', $clientServiceId)->where('sequence_id', $nextService)->first();
+            $maxSequenceNo = ClientSubService::where('client_service_id', $clientServiceId)->max('sequence_id');
+    
+            if ($nextService <= $maxSequenceNo) {
+                $nextTask = ClientSubService::where('client_service_id', $clientServiceId)
+                    ->where('sequence_id', $nextService)
+                    ->first();
 
-            if (isset($nextTask)) {
-                $nextTask->sequence_status = 0;
-                $nextTask->updated_by = Auth::id();
-                $nextTask->save();
+                if ($nextTask && $nextTask->sequence_status != 2) {
+                    $nextTask->sequence_status = 0;
+                    $nextTask->updated_by = Auth::id();
+                    $nextTask->save();
+                }
             }
-
+    
             return response()->json(['message' => 'Status updated successfully']);
         } else {
             return response()->json(['error' => 'Client sub-service not found'], 404);

@@ -472,7 +472,8 @@
             var frequency = rowData.service_frequency;
             var deadline = rowData.service_deadline;
 
-            $('#service_name').val(serviceName);
+            var decodedServiceName = $('<div>').html(serviceName).text();
+            $('#service_name').val(decodedServiceName);
             $('#manager_name').val(managerFirstName);
             $('#service_frequency').val(frequency);
             $('#service_deadline').val(deadline);

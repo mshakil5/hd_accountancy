@@ -121,14 +121,20 @@ class ServiceController extends Controller
             $clientSubService->updated_by = Auth::id();
             $clientSubService->save();
 
-            $nextTask = ClientSubService::where('client_service_id', $clientServiceId)->where('sequence_id', $nextService)->first();
-
-            if (isset($nextTask)) {
-                $nextTask->sequence_status = 0;
-                $nextTask->updated_by = Auth::id();
-                $nextTask->save();
+            $maxSequenceNo = ClientSubService::where('client_service_id', $clientServiceId)->max('sequence_id');
+    
+            if ($nextService <= $maxSequenceNo) {
+                $nextTask = ClientSubService::where('client_service_id', $clientServiceId)
+                    ->where('sequence_id', $nextService)
+                    ->first();
+    
+                if ($nextTask && $nextTask->sequence_status != 2) {
+                    $nextTask->sequence_status = 0;
+                    $nextTask->updated_by = Auth::id();
+                    $nextTask->save();
+                }
             }
-
+    
             return response()->json(['message' => 'Status updated successfully']);
         } else {
             return response()->json(['error' => 'Client sub-service not found'], 404);
