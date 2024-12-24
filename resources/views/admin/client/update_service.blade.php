@@ -65,19 +65,19 @@
                                     <div class="col-md-2 text-center">
                                         <h5 class="mb-3">Due Date</h5>
                                         <div class="form-check">
-                                            <input type="date" class="form-control dueDate" name="dueDate" id="dueDate" value="{{ isset($clientService) ? $clientService->due_date : '' }}">
+                                        <input type="text" class="form-control dueDate" name="dueDate" id="dueDate" value="{{ \Carbon\Carbon::parse($clientService->due_date)->format('d-m-Y') }}">
                                         </div>
                                     </div>
                                     <div class="col-md-2 text-center">
                                         <h5 class="mb-3">Target Deadline</h5>
                                         <div class="form-check">
-                                            <input type="date" class="form-control legalDeadline" name="legalDeadline" id="legalDeadline" value="{{ isset($clientService) ? $clientService->legal_deadline : '' }}">
+                                            <input type="text" class="form-control legalDeadline" name="legalDeadline" id="legalDeadline" value="{{ \Carbon\Carbon::parse($clientService->legal_deadline)->format('d-m-Y') }}">
                                         </div>
                                     </div>
                                     <div class="col-md-2 text-center">
                                         <h5 class="mb-3">Deadline</h5>
                                         <div class="form-check">
-                                            <input type="date" class="form-control serviceDeadline" name="service_deadline" id="serviceDeadline" value="{{ isset($clientService) ? $clientService->service_deadline : '' }}">
+                                            <input type="text" class="form-control serviceDeadline" name="service_deadline" id="serviceDeadline" value="{{ \Carbon\Carbon::parse($clientService->service_deadline)->format('d-m-Y') }}">
                                         </div>
                                     </div>
                                     <div class="col-md-1 text-center">
