@@ -428,12 +428,12 @@
                         render: function(data, type, row) {
                             const currentUserId = {{ Auth::id() }};
 
-                            if (row.manager_id === currentUserId) {
+                            if (row.manager_id == currentUserId) {
                                 return `
                                     <select class="form-control status-change" data-id="${row.id}">
-                                        <option value="1" ${data === 1 ? 'selected' : ''}>Not Started</option>
-                                        <option value="0" ${data === 0 ? 'selected' : ''}>Processing</option>
-                                        <option value="2" ${data === 2 ? 'selected' : ''}>Completed</option>
+                                        <option value="1" ${data == 1 ? 'selected' : ''}>Not Started</option>
+                                        <option value="0" ${data == 0 ? 'selected' : ''}>Processing</option>
+                                        <option value="2" ${data == 2 ? 'selected' : ''}>Completed</option>
                                     </select>
                                 `;
                             }
@@ -527,38 +527,39 @@
             var subServiceTable = $('#serviceDetailsTable');
             subServiceTable.empty();
             var staffs = @json($staffs);
+            console.log(staffs);
             var authUserId = {{ auth()->user()->id }};
 
             $.each(subServices, function(index, subService) {
                 var statusText = '';
                 var statusDropdown = '';
                 var staff = staffs.find(function(staff) {
-                    return staff.id === subService.staff_id;
+                    return staff.id == subService.staff_id;
                 });
 
                 var staffDropdown = '';
 
-                if (subService.sequence_status === 0 || subService.sequence_status === 1) {
-                    if (subService.client_service && subService.client_service.manager_id === authUserId) {
+                if (subService.sequence_status == 0 || subService.sequence_status == 1) {
+                    if (subService.client_service && subService.client_service.manager_id == authUserId) {
                         staffDropdown = '<select class="form-select change-staff" data-sub-service-id="' + subService.id + '">';
                         staffs.forEach(function(staffMember) {
-                            staffDropdown += '<option value="' + staffMember.id + '" ' + (staffMember.id === subService.staff_id ? 'selected' : '') + '>' + staffMember.first_name + '</option>';
+                            staffDropdown += '<option value="' + staffMember.id + '" ' + (staffMember.id == subService.staff_id ? 'selected' : '') + '>' + staffMember.first_name + '</option>';
                         });
                         staffDropdown += '</select>';
                     }
                 } else {
-                    staffDropdown = staff ? (staff.first_name + ' ' + (staff.last_name || '')).trim() : 'N/A';
+                    staffDropdown = subService.staff ? (subService.staff.first_name + ' ' + (subService.staff.last_name || '')).trim() : 'N/A';
                 }
 
                 var staffName = subService.staff ? (subService.staff.first_name + ' ' + (subService.staff.last_name || '')).trim() : 'N/A';
-                var isAuthUserStaff = authUserId === subService.staff_id;
+                var isAuthUserStaff = authUserId == subService.staff_id;
                 var hasWorkTimes = subService.work_times && subService.work_times.length > 0;
 
                 var hasActiveWorkTime = subService.work_times && subService.work_times.some(function(workTime) {
-                    return (workTime.end_time === null || workTime.end_time === "") && workTime.is_break === 0;
+                    return (workTime.end_time == null || workTime.end_time == "") && workTime.is_break == 0;
                 });
 
-                if (subService.sequence_status === 0) {
+                if (subService.sequence_status == 0) {
                     if (isAuthUserStaff && !hasActiveWorkTime) {
                         statusDropdown = `
                             <select class="form-select change-service-status" data-sub-service-id="${subService.id}">
@@ -568,9 +569,9 @@
                     } else {
                         statusText = 'Processing';
                     }
-                } else if (subService.sequence_status === 1) {
+                } else if (subService.sequence_status == 1) {
                     statusText = 'Work isn\'t started yet';
-                } else if (subService.sequence_status === 2) {
+                } else if (subService.sequence_status == 2) {
                     statusText = 'Work is completed';
                 }
 
@@ -590,7 +591,7 @@
                     duration = `<div>${hours}h ${minutes}m ${seconds}s</div>`;
                 }
 
-                if (isAuthUserStaff && subService.sequence_status === 0) {
+                if (isAuthUserStaff && subService.sequence_status == 0) {
                     if (hasActiveWorkTime) {
                         stopButton = `<button type="button" class="btn btn-danger stop-timer" data-sub-service-id="${subService.id}">Stop</button>`;
                     } else {
@@ -968,7 +969,9 @@
             var frequency = rowData.service_frequency;
             var deadline = rowData.service_deadline;
 
-            $('#service_name1').val(serviceName);
+            // $('#service_name1').val(serviceName);
+            var decodedServiceName = $('<div>').html(serviceName).text();
+            $('#service_name1').val(decodedServiceName);
             $('#manager_name1').val(managerName);
             $('#service_frequency1').val(frequency);
             $('#service_deadline1').val(deadline);
@@ -994,14 +997,14 @@
 
             $.each(subServices, function(index, subService) {
                 var staff = staffs.find(function(staff) {
-                    return staff.id === subService.staff_id;
+                    return staff.id == subService.staff_id;
                 });
 
                 var authUserId = {{ auth()->user()->id }};
-                var isAuthUserStaff = authUserId === subService.staff_id;
+                var isAuthUserStaff = authUserId == subService.staff_id;
                 var staffName = subService.staff ? (subService.staff.first_name + ' ' + (subService.staff.last_name || '')).trim() : 'N/A';
 
-                var totalDurationInSeconds = subService.work_times.filter(workTime => workTime.is_break === 0)
+                var totalDurationInSeconds = subService.work_times.filter(workTime => workTime.is_break == 0)
                     .reduce(function(acc, workTime) {
                         return acc + parseInt(workTime.duration);
                     }, 0);

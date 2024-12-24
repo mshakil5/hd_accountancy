@@ -243,6 +243,18 @@
     </div>
 
     <div class="menuBar p-1 ps-4">
-      <i class="bi bi-list toggle-sidebar-btn curp text-black fs-4" onclick="toggleSidebar();"></i>
+      <div class="row mx-0 align-items-center justify-content-between">
+        <div class="col-auto">
+          <i class="bi bi-list toggle-sidebar-btn curp text-black fs-4" onclick="toggleSidebar();"></i>
+        </div>
+        <div class="col-auto d-flex align-items-center">
+          <a>
+            <i class="bi bi-person fs-4 txt-theme mx-2"></i> 
+            <span class="fw-bold txt-theme fs-6">
+              {{ auth()->user()->first_name }} {{ auth()->user()->last_name }}
+            </span>
+          </a>
+        </div>
+      </div>
     </div>
 </header>

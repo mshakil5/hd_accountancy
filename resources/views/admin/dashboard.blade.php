@@ -913,7 +913,7 @@
                         return acc + parseInt(workTime.duration);
                     }, 0);
 
-                if (subService.sequence_status === 2) {
+                if (subService.sequence_status == 2) {
                     if (firstWorkTime) {
                         var durationInSeconds = firstWorkTime;
                         var hours = Math.floor(durationInSeconds / 3600);
@@ -924,10 +924,10 @@
                 }
 
                 var statusDropdown = `
-                    <select class="form-select change-service-status" data-sub-service-id="${subService.id}" ${subService.sequence_status === 0 || subService.sequence_status === 1 ? 'disabled' : ''}>
-                        <option value="0" ${subService.sequence_status === 0 ? 'selected' : ''}>Processing</option>
-                        <option value="1" ${subService.sequence_status === 1 ? 'selected' : ''}>Not Started</option>
-                        <option value="2" ${subService.sequence_status === 2 ? 'selected' : ''}>Work is completed</option>
+                    <select class="form-select change-service-status" data-sub-service-id="${subService.id}" ${subService.sequence_status == 0 || subService.sequence_status == 1 ? 'disabled' : ''}>
+                        <option value="0" ${subService.sequence_status == 0 ? 'selected' : ''}>Processing</option>
+                        <option value="1" ${subService.sequence_status == 1 ? 'selected' : ''}>Not Started</option>
+                        <option value="2" ${subService.sequence_status == 2 ? 'selected' : ''}>Work is completed</option>
                     </select>`;
 
                 var newRow = `
@@ -1084,7 +1084,9 @@
                 var serviceName = rowData.servicename;
                 var frequency = rowData.service_frequency;
                 var deadline = rowData.service_deadline;
-                $('#service_name2').val(serviceName);
+                // $('#service_name2').val(serviceName);
+                var decodedServiceName = $('<div>').html(serviceName).text();
+                $('#service_name2').val(decodedServiceName);
                 $('#manager_name2').val(managerFirstName);
                 $('#service_frequency2').val(frequency);
                 $('#service_deadline2').val(deadline.original);
@@ -1278,9 +1280,9 @@
                       <td>${staffName}</td>
                       <td>${subService.note ? subService.note : ''}</td>
                       <td>
-                          ${  subService.sequence_status === 2 ? 'Work is completed' 
-                              : subService.sequence_status === 1 ? 'Not Started' 
-                              : subService.sequence_status === 0 ? 'Processing'
+                          ${  subService.sequence_status == 2 ? 'Work is completed' 
+                              : subService.sequence_status == 1 ? 'Not Started' 
+                              : subService.sequence_status == 0 ? 'Processing'
                               : 'N/A'
                           }
                       </td>

@@ -15,7 +15,7 @@
       </div>
     </div>
 
-    <div class="menuBar p-1 ps-4 d-none">
+    <div class="menuBar p-1 ps-4">
 
       <div class="row mx-0">
         <div class="col-lg-6 d-flex justify-content-between align-items-center">

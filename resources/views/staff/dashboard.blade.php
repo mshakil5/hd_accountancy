@@ -500,18 +500,18 @@
                 var statusText = '';
                 var statusDropdown = '';
                 var staff = staffs.find(function(staff) {
-                    return staff.id === subService.staff_id;
+                    return staff.id == subService.staff_id;
                 });
 
                 var staffName = subService.staff ? (subService.staff.first_name + ' ' + (subService.staff.last_name || '')).trim() : 'N/A';
-                var isAuthUserStaff = authUserId === subService.staff_id;
+                var isAuthUserStaff = authUserId == subService.staff_id;
                 var hasWorkTimes = subService.work_times && subService.work_times.length > 0;
 
                 var hasActiveWorkTime = subService.work_times && subService.work_times.some(function(workTime) {
-                    return (workTime.end_time === null || workTime.end_time === "") && workTime.is_break === 0;
+                    return (workTime.end_time == null || workTime.end_time == "") && workTime.is_break == 0;
                 });
 
-                if (subService.sequence_status === 0) {
+                if (subService.sequence_status == 0) {
                     if (isAuthUserStaff && !hasActiveWorkTime) {
                         statusDropdown = `
                             <select class="form-select change-service-status" data-sub-service-id="${subService.id}">
@@ -521,9 +521,9 @@
                     } else {
                         statusText = 'Processing';
                     }
-                } else if (subService.sequence_status === 1) {
+                } else if (subService.sequence_status == 1) {
                     statusText = 'Work isn\'t started yet';
-                } else if (subService.sequence_status === 2) {
+                } else if (subService.sequence_status == 2) {
                     statusText = 'Work is completed';
                 }
 
@@ -531,7 +531,7 @@
                 var stopButton = '';
                 var duration = '';
                 
-                var totalDurationInSeconds = subService.work_times.filter(workTime => workTime.is_break === 0)
+                var totalDurationInSeconds = subService.work_times.filter(workTime => workTime.is_break == 0)
                     .reduce(function(acc, workTime) {
                         return acc + parseInt(workTime.duration);
                     }, 0);
@@ -543,7 +543,7 @@
                     duration = `<div>${hours}h ${minutes}m ${seconds}s</div>`;
                 }
 
-                if (isAuthUserStaff && subService.sequence_status === 0) {
+                if (isAuthUserStaff && subService.sequence_status == 0) {
                     if (hasActiveWorkTime) {
                         stopButton = `<button type="button" class="btn btn-danger stop-timer" data-sub-service-id="${subService.id}">Stop</button>`;
                     } else {
@@ -868,7 +868,6 @@
                 type: 'GET',
                 dataSrc: 'data',
                 error: function(xhr, error, thrown) {
-                    console
                     console.error('DataTables error:', error, thrown);
                 }
             },
@@ -913,7 +912,9 @@
             var frequency = rowData.service_frequency;
             var deadline = rowData.service_deadline;
 
-            $('#service_name1').val(serviceName);
+            // $('#service_name1').val(serviceName);
+            var decodedServiceName = $('<div>').html(serviceName).text();
+            $('#service_name1').val(decodedServiceName);
             $('#manager_name1').val(managerFirstName);
             $('#service_frequency1').val(frequency);
             $('#service_deadline1').val(deadline);
@@ -939,19 +940,21 @@
 
             $.each(subServices, function(index, subService) {
                 var staff = staffs.find(function(staff) {
-                    return staff.id === subService.staff_id;
+                    return staff.id == subService.staff_id;
                 });
 
                 var statusDropdown = '';
                 var authUserId = {{ auth()->user()->id }};
-                var isAuthUserStaff = authUserId === subService.staff_id;
+                var isAuthUserStaff = authUserId == subService.staff_id;
 
                 var staffName = subService.staff ? (subService.staff.first_name + ' ' + (subService.staff.last_name || '')).trim() : 'N/A';
 
-                var totalDurationInSeconds = subService.work_times.filter(workTime => workTime.is_break === 0)
+                var totalDurationInSeconds = subService.work_times.filter(workTime => workTime.is_break == 0)
                     .reduce(function(acc, workTime) {
                         return acc + parseInt(workTime.duration);
                     }, 0);
+
+                var duration = '';
 
                 if (totalDurationInSeconds > 0) {
                     var hours = Math.floor(totalDurationInSeconds / 3600);
@@ -961,9 +964,9 @@
                 }
 
                 var statusDropdown = `
-                    <select class="form-select change-service" data-sub-service-id="${subService.id}" ${isAuthUserStaff && subService.sequence_status === 2 ? '' : 'disabled'}>
-                        <option value="0" ${subService.sequence_status === 0 ? 'selected' : ''}>Processing</option>
-                        <option value="2" ${subService.sequence_status === 2 ? 'selected' : ''}>Work is completed</option>
+                    <select class="form-select change-service" data-sub-service-id="${subService.id}" ${isAuthUserStaff && subService.sequence_status == 2 ? '' : 'disabled'}>
+                        <option value="0" ${subService.sequence_status == 0 ? 'selected' : ''}>Processing</option>
+                        <option value="2" ${subService.sequence_status == 2 ? 'selected' : ''}>Work is completed</option>
                     </select>`;
 
                 var newRow = `
