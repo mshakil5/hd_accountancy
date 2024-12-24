@@ -505,7 +505,8 @@
             var frequency = rowData.service_frequency;
             var deadline = rowData.service_deadline;
 
-            $('#service_name').val(serviceName);
+            var decodedServiceName = $('<div>').html(serviceName).text();
+            $('#service_name').val(decodedServiceName);
             $('#manager_name').val(managerFirstName);
             $('#service_frequency').val(frequency);
             $('#service_deadline').val(deadline);
@@ -579,7 +580,7 @@
                 var stopButton = '';
                 var duration = '';
 
-                var totalDurationInSeconds = subService.work_times.filter(workTime => workTime.is_break === 0)
+                var totalDurationInSeconds = subService.work_times.filter(workTime => workTime.is_break == 0)
                     .reduce(function(acc, workTime) {
                         return acc + parseInt(workTime.duration);
                     }, 0);
@@ -1017,9 +1018,9 @@
                 }
 
                 var statusDropdown = `
-                    <select class="form-select change-service" data-sub-service-id="${subService.id}" ${isAuthUserStaff && subService.sequence_status === 2 ? '' : 'disabled'}>
-                        <option value="0" ${subService.sequence_status === 0 ? 'selected' : ''}>Processing</option>
-                        <option value="2" ${subService.sequence_status === 2 ? 'selected' : ''}>Work is completed</option>
+                    <select class="form-select change-service" data-sub-service-id="${subService.id}" ${isAuthUserStaff && subService.sequence_status == 2 ? '' : 'disabled'}>
+                        <option value="0" ${subService.sequence_status == 0 ? 'selected' : ''}>Processing</option>
+                        <option value="2" ${subService.sequence_status == 2 ? 'selected' : ''}>Work is completed</option>
                     </select>`;
 
                 var newRow = `
