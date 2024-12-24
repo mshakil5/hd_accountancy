@@ -886,7 +886,7 @@
                 dataType: "json",
                 success: function(data) {
                     populateCompletedForm(data);
-                    console.log(data);
+                    // console.log(data);
                 },
                 error: function(xhr, error, thrown) {
                     console.error('Error fetching sub-services:', error, thrown);
@@ -1097,7 +1097,7 @@
                     dataType: "json",
                     success: function(data) {
                         populateCompletedForm(data);
-                        console.log(data);
+                        // console.log(data);
                     },
                     error: function(xhr, error, thrown) {
                         console.error('Error fetching sub-services:', error, thrown);

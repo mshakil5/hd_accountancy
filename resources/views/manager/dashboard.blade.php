@@ -528,7 +528,7 @@
             var subServiceTable = $('#serviceDetailsTable');
             subServiceTable.empty();
             var staffs = @json($staffs);
-            console.log(staffs);
+            // console.log(staffs);
             var authUserId = {{ auth()->user()->id }};
 
             $.each(subServices, function(index, subService) {
