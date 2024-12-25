@@ -203,7 +203,8 @@
             var rowData = $('#serviceStaffTable').DataTable().row($(this).closest('tr')).data();
             var serviceName = rowData.servicename;
             var frequency = rowData.service_frequency;
-            var deadline = rowData.service_deadline;
+            let deadline = rowData.service_deadline;
+            deadline = deadline ? moment(deadline).format('YYYY-MM-DD') : '';
 
             $('#service_name').val(serviceName);
             $('#manager_name').val(managerFirstName);

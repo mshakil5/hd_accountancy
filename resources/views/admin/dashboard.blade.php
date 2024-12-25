@@ -786,8 +786,7 @@
                 url: '/admin/get-one-time-assigned-service',
                 type: 'GET',
             },
-            columns: [
-                {
+            columns: [{
                     data: 'servicename',
                     name: 'servicename'
                 },
@@ -823,8 +822,7 @@
                 url: '/admin/get-one-time-completed-service',
                 type: 'GET',
             },
-            columns: [
-                {
+            columns: [{
                     data: 'servicename',
                     name: 'servicename'
                 },
@@ -894,7 +892,7 @@
                 var staffName = subService.staff ? (subService.staff.first_name + ' ' + (subService.staff.last_name || '')).trim() : 'N/A';
 
                 var duration = '';
-                
+
                 var totalDurationInSeconds = subService.work_times.filter(workTime => workTime.is_break == 0)
                     .reduce(function(acc, workTime) {
                         return acc + parseInt(workTime.duration);
@@ -1156,7 +1154,8 @@
             var rowData = $('#completedServices').DataTable().row($(this).closest('tr')).data();
             var serviceName = rowData.servicename;
             var frequency = rowData.service_frequency;
-            var deadline = rowData.service_deadline;
+            let deadline = rowData.service_deadline;
+            deadline = deadline ? moment(deadline).format('YYYY-MM-DD') : '';
 
             $('#service_name1').val(serviceName);
             $('#manager_name1').val(managerFirstName);
@@ -1363,7 +1362,8 @@
             if (rowData) {
                 var serviceName = rowData.servicename;
                 var frequency = rowData.service_frequency;
-                var deadline = rowData.service_deadline;
+                let deadline = rowData.service_deadline;
+                deadline = deadline ? moment(deadline).format('YYYY-MM-DD') : '';
                 // $('#service_name2').val(serviceName);
                 var decodedServiceName = $('<div>').html(serviceName).text();
                 $('#service_name2').val(decodedServiceName);
@@ -1469,8 +1469,7 @@
                     $('#service-message').val('');
                     populateMessage(clientSubServiceId);
                 },
-                error: function(xhr, status, error) {
-                }
+                error: function(xhr, status, error) {}
             });
         });
 
@@ -1516,7 +1515,8 @@
             if (rowData) {
                 var serviceName = rowData.servicename;
                 var frequency = rowData.service_frequency;
-                var deadline = rowData.service_deadline;
+                let deadline = rowData.service_deadline;
+                deadline = deadline ? moment(deadline).format('YYYY-MM-DD') : '';
 
                 $('#service_name3').val(serviceName);
                 $('#manager_name3').val(managerFirstName);

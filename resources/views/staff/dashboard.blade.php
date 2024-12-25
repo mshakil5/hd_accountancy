@@ -461,7 +461,8 @@
             var rowData = $('#serviceStaffTable').DataTable().row($(this).closest('tr')).data();
             var serviceName = rowData.servicename;
             var frequency = rowData.service_frequency;
-            var deadline = rowData.service_deadline;
+            let deadline = rowData.service_deadline;
+            deadline = deadline ? moment(deadline).format('YYYY-MM-DD') : '';
 
             var decodedServiceName = $('<div>').html(serviceName).text();
             $('#service_name').val(decodedServiceName);
@@ -893,7 +894,8 @@
             var rowData = $('#completedTasksTable').DataTable().row($(this).closest('tr')).data();
             var serviceName = rowData.servicename;
             var frequency = rowData.service_frequency;
-            var deadline = rowData.service_deadline;
+            let deadline = rowData.service_deadline;
+            deadline = deadline ? moment(deadline).format('YYYY-MM-DD') : '';
 
             // $('#service_name1').val(serviceName);
             var decodedServiceName = $('<div>').html(serviceName).text();
