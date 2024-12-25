@@ -194,6 +194,12 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
      //  Fetch assigned services
      Route::get('/get-assigned-service', [ServiceController::class, 'getAssignedService']);
 
+    //  Fetch one time  assigned services
+    Route::get('/get-one-time-assigned-service', [ServiceController::class, 'getOneTimeAssignedService']);
+
+    //  Fetch one time completed services
+    Route::get('/get-one-time-completed-service', [ServiceController::class, 'getOneTimeCompletedService']);
+
      //  Fetch todays deadline services
      Route::get('/get-todays-deadline-service', [ServiceController::class, 'getTodaysDeadlineService']);
      

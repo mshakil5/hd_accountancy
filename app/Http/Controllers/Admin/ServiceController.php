@@ -295,7 +295,7 @@ class ServiceController extends Controller
     public function getServicesClientStaff(Request $request)
     {
         if ($request->ajax()) {
-            $data = ServiceStaff::with(['client', 'staff'])->where('status', 1)->orWhere('status', 3)->orderBy('id', 'desc')->get();
+            $data = ServiceStaff::with(['client', 'staff'])->where('type', 1)->where('status', 1)->orWhere('status', 3)->orderBy('id', 'desc')->get();
 
             $data->transform(function ($item, $key) {
                 $assigned_services = $item->assigned_services;
@@ -336,6 +336,7 @@ class ServiceController extends Controller
         if ($request->ajax()) {
             $data = ClientService::with('client', 'manager', 'service', 'clientSubServices')
                 ->where('status', 1)
+                ->where('type', 1)
                 // ->whereDate('service_deadline', '<=', now()->addDays(30))
                 // ->whereHas('clientSubServices', function ($query) {
                 //     $query->whereNull('staff_id');
@@ -683,6 +684,7 @@ class ServiceController extends Controller
 
             $data = ClientService::with('clientSubServices')
                 ->whereIn('status', [0, 1])
+                ->where('type', 1)
                 ->where('due_date', '<=', now()->endOfDay())
                 ->orderBy('id', 'desc')
                 ->get();
@@ -731,6 +733,99 @@ class ServiceController extends Controller
         }
     }
 
+    public function getOneTimeAssignedService(Request $request)
+    {
+        if ($request->ajax()) {
+            // $data = ClientService::with('clientSubServices')
+            //     ->where('due_date', '>=', now()->startOfDay())
+            //     ->where('due_date', '<=', now()->addDays(30)->endOfDay())
+            //     // ->whereHas('clientSubServices', function ($query) {
+            //     //     $query->whereNotNull('staff_id');
+            //     // })
+            //     ->orderBy('id', 'desc')
+            //     ->get();
+
+            $data = ClientService::with('clientSubServices')
+                ->whereIn('status', [0, 1])
+                ->where('type', 2)
+                ->where('legal_deadline', '<=', now()->endOfDay())
+                ->orderBy('id', 'desc')
+                ->get();
+
+            return DataTables::of($data)
+
+                ->addColumn('servicename', function (ClientService $clientservice) {
+                    return $clientservice->service ? $clientservice->service->name : '';
+                })
+                ->addColumn('legal_deadline', function (ClientService $clientservice) {
+                    $legalDeadline = $clientservice->legal_deadline;
+                    if ($legalDeadline) {
+                        return [
+                            'formatted' => \Carbon\Carbon::parse($legalDeadline)->format('d.m.y'),
+                            'original' => $legalDeadline
+                        ];
+                    }
+
+                    return [
+                        'formatted' => 'N/A',
+                        'original' => null
+                    ];
+                })
+
+                ->addColumn('action', function (ClientService $clientservice) {
+                    $managerFirstName = $clientservice->manager ? $clientservice->manager->first_name . ' ' . $clientservice->manager->last_name : 'N/A';
+                    return '<button class="btn btn-secondary assigned-task-detail" data-id="' . $clientservice->id . '" data-manager-firstname="' . $managerFirstName . '">Details</button>';
+                })
+                ->make(true);
+        }
+    }
+
+    public function getOneTimeCompletedService(Request $request)
+    {
+        if ($request->ajax()) {
+            // $data = ClientService::with('clientSubServices')
+            //     ->where('due_date', '>=', now()->startOfDay())
+            //     ->where('due_date', '<=', now()->addDays(30)->endOfDay())
+            //     // ->whereHas('clientSubServices', function ($query) {
+            //     //     $query->whereNotNull('staff_id');
+            //     // })
+            //     ->orderBy('id', 'desc')
+            //     ->get();
+
+            $data = ClientService::with('clientSubServices')
+                ->where('status', 2)
+                ->where('type', 2)
+                ->orderBy('id', 'desc')
+                ->get();
+
+            return DataTables::of($data)
+
+                ->addColumn('servicename', function (ClientService $clientservice) {
+                    return $clientservice->service ? $clientservice->service->name : '';
+                })
+                ->addColumn('legal_deadline', function (ClientService $clientservice) {
+                    $legalDeadline = $clientservice->legal_deadline;
+                    if ($legalDeadline) {
+                        return [
+                            'formatted' => \Carbon\Carbon::parse($legalDeadline)->format('d.m.y'),
+                            'original' => $legalDeadline
+                        ];
+                    }
+
+                    return [
+                        'formatted' => 'N/A',
+                        'original' => null
+                    ];
+                })
+
+                ->addColumn('action', function (ClientService $clientservice) {
+                    $managerFirstName = $clientservice->manager ? $clientservice->manager->first_name . ' ' . $clientservice->manager->last_name : 'N/A';
+                    return '<button class="btn btn-secondary assigned-task-detail" data-id="' . $clientservice->id . '" data-manager-firstname="' . $managerFirstName . '">Details</button>';
+                })
+                ->make(true);
+        }
+    }
+
     public function getTodaysDeadlineService(Request $request)
     {
         if ($request->ajax()) {
@@ -739,6 +834,7 @@ class ServiceController extends Controller
                 ->whereHas('clientSubServices', function ($query) {
                     $query->whereNotNull('staff_id');
                 })
+                ->where('type', 1)
                 ->orderBy('id', 'desc')
                 ->get();
 

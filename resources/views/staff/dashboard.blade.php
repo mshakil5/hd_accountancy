@@ -441,24 +441,15 @@
                 { data: 'servicename', name: 'servicename' },
                 { 
                     data: 'due_date', 
-                    name: 'due_date',
-                    render: function(data, type, row) {
-                        return moment(data).format('DD.MM.YY');
-                    }
+                    name: 'due_date'
                 },
                 { 
                     data: 'legal_deadline', 
-                    name: 'legal_deadline',
-                    render: function(data, type, row) {
-                        return moment(data).format('DD.MM.YY');
-                    }
+                    name: 'legal_deadline'
                 },
                 { 
                     data: 'service_deadline', 
-                    name: 'service_deadline',
-                    render: function(data, type, row) {
-                        return moment(data).format('DD.MM.YY');
-                    }
+                    name: 'service_deadline'
                 },
                 { data: 'action', name: 'action', orderable: false, searchable: false }
             ]
@@ -877,24 +868,15 @@
                 { data: 'servicename', name: 'servicename' },
                 { 
                     data: 'due_date', 
-                    name: 'due_date',
-                    render: function(data, type, row) {
-                        return moment(data).format('DD.MM.YY');
-                    }
+                    name: 'due_date'
                 },
                 { 
                     data: 'legal_deadline', 
-                    name: 'legal_deadline',
-                    render: function(data, type, row) {
-                        return moment(data).format('DD.MM.YY');
-                    }
+                    name: 'legal_deadline'
                 },
                 { 
                     data: 'service_deadline', 
-                    name: 'service_deadline',
-                    render: function(data, type, row) {
-                        return moment(data).format('DD.MM.YY');
-                    }
+                    name: 'service_deadline'
                 },
                 { 
                     data: 'action', 

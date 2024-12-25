@@ -117,7 +117,7 @@
                                     <h5 class="mb-3">Choose Manager</h5>
                                     <div class="form-check">
                                         <select id="managerDropdown" class="form-control mt-2">
-                                            <option value="" selected disabled>Select Manager</option>
+                                            <option value="" selected>Select Manager</option>
                                             @foreach($managers as $manager)
                                             <option value="{{ $manager->id }}">
                                                 {{ $manager->first_name }}
@@ -130,7 +130,7 @@
                                     <h5 class="mb-3">Choose Frequency</h5>
                                     <div class="form-check">
                                         <select id="service_frequency" class="form-control mt-2" name="service_frequency">
-                                            <option value="" selected disabled>Select Frequency</option>
+                                            <option value="" selected>Select Frequency</option>
                                             <option>Weekly</option>
                                             <option>2 Weekly</option>
                                             <option>4 Weekly</option>
@@ -618,6 +618,106 @@
             </div>
             <!-- Completed Work List -->
 
+            <!-- One time work details start -->
+            <div class="col-lg-12">
+                <div class="report-box border-theme sales-card p-4 mb-3 rounded-4 border-3" id="oneTimeWorkDetails" style="display: none;">
+                    <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                        One Time Work Details
+                    </div>
+
+                    <div class="container-fluid">
+                        <div class="row mt-3">
+                            <div class="col-md-4 text-center">
+                                <h5 class="mb-3">Service</h5>
+                                <input type="text" id="oneTimeService" class="form-control mt-2 text-center" readonly>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <h5 class="mb-3">Manager</h5>
+                                <input type="text" id="oneTimeManager" class="form-control mt-2 text-center" value="" readonly>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <h5 class="mb-3">Deadline</h5>
+                                <input type="date" id="OneTimeDeadline" class="form-control mt-2 text-center" readonly>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-md-12">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Sub Service Name</th>
+                                            <th>Deadline</th>
+                                            <th>Staff</th>
+                                            <th>Note</th>
+                                            <th>Status</th>
+                                            <th>Timer</th>
+                                            <th>Comment</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="oneTimeWorkDetailsTable"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3 mb-3">
+                            <div class="col-lg-4 mx-auto text-center">
+                                <button id="oneTimeWorkCancel" class="btn btn-sm btn-outline-dark">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- One time work details end  -->
+
+            <div class="row">
+                <!-- Assigned One Time Work List -->
+                <div class="col-lg-6">
+                    <div class="col-lg-12 px-0 border shadow-sm mb-3">
+
+                        <p class="p-2 bg-theme-light txt-theme px-3 mb-0 text-capitalize d-flex align-items-center">
+                            <i class="bx bxs-user-plus fs-4 me-2"></i>Assigned One Time Work List
+                        </p>
+                        <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
+                            <table id="assignedOneTimeServices" class="table cell-border table-striped" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Service Name</th>
+                                        <th scope="col">Target Deadline</th>
+                                        <th scope="col">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Completed One Time Work List -->
+                <div class="col-lg-6">
+                    <div class="col-lg-12 px-0 border shadow-sm mb-3">
+
+                        <p class="p-2 bg-theme-light txt-theme px-3 mb-0 text-capitalize d-flex align-items-center">
+                            <i class="bx bxs-user-plus fs-4 me-2"></i>Completed One Time Work List
+                        </p>
+                        <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
+                            <table id="completedOneTimeServices" class="table cell-border table-striped" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Service Name</th>
+                                        <th scope="col">Target Deadline</th>
+                                        <th scope="col">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         <!-- Service message modal start -->
@@ -675,6 +775,198 @@
         }
     });
 </script>
+
+
+<script>
+    $(document).ready(function() {
+        $('#assignedOneTimeServices').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: '/admin/get-one-time-assigned-service',
+                type: 'GET',
+            },
+            columns: [
+                {
+                    data: 'servicename',
+                    name: 'servicename'
+                },
+                {
+                    data: 'legal_deadline',
+                    name: 'legal_deadline',
+                    render: function(data, type, row) {
+                        if (!data.original) {
+                            return 'N/A';
+                        }
+                        var formattedDate = data.formatted;
+                        var today = moment().startOf('day');
+                        var deadline = moment(data.original).startOf('day');
+                        if (deadline.isBefore(today)) {
+                            return '<span class="bg-warning">' + formattedDate + '</span>';
+                        }
+                        return formattedDate;
+                    }
+                },
+                {
+                    data: 'action',
+                    name: 'action',
+                    orderable: false,
+                    searchable: false
+                }
+            ]
+        });
+
+        $('#completedOneTimeServices').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: '/admin/get-one-time-completed-service',
+                type: 'GET',
+            },
+            columns: [
+                {
+                    data: 'servicename',
+                    name: 'servicename'
+                },
+                {
+                    data: 'legal_deadline',
+                    name: 'legal_deadline',
+                    render: function(data, type, row) {
+                        if (!data.original) {
+                            return 'N/A';
+                        }
+                        var formattedDate = data.formatted;
+                        var today = moment().startOf('day');
+                        var deadline = moment(data.original).startOf('day');
+                        if (deadline.isBefore(today)) {
+                            return '<span class="bg-warning">' + formattedDate + '</span>';
+                        }
+                        return formattedDate;
+                    }
+                },
+                {
+                    data: 'action',
+                    name: 'action',
+                    orderable: false,
+                    searchable: false
+                }
+            ]
+        });
+
+        $(document).on('click', '.assigned-task-detail', function() {
+            var clientserviceId = $(this).data('id');
+            var managerFirstName = $(this).data('manager-firstname');
+            var legal_deadline = $(this).data('manager-firstname');
+            var rowData = $('#assignedOneTimeServices').DataTable().row($(this).closest('tr')).data();
+            if (rowData) {
+                var serviceName = rowData.servicename;
+                var decodedServiceName = $('<div>').html(serviceName).text();
+                $('#oneTimeService').val(decodedServiceName);
+                $('#oneTimeManager').val(managerFirstName);
+                $('#OneTimeDeadline').val(rowData.legal_deadline.original);
+
+                $.ajax({
+                    url: '/admin/getClientSubService/' + clientserviceId,
+                    type: "GET",
+                    dataType: "json",
+                    success: function(data) {
+                        populateOneTimeTaskForm(data);
+                    },
+                    error: function(xhr, error, thrown) {
+                        console.error('Error fetching sub-services:', error, thrown);
+                    }
+                });
+
+                $('#oneTimeWorkDetails').show();
+            } else {
+                console.error('Row data is undefined');
+            }
+        });
+
+        function populateOneTimeTaskForm(subServices) {
+            var oneTimeWork = $('#oneTimeWorkDetailsTable');
+            oneTimeWork.empty();
+
+            var staffs = @json($staffs);
+
+            $.each(subServices, function(index, subService) {
+
+                var staffName = subService.staff ? (subService.staff.first_name + ' ' + (subService.staff.last_name || '')).trim() : 'N/A';
+
+                var duration = '';
+                
+                var totalDurationInSeconds = subService.work_times.filter(workTime => workTime.is_break == 0)
+                    .reduce(function(acc, workTime) {
+                        return acc + parseInt(workTime.duration);
+                    }, 0);
+
+                if (totalDurationInSeconds > 0) {
+                    var hours = Math.floor(totalDurationInSeconds / 3600);
+                    var minutes = Math.floor((totalDurationInSeconds % 3600) / 60);
+                    var seconds = totalDurationInSeconds % 60;
+                    duration = `<div>${hours}h ${minutes}m ${seconds}s</div>`;
+                }
+
+                var newRow = `
+                  <tr>
+                      <td>${subService.sub_service.name}</td>
+                      <td>${moment(subService.deadline).format('DD.MM.YYYY')}</td>
+                      <td>${staffName}</td>
+                      <td>${subService.note ? subService.note : ''}</td>
+                      <td>
+                          ${  subService.sequence_status == 2 ? 'Work is completed' 
+                              : subService.sequence_status == 1 ? 'Not Started' 
+                              : subService.sequence_status == 0 ? 'Processing'
+                              : 'N/A'
+                          }
+                      </td>
+                      <td><span class="badge bg-success">${duration}</span></td>
+                      <td>
+                            <button type="button" class="btn btn-secondary open-modal" data-toggle="modal" data-target="#messageModal" data-client-sub-service-id="${subService.id}">
+                                <i class="fas fa-plus-circle"></i>
+                            </button>
+                        </td>
+                  </tr>
+              `;
+                oneTimeWork.append(newRow);
+            });
+        }
+
+        $(document).on('click', '.open-modal', function() {
+            var clientSubServiceId = $(this).data('client-sub-service-id');
+            $('#hiddenClientSubServiceId').val(clientSubServiceId);
+            populateMessage(clientSubServiceId);
+            $('#messageModal').modal('show');
+        });
+
+        function populateMessage(clientSubServiceId) {
+            $.ajax({
+                url: '/admin/getServiceMessage/' + clientSubServiceId,
+                type: "GET",
+                dataType: "json",
+                success: function(data) {
+                    $('#previousMessages').empty();
+                    data.forEach(function(message) {
+                        var messageDiv = $('<div>').addClass('message');
+                        var userName = message.userName;
+                        var messageContent = message.messageContent ? message.messageContent : '';
+
+                        messageDiv.html('<span style="font-weight: bold;">' + userName + ': </span>' + messageContent);
+                        $('#previousMessages').append(messageDiv);
+                    });
+                },
+                error: function(xhr, error, thrown) {
+                    console.error('Error fetching previous messages:', error, thrown);
+                }
+            });
+        }
+
+        $('#oneTimeWorkCancel').click(function() {
+            $('#oneTimeWorkDetails').hide();
+        });
+    });
+</script>
+<!-- Assigned Work List -->
 
 <!-- Assign service staff -->
 <script>
@@ -839,24 +1131,15 @@
                 },
                 {
                     data: 'due_date',
-                    name: 'due_date',
-                    render: function(data, type, row) {
-                        return moment(data).format('DD.MM.YY');
-                    }
+                    name: 'due_date'
                 },
                 {
                     data: 'legal_deadline',
-                    name: 'legal_deadline',
-                    render: function(data, type, row) {
-                        return moment(data).format('DD.MM.YY');
-                    }
+                    name: 'legal_deadline'
                 },
                 {
                     data: 'service_deadline',
-                    name: 'service_deadline',
-                    render: function(data, type, row) {
-                        return moment(data).format('DD.MM.YY');
-                    }
+                    name: 'service_deadline'
                 },
                 {
                     data: 'action',
@@ -1026,10 +1309,7 @@
                 },
                 {
                     data: 'due_date',
-                    name: 'due_date',
-                    render: function(data, type, row) {
-                        return moment(data).format('DD.MM.YY');
-                    }
+                    name: 'due_date'
                 },
                 {
                     data: 'legal_deadline',
