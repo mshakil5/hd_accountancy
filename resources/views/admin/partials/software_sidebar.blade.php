@@ -59,6 +59,13 @@
       </a>
     </li>
 
+    <li class="nav-item {{ request()->routeIs('oneTimeJob.create') ? 'active' : '' }}">
+      <a class="nav-link collapsed" href="{{ route('oneTimeJob.create') }}">
+        <i class="bi bi-journal-text"></i>
+        <span>One Time Job</span>
+      </a>
+    </li>
+
     <li class="nav-item {{ request()->routeIs('allService') ? 'active' : '' }}">
       <a class="nav-link collapsed" href="{{ route('allService') }}">
         <i class="bi bi-tools"></i>

@@ -43,6 +43,7 @@ use App\Http\Controllers\Admin\GoogleReviewController;
 use App\Http\Controllers\Admin\MetaDataController;
 use App\Http\Controllers\Admin\ContactMailController;
 use App\Http\Controllers\Admin\MailContentController;
+use App\Http\Controllers\Admin\OneTimeJobController;
 
 //Fallback route
 Route::fallback(function () {
@@ -544,5 +545,9 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/mail-content', [MailContentController::class, 'index'])->name('admin.mail-content');
     Route::get('/mail-content/{id}/edit', [MailContentController::class, 'edit']);
     Route::put('/mail-content/{id}', [MailContentController::class, 'update']);
+
+    //One time job
+    Route::get('/one-time-job', [OneTimeJobController::class, 'create'])->name('oneTimeJob.create');
+    Route::post('/one-time-job', [OneTimeJobController::class, 'store']);
 
 });
