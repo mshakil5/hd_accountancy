@@ -124,6 +124,8 @@ Route::middleware(['auth', 'user-access:manager'])->group(function () {
     // Fetch completed services by manager
     Route::get('/manager/get-completed-services', [ServiceController::class, 'getCompetedServices']);
 
+    Route::get('/manager/get-completed-services-as-manager', [ServiceController::class, 'getCompetedServicesAsManager']);
+
     // Fetch Sub Services
     Route::get('/manager/getClientSubServices/{clientserviceId}', [ServiceController::class, 'getClientSubServices']);
 

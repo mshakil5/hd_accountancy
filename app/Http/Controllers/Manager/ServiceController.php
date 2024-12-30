@@ -191,6 +191,32 @@ class ServiceController extends Controller
                 ->make(true);
         }
     }
+    
+    public function getCompetedServicesAsManager(Request $request)
+    {
+        $managerName = Auth::user()->first_name;
+
+        if ($request->ajax()) {
+            $data = ClientService::with('clientSubServices')
+                ->where('manager_id', Auth::id())
+                ->where('status', 2)
+                ->orderBy('id', 'desc')
+                ->get();
+
+            return DataTables::of($data)
+
+                ->addColumn('clientname', function (ClientService $clientservice) {
+                    return $clientservice->client ? $clientservice->client->name : '';
+                })
+                ->addColumn('servicename', function (ClientService $clientservice) {
+                    return $clientservice->service ? $clientservice->service->name : '';
+                })
+                ->addColumn('action', function (ClientService $clientservice) use ($managerName) {
+                    return '<button class="btn btn-secondary task-details1" data-id="' . $clientservice->id . '" data-manager="' . $managerName . '">Details</button>';
+                })
+                ->make(true);
+        }
+    }
 
     public function startWorkTime(Request $request)
     {

@@ -327,12 +327,12 @@
     </div>
     <!-- Completed service details section end -->
 
-    <!-- Completed tasks table start-->
-    <div class="col-lg-8 mb-3">
+    <!-- Completed tasks as staff table start-->
+    <div class="col-lg-6 mb-3">
         <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
             <div class="card-body px-0">
                 <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                    Completed Tasks
+                    Completed Tasks As Staff
                 </div>
                 <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
                     <table id="completedTasksTable" class="table cell-border table-striped" style="width:100%">
@@ -342,7 +342,6 @@
                                 <th scope="col">Service Name</th>
                                 <th scope="col">Due Date</th>
                                 <th scope="col">Target Deadline</th>
-                                <th scope="col">Deadline</th>
                                 <th scope="col">Action</th>
                             </tr>
                         </thead>
@@ -351,7 +350,32 @@
             </div>
         </div>
     </div>
-    <!-- Completed tasks table end-->
+    <!-- Completed tasks as staff table end-->
+
+    <!-- Completed tasks as manager table start-->
+    <div class="col-lg-6 mb-3">
+        <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+            <div class="card-body px-0">
+                <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                    Completed Tasks As Manager
+                </div>
+                <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
+                    <table id="completedTasksAsManagergTable" class="table cell-border table-striped" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th scope="col">Client Name</th>
+                                <th scope="col">Service Name</th>
+                                <th scope="col">Due Date</th>
+                                <th scope="col">Target Deadline</th>
+                                <th scope="col">Action</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Completed tasks as manager table end-->
     </div>
 </section>
 
@@ -467,6 +491,10 @@
 
                     if ($.fn.DataTable.isDataTable('#serviceManagerTable')) {
                         $('#serviceManagerTable').DataTable().ajax.reload(null, false);
+                    }
+
+                    if ($.fn.DataTable.isDataTable('#completedTasksAsManagergTable')) {
+                        $('#completedTasksAsManagergTable').DataTable().ajax.reload(null, false);
                     }
 
                     if ($.fn.DataTable.isDataTable('#completedTasksTable')) {
@@ -644,6 +672,10 @@
                         $('#serviceManagerTable').DataTable().ajax.reload(null, false);
                     }
 
+                    if ($.fn.DataTable.isDataTable('#completedTasksAsManagergTable')) {
+                        $('#completedTasksAsManagergTable').DataTable().ajax.reload(null, false);
+                    }
+
                     if ($.fn.DataTable.isDataTable('#completedTasksTable')) {
                         $('#completedTasksTable').DataTable().ajax.reload(null, false);
                     }
@@ -749,6 +781,10 @@
                         $('#serviceManagerTable').DataTable().ajax.reload(null, false);
                     }
 
+                    if ($.fn.DataTable.isDataTable('#completedTasksAsManagergTable')) {
+                        $('#completedTasksAsManagergTable').DataTable().ajax.reload(null, false);
+                    }
+
                     if ($.fn.DataTable.isDataTable('#completedTasksTable')) {
                         $('#completedTasksTable').DataTable().ajax.reload(null, false);
                     }
@@ -797,6 +833,10 @@
                         $('#serviceManagerTable').DataTable().ajax.reload(null, false);
                     }
 
+                    if ($.fn.DataTable.isDataTable('#completedTasksAsManagergTable')) {
+                        $('#completedTasksAsManagergTable').DataTable().ajax.reload(null, false);
+                    }
+
                     if ($.fn.DataTable.isDataTable('#completedTasksTable')) {
                         $('#completedTasksTable').DataTable().ajax.reload(null, false);
                     }
@@ -828,6 +868,10 @@
                         $('#serviceManagerTable').DataTable().ajax.reload(null, false);
                     }
 
+                    if ($.fn.DataTable.isDataTable('#completedTasksAsManagergTable')) {
+                        $('#completedTasksAsManagergTable').DataTable().ajax.reload(null, false);
+                    }
+
                     if ($.fn.DataTable.isDataTable('#completedTasksTable')) {
                         $('#completedTasksTable').DataTable().ajax.reload(null, false);
                     }
@@ -857,6 +901,11 @@
                     if ($.fn.DataTable.isDataTable('#serviceManagerTable')) {
                         $('#serviceManagerTable').DataTable().ajax.reload(null, false);
                     }
+
+                    if ($.fn.DataTable.isDataTable('#completedTasksAsManagergTable')) {
+                        $('#completedTasksAsManagergTable').DataTable().ajax.reload(null, false);
+                    }
+
                     if ($.fn.DataTable.isDataTable('#completedTasksTable')) {
                         $('#completedTasksTable').DataTable().ajax.reload(null, false);
                     }
@@ -888,6 +937,11 @@
                     if ($.fn.DataTable.isDataTable('#serviceManagerTable')) {
                         $('#serviceManagerTable').DataTable().ajax.reload(null, false);
                     }
+
+                    if ($.fn.DataTable.isDataTable('#completedTasksAsManagergTable')) {
+                        $('#completedTasksAsManagergTable').DataTable().ajax.reload(null, false);
+                    }
+
                     if ($.fn.DataTable.isDataTable('#completedTasksTable')) {
                         $('#completedTasksTable').DataTable().ajax.reload(null, false);
                     }
@@ -932,6 +986,38 @@
                     name: 'legal_deadline',
                 },
                 {
+                    data: 'action',
+                    name: 'action',
+                    orderable: false,
+                    searchable: false
+                }
+            ]
+        });
+
+        $('#completedTasksAsManagergTable').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: '/manager/get-completed-services-as-manager',
+                type: 'GET',
+                dataSrc: 'data',
+                error: function(xhr, error, thrown) {
+                    console.error('DataTables error:', error, thrown);
+                }
+            },
+            columns: [{
+                    data: 'clientname',
+                    name: 'clientname'
+                },
+                {
+                    data: 'servicename',
+                    name: 'servicename'
+                },
+                {
+                    data: 'due_date',
+                    name: 'due_date'
+                },
+                {
                     data: 'service_deadline',
                     name: 'service_deadline',
                 },
@@ -944,6 +1030,35 @@
             ]
         });
 
+        $(document).on('click', '.task-details1', function() {
+            var clientserviceId = $(this).data('id');
+            var managerName = $(this).data('manager');
+            var rowData = $('#completedTasksAsManagergTable').DataTable().row($(this).closest('tr')).data();
+            var serviceName = rowData.servicename;
+            var frequency = rowData.service_frequency;
+            let deadline = rowData.service_deadline;
+            deadline = deadline ? moment(deadline).format('YYYY-MM-DD') : '';
+
+            // $('#service_name1').val(serviceName);
+            var decodedServiceName = $('<div>').html(serviceName).text();
+            $('#service_name1').val(decodedServiceName);
+            $('#manager_name1').val(managerName);
+            $('#service_frequency1').val(frequency);
+            $('#service_deadline1').val(deadline);
+
+            $.ajax({
+                url: '/manager/getClientSubServices/' + clientserviceId,
+                type: "GET",
+                dataType: "json",
+                success: function(data) {
+                    populateCompletedForm(data);
+                },
+                error: function(xhr, error, thrown) {
+                    console.error('Error fetching sub-services:', error, thrown);
+                }
+            });
+        });
+        
         $(document).on('click', '.task-details', function() {
             var clientserviceId = $(this).data('id');
             var managerName = $(this).data('manager');
@@ -1051,6 +1166,10 @@
 
                     if ($.fn.DataTable.isDataTable('#serviceManagerTable')) {
                         $('#serviceManagerTable').DataTable().ajax.reload(null, false);
+                    }
+
+                    if ($.fn.DataTable.isDataTable('#completedTasksAsManagergTable')) {
+                        $('#completedTasksAsManagergTable').DataTable().ajax.reload(null, false);
                     }
 
                     if ($.fn.DataTable.isDataTable('#completedTasksTable')) {
