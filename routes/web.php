@@ -14,6 +14,7 @@ use App\Http\Controllers\Manager\ManagerController;
 use App\Http\Controllers\Manager\ServiceController;
 use App\Http\Controllers\Staff\StaffServiceController;
 use App\Http\Controllers\Frontend\FrontendController;
+use App\Http\Controllers\Staff\RecentUpdateController;
   
 /*
 |--------------------------------------------------------------------------
@@ -173,6 +174,13 @@ Route::middleware(['auth', 'user-access:manager'])->group(function () {
     Route::get('/manager/client', [ClientController::class, 'indexManager'])->name('allClientManager');
     Route::get('/manager/client-list', [ClientController::class, 'getClientsManager'])->name('get.Clients.manager');
 
+    Route::get('/manager/client/{id}/update', [ClientController::class, 'showUpdateByManager'])->name('client.Recent.update.manager');
+
+    //Recent Update
+    Route::post('/manager/recent-updates', [RecentUpdateController::class, 'storeByManager'])->name('recent-updates.store.manager');
+    Route::post('/manager/recent-updates/{id}', [RecentUpdateController::class, 'updateByManager'])->name('recent-updates.update.manager');
+    Route::delete('/manager/recent-updates/{id}', [RecentUpdateController::class, 'destroyByManager'])->name('recent-updates.destroy.manager');
+
     // Task list
     Route::get('/manager/task-list', [ServiceController::class, 'allTaskList'])->name('allTaskListManager');
 
@@ -244,6 +252,13 @@ Route::middleware(['auth', 'user-access:staff'])->group(function () {
     //  Client list
     Route::get('/staff/client', [ClientController::class, 'indexStaff'])->name('allClientStaff');
     Route::get('/staff/client-list', [ClientController::class, 'getClientsStaff'])->name('get.Clients.staff');
+
+    Route::get('/staff/client/{id}/update', [ClientController::class, 'showUpdate'])->name('client.Recent.update.staff');
+
+    //Recent Update
+    Route::post('/staff/recent-updates', [RecentUpdateController::class, 'store'])->name('recent-updates.store.staff');
+    Route::post('/staff/recent-updates/{id}', [RecentUpdateController::class, 'update'])->name('recent-updates.update.staff');
+    Route::delete('/staff/recent-updates/{id}', [RecentUpdateController::class, 'destroy'])->name('recent-updates.destroy.staff');
 
     // Task list
     Route::get('/staff/task-list', [StaffServiceController::class, 'allTaskList'])->name('allTaskList');

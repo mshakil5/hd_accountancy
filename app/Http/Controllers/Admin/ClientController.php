@@ -53,12 +53,17 @@ class ClientController extends Controller
     {
         if ($request->ajax()) {
             $authUserId = auth()->id();
-            $data = Client::with(['clientType', 'manager'])
-                ->whereHas('clientSubServices', function ($query) use ($authUserId) {
+            $filter = $request->input('filter', 'all');
+    
+            $query = Client::with(['clientType', 'manager']);
+    
+            if ($filter == 'assigned') {
+                $query->whereHas('clientSubServices', function ($query) use ($authUserId) {
                     $query->where('staff_id', $authUserId);
-                })
-                ->orderBy('id', 'desc')
-                ->get();
+                });
+            }
+    
+            $data = $query->orderBy('id', 'desc')->get();
     
             return Datatables::of($data)
                 ->addIndexColumn()
@@ -67,7 +72,22 @@ class ClientController extends Controller
                 })
                 ->make(true);
         }
-    }    
+    }
+    
+    public function showUpdate($id)
+    {
+        $client = Client::with('recentUpdates.user')->findOrFail($id);
+        $client->recentUpdates = $client->recentUpdates()->orderBy('id', 'desc')->get();
+        return view('staff.client.recent_update', compact('client'));
+    }
+
+
+    public function showUpdateByManager($id)
+    {
+        $client = Client::with('recentUpdates.user')->findOrFail($id);
+        $client->recentUpdates = $client->recentUpdates()->orderBy('id', 'desc')->get();
+        return view('manager.client.recent_update', compact('client'));
+    }
 
     public function indexManager()
     {
@@ -77,17 +97,20 @@ class ClientController extends Controller
     public function getClientsManager(Request $request)
     {
         $authUserId = auth()->id();
+        $filter = $request->input('filter', 'all');
+    
         if ($request->ajax()) {
-            $data = Client::with(['clientType', 'manager'])
-                ->where(function ($query) use ($authUserId) {
-                    $query->where('manager_id', $authUserId)
-                          ->orWhereHas('clientSubServices', function ($subQuery) use ($authUserId) {
-                              $subQuery->where('staff_id', $authUserId);
-                          });
-                })
-                ->distinct()
-                ->orderBy('id', 'desc')
-                ->get();
+            $query = Client::with(['clientType', 'manager']);
+    
+            if ($filter == 'assigned') {
+                $query->whereHas('clientSubServices', function ($subQuery) use ($authUserId) {
+                    $subQuery->where('staff_id', $authUserId);
+                });
+            } elseif ($filter == 'manager') {
+                $query->where('manager_id', $authUserId);
+            }
+    
+            $data = $query->distinct()->orderBy('id', 'desc')->get();
     
             return Datatables::of($data)
                 ->addIndexColumn()
