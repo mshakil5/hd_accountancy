@@ -24,7 +24,7 @@ class ServiceController extends Controller
         $currentUserId = Auth::id();
     
         if ($request->ajax()) {
-            $data = ClientService::with(['clientSubServices' => function ($query) {
+            $data = ClientService::where('type', '!=', 2)->with(['clientSubServices' => function ($query) {
                     $query->where('staff_id', Auth::id());
                         //   ->whereIn('sequence_status', [0, 1]);
                 }])
@@ -170,7 +170,7 @@ class ServiceController extends Controller
         $managerName = Auth::user()->first_name;
 
         if ($request->ajax()) {
-            $data = ClientService::with('clientSubServices')
+            $data = ClientService::where('type', '!=', 2)->with('clientSubServices')
                 ->whereHas('clientSubServices', function ($query) {
                     $query->where('sequence_status', 2)
                         ->where('staff_id', Auth::id());
@@ -198,7 +198,7 @@ class ServiceController extends Controller
         $managerName = Auth::user()->first_name;
 
         if ($request->ajax()) {
-            $data = ClientService::with('clientSubServices')
+            $data = ClientService::where('type', '!=', 2)->with('clientSubServices')
                 ->where('manager_id', Auth::id())
                 ->where('status', 2)
                 ->orderBy('id', 'desc')
@@ -590,5 +590,46 @@ class ServiceController extends Controller
             'success' => true,
             'message' => 'Status updated successfully.'
         ]);
+    }
+
+    public function getOneTimeJobs(Request $request)
+    {
+        $query = ClientService::where('type', 2)
+            ->with('service')
+            ->where('manager_id', Auth::id())
+            ->get();
+
+        return DataTables::of($query)
+            ->editColumn('servicename', function ($clientService) {
+                return $clientService->service->name;
+            })
+            ->editColumn('legal_deadline', function ($clientService) {
+                return \Carbon\Carbon::parse($clientService->legal_deadline)->format('d-m-Y');
+            })
+            ->editColumn('status', function ($clientService) {
+                return $clientService->status;
+            })
+            ->make(true);
+    }
+
+    public function updateJobStatus(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'status' => 'required|integer|in:0,1,2',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => 422, 'message' => 'Invalid status'], 422);
+        }
+
+        $clientService = ClientService::find($id);
+        if (!$clientService) {
+            return response()->json(['status' => 404, 'message' => 'Job not found'], 404);
+        }
+
+        $clientService->status = $request->status;
+        $clientService->save();
+
+        return response()->json(['status' => 200, 'message' => 'Status updated successfully']);
     }
 }

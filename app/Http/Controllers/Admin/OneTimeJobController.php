@@ -14,61 +14,42 @@ class OneTimeJobController extends Controller
 {
     public function create()
     {
-        $services = Service::select('id', 'name')->orderby('id', 'DESC')->get();
-        $managers = User::where('type', '2')->select('id', 'first_name', 'last_name')->orderby('id', 'DESC')->get();
-        $staffs = User::whereIn('type', ['2', '3'])->select('id', 'first_name', 'last_name')->orderby('id', 'DESC')->get();
-        return view('admin.one_time_job.create', compact('services', 'managers', 'staffs'));
+        $data = ClientService::where('type', 2)->select('id', 'service_id', 'manager_id', 'legal_deadline', 'created_at')->orderby('id', 'DESC')->get();
+
+        $managerAndStaffs = User::whereIn('type', [ '2', '3' ])->select('id', 'first_name', 'last_name', 'type')->orderby('id', 'DESC')->get();
+
+        return view('admin.one_time_job.create', compact('data', 'managerAndStaffs'));
     }
 
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'services' => 'required|array',
+            'task' => 'required|string',
+            'manager_id' => 'required|integer',
+            'legal_deadline' => 'nullable|date',
         ]);
-
+    
         if ($validator->fails()) {
             return response()->json(['status' => 422, 'errors' => $validator->errors()->toArray()], 422);
         }
+    
+        // Create a new service
+        $service = new Service();
+        $service->name = $request->task;
+        $service->status = 2;
+        $service->created_by = auth()->id();
+        $service->save();
 
-        foreach ($request->services as $serviceData) {
-            $validator = Validator::make($serviceData, [
-                'serviceId' => 'required|integer',
-                'managerId' => 'required|integer',
-                'legal_deadline' => 'required',
-                'subServices' => 'required|array',
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json(['status' => 422, 'errors' => $validator->errors()->toArray()], 422);
-            }
-
-            $clientService = new ClientService();
-            $uniqueId = date("His") . '-' . mt_rand(1000, 9999);
-            $clientService->service_id = $serviceData['serviceId'];
-            $clientService->manager_id = $serviceData['managerId'];
-            $clientService->legal_deadline = $serviceData['legal_deadline'];
-            $clientService->unique_id = $uniqueId;
-            $clientService->type = 2;
-            $clientService->save();
-
-            if (isset($serviceData['subServices'])) {
-                foreach ($serviceData['subServices'] as $key => $subServiceData) {
-                    $clientSubService = new ClientSubService();
-                    $clientSubService->client_service_id = $clientService->id;
-                    $clientSubService->sub_service_id = $subServiceData['subServiceId'];
-                    $clientSubService->deadline = $subServiceData['deadline'];
-                    $clientSubService->note = $subServiceData['note'];
-                    $clientSubService->staff_id = $subServiceData['staffId'];
-                    $clientSubService->created_by = auth()->id();
-                    $clientSubService->sequence_id = $key + 1;
-                    if ($key === 0) {
-                        $clientSubService->sequence_status = 0;
-                    }
-                    $clientSubService->save();
-                }
-            }
-        }
-
+        // Create a new client service
+        $clientService = new ClientService();
+        $uniqueId = date("His") . '-' . mt_rand(1000, 9999);
+        $clientService->service_id = $service->id;
+        $clientService->manager_id = $request->manager_id;
+        $clientService->legal_deadline = $request->legal_deadline;
+        $clientService->unique_id = $uniqueId;
+        $clientService->type = 2;
+        $clientService->save();
+    
         return response()->json(['status' => 200, 'message' => 'Data saved successfully']);
     }
 }

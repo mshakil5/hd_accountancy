@@ -175,6 +175,9 @@ Route::middleware(['auth', 'user-access:manager'])->group(function () {
 
     // Task list
     Route::get('/manager/task-list', [ServiceController::class, 'allTaskList'])->name('allTaskListManager');
+
+    Route::get('/manager/get-one-time-jobs', [ServiceController::class, 'getOneTimeJobs']);
+    Route::post('/manager/update-job-status/{id}', [ServiceController::class, 'updateJobStatus']);
     
 });
 
@@ -243,6 +246,9 @@ Route::middleware(['auth', 'user-access:staff'])->group(function () {
 
     //Idle time count 
     Route::post('/staff-idle-time', [StaffServiceController::class, 'logIdleTime'])->name('staff.idle.time');
+
+    Route::get('/staff/get-one-time-jobs', [StaffServiceController::class, 'getOneTimeJobs']);
+    Route::post('/staff/update-job-status/{id}', [StaffServiceController::class, 'updateJobStatus']);
     
 });
 

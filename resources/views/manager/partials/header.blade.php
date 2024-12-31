@@ -20,7 +20,7 @@
       <div class="row mx-0">
         <div class="col-lg-6 d-flex justify-content-between align-items-center">
           <i class="bi bi-list toggle-sidebar-btn curp text-black fs-4" onclick="toggleSidebar();"></i>
-          <div class="ms-5">
+          <div class="ms-5 d-none">
             <a href="{{ route('manager.home') }}" class="fw-bold me-5 txt-theme">Home</a>
             <a href="{{ route('allClientManager') }}" class="fw-bold me-5 txt-theme">Client List</a>
             <a href="{{ route('allTaskListManager') }}" class="fw-bold me-5 txt-theme">Task List</a>

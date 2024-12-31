@@ -365,6 +365,29 @@
         </div>
         <!-- Completed service details section start -->
 
+        <!-- One Time Jobs -->
+        <div class="col-lg-4 mb-3">
+            <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+                <div class="card-body px-0">
+                    <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                        One Time Jobs
+                    </div>
+                        <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
+                        <table id="OneTimeJobsTable" class="table cell-border table-striped" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Service Name</th>
+                                    <th scope="col">Deadline</th>
+                                    <th scope="col">Action</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- One Time Jobs -->
+
         <!-- Completed tasks table start-->
         <div class="col-lg-8 mb-3">
             <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
@@ -453,6 +476,84 @@
                 },
                 { data: 'action', name: 'action', orderable: false, searchable: false }
             ]
+        });
+
+        $('#OneTimeJobsTable').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: '/staff/get-one-time-jobs',
+                type: 'GET',
+                dataSrc: 'data',
+                error: function(xhr, error, thrown) {
+                    console.error('DataTables error:', error, thrown);
+                }
+            },
+            columns: 
+            [
+                {
+                    data: 'servicename',
+                    name: 'servicename'
+                },
+                {
+                    data: 'legal_deadline',
+                    name: 'legal_deadline'
+                },
+                {
+                    data: 'status',
+                    name: 'status',
+                    render: function(data, type, row) {
+                        const currentUserId = {{ Auth::id() }};
+
+                        if (row.manager_id == currentUserId) {
+                            return `
+                                <select class="form-control one-time-job-status" data-id="${row.id}">
+                                    <option value="1" ${data == 1 ? 'selected' : ''}>Not Started</option>
+                                    <option value="0" ${data == 0 ? 'selected' : ''}>Processing</option>
+                                    <option value="2" ${data == 2 ? 'selected' : ''}>Completed</option>
+                                </select>
+                            `;
+                        }
+
+                        const statusMap = {
+                            1: 'Not Started',
+                            0: 'Processing',
+                            2: 'Completed'
+                        };
+
+                        return statusMap[data] ?? 'Unknown Status';
+                    }
+                }
+            ]
+        });
+
+        $('#OneTimeJobsTable').on('change', '.one-time-job-status', function() {
+            var newStatus = $(this).val();
+            var jobId = $(this).data('id');
+
+            $.ajax({
+                url: '/staff/update-job-status/' + jobId,
+                type: 'POST',
+                data: {
+                    status: newStatus,
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    if (response.status === 200) {
+                        Toastify({
+                            text: "Status changed successfully!"
+                        }).showToast();
+                        if ($.fn.DataTable.isDataTable('#OneTimeJobsTable')) {
+                            $('#OneTimeJobsTable').DataTable().ajax.reload(null, false);
+                        }
+                    } else {
+                        alert('Failed to update status: ' + response.message);
+                    }
+                },
+                error: function(xhr, error, thrown) {
+                    console.error('Error updating status:', error, thrown);
+                }
+            });
         });
 
         $(document).on('click', '.change-status', function() {

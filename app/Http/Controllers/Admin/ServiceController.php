@@ -20,7 +20,7 @@ class ServiceController extends Controller
 {
     public function index()
     {
-        $data = Service::with('subServices')->orderBy('id', 'DESC')->get();
+        $data = Service::with('subServices')->where('status', 1)->orderBy('id', 'DESC')->get();
         $allsubServices = SubService::orderby('id', 'DESC')->get();
         return view('admin.service.index', compact('data', 'allsubServices'));
     }

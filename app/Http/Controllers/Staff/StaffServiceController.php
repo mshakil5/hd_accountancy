@@ -24,7 +24,7 @@ class StaffServiceController extends Controller
     public function getServicesClientStaff(Request $request)
     {
         if ($request->ajax()) {
-            $data = ClientService::with('clientSubServices')
+            $data = ClientService::where('type', '!=', 2)->with('clientSubServices')
                 ->whereHas('clientSubServices', function ($query) {
                     $query->whereIn('sequence_status', [0, 1])
                         ->where('staff_id', Auth::id());
@@ -77,7 +77,7 @@ class StaffServiceController extends Controller
     public function getCompetedServices(Request $request)
     {
         if ($request->ajax()) {
-            $data = ClientService::with('clientSubServices')
+            $data = ClientService::where('type', '!=', 2)->with('clientSubServices')
                 ->whereHas('clientSubServices', function ($query)  {
                     $query->where('sequence_status', 2)
                         ->where('staff_id', Auth::id());
@@ -582,5 +582,46 @@ class StaffServiceController extends Controller
         }
 
         return response()->json(['message' => 'Idle time logged successfully'], 200);
+    }
+
+    public function getOneTimeJobs(Request $request)
+    {
+        $query = ClientService::where('type', 2)
+            ->with('service')
+            ->where('manager_id', Auth::id())
+            ->get();
+
+        return DataTables::of($query)
+            ->editColumn('servicename', function ($clientService) {
+                return $clientService->service->name;
+            })
+            ->editColumn('legal_deadline', function ($clientService) {
+                return \Carbon\Carbon::parse($clientService->legal_deadline)->format('d-m-Y');
+            })
+            ->editColumn('status', function ($clientService) {
+                return $clientService->status;
+            })
+            ->make(true);
+    }
+
+    public function updateJobStatus(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'status' => 'required|integer|in:0,1,2',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => 422, 'message' => 'Invalid status'], 422);
+        }
+
+        $clientService = ClientService::find($id);
+        if (!$clientService) {
+            return response()->json(['status' => 404, 'message' => 'Job not found'], 404);
+        }
+
+        $clientService->status = $request->status;
+        $clientService->save();
+
+        return response()->json(['status' => 200, 'message' => 'Status updated successfully']);
     }
 }
