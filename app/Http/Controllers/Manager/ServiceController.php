@@ -25,8 +25,8 @@ class ServiceController extends Controller
     
         if ($request->ajax()) {
             $data = ClientService::with(['clientSubServices' => function ($query) {
-                    $query->where('staff_id', Auth::id())
-                          ->whereIn('sequence_status', [0, 1]);
+                    $query->where('staff_id', Auth::id());
+                        //   ->whereIn('sequence_status', [0, 1]);
                 }])
                 ->where(function ($query) use ($currentUserId) {
                     $query->where('manager_id', $currentUserId)
@@ -35,6 +35,7 @@ class ServiceController extends Controller
                                        ->whereIn('sequence_status', [0, 1]);
                           });
                 })
+                ->whereIn('status', [0, 1])
                 ->distinct()
                 ->orderBy('id', 'desc')
                 ->get();
