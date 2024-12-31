@@ -178,6 +178,10 @@ Route::middleware(['auth', 'user-access:manager'])->group(function () {
 
     Route::get('/manager/get-one-time-jobs', [ServiceController::class, 'getOneTimeJobs']);
     Route::post('/manager/update-job-status/{id}', [ServiceController::class, 'updateJobStatus']);
+
+    Route::get('/getServiceComment/{clientServiceId}', [ServiceController::class, 'getServiceComment']);
+
+    Route::post('/store-comment', [ServiceController::class, 'storeComment']);
     
 });
 
@@ -249,6 +253,10 @@ Route::middleware(['auth', 'user-access:staff'])->group(function () {
 
     Route::get('/staff/get-one-time-jobs', [StaffServiceController::class, 'getOneTimeJobs']);
     Route::post('/staff/update-job-status/{id}', [StaffServiceController::class, 'updateJobStatus']);
+
+    Route::get('/getServiceComment/{clientServiceId}', [StaffServiceController::class, 'getServiceComment']);
+
+    Route::post('/store-comment', [StaffServiceController::class, 'storeComment']);
     
 });
 

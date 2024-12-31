@@ -120,6 +120,48 @@
         </div>
         <!-- Service message modal end -->
 
+        <!-- Service message modal start -->
+        <div class="modal fade" id="messageModal1" tabindex="-1" role="dialog" aria-labelledby="messageModal1Label" aria-hidden="true">
+            <div class="modal-dialog modal-lg mt-2" role="document">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+                                    <div class="card-body px-0">
+                                        <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                                            Previous Comment
+                                        </div>
+                                        <div id="previousMessages1" class="mt-4">
+                                            <!-- Previous messages -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--Message Input Section -->
+                            <div class="col-md-6">
+                                <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+                                    <div class="card-body px-0">
+                                        <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                                            New Comment
+                                        </div>
+                                        <input type="hidden" id="hiddenClientServiceId" />
+                                        <div class="form-group mt-4">
+                                            <textarea class="form-control" id="service-message1" rows="7" name="message" placeholder="Your comment..."></textarea>
+                                        </div>
+                                        <div class="text-center">
+                                            <button type="button" class="mt-3 btn btn-primary bg-theme-light fs-4 border-theme border-2 fw-bold txt-theme" id="saveMessage1">Send</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Service message modal end -->
+
         <!-- Your time start -->
         <div class="col-lg-4 mb-3">
             <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100">
@@ -379,6 +421,7 @@
                                     <th scope="col">Service Name</th>
                                     <th scope="col">Deadline</th>
                                     <th scope="col">Action</th>
+                                    <th scope="col">Comment</th>
                                 </tr>
                             </thead>
                         </table>
@@ -523,6 +566,17 @@
 
                         return statusMap[data] ?? 'Unknown Status';
                     }
+                },
+                {
+                    data: null,
+                    name: 'comment',
+                    render: function(data, type, row) {
+                        return `
+                            <button type="button" class="btn btn-secondary open-modal1" data-toggle="modal" data-target="#messageModal1" data-client-service-id="${row.id}">
+                                <i class="fas fa-plus-circle"></i>
+                            </button>
+                        `;
+                    }
                 }
             ]
         });
@@ -552,6 +606,57 @@
                 },
                 error: function(xhr, error, thrown) {
                     console.error('Error updating status:', error, thrown);
+                }
+            });
+        });
+
+        $(document).on('click', '.open-modal1', function() {
+            var clientServiceId = $(this).data('client-service-id');
+            $('#hiddenClientServiceId').val(clientServiceId);
+            populateMessage1(clientServiceId);
+            $('#messageModal1').modal('show');
+        });
+
+        function populateMessage1(clientServiceId) {
+            $.ajax({
+                url: '/getServiceComment/' + clientServiceId,
+                type: "GET",
+                dataType: "json",
+                success: function(data) {
+                    $('#previousMessages1').empty();
+                    data.forEach(function(message) {
+                        var messageDiv = $('<div>').addClass('message');
+                        var userName = message.userName;
+                        var messageContent = message.messageContent ? message.messageContent : '';
+
+                        messageDiv.html('<span style="font-weight: bold;">' + userName + ': </span>' + messageContent);
+                        $('#previousMessages1').append(messageDiv);
+                    });
+                },
+                error: function(xhr, error, thrown) {
+                    console.error('Error fetching previous messages:', error, thrown);
+                }
+            });
+        }
+
+        $('#saveMessage1').click(function() {
+            var message = $('#service-message1').val();
+            var clientServiceId = $('#hiddenClientServiceId').val();
+
+            $.ajax({
+                url: '/store-comment',
+                type: "POST",
+                data: {
+                    message: message,
+                    client_service_id: clientServiceId,
+                    _token: "{{ csrf_token() }}"
+                },
+                success: function(response) {
+                    $('#service-message1').val('');
+                    populateMessage1(clientServiceId);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error saving message :', error);
                 }
             });
         });

@@ -904,4 +904,36 @@ class ServiceController extends Controller
         return response()->json(['success' => true, 'message' => 'Message saved successfully']);
     }
 
+    public function getServiceComment($clientServiceId)
+    {
+        $messages = ServiceMessage::with('user:id,first_name')
+            ->select('created_by', 'message')
+            ->where('client_service_id', $clientServiceId)
+            ->get()
+            ->map(function($message) {
+                return [
+                    'userName' => $message->user->first_name,
+                    'messageContent' => $message->message,
+                ];
+            });
+
+        return response()->json($messages);
+    }
+
+    public function storeComment(Request $request)
+    {
+        $validated = $request->validate([
+            'message' => 'required|string',
+            'client_service_id' => 'required|integer',
+        ]);
+
+        $serviceMessage = new ServiceMessage();
+        $serviceMessage->message = $validated['message'];
+        $serviceMessage->client_service_id = $validated['client_service_id'];
+        $serviceMessage->created_by = auth()->id();
+        $serviceMessage->save();
+
+        return response()->json(['success' => true, 'message' => 'Message saved successfully']);
+    }
+
 }
