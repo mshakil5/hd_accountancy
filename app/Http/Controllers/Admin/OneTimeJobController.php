@@ -14,7 +14,7 @@ class OneTimeJobController extends Controller
 {
     public function create()
     {
-        $data = ClientService::where('type', 2)->select('id', 'service_id', 'manager_id', 'legal_deadline', 'created_at')->orderby('id', 'DESC')->get();
+        $data = ClientService::where('type', 2)->select('id', 'service_id', 'manager_id', 'legal_deadline', 'created_at', 'status')->orderby('id', 'DESC')->get();
 
         $managerAndStaffs = User::whereIn('type', [ '2', '3' ])->select('id', 'first_name', 'last_name', 'type')->orderby('id', 'DESC')->get();
 
