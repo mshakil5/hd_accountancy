@@ -59,4 +59,9 @@ class Client extends Model
         return $this->hasMany(ClientSubService::class, 'client_id', 'id');
     }
 
+    public function recentUpdates()
+    {
+        return $this->hasMany(RecentUpdate::class);
+    }
+
 }

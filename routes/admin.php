@@ -44,6 +44,7 @@ use App\Http\Controllers\Admin\MetaDataController;
 use App\Http\Controllers\Admin\ContactMailController;
 use App\Http\Controllers\Admin\MailContentController;
 use App\Http\Controllers\Admin\OneTimeJobController;
+use App\Http\Controllers\Admin\RecentUpdateController;
 
 //Fallback route
 Route::fallback(function () {
@@ -161,6 +162,11 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/contact-info/{id}/edit', [ContactInfoController::class, 'edit']);
     Route::post('/contact-info-update', [ContactInfoController::class, 'update']);
     Route::get('/contact-info/{id}', [ContactInfoController::class, 'delete']);
+
+    //Recent Update
+    Route::post('/recent-updates', [RecentUpdateController::class, 'store'])->name('recent-updates.store');
+    Route::post('/recent-updates/{id}', [RecentUpdateController::class, 'update'])->name('recent-updates.update');
+    Route::delete('/recent-updates/{id}', [RecentUpdateController::class, 'destroy'])->name('recent-updates.destroy');
 
     //Fetch all services
     Route::get('/all-services', [ServiceController::class, 'getAllServices']);

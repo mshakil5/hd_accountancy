@@ -630,7 +630,7 @@
 
         function populateMessage1(clientServiceId) {
             $.ajax({
-                url: '/getServiceComment/' + clientServiceId,
+                url: '/manager/getServiceComment/' + clientServiceId,
                 type: "GET",
                 dataType: "json",
                 success: function(data) {
@@ -655,7 +655,7 @@
             var clientServiceId = $('#hiddenClientServiceId').val();
 
             $.ajax({
-                url: '/store-comment',
+                url: '/manager/store-comment',
                 type: "POST",
                 data: {
                     message: message,

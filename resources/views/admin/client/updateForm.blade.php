@@ -193,6 +193,7 @@
 
                                 <!-- Recent Update -->
                                 <div class="tab-pane fade" id="recent-update" role="tabpanel" aria-labelledby="recent-update-tab">
+                                    @include('admin.client.recent_update')
                                 </div>
                                 <!-- Recent Update -->
 
@@ -1038,10 +1039,128 @@
 </script>
 <!-- Delete contact end-->
 
+<!-- Recent Update Start -->
+<script>
+    $(document).ready(function () {
+        $('#createNewButton2').click(function (event) {
+            event.preventDefault();
+            $('#recentUpdateFormContainer').toggle();
+            $('#recentUpdateForm')[0].reset();
+            $('#recentUpdate-saveButton').show();
+            $('#recentUpdate-updateButton').hide();
+            $('html, body').animate({
+                scrollTop: $('#recentUpdateFormContainer').offset().top - 200
+            }, 500);
+        });
+
+        $('#recentUpdate-saveButton').click(function (event) {
+            event.preventDefault();
+
+            var formData = new FormData($('#recentUpdateForm')[0]);
+
+            $.ajax({
+                url: "{{ route('recent-updates.store') }}", 
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    swal("Success", response.message, "success");
+                    setTimeout(() => location.reload(), 2000);
+                },
+                error: function (xhr) {
+                    swal("Error", xhr.responseJSON.message || "An error occurred.", "error");
+                }
+            });
+        });
+
+        $('#recentUpdateTable').on('click', '.edit-recent-update', function () {
+            var update = $(this).closest('tr').data('recent-update');
+            $('#recentUpdateIdInput').val(update.id);
+            $('#note').val(update.note);
+            $('#recentUpdate-saveButton').hide();
+            $('#recentUpdate-updateButton').show();
+            $('#recentUpdateFormContainer').show();
+            $('#recentUpdate-clearButton').hide();
+            $('html, body').animate({
+                scrollTop: $('#recentUpdateFormContainer').offset().top - 200
+            }, 500);
+        });
+
+        $('#recentUpdate-updateButton').click(function (event) {
+            event.preventDefault();
+            var id = $('#recentUpdateIdInput').val();
+            var formData = new FormData($('#recentUpdateForm')[0]);
+
+            $.ajax({
+                url: `{{ url('/admin/recent-updates') }}/${id}`,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    swal("Success", response.message, "success");
+                    setTimeout(() => location.reload(), 2000);
+                },
+                error: function (xhr) {
+                    swal("Error", xhr.responseJSON.message || "An error occurred.", "error");
+                }
+            });
+        });
+
+        $('#recentUpdate-cancelButton').click(function () {
+            $('#recentUpdateFormContainer').hide();
+            $('#recentUpdate-clearButton').show();
+            $('#recentUpdateForm')[0].reset();
+            $('#recentUpdate-saveButton').show();
+            $('#recentUpdate-updateButton').hide();
+            $('html, body').animate({
+                scrollTop: $('#recentUpdateFormContainer').offset().top - 200
+            }, 500);
+        });
+
+        $('#recentUpdate-clearButton').click(function () {
+            event.preventDefault();
+            $('#recentUpdateForm')[0].reset();
+            $('#recentUpdate-saveButton').show();
+            $('#recentUpdate-updateButton').hide();
+        });
+
+        $('#recentUpdateTable').on('click', '.delete-recent-update', function () {
+            var update = $(this).closest('tr').data('recent-update');
+            swal({
+                title: "Are you sure?",
+                text: "Once deleted, you will not be able to recover this update!",
+                icon: "warning",
+                buttons: true,
+                dangerMode: true,
+            }).then((willDelete) => {
+                if (willDelete) {
+                    $.ajax({
+                        url: `{{ url('/admin/recent-updates') }}/${update.id}`,
+                        type: 'DELETE',
+                        data: {
+                            _token: "{{ csrf_token() }}"
+                        },
+                        success: function (response) {
+                            swal("Success", response.message, "success");
+                            setTimeout(() => location.reload(), 2000);
+                        },
+                        error: function (xhr) {
+                            swal("Error", xhr.responseJSON.message || "An error occurred.", "error");
+                        }
+                    });
+                }
+            });
+        });
+    });
+</script>
+<!-- Recent Update End -->
+ 
 <!-- Data table initialize -->
 <script>
     $(document).ready(function() {
-        $("#directorTable, #contactTable").DataTable({});
+        $("#directorTable, #contactTable, #recentUpdateTable").DataTable({});
     });
 </script>
 <!-- Data table initialize -->

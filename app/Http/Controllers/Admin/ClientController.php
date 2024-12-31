@@ -193,7 +193,8 @@ class ClientController extends Controller
 
     public function updateForm($id)
     {
-        $client = Client::with(['clientType', 'manager', 'businessInfo', 'directorInfos', 'clientServices', 'contactInfos'])->find($id);
+        $client = Client::with(['clientType', 'manager', 'businessInfo', 'directorInfos', 'clientServices', 'contactInfos', 'recentUpdates.user'])->find($id);
+        $client->recentUpdates = $client->recentUpdates()->orderBy('id', 'desc')->get();
         $clientTypes = ClientType::select('id', 'name')->orderby('id', 'DESC')->get();
         $managers = User::where('type', '2')->select('id', 'first_name')->orderby('id', 'DESC')->get();
         $businessInfo = BusinessInfo::where('client_id', $id)->first();

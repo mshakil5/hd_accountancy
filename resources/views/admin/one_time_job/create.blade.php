@@ -25,7 +25,7 @@
             <!-- general form elements disabled -->
                 <div class="card card-secondary">
                     <div class="card-header">
-                        <h3 class="card-title">Add new client type</h3>
+                        <h3 class="card-title">Add new one time job</h3>
                     </div>
                     <!-- /.card-header -->
                     <div class="card-body">
@@ -35,13 +35,13 @@
                             <div class="row">
                                 <div class="col-sm-12">
                                     <div class="form-group">
-                                    <label>Task <span class="tex-danger">*</span></label>
+                                    <label>Task <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" id="task" name="task">
                                     </div>
                                 </div>
                                 <div class="col-sm-6">
                                   <div class="form-group">
-                                      <label for="manager_id">Assign To <span class="tex-danger">*</span></label>
+                                      <label for="manager_id">Assign To <span class="text-danger">*</span></label>
                                       <select class="form-control select2" id="manager_id" name="manager_id">
                                           <option value="">Select a manager or staff</option>
                                           @foreach ($managerAndStaffs as $staff)
@@ -224,18 +224,31 @@
                 method: "POST",
                 contentType: false,
                 processData: false,
-                data:form_data,
+                data: form_data,
                 success: function (d) {
                     swal({
-                          title: "Success!",
-                          text: "Task assigned successfully",
-                          icon: "success",
-                          button: "OK",
-                      });
-                    window.setTimeout(function(){location.reload()},1000);
+                        title: "Success!",
+                        text: "Task assigned successfully",
+                        icon: "success",
+                        button: "OK",
+                    });
+                    window.setTimeout(function () {
+                        location.reload();
+                    }, 1000);
                 },
-                error: function (d) {
-                    console.log(d);
+                error: function (xhr, error, thrown) {
+                    let errorMessage = "An unknown error occurred.";
+                    
+                    if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
+                    }
+
+                    swal({
+                        title: "Error!",
+                        text: errorMessage,
+                        icon: "error",
+                        button: "OK",
+                    });
                 }
             });
           }
