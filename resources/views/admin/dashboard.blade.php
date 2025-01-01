@@ -682,9 +682,10 @@
                             <table id="assignedOneTimeServices" class="table cell-border table-striped" style="width:100%">
                                 <thead>
                                     <tr>
-                                        <th scope="col">Service Name</th>
-                                        <th scope="col">Target Deadline</th>
-                                        <th scope="col">Action</th>
+                                        <th scope="col">Assign Date</th>
+                                        <th scope="col">Task</th>
+                                        <th scope="col">Deadline</th>
+                                        <th scope="col">Assigned To</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -705,9 +706,10 @@
                             <table id="completedOneTimeServices" class="table cell-border table-striped" style="width:100%">
                                 <thead>
                                     <tr>
-                                        <th scope="col">Service Name</th>
-                                        <th scope="col">Target Deadline</th>
-                                        <th scope="col">Action</th>
+                                        <th scope="col">Assign Date</th>
+                                        <th scope="col">Task</th>
+                                        <th scope="col">Deadline</th>
+                                        <th scope="col">Assigned To</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -786,7 +788,15 @@
                 url: '/admin/get-one-time-assigned-service',
                 type: 'GET',
             },
-            columns: [{
+            columns: [
+                {
+                    data: 'created_at',
+                    name: 'created_at',
+                    render: function(data, type, row) {
+                        return moment(data).format('DD.MM.YYYY');
+                    }
+                },
+                {
                     data: 'servicename',
                     name: 'servicename'
                 },
@@ -807,10 +817,11 @@
                     }
                 },
                 {
-                    data: 'action',
-                    name: 'action',
-                    orderable: false,
-                    searchable: false
+                    data: 'manager',
+                    name: 'manager',
+                    render: function(data, type, row) {
+                        return data ? (data.first_name + ' ' + data.last_name) : 'N/A';
+                    }
                 }
             ]
         });
@@ -822,7 +833,15 @@
                 url: '/admin/get-one-time-completed-service',
                 type: 'GET',
             },
-            columns: [{
+            columns: [
+                {
+                    data: 'created_at',
+                    name: 'created_at',
+                    render: function(data, type, row) {
+                        return moment(data).format('DD.MM.YYYY');
+                    }
+                },
+                {
                     data: 'servicename',
                     name: 'servicename'
                 },
@@ -843,10 +862,11 @@
                     }
                 },
                 {
-                    data: 'action',
-                    name: 'action',
-                    orderable: false,
-                    searchable: false
+                    data: 'manager',
+                    name: 'manager',
+                    render: function(data, type, row) {
+                        return data ? (data.first_name + ' ' + data.last_name) : 'N/A';
+                    }
                 }
             ]
         });
@@ -1369,7 +1389,7 @@
                 $('#service_name2').val(decodedServiceName);
                 $('#manager_name2').val(managerFirstName);
                 $('#service_frequency2').val(frequency);
-                $('#service_deadline2').val(deadline.original);
+                $('#service_deadline2').val(deadline);
 
                 $.ajax({
                     url: '/admin/getClientSubService/' + clientserviceId,

@@ -237,6 +237,7 @@
                     }, 1000);
                 },
                 error: function (xhr, error, thrown) {
+                    console.error(xhr.responseText);
                     let errorMessage = "An unknown error occurred.";
                     
                     if (xhr.responseJSON && xhr.responseJSON.errors) {

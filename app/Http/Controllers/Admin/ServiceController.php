@@ -337,10 +337,13 @@ class ServiceController extends Controller
             $data = ClientService::with('client', 'manager', 'service', 'clientSubServices')
                 ->where('status', 1)
                 ->where('type', 1)
-                // ->whereDate('service_deadline', '<=', now()->addDays(30))
-                // ->whereHas('clientSubServices', function ($query) {
-                //     $query->whereNull('staff_id');
-                // })
+                ->where(function ($query) {
+                $query->whereNull('manager_id')
+                        ->orWhereHas('clientSubServices', function ($subQuery) {
+                            $subQuery->whereNull('staff_id');
+                        });
+                })
+                ->distinct()
                 ->orderBy('id', 'desc')
                 ->get();
 
@@ -745,7 +748,7 @@ class ServiceController extends Controller
             //     ->orderBy('id', 'desc')
             //     ->get();
 
-            $data = ClientService::with('clientSubServices')
+            $data = ClientService::with(['clientSubServices', 'manager'])
                 ->whereIn('status', [0, 1])
                 ->where('type', 2)
                 ->where('legal_deadline', '<=', now()->endOfDay())
@@ -792,7 +795,7 @@ class ServiceController extends Controller
             //     ->orderBy('id', 'desc')
             //     ->get();
 
-            $data = ClientService::with('clientSubServices')
+            $data = ClientService::with(['clientSubServices', 'manager'])
                 ->where('status', 2)
                 ->where('type', 2)
                 ->orderBy('id', 'desc')
