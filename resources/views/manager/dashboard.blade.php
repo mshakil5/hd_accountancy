@@ -408,6 +408,7 @@
                                 <th scope="col">Service Name</th>
                                 <th scope="col">Due Date</th>
                                 <th scope="col">Target Deadline</th>
+                                <th scope="col">Status</th>
                                 <th scope="col">Action</th>
                             </tr>
                         </thead>
@@ -499,30 +500,30 @@
                     name: 'legal_deadline'
                 },
                 {
-                        data: 'status',
-                        name: 'status',
-                        render: function(data, type, row) {
-                            const currentUserId = {{ Auth::id() }};
+                    data: 'status',
+                    name: 'status',
+                    render: function(data, type, row) {
+                        const currentUserId = {{ Auth::id() }};
 
-                            if (row.manager_id == currentUserId) {
-                                return `
-                                    <select class="form-control status-change" data-id="${row.id}">
-                                        <option value="1" ${data == 1 ? 'selected' : ''}>Not Started</option>
-                                        <option value="0" ${data == 0 ? 'selected' : ''}>Processing</option>
-                                        <option value="2" ${data == 2 ? 'selected' : ''}>Completed</option>
-                                    </select>
-                                `;
-                            }
-
-                            const statusMap = {
-                                1: 'Not Started',
-                                0: 'Processing',
-                                2: 'Completed'
-                            };
-
-                            return statusMap[data] ?? 'Unknown Status';
+                        if (row.manager_id == currentUserId) {
+                            return `
+                                <select class="form-control status-change" data-id="${row.id}">
+                                    <option value="1" ${data == 1 ? 'selected' : ''}>Not Started</option>
+                                    <option value="0" ${data == 0 ? 'selected' : ''}>Processing</option>
+                                    <option value="2" ${data == 2 ? 'selected' : ''}>Completed</option>
+                                </select>
+                            `;
                         }
-                    },
+
+                        const statusMap = {
+                            1: 'Not Started',
+                            0: 'Processing',
+                            2: 'Completed'
+                        };
+
+                        return statusMap[data] ?? 'Unknown Status';
+                    }
+                },
                 {
                     data: 'action',
                     name: 'action',
@@ -1221,6 +1222,31 @@
                 {
                     data: 'service_deadline',
                     name: 'service_deadline',
+                },
+                {
+                    data: 'status',
+                    name: 'status',
+                    render: function(data, type, row) {
+                        const currentUserId = {{ Auth::id() }};
+
+                        if (row.manager_id == currentUserId) {
+                            return `
+                                <select class="form-control status-change" data-id="${row.id}">
+                                    <option value="1" ${data == 1 ? 'selected' : ''}>Not Started</option>
+                                    <option value="0" ${data == 0 ? 'selected' : ''}>Processing</option>
+                                    <option value="2" ${data == 2 ? 'selected' : ''}>Completed</option>
+                                </select>
+                            `;
+                        }
+
+                        const statusMap = {
+                            1: 'Not Started',
+                            0: 'Processing',
+                            2: 'Completed'
+                        };
+
+                        return statusMap[data] ?? 'Unknown Status';
+                    }
                 },
                 {
                     data: 'action',
