@@ -633,7 +633,7 @@
                         var editButtonHtml = '<button class="btn btn-secondary edit-staff" data-staff-id="' + data + '"><i class="fa fa-eye"></i></button>';
                         var deleteButtonHtml = '<button class="btn btn-danger delete-staff" data-staff-id="' + data + '" style="margin-left: 10px;"><i class="fas fa-trash"></i></button>';
 
-                        return editButtonHtml + deleteButtonHtml;
+                        return editButtonHtml;
                     }
                 }
             ]

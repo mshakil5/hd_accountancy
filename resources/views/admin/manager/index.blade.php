@@ -42,7 +42,7 @@
                     </div>
                     <div class="col-sm-6">
                       <div class="form-group">
-                        <label>Last Name</label>
+                        <label>Last Name <span class="text-danger">*</span></label>
                         <input type="text" id="last_name" name="last_name" class="form-control" placeholder="Enter last name">
                       </div>
                     </div>
@@ -134,9 +134,11 @@
                     
                     <td>
                       <a class="btn btn-link" id="EditBtn" rid="{{$data->id}}"><i class="fa fa-edit" style="font-size: 20px;"></i></a>
+                      {{-- 
                       @if (Auth::user()->id != $data->id)
                         <a class="btn btn-link" id="deleteBtn" rid="{{$data->id}}"><i class="fas fa-trash" style="color: red; font-size: 20px;"></i></a>
                       @endif
+                      --}}
                       
                     </td>
                   </tr>
