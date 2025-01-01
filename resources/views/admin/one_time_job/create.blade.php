@@ -284,6 +284,7 @@
                   });
               },
               error: function(xhr, error, thrown) {
+                  console.error(xhr.responseText);
                   console.error('Error fetching previous messages:', error, thrown);
               }
           });
@@ -306,6 +307,7 @@
                   populateMessage(clientServiceId);
               },
               error: function(xhr, status, error) {
+                  console.error(xhr.responseText);
                   console.error('Error saving message :', error);
               }
           });
