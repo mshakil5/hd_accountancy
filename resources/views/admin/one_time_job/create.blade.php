@@ -100,39 +100,6 @@
                   <th>Comment</th>
                 </tr>
                 </thead>
-                <tbody>
-                  @foreach ($data as $key => $data)
-                  <tr class="
-                      @if ($data->status == 2)
-                          table-success
-                      @elseif($data->status == 1)
-                          table-warning
-                      @elseif($data->status == 0)
-                          table-info
-                      @endif
-                  ">
-                    <td>{{ $key + 1 }}</td>
-                    <td>{{ \Carbon\Carbon::parse($data->created_at)->format('d-m-Y') }}</td>
-                    <td>{{ $data->service->name }}</td>
-                    <td>{{ $data->manager->first_name }} {{ $data->manager->last_name }}</td>
-                    <td>{{ \Carbon\Carbon::parse($data->legal_deadline)->format('d-m-Y') }} </td>
-                    <td>
-                      @if ($data->status == 2)
-                        <span>Completed</span>
-                      @elseif($data->status == 1)
-                        <span>Not Started Yet</span>
-                      @elseif($data->status == 0)
-                        <span>In Progress</span>
-                      @endif
-                    </td>
-                    <td>
-                      <button type="button" class="btn btn-secondary open-modal" data-toggle="modal" data-target="#messageModal" data-client-service-id="{{ $data->id }}">
-                          <i class="fas fa-plus-circle"></i>
-                      </button>
-                  </td>
-                  </tr>
-                  @endforeach
-                </tbody>
               </table>
             </div>
             <!-- /.card-body -->
@@ -192,8 +159,56 @@
 @section('script')
 
 <script>
-    $(function () {
-      $("#example1").DataTable();
+    $('#example1').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: '/admin/one-time-job/data',
+            type: 'GET',
+            dataSrc: 'data',
+            error: function(xhr, error, thrown) {
+                console.error(xhr.responseText);
+            }
+        },
+        columns: [
+            { data: null, render: function(data, type, row, meta) {
+                return meta.row + meta.settings._iDisplayStart + 1;
+            }},
+            { 
+                data: 'created_at', 
+                name: 'created_at',
+                render: function(data) {
+                    return moment(data).format('DD-MM-YYYY');
+                }
+            },
+            { data: 'service.name', name: 'service.name' },
+            { data: 'manager.first_name', name: 'manager.first_name' },
+            { data: 'legal_deadline', name: 'legal_deadline' },
+            {
+                data: 'status',
+                name: 'status',
+                render: function(data, type, row) {
+                    const statusMap = {
+                        1: 'Not Started',
+                        0: 'Processing',
+                        2: 'Completed'
+                    };
+
+                    return statusMap[data] ?? 'Unknown Status';
+                }
+            },
+            {
+                data: null,
+                name: 'comment',
+                render: function(data, type, row) {
+                    return `
+                        <button type="button" class="btn btn-secondary open-modal" data-toggle="modal" data-target="#messageModal" data-client-service-id="${row.id}">
+                            <i class="fas fa-plus-circle"></i>
+                        </button>
+                    `;
+                }
+            }
+        ]
     });
 </script>
 

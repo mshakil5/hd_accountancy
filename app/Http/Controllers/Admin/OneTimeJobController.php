@@ -9,6 +9,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use App\Models\ClientService;
 use App\Models\ClientSubService;
+use Carbon\Carbon;
+use DataTables;
 
 class OneTimeJobController extends Controller
 {
@@ -51,5 +53,24 @@ class OneTimeJobController extends Controller
         $clientService->save();
     
         return response()->json(['status' => 200, 'message' => 'Data saved successfully']);
+    }
+
+    public function getData(Request $request)
+    {
+        $query = ClientService::where('type', 2)
+            ->with(['service', 'manager'])
+            ->get();
+
+        return DataTables::of($query)
+            ->editColumn('servicename', function ($clientService) {
+                return $clientService->service->name;
+            })
+            ->editColumn('legal_deadline', function ($clientService) {
+                return \Carbon\Carbon::parse($clientService->legal_deadline)->format('d-m-Y');
+            })
+            ->editColumn('status', function ($clientService) {
+                return $clientService->status;
+            })
+            ->make(true);
     }
 }

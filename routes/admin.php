@@ -564,6 +564,7 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
 
     //One time job
     Route::get('/one-time-job', [OneTimeJobController::class, 'create'])->name('oneTimeJob.create');
+    Route::get('/one-time-job/data', [OneTimeJobController::class, 'getData'])->name('client-services.data');
     Route::post('/one-time-job', [OneTimeJobController::class, 'store']);
 
 });
