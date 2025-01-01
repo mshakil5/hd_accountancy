@@ -77,7 +77,7 @@
         <!-- Assigned service details section start -->
 
         <!-- Login Time and button -->
-        <div class="col-lg-2 mb-3">
+        <div class="col-lg-4 mb-3">
             <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100">
                 <div class="card-body p-0">
                     <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
@@ -286,32 +286,8 @@
     </div>
     <!-- Service message modal end -->
 
-    <!-- One Time Jobs -->
-    <div class="col-lg-4 mb-3">
-        <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
-            <div class="card-body px-0">
-                <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                    One Time Jobs
-                </div>
-                    <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                    <table id="OneTimeJobsTable" class="table cell-border table-striped" style="width:100%">
-                        <thead>
-                            <tr>
-                                <th scope="col">Service Name</th>
-                                <th scope="col">Deadline</th>
-                                <th scope="col">Action</th>
-                                <th scope="col">Comment</th>
-                            </tr>
-                        </thead>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-   <!-- One Time Jobs -->
-
     <!-- Works assigned to a user and specified staff start-->
-    <div class="col-lg-6 mb-3">
+    <div class="col-lg-8 mb-3">
         <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
             <div class="card-body px-0">
                 <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
@@ -441,6 +417,30 @@
         </div>
     </div>
     <!-- Completed tasks as manager table end-->
+
+    <!-- One Time Jobs -->
+    <div class="col-lg-6 mb-3">
+        <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+            <div class="card-body px-0">
+                <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                    One Time Jobs
+                </div>
+                    <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
+                    <table id="OneTimeJobsTable" class="table cell-border table-striped" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th scope="col">Service Name</th>
+                                <th scope="col">Deadline</th>
+                                <th scope="col">Action</th>
+                                <th scope="col">Comment</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- One Time Jobs -->
     </div>
 </section>
 

@@ -1173,11 +1173,12 @@
             var managerFirstName = $(this).data('manager-firstname');
             var rowData = $('#completedServices').DataTable().row($(this).closest('tr')).data();
             var serviceName = rowData.servicename;
+            var decodedServiceName = $('<div>').html(serviceName).text();
             var frequency = rowData.service_frequency;
             let deadline = rowData.service_deadline;
             deadline = deadline ? moment(deadline).format('YYYY-MM-DD') : '';
 
-            $('#service_name1').val(serviceName);
+            $('#service_name1').val(decodedServiceName);
             $('#manager_name1').val(managerFirstName);
             $('#service_frequency1').val(frequency);
             $('#service_deadline1').val(deadline);
