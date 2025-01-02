@@ -18,6 +18,7 @@ return new class extends Migration
             $table->unsignedBigInteger('client_sub_service_id')->nullable();
             $table->longText('message')->nullable();
             $table->boolean('status')->default(1);
+            $table->json('viewed_by')->nullable();
             $table->foreign('manager_id')->references('id')->on('users')->where('type', 2)->onDelete('cascade');
             $table->foreign('staff_id')->references('id')->on('users')->where('type', 3)->onDelete('cascade');
             $table->foreign('client_sub_service_id')->references('id')->on('client_sub_services')->onDelete('cascade');

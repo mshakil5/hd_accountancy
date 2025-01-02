@@ -16,11 +16,9 @@ class OneTimeJobController extends Controller
 {
     public function create()
     {
-        $data = ClientService::where('type', 2)->select('id', 'service_id', 'manager_id', 'legal_deadline', 'created_at', 'status')->orderby('id', 'DESC')->get();
-
         $managerAndStaffs = User::whereIn('type', [ '2', '3' ])->select('id', 'first_name', 'last_name', 'type')->orderby('id', 'DESC')->get();
 
-        return view('admin.one_time_job.create', compact('data', 'managerAndStaffs'));
+        return view('admin.one_time_job.create', compact('managerAndStaffs'));
     }
 
     public function store(Request $request)
@@ -35,14 +33,12 @@ class OneTimeJobController extends Controller
             return response()->json(['status' => 422, 'errors' => $validator->errors()->toArray()], 422);
         }
     
-        // Create a new service
         $service = new Service();
         $service->name = $request->task;
         $service->status = 2;
         $service->created_by = auth()->id();
         $service->save();
 
-        // Create a new client service
         $clientService = new ClientService();
         $uniqueId = date("His") . '-' . mt_rand(1000, 9999);
         $clientService->service_id = $service->id;
@@ -57,20 +53,33 @@ class OneTimeJobController extends Controller
 
     public function getData(Request $request)
     {
+        $authUserId = (string) auth()->id();
+    
         $query = ClientService::where('type', 2)
-            ->with(['service', 'manager'])
-            ->get();
-
+            ->with(['service', 'manager', 'messages'])
+            ->get()
+            ->map(function ($clientService) use ($authUserId) {
+                $clientService->has_new_message = $clientService->messages->contains(function ($message) use ($authUserId) {
+                    $viewedBy = json_decode($message->viewed_by, true) ?? [];
+                    return !in_array($authUserId, $viewedBy);
+                });
+    
+                return $clientService;
+            });
+    
         return DataTables::of($query)
             ->editColumn('servicename', function ($clientService) {
                 return $clientService->service->name;
             })
             ->editColumn('legal_deadline', function ($clientService) {
-                return \Carbon\Carbon::parse($clientService->legal_deadline)->format('d-m-Y');
+                return Carbon::parse($clientService->legal_deadline)->format('d-m-Y');
             })
             ->editColumn('status', function ($clientService) {
                 return $clientService->status;
             })
+            ->addColumn('has_new_message', function ($clientService) {
+                return $clientService->has_new_message ? 'Yes' : 'No';
+            })
             ->make(true);
-    }
+    }      
 }
