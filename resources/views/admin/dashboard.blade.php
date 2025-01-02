@@ -1233,6 +1233,10 @@
                         <option value="2" ${subService.sequence_status == 2 ? 'selected' : ''}>Work is completed</option>
                     </select>`;
 
+                const newMessageIcon = subService.has_new_message
+                ? '<span class="new-message-icon" style="color: red; margin-left: 5px;"><i class="fas fa-circle"></i></span>'
+                : '';
+
                 var newRow = `
                     <tr>
                         <td>${subService.sub_service.name}</td>
@@ -1245,7 +1249,7 @@
                         </td>
                         <td>
                             <button type="button" class="btn btn-secondary open-modal" data-toggle="modal" data-target="#messageModal" data-client-sub-service-id="${subService.id}">
-                                <i class="fas fa-plus-circle"></i>
+                                <i class="fas fa-plus-circle"></i> ${newMessageIcon}
                             </button>
                         </td>
                     </tr>
@@ -1255,6 +1259,10 @@
 
             $('#completedTaskSection').show();
         }
+
+        $('#messageModal').on('hidden.bs.modal', function () {
+            $('#assignedTaskSection, #completedTaskSection').hide();
+        });
 
         $(document).on('change', '.change-service-status', function() {
             var clientSubServiceId = $(this).data('sub-service-id');
@@ -1421,6 +1429,10 @@
 
                 var staffName = subService.staff ? (subService.staff.first_name + ' ' + (subService.staff.last_name || '')).trim() : 'N/A';
 
+                const newMessageIcon = subService.has_new_message
+                    ? '<span class="new-message-icon" style="color: red; margin-left: 5px;"><i class="fas fa-circle"></i></span>'
+                    : '';
+
                 var newRow = `
                   <tr>
                       <td>${subService.sub_service.name}</td>
@@ -1436,7 +1448,7 @@
                       </td>
                       <td>
                             <button type="button" class="btn btn-secondary open-modal" data-toggle="modal" data-target="#messageModal" data-client-sub-service-id="${subService.id}">
-                                <i class="fas fa-plus-circle"></i>
+                                <i class="fas fa-plus-circle"></i> ${newMessageIcon}
                             </button>
                         </td>
                   </tr>

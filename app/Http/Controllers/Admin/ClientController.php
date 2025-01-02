@@ -124,11 +124,9 @@ class ClientController extends Controller
     public function create()
     {
         $managers = User::where('type', '2')->select('id', 'first_name')->orderby('id', 'DESC')->get();
-        $staffs = User::where('type', '3')->select('id', 'first_name')->orderby('id', 'DESC')->get();
         $clientTypes = ClientType::select('id', 'name')->orderby('id', 'DESC')->get();
-        $services = Service::select('id', 'name')->orderby('id', 'DESC')->get();
         $client = "";
-        return view('admin.client.create', compact('clientTypes', 'managers', 'services', 'client', 'staffs'));
+        return view('admin.client.create', compact('clientTypes', 'managers', 'client'));
     }
 
     public function store(Request $request)
@@ -223,7 +221,7 @@ class ClientController extends Controller
         $businessInfo = BusinessInfo::where('client_id', $id)->first();
         $directorInfos = DirectorInfo::where('client_id', $id)->get();
         $contactInfo = ContactInfo::where('client_id', $id)->first();
-        $services = Service::select('id', 'name')->orderby('id', 'DESC')->get();
+        $services = Service::where('status', '1')->select('id', 'name')->orderby('id', 'DESC')->get();
         $staffs = User::whereIn('type', ['3', '2'])->select('id', 'first_name')->orderby('id', 'DESC')->get();
         return view('admin.client.updateForm', compact('client', 'clientTypes', 'managers', 'businessInfo', 'directorInfos', 'contactInfo', 'services', 'staffs'));
     }

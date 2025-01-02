@@ -189,7 +189,7 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
      Route::post('/store-message', [ServiceController::class, 'storeMessage']);
 
     Route::get('/getServiceComment/{clientServiceId}', [ServiceController::class, 'getServiceComment']);
-
+    
     Route::post('/store-comment', [ServiceController::class, 'storeComment']);
 
      //Store fetched services + staff

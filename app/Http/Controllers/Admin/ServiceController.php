@@ -395,9 +395,22 @@ class ServiceController extends Controller
 
     public function getClientSubService($clientserviceId)
     {
-        $clientSubServices = ClientSubService::with('subService', 'serviceMessage', 'workTimes', 'staff')->where('client_service_id', $clientserviceId)->get();
+        $authUserId = auth()->id();
+        
+        $clientSubServices = ClientSubService::with('subService', 'serviceMessage', 'workTimes', 'staff')
+            ->where('client_service_id', $clientserviceId)
+            ->get()
+            ->map(function ($subService) use ($authUserId) {
+                $subService->has_new_message = $subService->serviceMessage->contains(function ($message) use ($authUserId) {
+                    $viewedBy = json_decode($message->viewed_by, true) ?? [];
+                    return !in_array($authUserId, $viewedBy);
+                });
+    
+                return $subService;
+            });
+    
         return response()->json($clientSubServices);
-    }
+    }    
 
     public function getSubServices($serviceId)
     {
@@ -877,11 +890,24 @@ class ServiceController extends Controller
 
     public function getServiceMessage($clientSubServiceId)
     {
+        $authUserId = (string) auth()->id();
+        
         $messages = ServiceMessage::with('user:id,first_name')
-            ->select('created_by', 'message')
             ->where('client_sub_service_id', $clientSubServiceId)
             ->get()
-            ->map(function($message) {
+            ->map(function ($message) use ($authUserId) {
+                $viewedBy = $message->viewed_by ? json_decode($message->viewed_by, true) : [];
+    
+                if (!in_array($authUserId, $viewedBy)) {
+                    $viewedBy[] = $authUserId;
+                }
+    
+                $viewedBy = array_map('strval', $viewedBy);
+                $viewedBy = array_unique($viewedBy);
+    
+                $message->viewed_by = json_encode($viewedBy);
+                $message->save();
+    
                 return [
                     'userName' => $message->user->first_name,
                     'messageContent' => $message->message,
@@ -889,7 +915,7 @@ class ServiceController extends Controller
             });
     
         return response()->json($messages);
-    }
+    }    
 
     public function storeMessage(Request $request)
     {
@@ -902,6 +928,7 @@ class ServiceController extends Controller
         $serviceMessage->message = $validated['message'];
         $serviceMessage->client_sub_service_id = $validated['client_sub_service_id'];
         $serviceMessage->created_by = auth()->id();
+        $serviceMessage->viewed_by = json_encode([strval(auth()->id())]);
         $serviceMessage->save();
 
         return response()->json(['success' => true, 'message' => 'Message saved successfully']);
@@ -910,7 +937,7 @@ class ServiceController extends Controller
     public function getServiceComment($clientServiceId)
     {
         $authUserId = (string) auth()->id();
-        
+
         $messages = ServiceMessage::with('user:id,first_name')
             ->where('client_service_id', $clientServiceId)
             ->get()
