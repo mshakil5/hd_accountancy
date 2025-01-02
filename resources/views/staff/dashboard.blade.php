@@ -762,6 +762,10 @@
                     }
                 }
 
+                const newMessageIcon = subService.has_new_message
+                    ? '<span class="new-message-icon" style="color: red; margin-left: 5px;"><i class="fas fa-circle"></i></span>'
+                    : '';
+
                 var newRow = `
                     <tr>
                         <td>${subService.sub_service.name}</td>
@@ -771,7 +775,7 @@
                         <td>${statusText} ${statusDropdown}</td>
                         <td>
                             <button type="button" class="btn btn-secondary open-modal" data-toggle="modal" data-target="#messageModal" data-staff-id="${subService.staff_id}" data-client-sub-service-id="${subService.id}">
-                                <i class="fas fa-plus-circle"></i>
+                                <i class="fas fa-plus-circle"></i> ${newMessageIcon}
                             </button>
                         </td>
                         <td>
@@ -819,6 +823,10 @@
                 }
             });
         }
+
+        $('#messageModal').on('hidden.bs.modal', function () {
+            $('#assignTaskSection, #completedTaskSection').hide();
+        });
 
         $('#saveMessage').click(function() {
             var message = $('#service-message').val();
@@ -1172,6 +1180,10 @@
                         <option value="2" ${subService.sequence_status == 2 ? 'selected' : ''}>Work is completed</option>
                     </select>`;
 
+                const newMessageIcon = subService.has_new_message
+                ? '<span class="new-message-icon" style="color: red; margin-left: 5px;"><i class="fas fa-circle"></i></span>'
+                : '';
+
                 var newRow = `
                     <tr>
                         <td>${subService.sub_service.name}</td>
@@ -1181,7 +1193,7 @@
                         <td>${statusDropdown}</td>
                         <td>
                             <button type="button" class="btn btn-secondary open-modal" data-toggle="modal" data-target="#messageModal" data-staff-id="${subService.staff_id}" data-client-sub-service-id="${subService.id}">
-                                <i class="fas fa-plus-circle"></i>
+                                <i class="fas fa-plus-circle"></i> ${newMessageIcon}
                             </button>
                         </td>
                          <td>

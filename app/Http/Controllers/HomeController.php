@@ -189,7 +189,7 @@ class HomeController extends Controller
 
         $staffs = User::whereIn('type', ['3', '2'])->select('id', 'first_name', 'last_name')->orderBy('id', 'DESC')->get();
         $managers = User::whereIn('type', ['3', '2'])->select('id', 'first_name', 'last_name')->orderBy('id', 'DESC')->get();
-        $services = Service::orderBy('id', 'DESC')->select('id', 'name')->get();
+        $services = Service::orderBy('id', 'DESC')->where('status', '1')->select('id', 'name')->get();
 
         return view('admin.dashboard', compact('staffs', 'loggedStaff', 'managers', 'services', 'lateStaff', 'absentStaff','filteredLogs','totalAbsentStaffCount'));
     }
