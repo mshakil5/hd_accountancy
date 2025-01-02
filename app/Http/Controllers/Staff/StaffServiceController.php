@@ -586,10 +586,19 @@ class StaffServiceController extends Controller
 
     public function getOneTimeJobs(Request $request)
     {
+        $authUserId = (string) auth()->id();
         $query = ClientService::where('type', 2)
-            ->with('service')
+            ->with(['service', 'messages'])
             ->where('manager_id', Auth::id())
-            ->get();
+            ->get()
+            ->map(function ($clientService) use ($authUserId) {
+                $clientService->has_new_message = $clientService->messages->contains(function ($message) use ($authUserId) {
+                    $viewedBy = json_decode($message->viewed_by, true) ?? [];
+                    return !in_array($authUserId, $viewedBy);
+                });
+    
+                return $clientService;
+            });
 
         return DataTables::of($query)
             ->editColumn('servicename', function ($clientService) {
@@ -600,6 +609,9 @@ class StaffServiceController extends Controller
             })
             ->editColumn('status', function ($clientService) {
                 return $clientService->status;
+            })
+            ->addColumn('has_new_message', function ($clientService) {
+                return $clientService->has_new_message ? 'Yes' : 'No';
             })
             ->make(true);
     }
@@ -627,19 +639,33 @@ class StaffServiceController extends Controller
 
     public function getServiceComment($clientServiceId)
     {
+        $authUserId = (string) auth()->id();
+        
         $messages = ServiceMessage::with('user:id,first_name')
-            ->select('created_by', 'message')
             ->where('client_service_id', $clientServiceId)
             ->get()
-            ->map(function($message) {
+            ->map(function ($message) use ($authUserId) {
+                $viewedBy = $message->viewed_by ? json_decode($message->viewed_by, true) : []; 
+    
+                if (!in_array($authUserId, $viewedBy)) {
+                    $viewedBy[] = $authUserId;
+                }
+    
+                $viewedBy = array_map('strval', $viewedBy);
+                $viewedBy = array_unique($viewedBy);
+    
+                $message->viewed_by = json_encode($viewedBy); 
+    
+                $message->save();
+    
                 return [
                     'userName' => $message->user->first_name,
                     'messageContent' => $message->message,
                 ];
             });
-
+    
         return response()->json($messages);
-    }
+    } 
 
     public function storeComment(Request $request)
     {
@@ -652,6 +678,7 @@ class StaffServiceController extends Controller
         $serviceMessage->message = $validated['message'];
         $serviceMessage->client_service_id = $validated['client_service_id'];
         $serviceMessage->created_by = auth()->id();
+        $serviceMessage->viewed_by = json_encode([strval(auth()->id())]);
         $serviceMessage->save();
 
         return response()->json(['success' => true, 'message' => 'Message saved successfully']);

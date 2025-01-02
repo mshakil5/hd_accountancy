@@ -568,12 +568,16 @@
                     }
                 },
                 {
-                    data: null,
-                    name: 'comment',
+                    data: 'has_new_message',
+                    name: 'has_new_message',
                     render: function(data, type, row) {
+                        const newMessageIcon = data === 'Yes' 
+                            ? '<span class="new-message-icon" style="color: red; margin-left: 5px;"><i class="fas fa-circle"></i></span>' 
+                            : '';
+
                         return `
                             <button type="button" class="btn btn-secondary open-modal1" data-toggle="modal" data-target="#messageModal1" data-client-service-id="${row.id}">
-                                <i class="fas fa-plus-circle"></i>
+                                <i class="fas fa-plus-circle"></i>${newMessageIcon}
                             </button>
                         `;
                     }
@@ -660,6 +664,14 @@
                 }
             });
         });
+
+        $('#messageModal1').on('hidden.bs.modal', function () {
+            $('#OneTimeJobsTable').DataTable().ajax.reload();
+        });
+
+        setInterval(function () {
+            $('#OneTimeJobsTable').DataTable().ajax.reload();
+        }, 30000);
 
         $(document).on('click', '.change-status', function() {
             var clientserviceId = $(this).data('id');
@@ -1478,7 +1490,7 @@
 <!-- Note and additional work end -->
 
 <!-- Idle time count start -->
-<script>
+<!-- <script>
     let idleTimer;
     let idleStartTime;
     let totalIdleTime = 0;
@@ -1526,7 +1538,7 @@
     document.addEventListener('keypress', resetIdleTimer);
 
     startIdleTimer();
-</script>
+</script> -->
 <!-- Idle time count end -->
 
 <!-- Active Time start -->
