@@ -57,6 +57,7 @@ class OneTimeJobController extends Controller
     
         $query = ClientService::where('type', 2)
             ->with(['service', 'manager', 'messages'])
+            ->orderBy('id', 'DESC')
             ->get()
             ->map(function ($clientService) use ($authUserId) {
                 $clientService->has_new_message = $clientService->messages->contains(function ($message) use ($authUserId) {

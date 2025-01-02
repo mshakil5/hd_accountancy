@@ -133,17 +133,17 @@ class ClientController extends Controller
     {
          $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'client_type_id' => 'required',
+            'client_type_id' => 'nullable',
             'manager_id' => 'required',
             'email' => 'required|email|unique:clients',
             'phone' => 'required|numeric|digits:11',
             'address_line1' => 'required|string|max:255',
             'address_line2' => 'nullable|string|max:255',
             'trading_address' => 'nullable|string|max:255',
-            'city' => 'required|string|max:255',
-            'town' => 'required|string|max:255',
+            'city' => 'nullable|string|max:255',
+            'town' => 'nullable|string|max:255',
             'reference_id' => 'required',
-            'postcode' => 'required|string',
+            'postcode' => 'nullable|string',
             'country' => 'nullable|string|max:255',
             'photo' => 'nullable|mimes:jpeg,png,jpg,gif,svg,pdf|max:8048',
             'photo_id' => 'nullable|mimes:jpeg,png,jpg,gif,svg,pdf|max:8048'
@@ -230,7 +230,7 @@ class ClientController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'client_type_id' => 'required',
+            'client_type_id' => 'nullable',
             'manager_id' => 'required',
             'reference_id' => 'required',
             'email' => 'required|email',
@@ -238,10 +238,10 @@ class ClientController extends Controller
             'address_line1' => 'required|string|max:255',
             'address_line2' => 'nullable|string|max:255',
             'trading_address' => 'nullable|string|max:255',
-            'city' => 'required|string|max:255',
-            'town' => 'required|string|max:255',
-            'postcode' => 'required|string',
-            'country' => 'required|string|max:255',
+            'city' => 'nullable|string|max:255',
+            'town' => 'nullable|string|max:255',
+            'postcode' => 'nullable|string',
+            'country' => 'nullable|string|max:255',
             'photo' => 'nullable|mimes:jpeg,png,jpg,gif,svg,pdf|max:8048',
             'photo_id' => 'nullable|mimes:jpeg,png,jpg,gif,svg,pdf|max:8048'
         ]);

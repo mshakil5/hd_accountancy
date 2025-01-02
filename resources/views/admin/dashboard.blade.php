@@ -787,6 +787,9 @@
             ajax: {
                 url: '/admin/get-one-time-assigned-service',
                 type: 'GET',
+                error: function(xhr, status, error) {
+                console.error('Error occurred:', xhr.responseText);
+            }
             },
             columns: [
                 {
@@ -804,16 +807,11 @@
                     data: 'legal_deadline',
                     name: 'legal_deadline',
                     render: function(data, type, row) {
-                        if (!data.original) {
-                            return 'N/A';
+                        var legalDeadlineDate = moment(data, 'DD-MM-YYYY');
+                        if (legalDeadlineDate.isBefore(moment(), 'day')) {
+                            return '<span style="color: red;">' + data + '</span>';
                         }
-                        var formattedDate = data.formatted;
-                        var today = moment().startOf('day');
-                        var deadline = moment(data.original).startOf('day');
-                        if (deadline.isBefore(today)) {
-                            return '<span class="bg-warning">' + formattedDate + '</span>';
-                        }
-                        return formattedDate;
+                        return data;
                     }
                 },
                 {
@@ -849,16 +847,11 @@
                     data: 'legal_deadline',
                     name: 'legal_deadline',
                     render: function(data, type, row) {
-                        if (!data.original) {
-                            return 'N/A';
+                        var legalDeadlineDate = moment(data, 'DD-MM-YYYY');
+                        if (legalDeadlineDate.isBefore(moment(), 'day')) {
+                            return '<span style="color: red;">' + data + '</span>';
                         }
-                        var formattedDate = data.formatted;
-                        var today = moment().startOf('day');
-                        var deadline = moment(data.original).startOf('day');
-                        if (deadline.isBefore(today)) {
-                            return '<span class="bg-warning">' + formattedDate + '</span>';
-                        }
-                        return formattedDate;
+                        return data;
                     }
                 },
                 {

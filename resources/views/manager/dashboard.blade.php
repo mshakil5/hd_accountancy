@@ -749,6 +749,7 @@
                 type: "GET",
                 dataType: "json",
                 success: function(data) {
+                    // console.log(data);
                     populateSubServiceForm(data);
                 },
                 error: function(xhr, error, thrown) {
@@ -771,9 +772,8 @@
                     return staff.id == subService.staff_id;
                 });
 
-                var staffDropdown = '';
-
-                if (subService.sequence_status == 0 || subService.sequence_status == 1) {
+                var staffDropdown = '';               
+                if ([0, 1, 2].includes(subService.sequence_status)) {
                     if (subService.client_service && subService.client_service.manager_id == authUserId) {
                         staffDropdown = '<select class="form-select change-staff" data-sub-service-id="' + subService.id + '">';
                         staffs.forEach(function(staffMember) {

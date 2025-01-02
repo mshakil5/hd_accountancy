@@ -193,7 +193,14 @@
             },
             {
                 data: 'legal_deadline',
-                name: 'legal_deadline'
+                name: 'legal_deadline',
+                render: function(data, type, row) {
+                    var legalDeadlineDate = moment(data, 'DD-MM-YYYY');
+                    if (legalDeadlineDate.isBefore(moment(), 'day')) {
+                        return '<span style="color: red;">' + data + '</span>';
+                    }
+                    return data;
+                }
             },
             {
                 data: 'status',

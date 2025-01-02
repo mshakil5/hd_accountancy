@@ -91,7 +91,7 @@ class ServiceController extends Controller
     {
         $authUserId = auth()->id();
         
-        $clientSubServices = ClientSubService::with('subService', 'serviceMessage', 'workTimes', 'staff')
+        $clientSubServices = ClientSubService::with('subService', 'serviceMessage', 'workTimes', 'staff', 'clientService')
             ->where('client_service_id', $clientserviceId)
             ->get()
             ->map(function ($subService) use ($authUserId) {

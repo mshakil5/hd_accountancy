@@ -31,7 +31,7 @@
                     <input for="myForm" type="text" value="{{ isset($client->name) ? $client->name : '' }}" class="form-control mt-2" name="name" id="name" required placeholder="Enter client name">
                 </div>
                 <div class="col-lg-3">
-                    <label for="">Client Type <span class="text-danger">*</span></label>
+                    <label for="">Client Type </label>
                     <div class="mt-2">
                         <select name="client_type_id" class="form-control mt-2" id="client_type_id">
                             <option value="" selected>Select client</option>
@@ -132,15 +132,15 @@
                                                 <textarea class="form-control my-2" id="trading_address" name="trading_address" placeholder="Enter trading address">{{ isset($client) && isset($client->trading_address) ? $client->trading_address : '' }}</textarea>
                                             </div>
                                             <div class="col-lg-4">
-                                                <label for="">City <span class="text-danger">*</span></label>
+                                                <label for="">City </label>
                                                 <input type="text" class="form-control my-2" id="city" name="city" value="{{ isset($client) && isset($client->city) ? $client->city : '' }}" placeholder="Enter city">
                                             </div>
                                             <div class="col-lg-4">
-                                                <label for="">Town <span class="text-danger">*</span></label>
+                                                <label for="">Town </label>
                                                 <input type="text" class="form-control my-2" id="town" name="town" placeholder="Enter town" value="{{ isset($client) && isset($client->town) ? $client->town : '' }}">
                                             </div>
                                             <div class="col-lg-4">
-                                                <label for="">Postal Code <span class="text-danger">*</span></label>
+                                                <label for="">Postal Code </label>
                                                 <input type="text" class="form-control my-2" id="postcode" name="postcode" placeholder="Enter postal code" value="{{ isset($client) && isset($client->postcode) ? $client->postcode : '' }}">
                                             </div>
                                             <div class="col-lg-4">

@@ -15,6 +15,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ServiceMessage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Carbon;
 
 class ServiceController extends Controller
 {
@@ -368,12 +369,9 @@ class ServiceController extends Controller
     public function getCompletedServices(Request $request)
     {
         if ($request->ajax()) {
-            $data = ClientService::with('clientSubServices')
+            $data = ClientService::where('type', 1)->with('clientSubServices')
                 ->where('status', 2)
                 ->where('due_date', '<=', now()->endOfDay())
-                // ->whereHas('clientSubServices', function ($query) {
-                //     $query->where('sequence_status', 2);
-                // })
                 ->orderBy('id', 'desc')
                 ->get();
 
@@ -689,14 +687,6 @@ class ServiceController extends Controller
     public function getAssignedService(Request $request)
     {
         if ($request->ajax()) {
-            // $data = ClientService::with('clientSubServices')
-            //     ->where('due_date', '>=', now()->startOfDay())
-            //     ->where('due_date', '<=', now()->addDays(30)->endOfDay())
-            //     // ->whereHas('clientSubServices', function ($query) {
-            //     //     $query->whereNotNull('staff_id');
-            //     // })
-            //     ->orderBy('id', 'desc')
-            //     ->get();
 
             $data = ClientService::with('clientSubServices')
                 ->whereIn('status', [0, 1])
@@ -752,19 +742,10 @@ class ServiceController extends Controller
     public function getOneTimeAssignedService(Request $request)
     {
         if ($request->ajax()) {
-            // $data = ClientService::with('clientSubServices')
-            //     ->where('due_date', '>=', now()->startOfDay())
-            //     ->where('due_date', '<=', now()->addDays(30)->endOfDay())
-            //     // ->whereHas('clientSubServices', function ($query) {
-            //     //     $query->whereNotNull('staff_id');
-            //     // })
-            //     ->orderBy('id', 'desc')
-            //     ->get();
 
             $data = ClientService::with(['clientSubServices', 'manager'])
                 ->whereIn('status', [0, 1])
                 ->where('type', 2)
-                ->where('legal_deadline', '<=', now()->endOfDay())
                 ->orderBy('id', 'desc')
                 ->get();
 
@@ -773,19 +754,8 @@ class ServiceController extends Controller
                 ->addColumn('servicename', function (ClientService $clientservice) {
                     return $clientservice->service ? $clientservice->service->name : '';
                 })
-                ->addColumn('legal_deadline', function (ClientService $clientservice) {
-                    $legalDeadline = $clientservice->legal_deadline;
-                    if ($legalDeadline) {
-                        return [
-                            'formatted' => \Carbon\Carbon::parse($legalDeadline)->format('d.m.y'),
-                            'original' => $legalDeadline
-                        ];
-                    }
-
-                    return [
-                        'formatted' => 'N/A',
-                        'original' => null
-                    ];
+                ->editColumn('legal_deadline', function ($clientService) {
+                    return Carbon::parse($clientService->legal_deadline)->format('d-m-Y');
                 })
 
                 ->addColumn('action', function (ClientService $clientservice) {
@@ -799,14 +769,6 @@ class ServiceController extends Controller
     public function getOneTimeCompletedService(Request $request)
     {
         if ($request->ajax()) {
-            // $data = ClientService::with('clientSubServices')
-            //     ->where('due_date', '>=', now()->startOfDay())
-            //     ->where('due_date', '<=', now()->addDays(30)->endOfDay())
-            //     // ->whereHas('clientSubServices', function ($query) {
-            //     //     $query->whereNotNull('staff_id');
-            //     // })
-            //     ->orderBy('id', 'desc')
-            //     ->get();
 
             $data = ClientService::with(['clientSubServices', 'manager'])
                 ->where('status', 2)
@@ -819,19 +781,8 @@ class ServiceController extends Controller
                 ->addColumn('servicename', function (ClientService $clientservice) {
                     return $clientservice->service ? $clientservice->service->name : '';
                 })
-                ->addColumn('legal_deadline', function (ClientService $clientservice) {
-                    $legalDeadline = $clientservice->legal_deadline;
-                    if ($legalDeadline) {
-                        return [
-                            'formatted' => \Carbon\Carbon::parse($legalDeadline)->format('d.m.y'),
-                            'original' => $legalDeadline
-                        ];
-                    }
-
-                    return [
-                        'formatted' => 'N/A',
-                        'original' => null
-                    ];
+                ->editColumn('legal_deadline', function ($clientService) {
+                    return Carbon::parse($clientService->legal_deadline)->format('d-m-Y');
                 })
 
                 ->addColumn('action', function (ClientService $clientservice) {
@@ -845,11 +796,12 @@ class ServiceController extends Controller
     public function getTodaysDeadlineService(Request $request)
     {
         if ($request->ajax()) {
-            $data = ClientService::with('clientSubServices')
-                ->whereDate('service_deadline', '=', now())
-                ->whereHas('clientSubServices', function ($query) {
-                    $query->whereNotNull('staff_id');
-                })
+            $data = ClientService::where('type', 2)
+                ->with('clientSubServices')
+                ->whereDate('service_deadline', '=', today())
+                // ->whereHas('clientSubServices', function ($query) {
+                //     $query->whereNotNull('staff_id');
+                // })
                 ->where('type', 1)
                 ->orderBy('id', 'desc')
                 ->get();

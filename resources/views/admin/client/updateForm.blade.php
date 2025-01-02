@@ -16,7 +16,7 @@
                 </div>
 
                 <div class="col-lg-3">
-                    <label for="country">Client Type <span class="text-danger">*</span></label>
+                    <label for="country">Client Type </label>
                     <div class="mt-2">
                         <select class="form-control my-2" id="client_type_id" name="client_type_id">
                             <option value="">Please select</option>
@@ -94,11 +94,11 @@
                                                 <input type="email" class="form-control my-2" id="email" name="email" placeholder="Enter email" value="{{ $client->email }}">
                                             </div>
                                             <div class="col-lg-4">
-                                                <label for="">Phone</label>
+                                                <label for="">Phone <span class="text-danger">*</span></label>
                                                 <input type="number" class="form-control my-2" id="phone" name="phone" placeholder="Enter phone" value="{{ $client->phone }}">
                                             </div>
                                             <div class="col-lg-4">
-                                                <label for="">Address Line 1</label>
+                                                <label for="">Address Line 1 <span class="text-danger">*</span></label>
                                                 <textarea class="form-control my-2" id="address_line1" name="address_line1" placeholder="Enter address line 1">{{ $client->address_line1 }}</textarea>
                                             </div>
                                             <div class="col-lg-4">
@@ -130,9 +130,7 @@
                                                 <div class="mt-2">
                                                     <select class="form-control my-2" id="country" name="country">
                                                         <option value="" disabled>Choose Country</option>
-                                                        <option value="Bangladesh" {{ $client->country == 'Bangladesh' ? 'selected' : '' }}>Bangladesh</option>
                                                         <option value="UK" {{ $client->country == 'UK' ? 'selected' : '' }}>UK</option>
-                                                        <option value="USA" {{ $client->country == 'USA' ? 'selected' : '' }}>USA</option>
                                                     </select>
                                                 </div>
                                             </div>
