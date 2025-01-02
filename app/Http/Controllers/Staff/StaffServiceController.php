@@ -29,6 +29,7 @@ class StaffServiceController extends Controller
                     $query->whereIn('sequence_status', [0, 1])
                         ->where('staff_id', Auth::id());
                 })
+                ->where('due_date', '<=', now()->endOfDay())
                 ->orderBy('id', 'desc')
                 ->get();
 
@@ -82,6 +83,7 @@ class StaffServiceController extends Controller
                     $query->where('sequence_status', 2)
                         ->where('staff_id', Auth::id());
                 })
+                ->where('due_date', '<=', now()->endOfDay())
                 ->orderBy('id', 'desc')
                 ->get();
 

@@ -24,7 +24,9 @@ class ServiceController extends Controller
         $currentUserId = Auth::id();
     
         if ($request->ajax()) {
-            $data = ClientService::where('type', '!=', 2)->with(['clientSubServices' => function ($query) {
+            $data = ClientService::where('type', '!=', 2)
+            ->where('due_date', '<=', now()->endOfDay())
+            ->with(['clientSubServices' => function ($query) {
                     $query->where('staff_id', Auth::id());
                         //   ->whereIn('sequence_status', [0, 1]);
                 }])
@@ -202,6 +204,7 @@ class ServiceController extends Controller
                     $query->where('sequence_status', 2)
                         ->where('staff_id', Auth::id());
                 })
+                ->where('due_date', '<=', now()->endOfDay())
                 ->orderBy('id', 'desc')
                 ->get();
 
@@ -228,6 +231,7 @@ class ServiceController extends Controller
             $data = ClientService::where('type', '!=', 2)->with('clientSubServices')
                 ->where('manager_id', Auth::id())
                 ->where('status', 2)
+                ->where('due_date', '<=', now()->endOfDay())
                 ->orderBy('id', 'desc')
                 ->get();
 
