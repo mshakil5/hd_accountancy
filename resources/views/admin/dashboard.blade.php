@@ -1334,11 +1334,11 @@
                     render: function(data, type, row) {
                         let badge = '';
                         console.log('Status:', row.status);
-                        if (row.status === 1) {
+                        if (row.status == 1) {
                             badge = '<span class="badge bg-primary text-white">Not Started</span>';
-                        } else if (row.status === 2) {
+                        } else if (row.status == 2) {
                             badge = '<span class="badge bg-success text-white">Completed</span>';
-                        } else if (row.status === 0) {
+                        } else if (row.status == 0) {
                             badge = '<span class="badge bg-warning text-dark">Processing</span>';
                         } else {
                             badge = '<span class="badge bg-secondary text-white">Unknown</span>';
