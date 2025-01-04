@@ -1333,18 +1333,15 @@
                     name: 'servicename',
                     render: function(data, type, row) {
                         let badge = '';
-                        switch (row.status) {
-                            case 1:
-                                badge = '<span class="badge" style="background-color: #007bff; border: 2px solid #0056b3;">Not Started</span>';
-                                break;
-                            case 2:
-                                badge = '<span class="badge" style="background-color: #28a745; border: 2px solid #218838;">Completed</span>';
-                                break;
-                            case 0:
-                                badge = '<span class="badge" style="background-color: #ffc107; border: 2px solid #e0a800;">Processing</span>';
-                                break;
-                            default:
-                                badge = '<span class="badge" style="background-color: #6c757d; border: 2px solid #5a6268;">Unknown</span>';
+                        console.log('Status:', row.status);
+                        if (row.status === 1) {
+                            badge = '<span class="badge bg-primary text-white">Not Started</span>';
+                        } else if (row.status === 2) {
+                            badge = '<span class="badge bg-success text-white">Completed</span>';
+                        } else if (row.status === 0) {
+                            badge = '<span class="badge bg-warning text-dark">Processing</span>';
+                        } else {
+                            badge = '<span class="badge bg-secondary text-white">Unknown</span>';
                         }
                         return `${data} <br>${badge}`;
                     }
