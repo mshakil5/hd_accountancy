@@ -42,7 +42,7 @@
                                                 <option value="">Select</option>
                                                 @foreach($managers as $manager)
                                                     <option value="{{ $manager->id }}" {{ isset($clientService) && $clientService->manager_id == $manager->id ? 'selected' : '' }}>
-                                                        {{ $manager->first_name }}
+                                                        {{ $manager->first_name }} {{ $manager->last_name }} ({{ $manager->type }})
                                                     </option>
                                                 @endforeach
                                             </select>
@@ -112,7 +112,7 @@
                                                 <option value="">Select Staff</option>
                                                 @foreach($staffs as $staff)
                                                     <option value="{{ $staff->id }}" {{ isset($clientSubService->staff_id) && $clientSubService->staff_id == $staff->id ? 'selected' : '' }}>
-                                                        {{ $staff->first_name }}
+                                                        {{ $staff->first_name }} {{ $staff->last_name }} ({{ $staff->type }})
                                                     </option>
                                                 @endforeach
                                             </select>

@@ -217,12 +217,12 @@ class ClientController extends Controller
         $client = Client::with(['clientType', 'manager', 'businessInfo', 'directorInfos', 'clientServices', 'contactInfos', 'recentUpdates.user'])->find($id);
         $client->recentUpdates = $client->recentUpdates()->orderBy('id', 'desc')->get();
         $clientTypes = ClientType::select('id', 'name')->orderby('id', 'DESC')->get();
-        $managers = User::where('type', '2')->select('id', 'first_name')->orderby('id', 'DESC')->get();
+        $managers = User::whereIn('type', ['1', '2'])->select('id', 'first_name', 'last_name', 'type')->orderby('id', 'DESC')->get();
         $businessInfo = BusinessInfo::where('client_id', $id)->first();
         $directorInfos = DirectorInfo::where('client_id', $id)->get();
         $contactInfo = ContactInfo::where('client_id', $id)->first();
         $services = Service::where('status', '1')->select('id', 'name')->orderby('id', 'DESC')->get();
-        $staffs = User::whereIn('type', ['3', '2'])->select('id', 'first_name')->orderby('id', 'DESC')->get();
+        $staffs = User::whereIn('type', ['3', '2', '1'])->select('id', 'first_name', 'last_name', 'type')->orderby('id', 'DESC')->get();
         return view('admin.client.updateForm', compact('client', 'clientTypes', 'managers', 'businessInfo', 'directorInfos', 'contactInfo', 'services', 'staffs'));
     }
 
