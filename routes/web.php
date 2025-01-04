@@ -15,6 +15,7 @@ use App\Http\Controllers\Manager\ServiceController;
 use App\Http\Controllers\Staff\StaffServiceController;
 use App\Http\Controllers\Frontend\FrontendController;
 use App\Http\Controllers\Staff\RecentUpdateController;
+use App\Http\Controllers\Manager\OneTimeJobController;
   
 /*
 |--------------------------------------------------------------------------
@@ -190,6 +191,11 @@ Route::middleware(['auth', 'user-access:manager'])->group(function () {
     Route::get('/manager/getServiceComment/{clientServiceId}', [ServiceController::class, 'getServiceComment']);
 
     Route::post('/manager/store-comment', [ServiceController::class, 'storeComment']);
+
+    //One time job
+    Route::get('/manager/one-time-job', [OneTimeJobController::class, 'create'])->name('oneTimeJob.create.manager');
+    Route::get('/manager/one-time-job/data', [OneTimeJobController::class, 'getData']);
+    Route::post('/manager/one-time-job', [OneTimeJobController::class, 'store']);
     
 });
 
@@ -272,6 +278,11 @@ Route::middleware(['auth', 'user-access:staff'])->group(function () {
     Route::get('/staff/getServiceComment/{clientServiceId}', [StaffServiceController::class, 'getServiceComment']);
 
     Route::post('/staff/store-comment', [StaffServiceController::class, 'storeComment']);
+
+    //One time job
+    Route::get('/staff/one-time-job', [OneTimeJobController::class, 'createByStaff'])->name('oneTimeJob.create.staff');
+    Route::get('/staff/one-time-job/data', [OneTimeJobController::class, 'getDataByStaff'])->name('client-services.data');
+    Route::post('/staff/one-time-job', [OneTimeJobController::class, 'storeByStaff']);
     
 });
 

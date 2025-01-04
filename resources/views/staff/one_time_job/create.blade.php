@@ -1,4 +1,4 @@
-@extends('admin.layouts.admin')
+@extends('staff.layouts.staff')
 
 @section('content')
 
@@ -162,7 +162,7 @@
         processing: true,
         serverSide: true,
         ajax: {
-            url: '/admin/one-time-job/data',
+            url: '/staff/one-time-job/data',
             type: 'GET',
             dataSrc: 'data',
             error: function (xhr, error, thrown) {
@@ -262,7 +262,7 @@
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             }
         });
-        var url = "{{URL::to('/admin/one-time-job')}}";
+        var url = "{{URL::to('/staff/one-time-job')}}";
         $("#addBtn").click(function() {
             if ($(this).val() == 'Create') {
                 var form_data = new FormData();
@@ -286,6 +286,7 @@
                         clearform();
                         $("#addThisFormContainer").hide(100);
                         $("#newBtn").show(100);
+
                         $('#example1').DataTable().ajax.reload();
                         
                     },
@@ -322,7 +323,7 @@
 
         function populateMessage(clientServiceId) {
             $.ajax({
-                url: '/admin/getServiceComment/' + clientServiceId,
+                url: '/staff/getServiceComment/' + clientServiceId,
                 type: "GET",
                 dataType: "json",
                 success: function(data) {
@@ -348,7 +349,7 @@
             var clientServiceId = $('#hiddenClientServiceId').val();
 
             $.ajax({
-                url: '/admin/store-comment',
+                url: '/staff/store-comment',
                 type: "POST",
                 data: {
                     message: message,

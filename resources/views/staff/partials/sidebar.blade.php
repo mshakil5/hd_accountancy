@@ -30,6 +30,13 @@
           </a>
         </li>
 
+        <li class="nav-item {{ request()->routeIs('oneTimeJob.create.staff') ? 'active' : '' }}">
+          <a class="nav-link collapsed" href="{{ route('oneTimeJob.create.staff') }}">
+            <i class="bi bi-journal-text"></i>
+            <span>One Time Job</span>
+          </a>
+        </li>
+
         <li class="nav-item {{ request()->routeIs('staff.holiday') ? 'active' : '' }}">
           <a class="nav-link collapsed" href="{{route('staff.holiday')}}">
             <i class="bi bi-card-list"></i>
