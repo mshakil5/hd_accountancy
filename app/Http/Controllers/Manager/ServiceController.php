@@ -609,7 +609,7 @@ class ServiceController extends Controller
     {
         $request->validate([
             'id' => 'required',
-            'status' => 'required|in:0,2',
+            'status' => 'required',
         ]);
 
         $clientService = ClientService::findOrFail($request->id);

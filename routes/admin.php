@@ -204,6 +204,8 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
      //  Fetch assigned services
      Route::get('/get-assigned-service', [ServiceController::class, 'getAssignedService']);
 
+     Route::post('/client-service-change-status', [ServiceController::class, 'changeServiceStatus']);
+
     //  Fetch one time  assigned services
     Route::get('/get-one-time-assigned-service', [ServiceController::class, 'getOneTimeAssignedService']);
 

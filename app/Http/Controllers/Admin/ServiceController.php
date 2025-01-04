@@ -370,7 +370,8 @@ class ServiceController extends Controller
     {
         if ($request->ajax()) {
             $data = ClientService::where('type', 1)->with('clientSubServices')
-                ->where('status', 2)
+                // ->where('status', 2)
+                ->where('is_admin_approved', 1)
                 ->where('due_date', '<=', now()->endOfDay())
                 ->orderBy('id', 'desc')
                 ->get();
@@ -689,7 +690,8 @@ class ServiceController extends Controller
         if ($request->ajax()) {
 
             $data = ClientService::with('clientSubServices')
-                ->whereIn('status', [0, 1])
+                // ->whereIn('status', [0, 1, 2])
+                ->where('is_admin_approved', 0)
                 ->where('type', 1)
                 ->where('due_date', '<=', now()->endOfDay())
                 ->orderBy('id', 'desc')
@@ -707,7 +709,7 @@ class ServiceController extends Controller
                     $legalDeadline = $clientservice->legal_deadline;
                     if ($legalDeadline) {
                         return [
-                            'formatted' => \Carbon\Carbon::parse($legalDeadline)->format('d.m.y'),
+                            'formatted' => \Carbon\Carbon::parse($legalDeadline)->format('d-m-y'),
                             'original' => $legalDeadline
                         ];
                     }
@@ -722,7 +724,7 @@ class ServiceController extends Controller
 
                     if ($serviceDeadline) {
                         return [
-                            'formatted' => \Carbon\Carbon::parse($serviceDeadline)->format('d.m.y'),
+                            'formatted' => \Carbon\Carbon::parse($serviceDeadline)->format('d-m-y'),
                             'original' => $serviceDeadline
                         ];
                     }
@@ -737,6 +739,24 @@ class ServiceController extends Controller
                 })
                 ->make(true);
         }
+    }
+
+    public function changeServiceStatus(Request $request)
+    {
+        $validatedData = $request->validate([
+            'id' => 'required|integer',
+            'status' => 'required|boolean',
+        ]);
+    
+        $service = ClientService::find($validatedData['id']);
+        if ($service) {
+            $service->is_admin_approved = $validatedData['status'];
+            $service->save();
+    
+            return response()->json(['success' => true, 'message' => 'Status updated successfully.']);
+        }
+    
+        return response()->json(['success' => false, 'message' => 'Failed to update status.']);
     }
 
     public function getOneTimeAssignedService(Request $request)

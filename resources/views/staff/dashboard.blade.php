@@ -776,7 +776,7 @@
                 var newRow = `
                     <tr>
                         <td>${subService.sub_service.name}</td>
-                        <td>${moment(subService.deadline).format('DD.MM.YYYY')}</td>
+                        <td>${moment(subService.deadline).format('DD-MM-YYYY')}</td>
                         <td>${staffName}</td>
                         <td>${subService.note ? subService.note : ''}</td>
                         <td>${statusText} ${statusDropdown}</td>
@@ -1194,7 +1194,7 @@
                 var newRow = `
                     <tr>
                         <td>${subService.sub_service.name}</td>
-                        <td>${moment(subService.deadline).format('DD.MM.YYYY')}</td>
+                        <td>${moment(subService.deadline).format('DD-MM-YYYY')}</td>
                         <td>${staffName}</td>
                          <td>${subService.note ? subService.note : ''}</td>
                         <td>${statusDropdown}</td>

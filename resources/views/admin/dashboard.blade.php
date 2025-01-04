@@ -509,17 +509,10 @@
                                     <th scope="col">Due Date</th>
                                     <th scope="col">Target Deadline</th>
                                     <th scope="col">Deadline</th>
+                                    <th scope="col">Status</th>
                                     <th scope="col">Action</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <tr>
-                                    <th scope="row">1</th>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-                            </tbody>
                         </table>
                     </div>
                     <!-- Works assigned to a user and staff -->
@@ -600,6 +593,7 @@
                                     <th>Due Date</th>
                                     <th>Target Deadline</th>
                                     <th>Deadline</th>
+                                    <th>Status</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -788,11 +782,10 @@
                 url: '/admin/get-one-time-assigned-service',
                 type: 'GET',
                 error: function(xhr, status, error) {
-                console.error('Error occurred:', xhr.responseText);
-            }
+                    console.error('Error occurred:', xhr.responseText);
+                }
             },
-            columns: [
-                {
+            columns: [{
                     data: 'created_at',
                     name: 'created_at',
                     render: function(data, type, row) {
@@ -831,8 +824,7 @@
                 url: '/admin/get-one-time-completed-service',
                 type: 'GET',
             },
-            columns: [
-                {
+            columns: [{
                     data: 'created_at',
                     name: 'created_at',
                     render: function(data, type, row) {
@@ -921,7 +913,7 @@
                 var newRow = `
                   <tr>
                       <td>${subService.sub_service.name}</td>
-                      <td>${moment(subService.deadline).format('DD.MM.YYYY')}</td>
+                      <td>${moment(subService.deadline).format('DD-MM-YYYY')}</td>
                       <td>${staffName}</td>
                       <td>${subService.note ? subService.note : ''}</td>
                       <td>
@@ -1153,6 +1145,18 @@
                     name: 'service_deadline'
                 },
                 {
+                    data: 'is_admin_approved',
+                    name: 'is_admin_approved',
+                    render: function(data, type, row) {
+                        return `
+                            <select class="form-control approval-status-change" data-id="${row.id}">
+                                <option value="1" ${data == 1 ? 'selected' : ''}>Completed</option>
+                                <option value="0" ${data == 0 ? 'selected' : ''}>Processign</option>
+                            </select>
+                        `;
+                    }
+                },
+                {
                     data: 'action',
                     name: 'action',
                     orderable: false,
@@ -1226,14 +1230,14 @@
                         <option value="2" ${subService.sequence_status == 2 ? 'selected' : ''}>Work is completed</option>
                     </select>`;
 
-                const newMessageIcon = subService.has_new_message
-                ? '<span class="new-message-icon" style="color: red; margin-left: 5px;"><i class="fas fa-circle"></i></span>'
-                : '';
+                const newMessageIcon = subService.has_new_message ?
+                    '<span class="new-message-icon" style="color: red; margin-left: 5px;"><i class="fas fa-circle"></i></span>' :
+                    '';
 
                 var newRow = `
                     <tr>
                         <td>${subService.sub_service.name}</td>
-                        <td>${moment(subService.deadline).format('DD.MM.YYYY')}</td>
+                        <td>${moment(subService.deadline).format('DD-MM-YYYY')}</td>
                         <td>${staffName}</td>
                         <td>${subService.note ? subService.note : ''}</td>
                          <td>${statusDropdown}</td>
@@ -1253,7 +1257,7 @@
             $('#completedTaskSection').show();
         }
 
-        $('#messageModal').on('hidden.bs.modal', function () {
+        $('#messageModal').on('hidden.bs.modal', function() {
             $('#assignedTaskSection, #completedTaskSection').hide();
         });
 
@@ -1326,7 +1330,24 @@
                 },
                 {
                     data: 'servicename',
-                    name: 'servicename'
+                    name: 'servicename',
+                    render: function(data, type, row) {
+                        let badge = '';
+                        switch (row.status) {
+                            case 1:
+                                badge = '<span class="badge bg-primary text-white">Not Started</span>';
+                                break;
+                            case 2:
+                                badge = '<span class="badge bg-success text-white">Completed</span>';
+                                break;
+                            case 0:
+                                badge = '<span class="badge bg-warning text-dark">Processing</span>';
+                                break;
+                            default:
+                                badge = '<span class="badge bg-secondary text-white"></span>';
+                        }
+                        return `${data} <br>${badge}`;
+                    }
                 },
                 {
                     data: 'due_date',
@@ -1368,12 +1389,64 @@
                     }
                 },
                 {
+                    data: 'is_admin_approved',
+                    name: 'is_admin_approved',
+                    render: function(data, type, row) {
+                        return `
+                            <select class="form-control approval-status-change" data-id="${row.id}">
+                                <option value="1" ${data == 1 ? 'selected' : ''}>Completed</option>
+                                <option value="0" ${data == 0 ? 'selected' : ''}>Processing</option>
+                            </select>
+                        `;
+                    }
+                },
+                {
                     data: 'action',
                     name: 'action',
                     orderable: false,
                     searchable: false
                 }
             ]
+        });
+
+        $(document).on('change', '.approval-status-change', function() {
+            const serviceId = $(this).data('id');
+            const newStatus = $(this).val();
+            $.ajax({
+                url: '/admin/client-service-change-status',
+                method: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    id: serviceId,
+                    status: newStatus
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Toastify({
+                            text: "Status changed successfully!"
+                        }).showToast();
+
+                        if ($.fn.DataTable.isDataTable('#assignedServices')) {
+                            $('#assignedServices').DataTable().ajax.reload(null, false);
+                        }
+
+                        if ($.fn.DataTable.isDataTable('#completedServices')) {
+                            $('#completedServices').DataTable().ajax.reload(null, false);
+                        }
+
+                    } else {
+                        Toastify({
+                            text: "An error occurred!"
+                        }).showToast();
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.log(xhr.responseText);
+                    Toastify({
+                        text: "An error occurred!"
+                    }).showToast();
+                }
+            });
         });
 
         $(document).on('click', '.task-detail', function() {
@@ -1422,14 +1495,14 @@
 
                 var staffName = subService.staff ? (subService.staff.first_name + ' ' + (subService.staff.last_name || '')).trim() : 'N/A';
 
-                const newMessageIcon = subService.has_new_message
-                    ? '<span class="new-message-icon" style="color: red; margin-left: 5px;"><i class="fas fa-circle"></i></span>'
-                    : '';
+                const newMessageIcon = subService.has_new_message ?
+                    '<span class="new-message-icon" style="color: red; margin-left: 5px;"><i class="fas fa-circle"></i></span>' :
+                    '';
 
                 var newRow = `
                   <tr>
                       <td>${subService.sub_service.name}</td>
-                      <td>${moment(subService.deadline).format('DD.MM.YYYY')}</td>
+                      <td>${moment(subService.deadline).format('DD-MM-YYYY')}</td>
                       <td>${staffName}</td>
                       <td>${subService.note ? subService.note : ''}</td>
                       <td>
