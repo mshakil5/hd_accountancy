@@ -1333,7 +1333,6 @@
                     name: 'servicename',
                     render: function(data, type, row) {
                         let badge = '';
-                        console.log('Status:', row.status);
                         if (row.status == 1) {
                             badge = '<span class="badge bg-primary text-white">Not Started</span>';
                         } else if (row.status == 2) {
