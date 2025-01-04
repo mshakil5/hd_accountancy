@@ -16,6 +16,7 @@ use App\Http\Controllers\Staff\StaffServiceController;
 use App\Http\Controllers\Frontend\FrontendController;
 use App\Http\Controllers\Staff\RecentUpdateController;
 use App\Http\Controllers\Manager\OneTimeJobController;
+use App\Http\Controllers\Manager\NoteController;
   
 /*
 |--------------------------------------------------------------------------
@@ -284,6 +285,8 @@ Route::middleware(['auth', 'user-access:staff'])->group(function () {
     Route::get('/staff/one-time-job/data', [OneTimeJobController::class, 'getDataByStaff'])->name('client-services.data');
     Route::post('/staff/one-time-job', [OneTimeJobController::class, 'storeByStaff']);
     
+    Route::get('/staff/get-note', [NoteController::class, 'getNotesByStaff']);
+    Route::post('/staff/save-note', [NoteController::class, 'saveNoteByStaff']);
 });
 
 //User

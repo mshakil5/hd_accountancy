@@ -458,6 +458,55 @@
         <!-- Completed tasks table end-->
 
     </div>
+
+    <div class="row">
+        <div class="col-lg-4 mb-3">
+            <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+                <div class="card-body px-0">
+                    <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                        Your Notes
+                    </div>
+                    <div class="text-start my-3">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#note">
+                            Add New Note
+                        </button>
+                    </div>
+                    <div class="table-wrapper my-4 mx-auto">
+                        <table id="notesTable" class="table cell-border table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Sl</th>
+                                    <th>Note</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="note" tabindex="-1" aria-labelledby="noteLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="noteLabel">Add Note</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <textarea class="form-control" id="note-message" rows="5" name="note-message" placeholder="Your note..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="saveNote">Save Note</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </section>
 
 
@@ -519,6 +568,64 @@
                 },
                 { data: 'action', name: 'action', orderable: false, searchable: false }
             ]
+        });
+
+        $('#notesTable').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: '/staff/get-note',
+                type: 'GET',
+                dataSrc: 'data',
+                error: function(xhr, error, thrown) {
+                    console.error(xhr.responseText);
+                }
+            },
+            columns: [
+                {
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    },
+                    name: 'sl',
+                    orderable: false,
+                    searchable: false
+                },
+                {
+                    data: 'content',
+                    name: 'content'
+                },
+                {
+                    data: 'action',
+                    name: 'action',
+                    orderable: false,
+                    searchable: false
+                }
+            ]
+        });
+
+        $('#saveNote').click(function () {
+            var note = $('#note-message').val();
+            $.ajax({
+                url: '/staff/save-note',
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    note: note
+                },
+                success: function (response) {
+                    Toastify({
+                        text: "Note saved!"
+                    }).showToast();
+
+                    $('#note-message').val('');
+                    $('#note').modal('hide');
+                    $('#notesTable').DataTable().ajax.reload();
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error:', error);
+                }
+            });
         });
 
         $('#OneTimeJobsTable').DataTable({

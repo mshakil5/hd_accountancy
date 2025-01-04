@@ -100,7 +100,7 @@
     </div>
 
     <div class="row">
-        <div class="col-lg-4 mb-3">
+        <div class="col-lg-4 mb-3 d-none">
             <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
                 <div class="card-body px-0">
                     <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
