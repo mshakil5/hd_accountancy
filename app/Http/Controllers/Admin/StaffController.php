@@ -546,6 +546,8 @@ class StaffController extends Controller
             // 'date_of_birth' => 'required',
             // 'address_1' => 'required',
             // 'address_2' => 'required',
+            'password' => ['nullable', 'min:6', 'same:confirm_password'],
+            'confirm_password' => ['nullable', 'min:6'],
         ]);
 
          if ($validator->fails()) {
@@ -573,6 +575,10 @@ class StaffController extends Controller
                 $imageName = time() . '_' . $request->image->getClientOriginalName();
                 $request->image->move(public_path('images/staff'), $imageName);
                 $user->image = $imageName;
+            }
+
+            if (isset($request->password)) {
+                $user->password = Hash::make($request->password);
             }
 
             $user->save();

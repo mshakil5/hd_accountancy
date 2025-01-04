@@ -65,13 +65,23 @@
                 <div class="col-sm-6">
                   <div class="form-group">
                     <label>Password</label>
-                    <input type="password" class="form-control" id="password" name="password" placeholder="Enter password">
+                    <div class="input-group">
+                      <input type="password" class="form-control" id="password" name="password" placeholder="Enter password">
+                      <button type="button" class="btn btn-outline-secondary toggle-password" data-target="#password">
+                        <i class="fa fa-eye"></i>
+                      </button>
+                    </div>
                   </div>
                 </div>
                 <div class="col-sm-6">
                   <div class="form-group">
                     <label>Confirm Password</label>
-                    <input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="Enter confirm password">
+                    <div class="input-group">
+                      <input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="Enter confirm password">
+                      <button type="button" class="btn btn-outline-secondary toggle-password" data-target="#confirm_password">
+                        <i class="fa fa-eye"></i>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -157,6 +167,20 @@
 <script>
     $(function () {
       $("#example1").DataTable();
+    });
+
+    $(document).on('click', '.toggle-password', function () {
+      const target = $(this).data('target');
+      const input = $(target);
+      const icon = $(this).find('i');
+      
+      if (input.attr('type') === 'password') {
+          input.attr('type', 'text');
+          icon.removeClass('fa-eye').addClass('fa-eye-slash');
+      } else {
+          input.attr('type', 'password');
+          icon.removeClass('fa-eye-slash').addClass('fa-eye');
+      }
     });
 </script>
 

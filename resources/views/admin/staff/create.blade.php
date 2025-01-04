@@ -73,7 +73,7 @@
                                                 <label for="">Town <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control my-2" id="town" name="town" placeholder="Enter town">
                                             </div>
-                                                                                                                                                                <div class="col-lg-4">
+                                                                                                                                                                            <div class="col-lg-4">
                                                 <label for="">Post Code <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control my-2" id="postcode" name="postcode" placeholder="Enter post code">
                                             </div>
@@ -117,11 +117,22 @@
                                             </div>
                                             <div class="col-lg-4">
                                                 <label for="">Password</label>
-                                                <input type="password" class="form-control my-2" id="password" name="password" placeholder="Enter password">
+                                                <div class="input-group my-2">
+                                                    <input type="password" class="form-control" id="password" name="password" placeholder="Enter password">
+                                                    <button type="button" class="btn btn-outline-secondary toggle-password" data-target="#password">
+                                                        <i class="fa fa-eye"></i>
+                                                    </button>
+                                                </div>
                                             </div>
+
                                             <div class="col-lg-4">
                                                 <label for="">Confirm Password</label>
-                                                <input type="password" class="form-control my-2" id="confirm_password" name="confirm_password" placeholder="Enter confirm password">
+                                                <div class="input-group my-2">
+                                                    <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Enter confirm password">
+                                                    <button type="button" class="btn btn-outline-secondary toggle-password" data-target="#confirm_password">
+                                                        <i class="fa fa-eye"></i>
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="row">
@@ -146,6 +157,23 @@
 @endsection
 
 @section('script')
+
+<script>
+    $(document).on('click', '.toggle-password', function () {
+    const target = $(this).data('target');
+    const input = $(target);
+    const icon = $(this).find('i');
+    
+    if (input.attr('type') === 'password') {
+        input.attr('type', 'text');
+        icon.removeClass('fa-eye').addClass('fa-eye-slash');
+    } else {
+        input.attr('type', 'password');
+        icon.removeClass('fa-eye-slash').addClass('fa-eye');
+    }
+});
+
+</script>
 
 <script>
     $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') } });

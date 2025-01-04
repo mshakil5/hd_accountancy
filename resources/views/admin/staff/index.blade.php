@@ -268,6 +268,14 @@
                                                 <td><b>Address 2:</b></td>
                                                 <td><input type="text" id="address_2" readonly></td>
                                             </tr>
+                                            <tr>
+                                                <td><b>Password:</b></td>
+                                                <td><input type="password" id="password" readonly></td>
+                                            </tr>
+                                            <tr>
+                                                <td><b>Confirm Password:</b></td>
+                                                <td><input type="password" id="confirm_password" readonly></td>
+                                            </tr>
                                         </table>
                                     </div>
                                 </div>
@@ -645,11 +653,11 @@
         var updateButton = document.querySelector('.update-personal-info');
 
         if (editButton.innerHTML.includes('Edit')) {
-            $('input[type="text"], input[type="number"], input[type="email"], input[type="date"]').prop('readonly', false);
+            $('input[type="text"], input[type="number"], input[type="email"], input[type="password"], input[type="date"]').prop('readonly', false);
             editButton.innerHTML = '<i class="bi bi-x-square"></i> Cancel';
             updateButton.style.display = 'inline-block';
         } else {
-            $('input[type="text"], input[type="number"], input[type="email"], input[type="date"]').prop('readonly', true);
+            $('input[type="text"], input[type="number"], input[type="email"], input[type="password"], input[type="date"]').prop('readonly', true);
             editButton.innerHTML = '<i class="bi bi-pencil-square"></i> Edit';
             updateButton.style.display = 'none';
         }
@@ -748,6 +756,8 @@
         formData.append('date_of_birth', $('#date_of_birth').val());
         formData.append('address_1', $('#address_1').val());
         formData.append('address_2', $('#address_2').val());
+        formData.append('password', $('#password').val());
+        formData.append('confirm_password', $('#confirm_password').val());
 
         var imageFile = $('#pic')[0].files[0];
         if (imageFile) {
@@ -775,6 +785,14 @@
             },
             error: function(xhr, status, error) {
                 console.error(xhr.responseText);
+                var response = JSON.parse(xhr.responseText);
+                var firstError = Object.values(response)[0][0];
+                swal({
+                    title: "Error",
+                    text: firstError,
+                    icon: "error",
+                    button: "OK",
+                })
             }
         });
     }
