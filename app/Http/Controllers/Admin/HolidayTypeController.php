@@ -11,7 +11,7 @@ class HolidayTypeController extends Controller
 {
     public function index()
     {
-        $data = HolidayType::orderby('id','DESC')->get();
+        $data = HolidayType::orderby('id','DESC')->select('id', 'type')->get();
         return view('admin.holiday_type.index', compact('data'));
     }
 

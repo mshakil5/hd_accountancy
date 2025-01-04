@@ -16,7 +16,7 @@ class OneTimeJobController extends Controller
 {
     public function create()
     {
-        $managerAndStaffs = User::whereIn('type', [ '2', '3' ])->select('id', 'first_name', 'last_name', 'type')->orderby('id', 'DESC')->get();
+        $managerAndStaffs = User::whereIn('type', ['2', '3'])->select('id', 'first_name', 'last_name', 'type')->orderby('id', 'DESC')->get();
 
         return view('admin.one_time_job.create', compact('managerAndStaffs'));
     }
@@ -28,11 +28,11 @@ class OneTimeJobController extends Controller
             'manager_id' => 'required|integer',
             'legal_deadline' => 'nullable|date',
         ]);
-    
+
         if ($validator->fails()) {
             return response()->json(['status' => 422, 'errors' => $validator->errors()->toArray()], 422);
         }
-    
+
         $service = new Service();
         $service->name = $request->task;
         $service->status = 2;
@@ -47,16 +47,29 @@ class OneTimeJobController extends Controller
         $clientService->unique_id = $uniqueId;
         $clientService->type = 2;
         $clientService->save();
-    
+
         return response()->json(['status' => 200, 'message' => 'Data saved successfully']);
     }
 
     public function getData(Request $request)
     {
         $authUserId = (string) auth()->id();
-    
-        $query = ClientService::where('type', 2)
-            ->with(['service', 'manager', 'messages'])
+
+        $query = ClientService::select([
+            'id',
+            'type',
+            'service_id',
+            'manager_id',
+            'legal_deadline',
+            'status',
+            'created_at'
+        ])
+            ->with([
+                'service:id,name',
+                'manager:id,first_name',
+                'messages:id,client_service_id,viewed_by'
+            ])
+            ->where('type', 2)
             ->orderBy('id', 'DESC')
             ->get()
             ->map(function ($clientService) use ($authUserId) {
@@ -64,10 +77,10 @@ class OneTimeJobController extends Controller
                     $viewedBy = json_decode($message->viewed_by, true) ?? [];
                     return !in_array($authUserId, $viewedBy);
                 });
-    
+
                 return $clientService;
             });
-    
+
         return DataTables::of($query)
             ->editColumn('servicename', function ($clientService) {
                 return $clientService->service->name;
@@ -82,5 +95,5 @@ class OneTimeJobController extends Controller
                 return $clientService->has_new_message ? 'Yes' : 'No';
             })
             ->make(true);
-    }      
+    }
 }

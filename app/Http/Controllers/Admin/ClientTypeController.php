@@ -11,7 +11,7 @@ class ClientTypeController extends Controller
 {
     public function index()
     {
-        $data = ClientType::orderby('id','DESC')->get();
+        $data = ClientType::orderby('id','DESC')->select('id', 'name')->get();
         return view('admin.client_type.index', compact('data'));
     }
 

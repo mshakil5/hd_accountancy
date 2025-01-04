@@ -11,7 +11,7 @@ class DepartmentController extends Controller
 {
     public function index()
     {
-        $data = Department::orderby('id','DESC')->get();
+        $data = Department::orderby('id','DESC')->select('id', 'name' , 'description')->get();
         return view('admin.department.index', compact('data'));
     }
 

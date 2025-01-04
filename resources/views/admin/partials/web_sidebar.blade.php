@@ -264,6 +264,13 @@
             </a>
         </li>
 
+        <li class="nav-item {{ request()->routeIs('allWebService') ? 'active' : '' }}">
+            <a class="nav-link collapsed" href="{{ route('allWebService') }}">
+                <i class="bi bi-globe"></i>
+                <span>Web Services</span>
+            </a>
+        </li>
+
         <li class="nav-item {{ request()->routeIs('allFaq') ? 'active' : '' }}">
             <a class="nav-link collapsed" href="{{ route('allFaq') }}">
                 <i class="fas fa-question-circle"></i>
@@ -353,6 +360,13 @@
             <a class="nav-link collapsed" href="{{ route('admin.mail-content') }}">
                 <i class="fas fa-file-alt"></i>
                 <span>Mail Content</span>
+            </a>
+        </li>
+
+        <li class="nav-item {{ request()->routeIs('admin.companyDetail') ? 'active' : '' }}">
+            <a class="nav-link collapsed" href="{{ route('admin.companyDetail') }}">
+                <i class="bi bi-building"></i>
+                <span>Company Details</span>
             </a>
         </li>
 

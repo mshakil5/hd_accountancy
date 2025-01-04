@@ -73,13 +73,6 @@
       </a>
     </li>
 
-    <li class="nav-item {{ request()->routeIs('allWebService') ? 'active' : '' }}">
-      <a class="nav-link collapsed" href="{{ route('allWebService') }}">
-        <i class="bi bi-globe"></i>
-        <span>Web Services</span>
-      </a>
-    </li>
-
     <li class="nav-item {{ request()->routeIs('prevLogStaffs','task.details.staff','allPrevLogStaffs') ? 'active' : '' }}">
       <a class="nav-link collapsed" href="{{ route('prevLogStaffs') }}">
         <i class="bi bi-calendar-check"></i>
@@ -105,13 +98,6 @@
       <a class="nav-link collapsed" href="{{ route('prorota') }}">
         <i class="bi bi-box-arrow-in-right"></i>
         <span>Prorota</span>
-      </a>
-    </li>
-
-    <li class="nav-item {{ request()->routeIs('admin.companyDetail') ? 'active' : '' }}">
-      <a class="nav-link collapsed" href="{{ route('admin.companyDetail') }}">
-        <i class="bi bi-building"></i>
-        <span>Company Details</span>
       </a>
     </li>
 

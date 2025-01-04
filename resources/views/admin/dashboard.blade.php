@@ -1708,7 +1708,7 @@
                     data: 'service_deadline',
                     name: 'service_deadline',
                     render: function(data, type, row) {
-                        return moment(data).format('DD.MM.YY');
+                        return data ? moment(data).format('DD-MM-YYYY') : '';
                     }
                 },
                 {

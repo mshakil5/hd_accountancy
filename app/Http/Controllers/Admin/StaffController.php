@@ -261,9 +261,16 @@ class StaffController extends Controller
 
     public function prevLogStaffs()
     {
-        $previouslyLoggedStaff = UserAttendanceLog::with('user')
+        $previouslyLoggedStaff = UserAttendanceLog::select(
+                'id',
+                'user_id',
+                'start_time',
+                'end_time',
+                'note'
+            )
+            ->with(['user:id,first_name,last_name'])
             ->where('start_time', '>=', now()->subDays(30))
-            ->whereNotNull('end_time') 
+            ->whereNotNull('end_time')
             ->orderBy('id', 'desc')
             ->get()
             ->map(function ($log) {
@@ -271,15 +278,15 @@ class StaffController extends Controller
                 $log->duration = $duration->format('%H:%I:%S');
                 return $log;
             });
-        
-        return view('admin.staff.previous_logged', compact('previouslyLoggedStaff'));
 
-    }
+        return view('admin.staff.previous_logged', compact('previouslyLoggedStaff'));
+    }    
 
     public function allPrevLogStaffs()
     {
-        $previouslyLoggedStaff = UserAttendanceLog::with('user')
-            ->whereNotNull('end_time') 
+        $previouslyLoggedStaff = UserAttendanceLog::with(['user:id,first_name,last_name'])
+            ->select(['id', 'user_id', 'start_time', 'end_time', 'note'])
+            ->whereNotNull('end_time')
             ->orderBy('id', 'desc')
             ->get()
             ->map(function ($log) {
@@ -287,9 +294,8 @@ class StaffController extends Controller
                 $log->duration = $duration->format('%H:%I:%S');
                 return $log;
             });
-        
+    
         return view('admin.staff.all_previous_logged', compact('previouslyLoggedStaff'));
-
     }
 
     public function updateLogs(Request $request, $id)

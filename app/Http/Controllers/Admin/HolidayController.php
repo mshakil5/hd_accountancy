@@ -19,14 +19,14 @@ class HolidayController extends Controller
 {
     public function index()
     {  
-        $holidayTypes = HolidayType::orderBy('id', 'desc')->get();
+        $holidayTypes = HolidayType::orderBy('id', 'desc')->select('id', 'type')->get();
         return view('admin.holiday.index',compact('holidayTypes'));
     }
 
     public function create()
     {
         $staffs = User::whereIn('type', ['2','3'])->select('id','first_name','last_name','email')->orderby('id','DESC')->get();
-        $holidayTypes = HolidayType::orderBy('id', 'desc')->get();
+        $holidayTypes = HolidayType::orderBy('id', 'desc')->select('id', 'type')->get();
         return view('admin.holiday.create', compact('staffs','holidayTypes'));
     }
 
