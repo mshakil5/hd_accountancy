@@ -271,180 +271,6 @@
                 </div>
             </div>
 
-            <!-- Currently Active Staffs Start-->
-             @if(count($loggedStaff) > 0)
-            <div class="col-lg-12">
-                <div class="col-lg-12 px-0 border shadow-sm mb-3">
-
-                    <p class="p-2 bg-theme-light txt-theme px-3 mb-0 text-capitalize d-flex align-items-center">
-                        <i class="bx bxs-user-plus fs-4 me-2"></i>Currently logged-in staffs
-                    </p>
-
-                    <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                        <table class="table cell-border table-striped" id="active-staff">
-                            <thead>
-                                <tr>
-                                    <th scope="col" class="text-center">Name</th>
-                                    <th scope="col" class="text-center">Login Time</th>
-                                    <th scope="col" class="text-center">Attendence Status</th>
-                                    <th scope="col" class="text-center">Duration</th>
-                                    <th scope="col" class="text-center">Current Status</th>
-                                    <th scope="col" class="text-center">Note</th>
-                                    <th scope="col" class="text-center">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($loggedStaff as $staff)
-                                <tr>
-                                    <td class="text-center">{{ $staff->user->first_name }} {{ $staff->user->last_name }}</td>
-                                    <td class="text-center">{{ \Carbon\Carbon::parse($staff->start_time)->format('H:i. d/m/Y') }}</td>
-                                    <td class="text-center">
-                                        @if ($staff->prorotaNotFound)
-                                        Prorota not found
-                                        @else
-                                        @if ($staff->is_late)
-                                        Late
-                                        @else
-                                        In Time
-                                        @endif
-                                        @endif
-                                    </td>
-                                    <td>
-                                        <div class="text-center" id="duration_{{ $staff->id }}">{{ $staff->duration }}</div>
-                                    </td>
-                                    <td class="text-center">
-                                        @if (isset($staff->current_status))
-                                        @if ($staff->current_status == 'Logged In')
-                                        <span class="badge bg-info">{{ $staff->current_status }}</span>
-                                        @elseif ($staff->current_status == 'On Break')
-                                        <span class="badge bg-warning">{{ $staff->current_status }}</span>
-                                        @elseif ($staff->current_status == 'Working')
-                                        <span class="badge bg-success">{{ $staff->current_status }}</span>
-                                        @endif
-                                        @endif
-                                    </td>
-                                    <td class="text-center">
-                                        <textarea rows="2" name="note" placeholder="Add a note here..." style="border-radius: 5px;"></textarea>
-                                    </td>
-                                    <td class="text-center">
-                                        <button class="btn btn-danger btn-sm logout-btn" data-staff-id="{{ $staff->id }}">Logout</button>
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-
-                </div>
-            </div>
-            @endif
-            <!-- Currently Active Staffs End-->
-
-            <!-- Todays's Late Staffs Start -->
-            @if(count($lateStaff) > 0)
-            <div class="col-lg-12">
-                <div class="col-lg-12 px-0 border shadow-sm mb-3">
-                    <p class="p-2 bg-theme-light txt-theme px-3 mb-0 text-capitalize d-flex align-items-center">
-                        <i class="bx bxs-user-plus fs-4 me-2"></i>Late Staffs
-                    </p>
-                    <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                        <table class="table cell-border table-striped" id="late-staff-prorota">
-                            <thead>
-                                <tr>
-                                    <th scope="col">Name</th>
-                                    <th scope="col">Login Time</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($lateStaff as $staff)
-                                <tr>
-                                    <td>{{ $staff->user->first_name }} {{ $staff->user->last_name }}</td>
-                                    <td>{{ \Carbon\Carbon::parse($staff->start_time)->format('H:i . d/m/Y') }}</td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            @endif
-            <!-- Todays's Late Staffs End -->
-
-            <!-- Todays's Shift Deviation Staffs Start -->
-            @if(count($filteredLogs) > 0)
-            <div class="col-lg-12">
-                <div class="col-lg-12 px-0 border shadow-sm mb-3">
-                    <p class="p-2 bg-theme-light txt-theme px-3 mb-0 text-capitalize d-flex align-items-center">
-                        <i class="bx bxs-user-plus fs-4 me-2"></i>Departure Status
-                    </p>
-                    <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                        <table class="table cell-border table-striped" id="shift-deviation-staff">
-                            <thead>
-                                <tr>
-                                    <th scope="col">Name</th>
-                                    <th scope="col">Log Out Time</th>
-                                    <th scope="col">Departure Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($filteredLogs as $index => $log)
-                                <tr>
-                                    <td>{{ $log->user->first_name }} {{ $log->user->last_name }}</td>
-                                    <td>{{ \Carbon\Carbon::parse($log->end_time)->format('H:i. d/m/Y') }}</td>
-                                    <td>{{ $log->departure_status }}</td>
-                                </tr>
-                                @endforeach
-
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            @endif
-            <!-- Todays's Shift Deviation Staffs End -->
-
-            <!-- Todays's Absent Staffs Start -->
-            @if(count($absentStaff) > 0)
-            <div class="col-lg-12">
-                <div class="col-lg-12 px-0 border shadow-sm mb-3">
-                    <p class="p-2 bg-theme-light txt-theme px-3 mb-0 text-capitalize d-flex align-items-center">
-                        <i class="bx bxs-user-plus fs-4 me-2"></i>Today's Absent Staffs
-                    </p>
-                    <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                        <table class="table cell-border table-striped" id="absent-staff">
-                            <thead>
-                                <tr>
-                                    <th scope="col">Name</th>
-                                    <th scope="col">Comment</th>
-                                    <th scope="col">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($absentStaff as $index => $staff)
-                                <tr>
-                                    <td>{{ $staff->first_name }} {{ $staff->last_name }}</td>
-                                    <td>
-                                        @if ($staff->logComments->isNotEmpty())
-                                        <textarea class="form-control comment-textarea" rows="1" readonly>{{ $staff->logComments->last()->comment }}</textarea>
-                                        @else
-                                        <textarea class="form-control comment-textarea" rows="1"></textarea>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        @if ($staff->logComments->isEmpty())
-                                        <button class="btn btn-secondary submit-comment" data-staff-id="{{ $staff->id }}">Submit</button>
-                                        @endif
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            @endif
-            <!-- Todays's Absent Staffs End -->
-
             <!-- Assigned service details section start -->
             <div class="col-lg-12">
                 <div class="report-box border-theme sales-card p-4 mb-3 rounded-4 border-3" id="assignedTaskSection" style="display: none;">
@@ -723,19 +549,18 @@
             </div>
 
             <div class="row">
-                <div class="col-lg-4 mb-3">
-                    <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
-                        <div class="card-body px-0">
-                            <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                                Your Notes
-                            </div>
-                            <div class="text-start my-3">
+                <div class="col-lg-6 mb-3">
+                    <div class="col-lg-12 px-0 border shadow-sm mb-3">
+                            <p class="p-2 bg-theme-light txt-theme px-3 mb-0 text-capitalize d-flex align-items-center">
+                                <i class="bx bxs-user-plus fs-4 me-2"></i>Your Notes
+                            </p>
+                            <div class="text-start my-3 mx-3">
                                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#note">
                                     Add New Note
                                 </button>
                             </div>
-                            <div class="table-wrapper my-4 mx-auto">
-                                <table id="notesTable" class="table cell-border table-striped">
+                            <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
+                                <table id="notesTable" class="table cell-border table-striped" style="width: 100%;">
                                     <thead>
                                         <tr>
                                             <th>Sl</th>
@@ -746,69 +571,251 @@
                                     </thead>
                                 </table>
                             </div>
-                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="modal fade" id="note" tabindex="-1" aria-labelledby="noteLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="noteLabel">Add Note</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="form-group">
-                                <textarea class="form-control" id="note-message" rows="5" name="note-message" placeholder="Your note..."></textarea>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-primary" id="saveNote">Save Note</button>
-                        </div>
+            <!-- Currently Active Staffs Start-->
+            @if(count($loggedStaff) > 0)
+            <div class="col-lg-12">
+                <div class="col-lg-12 px-0 border shadow-sm mb-3">
+
+                    <p class="p-2 bg-theme-light txt-theme px-3 mb-0 text-capitalize d-flex align-items-center">
+                        <i class="bx bxs-user-plus fs-4 me-2"></i>Currently logged-in staffs
+                    </p>
+
+                    <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
+                        <table class="table cell-border table-striped" id="active-staff">
+                            <thead>
+                                <tr>
+                                    <th scope="col" class="text-center">Name</th>
+                                    <th scope="col" class="text-center">Login Time</th>
+                                    <th scope="col" class="text-center">Attendence Status</th>
+                                    <th scope="col" class="text-center">Duration</th>
+                                    <th scope="col" class="text-center">Current Status</th>
+                                    <th scope="col" class="text-center">Note</th>
+                                    <th scope="col" class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($loggedStaff as $staff)
+                                <tr>
+                                    <td class="text-center">{{ $staff->user->first_name }} {{ $staff->user->last_name }}</td>
+                                    <td class="text-center">{{ \Carbon\Carbon::parse($staff->start_time)->format('H:i. d/m/Y') }}</td>
+                                    <td class="text-center">
+                                        @if ($staff->prorotaNotFound)
+                                        Prorota not found
+                                        @else
+                                        @if ($staff->is_late)
+                                        Late
+                                        @else
+                                        In Time
+                                        @endif
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <div class="text-center" id="duration_{{ $staff->id }}">{{ $staff->duration }}</div>
+                                    </td>
+                                    <td class="text-center">
+                                        @if (isset($staff->current_status))
+                                        @if ($staff->current_status == 'Logged In')
+                                        <span class="badge bg-info">{{ $staff->current_status }}</span>
+                                        @elseif ($staff->current_status == 'On Break')
+                                        <span class="badge bg-warning">{{ $staff->current_status }}</span>
+                                        @elseif ($staff->current_status == 'Working')
+                                        <span class="badge bg-success">{{ $staff->current_status }}</span>
+                                        @endif
+                                        @endif
+                                    </td>
+                                    <td class="text-center">
+                                        <textarea rows="2" name="note" placeholder="Add a note here..." style="border-radius: 5px;"></textarea>
+                                    </td>
+                                    <td class="text-center">
+                                        <button class="btn btn-danger btn-sm logout-btn" data-staff-id="{{ $staff->id }}">Logout</button>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+            @endif
+            <!-- Currently Active Staffs End-->
+
+            <!-- Todays's Late Staffs Start -->
+            @if(count($lateStaff) > 0)
+            <div class="col-lg-12">
+                <div class="col-lg-12 px-0 border shadow-sm mb-3">
+                    <p class="p-2 bg-theme-light txt-theme px-3 mb-0 text-capitalize d-flex align-items-center">
+                        <i class="bx bxs-user-plus fs-4 me-2"></i>Late Staffs
+                    </p>
+                    <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
+                        <table class="table cell-border table-striped" id="late-staff-prorota">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Login Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($lateStaff as $staff)
+                                <tr>
+                                    <td>{{ $staff->user->first_name }} {{ $staff->user->last_name }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($staff->start_time)->format('H:i . d/m/Y') }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
+            @endif
+            <!-- Todays's Late Staffs End -->
 
-            <div class="modal fade" id="actionModal" aria-labelledby="actionModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="actionModalLabel">Choose an Action</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="note-section mb-3 p-3 border rounded bg-light d-none">
-                                <h6 class="text-primary">Note Details:</h6>
-                                <p id="noteDetails" class="mb-0"></p>
-                            </div>
-                            <button class="btn btn-success btn-one-time-job">Assign as One-Time Job</button>
-                            <button class="btn btn-info btn-recent-update">Assign as Recent Update</button>
+            <!-- Todays's Shift Deviation Staffs Start -->
+            @if(count($filteredLogs) > 0)
+            <div class="col-lg-12">
+                <div class="col-lg-12 px-0 border shadow-sm mb-3">
+                    <p class="p-2 bg-theme-light txt-theme px-3 mb-0 text-capitalize d-flex align-items-center">
+                        <i class="bx bxs-user-plus fs-4 me-2"></i>Departure Status
+                    </p>
+                    <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
+                        <table class="table cell-border table-striped" id="shift-deviation-staff">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Log Out Time</th>
+                                    <th scope="col">Departure Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($filteredLogs as $index => $log)
+                                <tr>
+                                    <td>{{ $log->user->first_name }} {{ $log->user->last_name }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($log->end_time)->format('H:i. d/m/Y') }}</td>
+                                    <td>{{ $log->departure_status }}</td>
+                                </tr>
+                                @endforeach
 
-                            <div class="deadline-section mt-3 d-none">
-                                <label for="deadline">Deadline:</label>
-                                <input type="date" id="deadline" class="form-control">
-                            </div>
-
-                            <div class="client-section mt-3 d-none">
-                                <label for="client_id">Select Client: <span class="text-danger">*</span></label>
-                                <select id="client_id" class="form-control" style="width: 100%;">
-                                    <option value="">Select a client</option>
-                                    @foreach($clients as $client)
-                                        <option value="{{ $client->id }}">{{ $client->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-primary btn-submit">Submit</button>
-                        </div>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
+            @endif
+            <!-- Todays's Shift Deviation Staffs End -->
 
+            <!-- Todays's Absent Staffs Start -->
+            @if(count($absentStaff) > 0)
+            <div class="col-lg-12">
+                <div class="col-lg-12 px-0 border shadow-sm mb-3">
+                    <p class="p-2 bg-theme-light txt-theme px-3 mb-0 text-capitalize d-flex align-items-center">
+                        <i class="bx bxs-user-plus fs-4 me-2"></i>Today's Absent Staffs
+                    </p>
+                    <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
+                        <table class="table cell-border table-striped" id="absent-staff">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Comment</th>
+                                    <th scope="col">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($absentStaff as $index => $staff)
+                                <tr>
+                                    <td>{{ $staff->first_name }} {{ $staff->last_name }}</td>
+                                    <td>
+                                        @if ($staff->logComments->isNotEmpty())
+                                        <textarea class="form-control comment-textarea" rows="1" readonly>{{ $staff->logComments->last()->comment }}</textarea>
+                                        @else
+                                        <textarea class="form-control comment-textarea" rows="1"></textarea>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if ($staff->logComments->isEmpty())
+                                        <button class="btn btn-secondary submit-comment" data-staff-id="{{ $staff->id }}">Submit</button>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            @endif
+            <!-- Todays's Absent Staffs End -->
+
+        </div>
+
+        <div class="modal fade" id="note" tabindex="-1" aria-labelledby="noteLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="noteLabel">Add Note</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <textarea class="form-control" id="note-message" rows="5" name="note-message" placeholder="Your note..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" id="saveNote">Save Note</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="actionModal" aria-labelledby="actionModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="actionModalLabel">Choose an Action</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="note-section mb-3 p-3 border rounded bg-light d-none">
+                            <h6 class="text-primary">Note Details:</h6>
+                            <p id="noteDetails" class="mb-0"></p>
+                        </div>
+                        <button class="btn btn-success btn-one-time-job">Assign as One-Time Job</button>
+                        <button class="btn btn-info btn-recent-update">Assign as Recent Update</button>
+
+                        <div class="deadline-section mt-3 d-none">
+                            <label for="deadline">Deadline:</label>
+                            <input type="date" id="deadline" class="form-control">
+                        </div>
+
+                        <div class="employee-section mt-3 d-none">
+                            <label for="employee_id">Assign To: <span class="text-danger">*</span></label>
+                            <select id="employee_id" class="form-control" style="width: 100%;">
+                                @foreach($staffs as $employee)
+                                    <option value="{{ $employee->id }}">{{ $employee->first_name }} {{ $employee->last_name }} ({{ $employee->type }})</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="client-section mt-3 d-none">
+                            <label for="client_id">Select Client: <span class="text-danger">*</span></label>
+                            <select id="client_id" class="form-control" style="width: 100%;">
+                                <option value="">Select a client</option>
+                                @foreach($clients as $client)
+                                    <option value="{{ $client->id }}">{{ $client->name }} - {{ $client->refid }} </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary btn-submit">Submit</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Service message modal start -->
@@ -953,6 +960,7 @@
 
     $(document).on('click', '.btn-one-time-job', function () {
         $('.deadline-section').removeClass('d-none');
+        $('.employee-section').removeClass('d-none');
         $('.client-section').addClass('d-none');
         $('.btn-submit').data('type', 'one-time-job');
         
@@ -962,12 +970,22 @@
     $(document).on('click', '.btn-recent-update', function () {
         $('.client-section').removeClass('d-none');
         $('.deadline-section').addClass('d-none');
+        $('.employee-section').addClass('d-none');
         $('.btn-submit').data('type', 'recent-update');
         
         $('.btn-submit').removeClass('d-none');
+    });
+
+    $('#actionModal').on('shown.bs.modal', function () {
 
         $('#client_id').select2({
             placeholder: "Select a client",
+            allowClear: true,
+            dropdownParent: $('#actionModal')
+        });
+
+        $('#employee_id').select2({
+            placeholder: "Please select an employee",
             allowClear: true,
             dropdownParent: $('#actionModal')
         });
@@ -977,10 +995,11 @@
         const noteId = $('#actionModal').data('note-id');
         const noteContent = $('#noteDetails').text();
         const deadline = $('#deadline').val();
+        const employeeId = $('#employee_id').val();
         const clientId = $('#client_id').val();
         const type = $(this).data('type');
 
-        console.log(noteId, noteContent, deadline, clientId, type);
+        // console.log(noteId, noteContent, deadline, clientId, type);
 
         $.ajax({
             url: '/admin/assign-note',
@@ -990,6 +1009,7 @@
                 note: noteContent,
                 type: type,
                 deadline: deadline,
+                manager_id: employeeId,
                 client_id: clientId,
                 _token: $('meta[name="csrf-token"]').attr('content')
             },
@@ -1013,6 +1033,7 @@
         $('#deadline').val('');
         $('#client_id').val(null).trigger('change');
         $('.deadline-section').addClass('d-none');
+        $('.employee-section').addClass('d-none');
         $('.client-section').addClass('d-none');
         $('.btn-submit').addClass('d-none');
     });
@@ -1996,7 +2017,7 @@
               <input type="date" name="deadline[]" class="form-control" value="${subService.deadline}">
             </td>
             <td>
-              <select class="form-control select2 staffDropdown" name="staff_id[]">
+              <select class="form-control staffDropdown" name="staff_id[]">
                 <option value="">Select Staff</option>`;
 
                 @foreach($staffs as $staff)
@@ -2155,7 +2176,7 @@
                                     <td>${value.name}</td>
                                     <td><input type="date" name="deadline" class="form-control"></td>
                                     <td>
-                                        <select class="form-control select2 staffDropdown" name="staff_id">
+                                        <select class="form-control staffDropdown" name="staff_id">
                                             <option value="">Select Staff</option>
                                             @foreach($staffs as $staff)
                                                 <option value="{{ $staff->id }}">{{ $staff->first_name }}</option>

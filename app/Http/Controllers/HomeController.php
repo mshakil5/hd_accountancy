@@ -133,7 +133,9 @@ class HomeController extends Controller
             })
             ->values();
 
-        $absentStaff = User::select('id', 'first_name', 'last_name', 'type')
+            $formattedToday = Carbon::now()->format('d-m-Y');
+
+            $absentStaff = User::select('id', 'first_name', 'last_name', 'type')
             ->whereIn('type', [2, 3])
             ->whereNotIn('id', function ($query) use ($today) {
                 $query->select('user_id')
@@ -147,7 +149,9 @@ class HomeController extends Controller
                     ->whereDate('start_date', '<=', $today)
                     ->whereDate('end_date', '>=', $today);
             })
-            ->with(['logComments:id,user_id,comment'])
+            ->with(['logComments' => function ($query) use ($formattedToday) {
+                $query->where('comment_date', $formattedToday);
+            }])
             ->orderBy('id', 'desc')
             ->get();
             
@@ -191,7 +195,7 @@ class HomeController extends Controller
         $staffs = User::whereIn('type', ['3', '2', '1'])->select('id', 'first_name', 'last_name', 'type')->orderBy('id', 'DESC')->get();
         $managers = User::whereIn('type', ['2', '1'])->select('id', 'first_name', 'last_name', 'type')->orderBy('id', 'DESC')->get();
         $services = Service::orderBy('id', 'DESC')->where('status', '1')->select('id', 'name')->get();
-        $clients = Client::orderby('id','DESC')->select('id', 'name')->get();
+        $clients = Client::orderby('id','DESC')->select('id', 'name', 'refid')->get();
         return view('admin.dashboard', compact('staffs', 'loggedStaff', 'managers', 'services', 'lateStaff', 'absentStaff','filteredLogs','totalAbsentStaffCount','clients'));
     }
 
@@ -202,10 +206,11 @@ class HomeController extends Controller
      */
     public function managerHome(): View
     {
-        $clients = Client::orderBy('id', 'DESC')->select('id', 'name')->get();
+        $clients = Client::orderBy('id', 'DESC')->select('id', 'name', 'refid')->get();
         $subServices = SubService::orderby('id','DESC')->select('id', 'name')->get();
         $staffs = User::whereIn('type', ['3','2'])->select('id', 'first_name', 'last_name')->orderby('id','DESC')->get();
         $managers = User::whereIn('type', ['3','2'])->select('id', 'first_name', 'last_name')->orderby('id','DESC')->get();
+        $users = User::whereIn('type', ['3','2', '1'])->select('id', 'first_name', 'last_name', 'type')->orderby('id','DESC')->get();
         $userId = auth()->id();
         $startOfDay = Carbon::today()->startOfDay();
 
@@ -227,7 +232,7 @@ class HomeController extends Controller
 
         $activeTimeFormatted = gmdate('H:i:s', $activeTimeInSeconds);
 
-        return view('manager.dashboard',compact('staffs','managers','activeTimeFormatted','clients','subServices'));
+        return view('manager.dashboard',compact('staffs','managers','activeTimeFormatted','clients','subServices', 'users'));
     }
 
     /**
@@ -240,7 +245,7 @@ class HomeController extends Controller
     {
         $staffs = User::whereIn('type', ['3','2'])->select('id', 'first_name', 'last_name')->orderby('id','DESC')->get();
         $managers = User::whereIn('type', ['3','2'])->select('id', 'first_name', 'last_name')->orderby('id','DESC')->get();
-        $clients = Client::orderby('id','DESC')->select('id', 'name')->get();
+        $clients = Client::orderby('id','DESC')->select('id', 'name', 'refid')->get();
         $subServices = SubService::orderby('id','DESC')->select('id', 'name')->get();
         
         $userId = auth()->id();
@@ -264,7 +269,8 @@ class HomeController extends Controller
 
         $activeTimeFormatted = gmdate('H:i:s', $activeTimeInSeconds);
 
-        return view('staff.dashboard', compact('activeTimeFormatted','staffs','managers','clients','subServices'));
+        $users = User::whereIn('type', ['3','2', '1'])->select('id', 'first_name', 'last_name', 'type')->orderby('id','DESC')->get();
+        return view('staff.dashboard', compact('activeTimeFormatted','staffs','managers','clients','subServices', 'users'));
     }
 
     /**

@@ -513,12 +513,21 @@
                         <input type="date" id="deadline" class="form-control">
                     </div>
 
+                    <div class="employee-section mt-3 d-none">
+                        <label for="employee_id">Assign To: <span class="text-danger">*</span></label>
+                        <select id="employee_id" class="form-control" style="width: 100%;">
+                            @foreach($users as $employee)
+                                <option value="{{ $employee->id }}">{{ $employee->first_name }} {{ $employee->last_name }} ({{ $employee->type }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+
                     <div class="client-section mt-3 d-none">
                         <label for="client_id">Select Client: <span class="text-danger">*</span></label>
                         <select id="client_id" class="form-control" style="width: 100%;">
                             <option value="">Select a client</option>
                             @foreach($clients as $client)
-                                <option value="{{ $client->id }}">{{ $client->name }}</option>
+                                <option value="{{ $client->id }}">{{ $client->name }} - {{ $client->refid }} </option>
                             @endforeach
                         </select>
                     </div>
@@ -644,6 +653,7 @@
 
     $(document).on('click', '.btn-one-time-job', function () {
         $('.deadline-section').removeClass('d-none');
+        $('.employee-section').removeClass('d-none');
         $('.client-section').addClass('d-none');
         $('.btn-submit').data('type', 'one-time-job');
         
@@ -653,12 +663,23 @@
     $(document).on('click', '.btn-recent-update', function () {
         $('.client-section').removeClass('d-none');
         $('.deadline-section').addClass('d-none');
+        $('.employee-section').addClass('d-none');
         $('.btn-submit').data('type', 'recent-update');
         
         $('.btn-submit').removeClass('d-none');
 
+    });
+
+    $('#actionModal').on('shown.bs.modal', function () {
+        
         $('#client_id').select2({
             placeholder: "Select a client",
+            allowClear: true,
+            dropdownParent: $('#actionModal')
+        });
+
+        $('#employee_id').select2({
+            placeholder: "Please select an employee",
             allowClear: true,
             dropdownParent: $('#actionModal')
         });
@@ -668,10 +689,11 @@
         const noteId = $('#actionModal').data('note-id');
         const noteContent = $('#noteDetails').text();
         const deadline = $('#deadline').val();
+        const employeeId = $('#employee_id').val();
         const clientId = $('#client_id').val();
         const type = $(this).data('type');
 
-        console.log(noteId, noteContent, deadline, clientId, type);
+        // console.log(noteId, noteContent, deadline, clientId, type);
 
         $.ajax({
             url: '/manager/assign-note',
@@ -681,6 +703,7 @@
                 note: noteContent,
                 type: type,
                 deadline: deadline,
+                manager_id: employeeId,
                 client_id: clientId,
                 _token: $('meta[name="csrf-token"]').attr('content')
             },

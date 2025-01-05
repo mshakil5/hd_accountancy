@@ -52,6 +52,7 @@ class NoteController extends Controller
         if ($request->type === 'one-time-job') {
             $validator = Validator::make($request->all(), [
                 'note' => 'required|string',
+                'manager_id' => 'required',
                 'deadline' => 'nullable|date',
             ]);
             
@@ -68,7 +69,7 @@ class NoteController extends Controller
             $clientService = new ClientService();
             $uniqueId = date("His") . '-' . mt_rand(1000, 9999);
             $clientService->service_id = $service->id;
-            $clientService->manager_id = auth()->id();
+            $clientService->manager_id = $request->manager_id;
             $clientService->legal_deadline = $request->deadline;
             $clientService->unique_id = $uniqueId;
             $clientService->type = 2;
@@ -144,6 +145,7 @@ class NoteController extends Controller
         if ($request->type === 'one-time-job') {
             $validator = Validator::make($request->all(), [
                 'note' => 'required|string',
+                'manager_id' => 'required',
                 'deadline' => 'nullable|date',
             ]);
             
@@ -160,7 +162,7 @@ class NoteController extends Controller
             $clientService = new ClientService();
             $uniqueId = date("His") . '-' . mt_rand(1000, 9999);
             $clientService->service_id = $service->id;
-            $clientService->manager_id = auth()->id();
+            $clientService->manager_id = $request->manager_id;
             $clientService->legal_deadline = $request->deadline;
             $clientService->unique_id = $uniqueId;
             $clientService->type = 2;
