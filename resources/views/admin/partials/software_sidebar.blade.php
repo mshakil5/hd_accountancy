@@ -59,6 +59,13 @@
       </a>
     </li>
 
+    <li class="nav-item {{ request()->routeIs('my.tasks') ? 'active' : '' }}">
+      <a class="nav-link collapsed" href="{{ route('my.tasks') }}">
+        <i class="bi bi-check-circle"></i>
+        <span>My Tasks</span>
+      </a>
+    </li>
+
     <li class="nav-item {{ request()->routeIs('oneTimeJob.create') ? 'active' : '' }}">
       <a class="nav-link collapsed" href="{{ route('oneTimeJob.create') }}">
         <i class="bi bi-journal-text"></i>
