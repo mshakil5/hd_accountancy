@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id')->nullable()->nullable();
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->longText('content')->nullable(); 
-            $table->boolean('status')->default(1);
+            $table->boolean('status')->default(1); // defaualt 1 = not assigned , 2 = assigned
             $table->string('created_by')->nullable();
             $table->string('updated_by')->nullable();
             $table->timestamps();

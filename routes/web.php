@@ -197,6 +197,10 @@ Route::middleware(['auth', 'user-access:manager'])->group(function () {
     Route::get('/manager/one-time-job', [OneTimeJobController::class, 'create'])->name('oneTimeJob.create.manager');
     Route::get('/manager/one-time-job/data', [OneTimeJobController::class, 'getData']);
     Route::post('/manager/one-time-job', [OneTimeJobController::class, 'store']);
+
+    Route::get('/manager/get-note', [NoteController::class, 'getNotesByManager']);
+    Route::post('/manager/save-note', [NoteController::class, 'saveNoteByManager']);
+    Route::post('/manager/assign-note', [NoteController::class, 'assignNoteByManager']);
     
 });
 
@@ -287,6 +291,7 @@ Route::middleware(['auth', 'user-access:staff'])->group(function () {
     
     Route::get('/staff/get-note', [NoteController::class, 'getNotesByStaff']);
     Route::post('/staff/save-note', [NoteController::class, 'saveNoteByStaff']);
+    Route::post('/staff/assign-note', [NoteController::class, 'assignNoteByStaff']);
 });
 
 //User

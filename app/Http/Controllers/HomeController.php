@@ -225,7 +225,9 @@ class HomeController extends Controller
         }
 
         $activeTimeFormatted = gmdate('H:i:s', $activeTimeInSeconds);
-        return view('manager.dashboard',compact('staffs','managers','activeTimeFormatted','clients','subServices'));
+
+        $clients = Client::orderby('id','DESC')->select('id', 'name')->get();
+        return view('manager.dashboard',compact('staffs','managers','activeTimeFormatted','clients','subServices', 'clients'));
     }
 
     /**
@@ -262,7 +264,9 @@ class HomeController extends Controller
 
         $activeTimeFormatted = gmdate('H:i:s', $activeTimeInSeconds);
 
-        return view('staff.dashboard', compact('activeTimeFormatted','staffs','managers','clients','subServices'));
+        $clients = Client::orderby('id','DESC')->select('id', 'name')->get();
+
+        return view('staff.dashboard', compact('activeTimeFormatted','staffs','managers','clients','subServices', 'clients'));
     }
 
     /**
