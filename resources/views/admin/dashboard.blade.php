@@ -714,6 +714,93 @@
                 </div>
             </div>
 
+            <div class="row">
+                <div class="col-lg-4 mb-3">
+                    <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+                        <div class="card-body px-0">
+                            <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                                Your Notes
+                            </div>
+                            <div class="text-start my-3">
+                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#note">
+                                    Add New Note
+                                </button>
+                            </div>
+                            <div class="table-wrapper my-4 mx-auto">
+                                <table id="notesTable" class="table cell-border table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Sl</th>
+                                            <th>Note</th>
+                                            <th>Status</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="note" tabindex="-1" aria-labelledby="noteLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="noteLabel">Add Note</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <textarea class="form-control" id="note-message" rows="5" name="note-message" placeholder="Your note..."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" id="saveNote">Save Note</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="actionModal" aria-labelledby="actionModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="actionModalLabel">Choose an Action</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="note-section mb-3 p-3 border rounded bg-light d-none">
+                                <h6 class="text-primary">Note Details:</h6>
+                                <p id="noteDetails" class="mb-0"></p>
+                            </div>
+                            <button class="btn btn-success btn-one-time-job">Assign as One-Time Job</button>
+                            <button class="btn btn-info btn-recent-update">Assign as Recent Update</button>
+
+                            <div class="deadline-section mt-3 d-none">
+                                <label for="deadline">Deadline:</label>
+                                <input type="date" id="deadline" class="form-control">
+                            </div>
+
+                            <div class="client-section mt-3 d-none">
+                                <label for="client_id">Select Client: <span class="text-danger">*</span></label>
+                                <select id="client_id" class="form-control" style="width: 100%;">
+                                    <option value="">Select a client</option>
+                                    @foreach($clients as $client)
+                                        <option value="{{ $client->id }}">{{ $client->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary btn-submit">Submit</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         <!-- Service message modal start -->
@@ -772,6 +859,157 @@
     });
 </script>
 
+<script>
+
+    $('#notesTable').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: '/admin/get-note',
+            type: 'GET',
+            dataSrc: 'data',
+            error: function(xhr, error, thrown) {
+                console.error(xhr.responseText);
+            }
+        },
+        columns: [
+            {
+                data: null,
+                render: function(data, type, row, meta) {
+                    return meta.row + meta.settings._iDisplayStart + 1;
+                },
+                name: 'sl',
+                orderable: false,
+                searchable: false
+            },
+            {
+                data: 'content',
+                name: 'content'
+            },
+            {
+                data: 'status',
+                render: function(data, type, row) {
+                    if (data == 1) {
+                        return '<span class="badge bg-warning text-dark">Not Assigned</span>';
+                    } else if (data == 2) {
+                        return '<span class="badge bg-success text-white">Assigned</span>';
+                    }
+                }
+            },
+
+            {
+                data: 'action',
+                name: 'action',
+                orderable: false,
+                searchable: false
+            }
+        ]
+    });
+
+    $('#saveNote').click(function () {
+        var note = $('#note-message').val();
+        $.ajax({
+            url: '/admin/save-note',
+            type: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}',
+                note: note
+            },
+            success: function (response) {
+                Toastify({
+                    text: "Note saved!"
+                }).showToast();
+
+                $('#note-message').val('');
+                $('#note').modal('hide');
+                $('#notesTable').DataTable().ajax.reload();
+            },
+            error: function (xhr, status, error) {
+                console.error('Error:', error);
+            }
+        });
+    });
+
+    $(document).on('click', '.action-btn', function () {
+        const noteId = $(this).data('id');
+        const noteContent = $(this).data('note');
+
+        $('#noteDetails').text(noteContent);
+        $('.note-section').removeClass('d-none');
+
+        $('#actionModal').data('note-id', noteId);
+        $('#actionModal').modal('show');
+
+        $('.btn-submit').addClass('d-none');
+    });
+
+    $(document).on('click', '.btn-one-time-job', function () {
+        $('.deadline-section').removeClass('d-none');
+        $('.client-section').addClass('d-none');
+        $('.btn-submit').data('type', 'one-time-job');
+        
+        $('.btn-submit').removeClass('d-none');
+    });
+
+    $(document).on('click', '.btn-recent-update', function () {
+        $('.client-section').removeClass('d-none');
+        $('.deadline-section').addClass('d-none');
+        $('.btn-submit').data('type', 'recent-update');
+        
+        $('.btn-submit').removeClass('d-none');
+
+        $('#client_id').select2({
+            placeholder: "Select a client",
+            allowClear: true,
+            dropdownParent: $('#actionModal')
+        });
+    });
+
+    $(document).on('click', '.btn-submit', function () {
+        const noteId = $('#actionModal').data('note-id');
+        const noteContent = $('#noteDetails').text();
+        const deadline = $('#deadline').val();
+        const clientId = $('#client_id').val();
+        const type = $(this).data('type');
+
+        console.log(noteId, noteContent, deadline, clientId, type);
+
+        $.ajax({
+            url: '/admin/assign-note',
+            type: 'POST',
+            data: {
+                note_id: noteId,
+                note: noteContent,
+                type: type,
+                deadline: deadline,
+                client_id: clientId,
+                _token: $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function (response) {
+                Toastify({
+                    text: "Note assigned successfully!"
+                }).showToast();
+
+                $('#actionModal').modal('hide');
+                $('#notesTable').DataTable().ajax.reload();
+            },
+            error: function (xhr) {
+                alert('Something went wrong. Please try again.');
+                console.error(xhr.responseText);
+            }
+        });
+    });
+
+    $('#actionModal').on('hidden.bs.modal', function () {
+        $('#noteDetails').text('');
+        $('#deadline').val('');
+        $('#client_id').val(null).trigger('change');
+        $('.deadline-section').addClass('d-none');
+        $('.client-section').addClass('d-none');
+        $('.btn-submit').addClass('d-none');
+    });
+
+</script>
 
 <script>
     $(document).ready(function() {

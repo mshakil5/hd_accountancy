@@ -45,6 +45,7 @@ use App\Http\Controllers\Admin\ContactMailController;
 use App\Http\Controllers\Admin\MailContentController;
 use App\Http\Controllers\Admin\OneTimeJobController;
 use App\Http\Controllers\Admin\RecentUpdateController;
+use App\Http\Controllers\Admin\NoteController;
 
 //Fallback route
 Route::fallback(function () {
@@ -568,5 +569,10 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/one-time-job', [OneTimeJobController::class, 'create'])->name('oneTimeJob.create');
     Route::get('/one-time-job/data', [OneTimeJobController::class, 'getData'])->name('client-services.data');
     Route::post('/one-time-job', [OneTimeJobController::class, 'store']);
+
+    //Note
+    Route::get('/get-note', [NoteController::class, 'getNotes']);
+    Route::post('/save-note', [NoteController::class, 'saveNote']);
+    Route::post('/assign-note', [NoteController::class, 'assignNote']);
 
 });
