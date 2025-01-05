@@ -606,45 +606,49 @@
 
         var table = $('#staffsTable').DataTable({
             serverSide: true,
+            processing: true,
             ajax: "{{ route('get.Stuffs') }}",
             columns: [
-                {data: 'DT_RowIndex', name: 'DT_RowIndex'},
-                {data: 'id_number', name: 'id_number'},
+                { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                { data: 'id_number', name: 'id_number' },
                 {
                     data: null,
                     name: 'name',
                     render: function(data, type, full, meta) {
-                        var fullName = '';
-                        if (full.first_name && full.last_name) {
-                            fullName = full.first_name + ' ' + full.last_name;
-                        } else if (full.first_name) {
-                            fullName = full.first_name;
-                        } else if (full.last_name) {
-                            fullName = full.last_name;
+                        if (type === 'display') {
+                            return (full.first_name || '') + ' ' + (full.last_name || '');
                         }
-                        return fullName;
-                    }
+                        return full.first_name + ' ' + full.last_name;
+                    },
                 },
                 {
                     data: 'status',
                     name: 'status',
                     render: function(data, type, full, meta) {
-                        var statusClass = data ? 'btn btn-secondary' : 'btn btn-danger';
-                        var statusIcon = data ? '<i class="fas fa-toggle-on"></i>' : '<i class="fas fa-toggle-off"></i>';
-                        return '<button class="' + statusClass + '" onclick="changeStatus(' + full.id + ')">' + statusIcon + '</button>';
-                    }
+                        if (type === 'display') {
+                            var statusClass = data ? 'btn btn-secondary' : 'btn btn-danger';
+                            var statusIcon = data ? '<i class="fas fa-toggle-on"></i>' : '<i class="fas fa-toggle-off"></i>';
+                            return '<button class="' + statusClass + '" onclick="changeStatus(' + full.id + ')">' + statusIcon + '</button>';
+                        }
+                        return data;
+                    },
                 },
                 {
                     data: 'id',
                     name: 'details',
+                    orderable: false,
+                    searchable: false,
                     render: function(data, type, full, meta) {
-                        var editButtonHtml = '<button class="btn btn-secondary edit-staff" data-staff-id="' + data + '"><i class="fa fa-eye"></i></button>';
-                        var deleteButtonHtml = '<button class="btn btn-danger delete-staff" data-staff-id="' + data + '" style="margin-left: 10px;"><i class="fas fa-trash"></i></button>';
-
-                        return editButtonHtml;
-                    }
+                        if (type === 'display') {
+                            var editButtonHtml = '<button class="btn btn-secondary edit-staff" data-staff-id="' + data + '"><i class="fa fa-eye"></i></button>';
+                            var deleteButtonHtml = '<button class="btn btn-danger delete-staff" data-staff-id="' + data + '" style="margin-left: 10px;"><i class="fas fa-trash"></i></button>';
+                            return editButtonHtml + deleteButtonHtml;
+                        }
+                        return null;
+                    },
                 }
-            ]
+            ],
+            order: [[1, 'asc']]
         });
     });
 

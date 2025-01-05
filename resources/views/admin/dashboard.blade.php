@@ -120,7 +120,7 @@
                                             <option value="" selected>Select Manager</option>
                                             @foreach($managers as $manager)
                                             <option value="{{ $manager->id }}">
-                                                {{ $manager->first_name }}
+                                                {{ $manager->first_name }} {{ $manager->last_name }} ({{ $manager->type }})
                                             </option>
                                             @endforeach
                                         </select>
@@ -272,6 +272,7 @@
             </div>
 
             <!-- Currently Active Staffs Start-->
+             @if(count($loggedStaff) > 0)
             <div class="col-lg-12">
                 <div class="col-lg-12 px-0 border shadow-sm mb-3">
 
@@ -336,9 +337,11 @@
 
                 </div>
             </div>
+            @endif
             <!-- Currently Active Staffs End-->
 
             <!-- Todays's Late Staffs Start -->
+            @if(count($lateStaff) > 0)
             <div class="col-lg-12">
                 <div class="col-lg-12 px-0 border shadow-sm mb-3">
                     <p class="p-2 bg-theme-light txt-theme px-3 mb-0 text-capitalize d-flex align-items-center">
@@ -355,7 +358,7 @@
                             <tbody>
                                 @foreach ($lateStaff as $staff)
                                 <tr>
-                                    <td>{{ $staff->first_name }} {{ $staff->last_name }}</td>
+                                    <td>{{ $staff->user->first_name }} {{ $staff->user->last_name }}</td>
                                     <td>{{ \Carbon\Carbon::parse($staff->start_time)->format('H:i . d/m/Y') }}</td>
                                 </tr>
                                 @endforeach
@@ -364,9 +367,11 @@
                     </div>
                 </div>
             </div>
+            @endif
             <!-- Todays's Late Staffs End -->
 
             <!-- Todays's Shift Deviation Staffs Start -->
+            @if(count($filteredLogs) > 0)
             <div class="col-lg-12">
                 <div class="col-lg-12 px-0 border shadow-sm mb-3">
                     <p class="p-2 bg-theme-light txt-theme px-3 mb-0 text-capitalize d-flex align-items-center">
@@ -395,9 +400,11 @@
                     </div>
                 </div>
             </div>
+            @endif
             <!-- Todays's Shift Deviation Staffs End -->
 
             <!-- Todays's Absent Staffs Start -->
+            @if(count($absentStaff) > 0)
             <div class="col-lg-12">
                 <div class="col-lg-12 px-0 border shadow-sm mb-3">
                     <p class="p-2 bg-theme-light txt-theme px-3 mb-0 text-capitalize d-flex align-items-center">
@@ -435,6 +442,7 @@
                     </div>
                 </div>
             </div>
+            @endif
             <!-- Todays's Absent Staffs End -->
 
             <!-- Assigned service details section start -->
@@ -1993,7 +2001,7 @@
 
                 @foreach($staffs as $staff)
                 newRow += `<option value="{{ $staff->id }}" ${subService.staff_id == {{$staff->id}} ? 'selected' : ''}>
-                    {{ $staff->first_name }}
+                    {{ $staff->first_name }} {{ $staff->last_name }} ({{ $staff->type }})
                   </option>`;
                 @endforeach
 
