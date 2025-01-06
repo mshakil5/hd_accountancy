@@ -13,6 +13,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Role;
 
 class StaffController extends Controller
 {
@@ -20,7 +21,8 @@ class StaffController extends Controller
     {
         $departments = Department::select('id', 'name')->orderby('id','DESC')->get();
         $managers = User::where('type', '2')->select('id', 'id_number', 'first_name')->orderby('id','DESC')->get();
-        return view('admin.staff.index', compact('managers','departments'));
+        $roles = Role::select('id', 'name')->get();
+        return view('admin.staff.index', compact('managers','departments', 'roles'));
     }
 
     public function getStuffs(Request $request)
@@ -41,7 +43,8 @@ class StaffController extends Controller
     {
         $managers = User::where('type', '2')->orderby('id','DESC')->get();
         $departments = Department::orderby('id','DESC')->get();
-        return view('admin.staff.create', compact('managers','departments'));
+        $roles = Role::select('id', 'name')->get();
+        return view('admin.staff.create', compact('managers','departments', 'roles'));
     }
 
     public function store(Request $request)
@@ -65,6 +68,7 @@ class StaffController extends Controller
             'reporting_to' => 'required',
             'password' => 'required|string|max:255',
             'confirm_password' => 'required|same:password',
+            'role_id' => 'required|integer',
         ],[
             'ni_number.regex' => 'The NI number must contain alphabet and  number.',
         ]);
@@ -95,6 +99,7 @@ class StaffController extends Controller
 
         $data->type = "3";
         $data->total_holiday = "20";
+        $data->role_id = $request->role_id;
         $data->created_by =  Auth::id();
 
         if(isset($request->password)){
@@ -545,6 +550,7 @@ class StaffController extends Controller
         $validator = Validator::make($request->all(), [
             'staff_id' => 'required',
             'first_name' => 'required|string',
+            'role_id' => 'required',
             // 'last_name' => 'required|string',
             // 'phone' => 'required|numeric|digits:11',
             'email' => 'required|email|unique:users,email,'. $request->input('staff_id'),
@@ -571,6 +577,7 @@ class StaffController extends Controller
             $user->date_of_birth = $request->date_of_birth;
             $user->address_line1 = $request->address_1;
             $user->address_line2 = $request->address_2;
+            $user->role_id = $request->role_id;
 
             if ($request->hasFile('image')) {
 

@@ -252,6 +252,17 @@
                                                 <td><b>NI Number:</b></td>
                                                 <td><input type="text" id="ni_number" readonly></td>
                                             </tr>
+                                            <tr>
+                                                <td><b>Role:</b></td>
+                                                <td>
+                                                    <select name="role_id" id="role_id" class="form-select" disabled>
+                                                        <option value="">Select Role</option>
+                                                        @foreach ($roles as $role)
+                                                            <option value="{{ $role->id }}">{{ $role->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </td>
+                                            </tr>
                                         </table>
                                     </div>
                                     <div class="col-lg-6">
@@ -658,6 +669,7 @@
 
         if (editButton.innerHTML.includes('Edit')) {
             $('input[type="text"], input[type="number"], input[type="email"], input[type="password"], input[type="date"]').prop('readonly', false);
+            $('#role_id').prop('disabled', false);
             editButton.innerHTML = '<i class="bi bi-x-square"></i> Cancel';
             updateButton.style.display = 'inline-block';
         } else {
@@ -702,6 +714,7 @@
                 $('#phone').val(response.phone);
                 $('#email').val(response.email);
                 $('#ni_number').val(response.ni_number);
+                $('#role_id').val(response.role_id);
                 $('#date_of_birth').val(response.date_of_birth);
                 $('#address_1').val(response.address_line1);
                 $('#address_2').val(response.address_line2);
@@ -762,6 +775,7 @@
         formData.append('address_2', $('#address_2').val());
         formData.append('password', $('#password').val());
         formData.append('confirm_password', $('#confirm_password').val());
+        formData.append('role_id', $('#role_id').val());
 
         var imageFile = $('#pic')[0].files[0];
         if (imageFile) {

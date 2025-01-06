@@ -7,13 +7,15 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Models\Role;
 
 class ManagerController extends Controller
 {
     public function index()
     {
-        $data = User::where('type', '2')->select('id', 'first_name', 'last_name', 'phone', 'email')->orderby('id','DESC')->get();
-        return view('admin.manager.index', compact('data'));
+        $data = User::where('type', '2')->with('role:name')->select('id', 'first_name', 'last_name', 'phone', 'email', 'role_id')->orderby('id','DESC')->get();
+        $roles = Role::select('id', 'name')->get();
+        return view('admin.manager.index', compact('data', 'roles'));
     }
 
     public function store(Request $request)
@@ -55,11 +57,18 @@ class ManagerController extends Controller
             exit();
         }
 
+        if(empty($request->role_id)){
+            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please select \"Role \" field..!</b></div>";
+            return response()->json(['status'=> 303,'message'=>$message]);
+            exit();
+        }
+
         $data = new User;
         $data->first_name = $request->first_name;
         $data->last_name = $request->last_name;
         $data->phone = $request->phone;
         $data->email = $request->email;
+        $data->role_id = $request->role_id;
         $data->type = "2";
         $data->created_by =  Auth::id();
         $data->id_number = mt_rand(10000000, 99999999);
@@ -80,7 +89,7 @@ class ManagerController extends Controller
         $where = [
             'id'=>$id
         ];
-        $info = User::where($where)->select('id', 'first_name', 'last_name', 'phone', 'email')->first();
+        $info = User::where($where)->select('id', 'first_name', 'last_name', 'phone', 'email', 'role_id')->first();
         return response()->json($info);
     }
 
@@ -112,12 +121,18 @@ class ManagerController extends Controller
             return response()->json(['status'=> 303,'message'=>$message]);
             exit();
         }
+        if(empty($request->role_id)){
+            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please select \"Role \" field..!</b></div>";
+            return response()->json(['status'=> 303,'message'=>$message]);
+            exit();
+        }
 
         $data = User::find($request->codeid);
         $data->first_name = $request->first_name;
         $data->last_name = $request->last_name;
         $data->phone = $request->phone;
         $data->email = $request->email;
+        $data->role_id = $request->role_id;
         $data->updated_by =  Auth::id();
         if(isset($request->password)){
             $data->password = Hash::make($request->password);

@@ -134,6 +134,18 @@
                                                     </button>
                                                 </div>
                                             </div>
+
+                                            <div class="col-lg-4">
+                                                <div class="form-group">
+                                                    <label>Role <span class="text-danger">*</span></label>
+                                                    <select class="form-control" id="role_id" name="role_id">
+                                                        <option value="">Select role</option>
+                                                        @foreach ($roles as $role)
+                                                        <option value="{{ $role->id }}">{{ $role->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                            </div>
                                         </div>
                                         <div class="row">
                                             <div class="col-lg-4 mx-auto text-center">

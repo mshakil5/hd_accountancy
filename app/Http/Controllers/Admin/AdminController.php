@@ -17,13 +17,15 @@ use App\Models\ClientSubService;
 use Illuminate\Support\Facades\Validator;
 use App\Models\WorkTime;
 use App\Models\ServiceMessage;
+use App\Models\Role;
 
 class AdminController extends Controller
 {
     public function getAdmin()
     {
-        $data = User::where('type', '1')->select('id', 'first_name', 'last_name', 'email', 'phone')->orderby('id','DESC')->get();
-        return view('admin.admin.index', compact('data'));
+        $data = User::where('type', '1')->with('role:name')->select('id', 'first_name', 'last_name', 'email', 'phone', 'role_id')->orderby('id','DESC')->get();
+        $roles = Role::select('id', 'name')->get();
+        return view('admin.admin.index', compact('data', 'roles'));
     }
 
     public function adminStore(Request $request)
@@ -74,12 +76,19 @@ class AdminController extends Controller
             return response()->json(['status'=> 303,'message'=>$message]);
             exit();
         }
+
+        if(empty($request->role_id)){
+            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please select \"Role \" field..!</b></div>";
+            return response()->json(['status'=> 303,'message'=>$message]);
+            exit();
+        }
         
         $data = new User;
         $data->first_name = $request->first_name;
         $data->last_name = $request->last_name;
         $data->phone = $request->phone;
         $data->email = $request->email;
+        $data->role_id = $request->role_id;
         $data->type = "1";
         $data->created_by =  Auth::id();
         if(isset($request->password)){
@@ -98,7 +107,7 @@ class AdminController extends Controller
         $where = [
             'id'=>$id
         ];
-        $info = User::where($where)->select('id', 'first_name', 'last_name', 'phone', 'email')->first();
+        $info = User::where($where)->select('id', 'first_name', 'last_name', 'phone', 'email', 'role_id')->first();
         return response()->json($info);
     }
 
@@ -141,11 +150,18 @@ class AdminController extends Controller
             exit();
         }
 
+        if(empty($request->role_id)){
+            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please select \"Role \" field..!</b></div>";
+            return response()->json(['status'=> 303,'message'=>$message]);
+            exit();
+        }
+
         $data = User::find($request->codeid);
         $data->first_name = $request->first_name;
         $data->last_name = $request->last_name;
         $data->phone = $request->phone;
         $data->email = $request->email;
+        $data->role_id = $request->role_id;
         $data->updated_by = Auth::id();
         if(isset($request->password)){
             $data->password = Hash::make($request->password);
