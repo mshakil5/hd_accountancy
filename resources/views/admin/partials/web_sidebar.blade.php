@@ -9,6 +9,8 @@
             </a>
         </li>
 
+        @if (in_array('2', json_decode(Auth::user()->role->permission)))
+
         <form action="{{ route('toggle.sidebar') }}" method="POST">
             @csrf
             <input type="hidden" name="sidebar" value="0">
@@ -17,6 +19,9 @@
             </button>
         </form>
 
+        @endif
+
+        @if (in_array('18', json_decode(Auth::user()->role->permission)))
 
         <li class="nav-item {{ request()->routeIs('homepageOurValues') || request()->routeIs('homepageIntro') || request()->routeIs('weWorkImage') || request()->routeIs('allClientTestimonial') || request()->routeIs('allCaseStudies') || request()->routeIs('allCaseStudies') || request()->routeIs('allLatestInsight') ? 'menu-open' : '' }}">
             <a class="nav-link collapsed {{ request()->routeIs('homepageOurValues') || request()->routeIs('homepageIntro') || request()->routeIs('weWorkImage') || request()->routeIs('allClientTestimonial') || request()->routeIs('allCaseStudies') || request()->routeIs('allCaseStudies') || request()->routeIs('allLatestInsight') ? 'active' : '' }}" href="#" data-bs-toggle="collapse" data-bs-target="#homepageDropdown" aria-expanded="{{ request()->routeIs('homepageOurValues') || request()->routeIs('homepageIntro') || request()->routeIs('weWorkImage') || request()->routeIs('allClientTestimonial') || request()->routeIs('allCaseStudies') || request()->routeIs('allClientReview') || request()->routeIs('allLatestInsight') ? 'true' : 'false' }}">
@@ -379,6 +384,8 @@
                 @csrf
             </form>
         </li>
+
+        @endif
 
     </ul>
 

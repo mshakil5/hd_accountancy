@@ -2,6 +2,8 @@
 
 @section('content')
 
+@if (in_array('1', json_decode(Auth::user()->role->permission)))
+
 <section class="section dashboard">
     <div class="row">
 
@@ -861,6 +863,8 @@
         <!-- Service message modal end -->
 
 </section>
+
+@endif
 
 @endsection
 

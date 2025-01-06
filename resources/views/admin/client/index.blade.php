@@ -10,7 +10,13 @@
             </p>
             <div class="row px-3">
                 <div class="col-lg-12 p-3 d-flex justify-content-end">
+
+                    @if (in_array('7', json_decode(Auth::user()->role->permission)))
+
                     <a href="{{ route('createClient') }}" class="btn btn-sm bg-theme text-light btn-outline-dark">+ New Client</a>
+
+                    @endif
+
                 </div>
             </div>
             <div class="table-wrapper my-2 mx-auto" style="width: 95%;">
@@ -43,6 +49,9 @@
 <!-- Client Data table start -->
 <script>
  $(document).ready(function() {
+
+    var canEditDelete = @json(in_array('8', json_decode(Auth::user()->role->permission)));
+
     var table = $('#clientsTable').DataTable({
         serverSide: true,
         ajax: "{{ route('get.Clients') }}",
@@ -59,15 +68,16 @@
                 render: function(data, type, full, meta) {
                     var statusClass = data ? 'btn btn-secondary' : 'btn btn-danger';
                     var statusText = data ? '<i class="fas fa-toggle-on"></i>' : '<i class="fas fa-toggle-off"></i>';
-                    return '<button class="' + statusClass + '" onclick="changeStatus(' + full.id + ')">' + statusText + '</button>';
+                    var statusButton = '<button class="' + statusClass + '" onclick="changeStatus(' + full.id + ')" ' + (canEditDelete ? '' : 'disabled') + '>' + statusText + '</button>';
+                    return statusButton;
                 }
             },
             {
                 data: 'id',
                 name: 'details',
                 render: function(data, type, full, meta) {
-                    var editButtonHtml = '<a href="{{ url('admin/client/update-form') }}/' + data + '" class="btn btn-secondary"><i class="fas fa-edit"></i></a>';
-                    var deleteButtonHtml = '<a href="#" class="btn btn-danger delete-client" data-client-id="' + data + '" style="margin-left: 10px;"><i class="fas fa-trash"></i></a>';
+                    var editButtonHtml = canEditDelete ? '<a href="{{ url('admin/client/update-form') }}/' + data + '" class="btn btn-secondary"><i class="fas fa-edit"></i></a>' : '<button class="btn btn-secondary" disabled><i class="fas fa-edit"></i></button>';
+                    var deleteButtonHtml = canEditDelete ? '<a href="#" class="btn btn-danger delete-client" data-client-id="' + data + '" style="margin-left: 10px;"><i class="fas fa-trash"></i></a>' : '<button class="btn btn-danger" disabled style="margin-left: 10px;"><i class="fas fa-trash"></i></button>';
 
                     return editButtonHtml + deleteButtonHtml;
                 }

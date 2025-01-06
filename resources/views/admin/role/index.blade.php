@@ -117,7 +117,7 @@
                     @endif
                     @if(in_array(8, $permissions))
                     <tr>
-                      <td><label class="control-label">Client Update</label></td>
+                      <td><label class="control-label">Client Manage</label></td>
                       <td>
                         <label style="margin-top: -9px" class="switch"><input name="permission[]" type="checkbox" value="8"><span class="slider round"></span></label>
                       </td>
