@@ -108,6 +108,14 @@
       </a>
     </li>
 
+
+    <li class="nav-item {{ (request()->is('admin/role*')) ? 'active' : '' }}">
+      <a class="nav-link collapsed" href="{{ route('admin.role') }}">
+        <i class="bi bi-person-lock"></i>
+        <span>Manage Roles & Permissions</span>
+      </a>
+    </li>
+
     <li class="nav-item">
       <a class="nav-link collapsed" href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
         <i class="bi bi-box-arrow-right"></i>
