@@ -31,7 +31,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <link href="{{ asset('assets/vendor/toastify/toastify.min.css')}}" rel="stylesheet">
   <link href="{{ asset('assets/vendor/datatables/buttons.dataTables.min.css')}}" rel="stylesheet">
-  <link href="{{ asset('assets/vendor/summernote/summernote-bs4.min.css')}}" rel="stylesheet">
 
   <!-- Template Main CSS File -->
   <link href="{{ asset('assets/css/style.css')}}" rel="stylesheet">
@@ -70,14 +69,12 @@
   <script src="{{ asset('assets/vendor/jquery/jquery.min.js')}}"></script>
   <script src="{{ asset('assets/vendor/bootstrap/js/bootstrap.bundle.min.js')}}"></script>
   <script src="{{ asset('assets/vendor/simple-datatables/simple-datatables.js')}}"></script>
-  <script src="{{ asset('assets/vendor/tinymce/tinymce.min.js')}}"></script>
   <script src="{{ asset('assets/vendor/php-email-form/validate.js')}}"></script>
   <script src="{{ asset('assets/vendor/select2/select2.min.js')}}"></script>
   <script src="{{ asset('assets/vendor/datatables/jquery.dataTables.min.js')}}"></script>
   <script src="{{ asset('assets/vendor/datatables/dataTables.bootstrap4.min.js')}}"></script>
   <script src="{{ asset('assets/vendor/toastify/toastify-js.js')}}"></script>
   <script src="{{ asset('assets/vendor/moment/moment.min.js')}}"></script>
-  <script src="{{ asset('assets/vendor/sweet-alert/sweetalert.min.js')}}"></script>
 
   <!-- Template Main JS File -->
   <script src="{{ asset('assets/js/main.js') }}"></script>

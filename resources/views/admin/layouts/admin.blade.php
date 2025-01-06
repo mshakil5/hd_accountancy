@@ -32,6 +32,7 @@
   <link href="{{ asset('assets/vendor/toastify/toastify.min.css')}}" rel="stylesheet">
   <link href="{{ asset('assets/vendor/datatables/buttons.dataTables.min.css')}}" rel="stylesheet">
   <link href="{{ asset('assets/vendor/summernote/summernote-bs4.min.css')}}" rel="stylesheet">
+  <link href="{{ asset('assets/vendor/toastr/toastr.css')}}" rel="stylesheet">
 
   <!-- Template Main CSS File -->
   <link href="{{ asset('assets/css/style.css')}}" rel="stylesheet">
@@ -63,17 +64,12 @@
   </main>
   <!--Main -->
 
-  <!--Footer-->
-  <!-- @include('admin.partials.footer') -->
-  <!-- End Footer -->
-
   <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
   <!-- Vendor JS Files -->
   <script src="{{ asset('assets/vendor/jquery/jquery.min.js')}}"></script>
   <script src="{{ asset('assets/vendor/bootstrap/js/bootstrap.bundle.min.js')}}"></script>
   <script src="{{ asset('assets/vendor/simple-datatables/simple-datatables.js')}}"></script>
-  <script src="{{ asset('assets/vendor/tinymce/tinymce.min.js')}}"></script>
   <script src="{{ asset('assets/vendor/php-email-form/validate.js')}}"></script>
   <script src="{{ asset('assets/vendor/select2/select2.min.js')}}"></script>
   <script src="{{ asset('assets/vendor/datatables/jquery.dataTables.min.js')}}"></script>
@@ -89,33 +85,32 @@
   <script src="{{ asset('assets/vendor/moment/moment.min.js')}}"></script>
   <script src="{{ asset('assets/vendor/sweet-alert/sweetalert.min.js')}}"></script>
   <script src="{{ asset('assets/vendor/summernote/summernote.min.js')}}"></script>
+  <script src="{{ asset('assets/vendor/toastr/toastr.min.js')}}"></script>
 
   <!-- Template Main JS File -->
   <script src="{{ asset('assets/js/main.js') }}"></script>
 
   <script>
-    function toggleSidebar() {
-      document.getElementsByTagName('body').classlist.toggle('toggle-sidebar');
-    }
-  </script>
-
-  <script>
     $(document).ready(function() {
       $('.select2').select2();
     });
+
+    function toggleSidebar() {
+      document.getElementsByTagName('body').classlist.toggle('toggle-sidebar');
+    }
+
+    function updateDateTime() {
+          var currentDate = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+          var currentTime = new Date().toLocaleTimeString(undefined, { hour12: false });
+          document.getElementById('date').textContent = 'Date: ' + currentDate;
+          document.getElementById('time').textContent = 'Time: ' + currentTime;
+      }
+      updateDateTime();
+      setInterval(updateDateTime, 1000);
+
+      moment.suppressDeprecationWarnings = true;
+      
   </script>
-
-    <script>
-        function updateDateTime() {
-            var currentDate = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            var currentTime = new Date().toLocaleTimeString(undefined, { hour12: false });
-            document.getElementById('date').textContent = 'Date: ' + currentDate;
-            document.getElementById('time').textContent = 'Time: ' + currentTime;
-        }
-        updateDateTime();
-        setInterval(updateDateTime, 1000);
-    </script>
-
 
   @yield('script')
 

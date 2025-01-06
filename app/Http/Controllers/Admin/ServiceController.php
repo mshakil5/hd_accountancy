@@ -709,7 +709,7 @@ class ServiceController extends Controller
                     $legalDeadline = $clientservice->legal_deadline;
                     if ($legalDeadline) {
                         return [
-                            'formatted' => \Carbon\Carbon::parse($legalDeadline)->format('d-m-y'),
+                            'formatted' => \Carbon\Carbon::parse($legalDeadline)->format('d-m-Y'),
                             'original' => $legalDeadline
                         ];
                     }
@@ -719,12 +719,21 @@ class ServiceController extends Controller
                         'original' => null
                     ];
                 })
+
+                ->addColumn('due_date', function (ClientService $clientservice) {
+                    $dueDate = $clientservice->due_date;
+                    if ($dueDate) {
+                        return \Carbon\Carbon::parse($dueDate)->format('d-m-Y');
+                    }
+                    return 'N/A';
+                })
+
                 ->addColumn('service_deadline', function (ClientService $clientservice) {
                     $serviceDeadline = $clientservice->service_deadline;
 
                     if ($serviceDeadline) {
                         return [
-                            'formatted' => \Carbon\Carbon::parse($serviceDeadline)->format('d-m-y'),
+                            'formatted' => \Carbon\Carbon::parse($serviceDeadline)->format('d-m-Y'),
                             'original' => $serviceDeadline
                         ];
                     }

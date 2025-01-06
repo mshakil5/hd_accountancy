@@ -574,11 +574,11 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/my-tasks', [AdminController::class, 'getAdminTasks'])->name('my.tasks');
     Route::get('/get-assigned-services', [AdminController::class, 'getAllAssignedServices']);
     Route::get('/get-note', [AdminController::class, 'getNotes']);
-    Route::get('/get-completed-services', [AdminController::class, 'getCompetedServices']);
+    Route::get('/get-completed-service', [AdminController::class, 'getCompetedServices']);
     Route::get('/get-completed-services-as-manager', [AdminController::class, 'getCompetedServicesAsManager']);
     Route::get('/get-one-time-jobs', [AdminController::class, 'getOneTimeJobs']);
     Route::get('/getClientSubServices/{clientserviceId}', [AdminController::class, 'getClientSubServices']);
-    Route::post('/client-service-change-status', [AdminController::class, 'changeServiceStatus']);
+    Route::post('client-service-status-chnange', [AdminController::class, 'changeServiceStatus']);
     Route::post('/update-sub-service-staff', [AdminController::class, 'updateSubServiceStaff']);
     Route::post('/update-sub-service-status', [AdminController::class,'updateSubServiceStatus']);
     Route::post('/change-sub-service-status', [AdminController::class,'changeSubServiceStatus']);

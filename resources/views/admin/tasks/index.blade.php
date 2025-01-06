@@ -836,7 +836,7 @@
             const newStatus = $(this).val();
 
             $.ajax({
-                url: '/admin/client-service-change-status',
+                url: '/admin/client-service-status-chnange',
                 method: 'POST',
                 data: {
                     _token: '{{ csrf_token() }}',
@@ -1330,7 +1330,7 @@
             processing: true,
             serverSide: true,
             ajax: {
-                url: '/admin/get-completed-services',
+                url: '/admin/get-completed-service',
                 type: 'GET',
                 dataSrc: 'data',
                 error: function(xhr, error, thrown) {
