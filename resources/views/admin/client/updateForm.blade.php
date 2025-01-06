@@ -596,7 +596,7 @@
                                             <select class="form-control mt-2 managerDropdown" name="manager_id">
                                             <option value="">Select</option>
                                             @foreach($managers as $manager)
-                                            <option value="{{ $manager->id }}">{{ $manager->first_name }}</option>
+                                            <option value="{{ $manager->id }}">{{ $manager->first_name }} {{ $manager->last_name }} ({{ $manager->type }})</option>
                                             @endforeach
                                             </select>
                                         </div>
@@ -618,19 +618,19 @@
                                     <div class="col-md-2 text-center">
                                         <h5 class="mb-3">Due Date</h5>
                                         <div class="form-check">
-                                            <input type="date" class="form-control dueDate" id="dueDate" name="dueDate">
+                                            <input type="text" class="form-control dueDate" id="dueDate" name="dueDate">
                                         </div>
                                     </div>
                                     <div class="col-md-2 text-center">
                                         <h5 class="mb-3">Target Deadline</h5>
                                         <div class="form-check">
-                                            <input type="date" class="form-control legalDeadline" id="legalDeadline" name="legalDeadline">
+                                            <input type="text" class="form-control legalDeadline" id="legalDeadline" name="legalDeadline">
                                         </div>
                                     </div>
                                     <div class="col-md-2 text-center">
                                         <h5 class="mb-3">Deadline</h5>
                                         <div class="form-check">
-                                            <input type="date" class="form-control serviceDeadline" id="serviceDeadline" name="service_deadline">
+                                            <input type="text" class="form-control serviceDeadline" id="serviceDeadline" name="service_deadline">
                                         </div>
                                     </div>
                                     <div class="col-md-1 text-center">
@@ -653,7 +653,7 @@
                                         <select class="form-control staffDropdown" id="selectedStaff" name="staff_id">
                                         <option value="">Select Staff</option>
                                         @foreach($staffs as $staff)
-                                        <option value="{{ $staff->id }}">{{ $staff->first_name }}</option>
+                                        <option value="{{ $staff->id }}">{{ $staff->first_name }} {{ $staff->last_name }} ({{ $staff->type }})</option>
                                         @endforeach
                                         </select>
                                     </td>
@@ -667,7 +667,17 @@
                                     </tr>
                                 `;
                             $('.subServiceDetails:last').find('tbody').append(newRow);
+
+                            $('.dueDate, .legalDeadline, .serviceDeadline').datepicker({
+                                format: 'dd-mm-yyyy',
+                                autoclose: true,
+                                todayHighlight: true
+                            });
+
                         });
+                    },
+                    error: function(xhr, status, error) {
+                        console.error(xhr.responseText);
                     }
                 });
             }
@@ -738,6 +748,7 @@
                 type: 'POST',
                 data: data,
                 success: function(response) {
+                    // console.log(response);
                     swal({
                         title: "Success!",
                         text: "Task assigned successfully",
@@ -749,6 +760,7 @@
                     }, 2000);
                 },
                 error: function(xhr, status, error) {
+                    // console.log(xhr.responseText);
                     var errorMessage = "An error occurred. Please try again later.";
                     if (xhr.responseJSON && xhr.responseJSON.errors) {
                         errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
@@ -835,6 +847,7 @@
                     }, 2000);
                 },
                 error: function(xhr, status, error) {
+                    // console.log(xhr.responseText);
                     var errorMessage = "An error occurred. Please try again later.";
                     if (xhr.responseJSON && xhr.responseJSON.errors) {
                         errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
@@ -1162,9 +1175,6 @@
     });
 </script>
 <!-- Data table initialize -->
-
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-datepicker/dist/css/bootstrap-datepicker.min.css">
-<script src="https://cdn.jsdelivr.net/npm/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"></script>
 
 <script>
     $('.dueDate, .legalDeadline, .serviceDeadline').datepicker({

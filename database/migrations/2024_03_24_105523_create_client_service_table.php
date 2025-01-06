@@ -26,7 +26,7 @@ return new class extends Migration
             $table->string('next_legal_deadline')->nullable();
             $table->boolean('manager_notification')->default(1);// default 1 == No notification , 0 == New notification
             $table->boolean('status')->default(1); // defaualt 1 = Work isnt start yet , 2 = Work is completed , 0 = work is processing, 3 = work assigned
-            $table->boolean('continue')->default(1); // default 1 = continue , 0 = stop
+            $table->boolean('continuous')->default(1); // default 1 = continue , 0 = stop
             $table->integer('type')->default(1); // 1 = Normal job , 2 = One time job
             $table->integer('is_admin_approved')->default(0); // 1 = Yes , 0 = No
             $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');

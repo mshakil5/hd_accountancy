@@ -101,7 +101,7 @@
 
                         <div class="col-md-12">
                             <div class="row mt-3">
-                                <div class="col-3 text-center">
+                                <div class="col-2 text-center">
                                     <h5 class="mb-3">Choose Service</h5>
                                     <div class="form-check">
                                         <input type="hidden" id="clientId">
@@ -115,7 +115,7 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-3 text-center">
+                                <div class="col-2 text-center">
                                     <h5 class="mb-3">Choose Manager</h5>
                                     <div class="form-check">
                                         <select id="managerDropdown" class="form-control mt-2">
@@ -128,7 +128,7 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-3 text-center">
+                                <div class="col-2 text-center">
                                     <h5 class="mb-3">Choose Frequency</h5>
                                     <div class="form-check">
                                         <select id="service_frequency" class="form-control mt-2" name="service_frequency">
@@ -142,10 +142,22 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-3 text-center">
+                                <div class="col-md-2 text-center">
+                                    <h5 class="mb-3">Due Date</h5>
+                                    <div class="form-check">
+                                        <input type="text" class="form-control dueDate" id="dueDate" name="dueDate">
+                                    </div>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <h5 class="mb-3">Target Deadline</h5>
+                                    <div class="form-check">
+                                        <input type="text" class="form-control legalDeadline" id="legalDeadline" name="legalDeadline">
+                                    </div>
+                                </div>
+                                <div class="col-2 text-center">
                                     <h5 class="mb-3">Deadline</h5>
                                     <div class="form-check">
-                                        <input type="date" id="service_deadline" class="form-control mt-2" name="service_deadline" value="">
+                                        <input type="date" id="service_deadline serviceDeadline" class="form-control mt-2" name="service_deadline" value="">
                                     </div>
                                 </div>
                             </div>
@@ -2094,6 +2106,8 @@
             var managerId = $('#managerDropdown').val();
             var serviceFrequency = $('#service_frequency').val();
             var serviceDeadline = $('#service_deadline').val();
+            var dueDate = $('#dueDate').val();
+            var legalDeadline = $('#legalDeadline').val();
 
             var subServices = [];
             $('#serviceDetailsTable tr').each(function() {
@@ -2106,7 +2120,9 @@
                     subServiceId: subServiceId,
                     deadline: deadline,
                     staffId: staffId,
-                    note: note
+                    note: note,
+                    dueDate: dueDate,
+                    legalDeadline: legalDeadline
                 });
             });
 
@@ -2156,6 +2172,12 @@
                     console.error(xhr.responseText);
                 }
             });
+        });
+
+        $('.dueDate, .legalDeadline, .serviceDeadline').datepicker({
+            format: 'dd-mm-yyyy',
+            autoclose: true,
+            todayHighlight: true
         });
     });
 </script>

@@ -33,6 +33,7 @@
   <link href="{{ asset('assets/vendor/datatables/buttons.dataTables.min.css')}}" rel="stylesheet">
   <link href="{{ asset('assets/vendor/summernote/summernote-bs4.min.css')}}" rel="stylesheet">
   <link href="{{ asset('assets/vendor/toastr/toastr.css')}}" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-datepicker/dist/css/bootstrap-datepicker.min.css">
 
   <!-- Template Main CSS File -->
   <link href="{{ asset('assets/css/style.css')}}" rel="stylesheet">
@@ -86,6 +87,7 @@
   <script src="{{ asset('assets/vendor/sweet-alert/sweetalert.min.js')}}"></script>
   <script src="{{ asset('assets/vendor/summernote/summernote.min.js')}}"></script>
   <script src="{{ asset('assets/vendor/toastr/toastr.min.js')}}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"></script>
 
   <!-- Template Main JS File -->
   <script src="{{ asset('assets/js/main.js') }}"></script>
