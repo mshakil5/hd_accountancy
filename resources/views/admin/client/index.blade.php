@@ -107,19 +107,14 @@
                     },
                     success: function(response) {
                         if (response.status === 200) {
-                            Toastify({
-                                text: "Client deleted successfully!"
-                            }).showToast();
-                            
+                            toastr.success(response.message);
                             $('#clientsTable').DataTable().ajax.reload();
                         } else {
-                            Toastify({
-                                text: "Failed to delete."
-                            }).showToast();
+                            toastr.error(response.message);
                         }
                     },
                     error: function(xhr, status, error) {
-
+                        toastr.error('Failed to delete client.');
                     }
                 });
             }
@@ -141,13 +136,9 @@
             success: function(response) {
                 if (response.success) {
                     $('#clientsTable').DataTable().ajax.reload(null, false);
-                    Toastify({
-                        text: "Status changed successfully!"
-                    }).showToast();
+                    toastr.success('Status changed successfully!');
                 } else {
-                    Toastify({
-                        text: "Failed to change status."
-                    }).showToast();
+                    toastr.error('Failed to change status!');
                 }
             }
         });
