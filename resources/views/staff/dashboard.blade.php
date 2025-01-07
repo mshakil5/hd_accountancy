@@ -162,39 +162,47 @@
         </div>
         <!-- Service message modal end -->
 
-        <!-- Your time start -->
-        <div class="col-lg-4 mb-3">
-            <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100">
-                <div class="card-body p-0">
-                    <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                        Your Time
+        <div class="modal fade" id="timeModal1" tabindex="-1" aria-labelledby="timeModalLabel1" aria-hidden="true">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header bg-theme-light border-theme">
+                        <h5 class="modal-title txt-theme fw-bold" id="timeModal1Label">Your Time</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="d-flex gap-3 my-5">
-                        <div class="text-center flex-fill">
-                            <div class="fs-6 txt-theme fw-bold">Active Time</div>
-                            <div class="container">
-                                <div class="text-center fs-2 txt-theme fw-bold" id="activeTime">
-                                    {{ $activeTimeFormatted ?? 'N/A' }}
+                    <div class="modal-body">
+                        <div class="report-box border-theme sales-card p-4 rounded-4 border-3">
+                            <div class="card-body p-0">
+                                <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                                    Your Time
+                                </div>
+                                <div class="d-flex gap-3 my-5">
+                                    <div class="text-center flex-fill">
+                                        <div class="fs-6 txt-theme fw-bold">Active Time</div>
+                                        <div class="container">
+                                            <div class="text-center fs-2 txt-theme fw-bold" id="activeTime">
+                                                {{ $activeTimeFormatted ?? 'N/A' }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mt-3 align-items-center justify-content-center">
+                                    <div class="col-lg-12">
+                                        <a id="takeBreakBtn" class="p-2 border-theme bg-theme text-center fs-6 d-block rounded-3 border-3 text-light fw-bold" style="cursor: pointer;">Take Break</a>
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-lg-12">
+                                        <a href="#" onclick="checkWorkTimeStatus();" class="p-2 border-theme bg-theme text-center fs-6 d-block rounded-3 border-3 text-light fw-bold">Clock out</a>
+                                        <form id="logout-form" class="d-none">
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="row mt-3 align-items-center justify-content-center">
-                        <div class="col-lg-12">
-                            <a id="takeBreakBtn" class="p-2 border-theme bg-theme text-center fs-6 d-block rounded-3 border-3 text-light fw-bold" style="cursor: pointer;">Take Break</a>
-                        </div>
-                    </div>
-                   <div class="row mt-3">
-                        <div class="col-lg-12">
-                            <a href="#" onclick="checkWorkTimeStatus();" class="p-2 border-theme bg-theme text-center fs-6 d-block rounded-3 border-3 text-light fw-bold">Clock out</a>
-                            <form id="logout-form" class="d-none">
-                            </form>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <!-- Your time end -->
 
         <!-- Note modal start -->
         <div class="modal fade" id="noteModal" tabindex="-1" aria-labelledby="noteModalLabel" aria-hidden="true">
@@ -286,6 +294,33 @@
             </div>
         </div>
         <!-- Note modal end -->
+
+        <div class="col-lg-4 mb-3">
+            <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+                <div class="card-body px-0">
+                    <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                        Your Notes
+                    </div>
+                    <div class="text-start my-3">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#note">
+                            Add New Note
+                        </button>
+                    </div>
+                    <div class="table-wrapper my-4 mx-auto">
+                        <table id="notesTable" class="table cell-border table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Sl</th>
+                                    <th>Note</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Whats happening start -->
         <div class="col-lg-8 mb-3 d-none">
@@ -442,35 +477,6 @@
         </div>
         <!-- Completed tasks table end-->
 
-    </div>
-
-    <div class="row">
-        <div class="col-lg-4 mb-3">
-            <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
-                <div class="card-body px-0">
-                    <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                        Your Notes
-                    </div>
-                    <div class="text-start my-3">
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#note">
-                            Add New Note
-                        </button>
-                    </div>
-                    <div class="table-wrapper my-4 mx-auto">
-                        <table id="notesTable" class="table cell-border table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Sl</th>
-                                    <th>Note</th>
-                                    <th>Status</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <div class="modal fade" id="note" tabindex="-1" aria-labelledby="noteLabel" aria-hidden="true">

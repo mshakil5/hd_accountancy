@@ -76,163 +76,214 @@
         </div>
         <!-- Assigned service details section start -->
 
-        <!-- Login Time and button -->
-        <div class="col-lg-4 mb-3">
-            <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100">
-                <div class="card-body p-0">
-                    <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                        Your Time
+        <div class="modal fade" id="timeModal" tabindex="-1" aria-labelledby="timeModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header bg-theme-light border-theme">
+                        <h5 class="modal-title txt-theme fw-bold" id="timeModalLabel">Your Time</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="d-flex gap-3 my-5">
-                        <div class="text-center flex-fill">
-                            <div class="fs-6 txt-theme fw-bold">Active Time</div>
-                            <div class="container">
-                                <div class="text-center fs-2 txt-theme fw-bold" id="activeTime">
-                                    {{ $activeTimeFormatted ?? 'N/A' }}
+                    <div class="modal-body">
+                        <div class="report-box border-theme sales-card p-4 rounded-4 border-3">
+                            <div class="card-body p-0">
+                                <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                                    Your Time
+                                </div>
+                                <div class="d-flex gap-3 my-5">
+                                    <div class="text-center flex-fill">
+                                        <div class="fs-6 txt-theme fw-bold">Active Time</div>
+                                        <div class="container">
+                                            <div class="text-center fs-2 txt-theme fw-bold" id="activeTime">
+                                                {{ $activeTimeFormatted ?? 'N/A' }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mt-3 align-items-center justify-content-center">
+                                    <div class="col-lg-12">
+                                        <a id="takeBreakBtn" class="p-2 border-theme bg-theme text-center fs-6 d-block rounded-3 border-3 text-light fw-bold" style="cursor: pointer;">Take Break</a>
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-lg-12">
+                                        <a href="#" onclick="checkWorkTimeStatus();" class="p-2 border-theme bg-theme text-center fs-6 d-block rounded-3 border-3 text-light fw-bold">Clock out</a>
+                                        <form id="logout-form" class="d-none">
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-            <div class="row mt-3 align-items-center justify-content-center">
-                <div class="col-lg-12">
-                    <a id="takeBreakBtn" class="p-2 border-theme bg-theme text-center fs-6 d-block rounded-3 border-3 text-light fw-bold" style="cursor: pointer;">Take Break</a>
                 </div>
-            </div>
-            <div class="row mt-3">
-                <div class="col-lg-12">
-                    <a href="#" onclick="checkWorkTimeStatus();" class="p-2 border-theme bg-theme text-center fs-6 d-block rounded-3 border-3 text-light fw-bold">Clock out</a>
-                    <form id="logout-form" class="d-none">
-                    </form>
-                </div>
-            </div>
-            </div>
             </div>
         </div>
-    <!-- Login Time and button -->
 
-    <!-- Note modal start -->
-    <div class="modal fade" id="noteModal" tabindex="-1" aria-labelledby="noteModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl mt-2">
-            <div class="modal-content">
-                <div class="modal-body">
-                    <div class="row">
-                        <!-- Left Side Section -->
-                        <div class="col-lg-4">
-                            <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
-                                <div class="card-body px-0">
-                                    <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                                        Your tasks
+        <!-- Note modal start -->
+        <div class="modal fade" id="noteModal" tabindex="-1" aria-labelledby="noteModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl mt-2">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <div class="row">
+                            <!-- Left Side Section -->
+                            <div class="col-lg-4">
+                                <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+                                    <div class="card-body px-0">
+                                        <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                                            Your tasks
+                                        </div>
+
+                                        <div class="mt-3">
+                                            <table class="table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Active Time:</th>
+                                                        <th>Break Time:</th>
+                                                        <th>Total Work Time:</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td><span id="loginTime"></span></td>
+                                                        <td><span id="totalBreakTime"></span></td>
+                                                        <td><span id="totalDuration"></span></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        <div id="completedServices">
+                                            <table id="completedServicesTable" class="table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Client</th>
+                                                        <th>Task</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <!--  -->
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
+                                </div>
+                            </div>
 
-                                    <div class="mt-3">
-                                        <table class="table">
-                                            <thead>
-                                                <tr>
-                                                    <th>Active Time:</th>
-                                                    <th>Break Time:</th>
-                                                    <th>Total Work Time:</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr>
-                                                    <td><span id="loginTime"></span></td>
-                                                    <td><span id="totalBreakTime"></span></td>
-                                                    <td><span id="totalDuration"></span></td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
+                            <!-- Right Side Section -->
+                            <div class="col-lg-8">
+                                <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+                                    <div class="card-body px-0">
+                                        <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                                            Add Note
+                                        </div>
+                                        <form id="noteForm" method="" action="#">
+                                            @csrf
+                                            <div class="form-group mt-4">
+                                                <label class="fw-bold mr-2">Note:</label>
+                                                <textarea class="form-control" id="noteInput" rows="3" name="note" placeholder="Your notes..."></textarea>
+                                            </div>
 
-                                    <div id="completedServices">
-                                        <table id="completedServicesTable" class="table">
-                                            <thead>
-                                                <tr>
-                                                    <th>Client</th>
-                                                    <th>Task</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <!--  -->
-                                            </tbody>
-                                        </table>
+                                            <div class="form-group row mt-3 align-items-center">
+                                                <div class="col">
+                                                    <label class="fw-bold mr-2">Additional Work:</label>
+                                                </div>
+                                                <div class="col-auto">
+                                                    <button type="button" class="btn btn-primary" id="addNoteRowBtn">+</button>
+                                                </div>
+                                            </div>
+
+                                            <div id="additionalWorkRows">
+                                                <!-- Rows -->
+                                            </div>
+
+                                            <div class="text-right mt-3">
+                                                <button type="button" class="btn btn-primary bg-theme-light fs-4 border-theme border-2 fw-bold txt-theme" id="saveNoteBtn">Save Note And Log Out</button>
+                                            </div>
+                                        </form>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Note modal end -->
 
-                        <!-- Right Side Section -->
-                        <div class="col-lg-8">
-                            <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
-                                <div class="card-body px-0">
-                                    <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                                        Add Note
+        <!-- Service message modal start -->
+        <div class="modal fade" id="messageModal" tabindex="-1" role="dialog" aria-labelledby="messageModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg mt-2" role="document">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+                                    <div class="card-body px-0">
+                                        <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                                            Previous Comment
+                                        </div>
+                                        <div id="previousMessages" class="mt-4">
+                                            <!-- Previous messages -->
+                                        </div>
                                     </div>
-                                    <form id="noteForm" method="" action="#">
-                                        @csrf
+                                </div>
+                            </div>
+                            <!--Message Input Section -->
+                            <div class="col-md-6">
+                                <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+                                    <div class="card-body px-0">
+                                        <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                                            New Comment
+                                        </div>
+                                        <input type="hidden" id="hiddenStaffId" />
+                                        <input type="hidden" id="hiddenClientSubServiceId" />
                                         <div class="form-group mt-4">
-                                            <label class="fw-bold mr-2">Note:</label>
-                                            <textarea class="form-control" id="noteInput" rows="3" name="note" placeholder="Your notes..."></textarea>
+                                            <textarea class="form-control" id="service-message" rows="7" name="message" placeholder="Your comment..."></textarea>
                                         </div>
-
-                                        <div class="form-group row mt-3 align-items-center">
-                                            <div class="col">
-                                                <label class="fw-bold mr-2">Additional Work:</label>
-                                            </div>
-                                            <div class="col-auto">
-                                                <button type="button" class="btn btn-primary" id="addNoteRowBtn">+</button>
-                                            </div>
+                                        <div class="text-center">
+                                            <button type="button" class="mt-3 btn btn-primary bg-theme-light fs-4 border-theme border-2 fw-bold txt-theme" id="saveMessage">Send</button>
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Service message modal end -->
 
-                                        <div id="additionalWorkRows">
-                                            <!-- Rows -->
+        <!-- Service message modal start -->
+        <div class="modal fade" id="messageModal1" tabindex="-1" role="dialog" aria-labelledby="messageModal1Label" aria-hidden="true">
+            <div class="modal-dialog modal-lg mt-2" role="document">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+                                    <div class="card-body px-0">
+                                        <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                                            Previous Comment
                                         </div>
-
-                                        <div class="text-right mt-3">
-                                            <button type="button" class="btn btn-primary bg-theme-light fs-4 border-theme border-2 fw-bold txt-theme" id="saveNoteBtn">Save Note And Log Out</button>
+                                        <div id="previousMessages1" class="mt-4">
+                                            <!-- Previous messages -->
                                         </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Note modal end -->
-
-    <!-- Service message modal start -->
-    <div class="modal fade" id="messageModal" tabindex="-1" role="dialog" aria-labelledby="messageModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg mt-2" role="document">
-            <div class="modal-content">
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
-                                <div class="card-body px-0">
-                                    <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                                        Previous Comment
-                                    </div>
-                                    <div id="previousMessages" class="mt-4">
-                                        <!-- Previous messages -->
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <!--Message Input Section -->
-                        <div class="col-md-6">
-                            <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
-                                <div class="card-body px-0">
-                                    <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                                        New Comment
-                                    </div>
-                                    <input type="hidden" id="hiddenStaffId" />
-                                    <input type="hidden" id="hiddenClientSubServiceId" />
-                                    <div class="form-group mt-4">
-                                        <textarea class="form-control" id="service-message" rows="7" name="message" placeholder="Your comment..."></textarea>
-                                    </div>
-                                    <div class="text-center">
-                                        <button type="button" class="mt-3 btn btn-primary bg-theme-light fs-4 border-theme border-2 fw-bold txt-theme" id="saveMessage">Send</button>
+                            <!--Message Input Section -->
+                            <div class="col-md-6">
+                                <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+                                    <div class="card-body px-0">
+                                        <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                                            New Comment
+                                        </div>
+                                        <input type="hidden" id="hiddenClientServiceId" />
+                                        <div class="form-group mt-4">
+                                            <textarea class="form-control" id="service-message1" rows="7" name="message" placeholder="Your comment..."></textarea>
+                                        </div>
+                                        <div class="text-center">
+                                            <button type="button" class="mt-3 btn btn-primary bg-theme-light fs-4 border-theme border-2 fw-bold txt-theme" id="saveMessage1">Send</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -241,210 +292,8 @@
                 </div>
             </div>
         </div>
-    </div>
-    <!-- Service message modal end -->
+        <!-- Service message modal end -->
 
-    <!-- Service message modal start -->
-    <div class="modal fade" id="messageModal1" tabindex="-1" role="dialog" aria-labelledby="messageModal1Label" aria-hidden="true">
-        <div class="modal-dialog modal-lg mt-2" role="document">
-            <div class="modal-content">
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
-                                <div class="card-body px-0">
-                                    <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                                        Previous Comment
-                                    </div>
-                                    <div id="previousMessages1" class="mt-4">
-                                        <!-- Previous messages -->
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!--Message Input Section -->
-                        <div class="col-md-6">
-                            <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
-                                <div class="card-body px-0">
-                                    <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                                        New Comment
-                                    </div>
-                                    <input type="hidden" id="hiddenClientServiceId" />
-                                    <div class="form-group mt-4">
-                                        <textarea class="form-control" id="service-message1" rows="7" name="message" placeholder="Your comment..."></textarea>
-                                    </div>
-                                    <div class="text-center">
-                                        <button type="button" class="mt-3 btn btn-primary bg-theme-light fs-4 border-theme border-2 fw-bold txt-theme" id="saveMessage1">Send</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Service message modal end -->
-
-    <!-- Works assigned to a user and specified staff start-->
-    <div class="col-lg-8 mb-3">
-        <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
-            <div class="card-body px-0">
-                <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                    Your Assigned Tasks
-                </div>
-                <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                    <table id="serviceManagerTable" class="table cell-border table-striped" style="width:100%">
-                        <thead>
-                            <tr>
-                                <th scope="col">Client Name</th>
-                                <th scope="col">Service Name</th>
-                                <th scope="col">Due Date</th>
-                                <th scope="col">Target Deadline</th>
-                                <th scope="col">Status</th>
-                                <th scope="col">Action</th>
-                            </tr>
-                        </thead>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Works assigned to a user and specified staff start-->
-
-    <!-- Completed service details section start -->
-    <div class="col-lg-12">
-        <div class="report-box border-theme sales-card p-4 mb-3 rounded-4 border-3" id="completedTaskSection" style="display: none;">
-            <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                Task Details
-            </div>
-
-            <div class="container-fluid">
-                <div class="row mt-3">
-                    <div class="col-md-3 text-center">
-                        <h5 class="mb-3">Service</h5>
-                        <input type="text" id="service_name1" class="form-control mt-2 text-center" readonly>
-                    </div>
-                    <div class="col-md-3 text-center">
-                        <h5 class="mb-3">Manager</h5>
-                        <input type="text" id="manager_name1" class="form-control mt-2 text-center" readonly>
-                    </div>
-                    <div class="col-md-3 text-center">
-                        <h5 class="mb-3">Frequency</h5>
-                        <input type="text" id="service_frequency1" class="form-control mt-2 text-center" readonly>
-                    </div>
-                    <div class="col-md-3 text-center">
-                        <h5 class="mb-3">Deadline</h5>
-                        <input type="date" id="service_deadline1" class="form-control mt-2 text-center" readonly>
-                    </div>
-                </div>
-
-                <div class="row mt-3">
-                    <div class="col-md-12">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Sub Service Name</th>
-                                    <th>Deadline</th>
-                                    <th>Staff</th>
-                                    <th>Note</th>
-                                    <th>Status</th>
-                                    <th>Comment</th>
-                                    <th>Timer</th>
-                                </tr>
-                            </thead>
-                            <tbody id="completedServiceDetailsTable"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="row mt-3 mb-3">
-                    <div class="col-lg-4 mx-auto text-center">
-                        <button id="completed-service-cancelButton" class="btn btn-sm btn-outline-dark">Cancel</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Completed service details section end -->
-
-    <!-- Completed tasks as staff table start-->
-    <div class="col-lg-6 mb-3">
-        <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
-            <div class="card-body px-0">
-                <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                    Completed Tasks As Staff
-                </div>
-                <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                    <table id="completedTasksTable" class="table cell-border table-striped" style="width:100%">
-                        <thead>
-                            <tr>
-                                <th scope="col">Client Name</th>
-                                <th scope="col">Service Name</th>
-                                <th scope="col">Due Date</th>
-                                <th scope="col">Target Deadline</th>
-                                <th scope="col">Action</th>
-                            </tr>
-                        </thead>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Completed tasks as staff table end-->
-
-    <!-- Completed tasks as manager table start-->
-    <div class="col-lg-6 mb-3">
-        <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
-            <div class="card-body px-0">
-                <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                    Completed Tasks As Manager
-                </div>
-                <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                    <table id="completedTasksAsManagergTable" class="table cell-border table-striped" style="width:100%">
-                        <thead>
-                            <tr>
-                                <th scope="col">Client Name</th>
-                                <th scope="col">Service Name</th>
-                                <th scope="col">Due Date</th>
-                                <th scope="col">Target Deadline</th>
-                                <th scope="col">Status</th>
-                                <th scope="col">Action</th>
-                            </tr>
-                        </thead>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Completed tasks as manager table end-->
-
-    <!-- One Time Jobs -->
-    <div class="col-lg-6 mb-3">
-        <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
-            <div class="card-body px-0">
-                <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                    One Time Jobs
-                </div>
-                    <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                    <table id="OneTimeJobsTable" class="table cell-border table-striped" style="width:100%">
-                        <thead>
-                            <tr>
-                                <th scope="col">Service Name</th>
-                                <th scope="col">Deadline</th>
-                                <th scope="col">Action</th>
-                                <th scope="col">Comment</th>
-                            </tr>
-                        </thead>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- One Time Jobs -->
-    </div>
-
-    <div class="row">
         <div class="col-lg-4 mb-3">
             <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
                 <div class="card-body px-0">
@@ -471,6 +320,163 @@
                 </div>
             </div>
         </div>
+
+        <!-- Works assigned to a user and specified staff start-->
+        <div class="col-lg-8 mb-3">
+            <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+                <div class="card-body px-0">
+                    <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                        Your Assigned Tasks
+                    </div>
+                    <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
+                        <table id="serviceManagerTable" class="table cell-border table-striped" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Client Name</th>
+                                    <th scope="col">Service Name</th>
+                                    <th scope="col">Due Date</th>
+                                    <th scope="col">Target Deadline</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Action</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Works assigned to a user and specified staff start-->
+
+        <!-- Completed service details section start -->
+        <div class="col-lg-12">
+            <div class="report-box border-theme sales-card p-4 mb-3 rounded-4 border-3" id="completedTaskSection" style="display: none;">
+                <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                    Task Details
+                </div>
+
+                <div class="container-fluid">
+                    <div class="row mt-3">
+                        <div class="col-md-3 text-center">
+                            <h5 class="mb-3">Service</h5>
+                            <input type="text" id="service_name1" class="form-control mt-2 text-center" readonly>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <h5 class="mb-3">Manager</h5>
+                            <input type="text" id="manager_name1" class="form-control mt-2 text-center" readonly>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <h5 class="mb-3">Frequency</h5>
+                            <input type="text" id="service_frequency1" class="form-control mt-2 text-center" readonly>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <h5 class="mb-3">Deadline</h5>
+                            <input type="date" id="service_deadline1" class="form-control mt-2 text-center" readonly>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Sub Service Name</th>
+                                        <th>Deadline</th>
+                                        <th>Staff</th>
+                                        <th>Note</th>
+                                        <th>Status</th>
+                                        <th>Comment</th>
+                                        <th>Timer</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="completedServiceDetailsTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3 mb-3">
+                        <div class="col-lg-4 mx-auto text-center">
+                            <button id="completed-service-cancelButton" class="btn btn-sm btn-outline-dark">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Completed service details section end -->
+
+        <!-- Completed tasks as staff table start-->
+        <div class="col-lg-6 mb-3">
+            <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+                <div class="card-body px-0">
+                    <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                        Completed Tasks As Staff
+                    </div>
+                    <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
+                        <table id="completedTasksTable" class="table cell-border table-striped" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Client Name</th>
+                                    <th scope="col">Service Name</th>
+                                    <th scope="col">Due Date</th>
+                                    <th scope="col">Target Deadline</th>
+                                    <th scope="col">Action</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Completed tasks as staff table end-->
+
+        <!-- Completed tasks as manager table start-->
+        <div class="col-lg-6 mb-3">
+            <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+                <div class="card-body px-0">
+                    <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                        Completed Tasks As Manager
+                    </div>
+                    <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
+                        <table id="completedTasksAsManagergTable" class="table cell-border table-striped" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Client Name</th>
+                                    <th scope="col">Service Name</th>
+                                    <th scope="col">Due Date</th>
+                                    <th scope="col">Target Deadline</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Action</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Completed tasks as manager table end-->
+
+        <!-- One Time Jobs -->
+        <div class="col-lg-6 mb-3">
+            <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+                <div class="card-body px-0">
+                    <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                        One Time Jobs
+                    </div>
+                        <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
+                        <table id="OneTimeJobsTable" class="table cell-border table-striped" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Service Name</th>
+                                    <th scope="col">Deadline</th>
+                                    <th scope="col">Action</th>
+                                    <th scope="col">Comment</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- One Time Jobs -->
     </div>
 
     <div class="modal fade" id="note" tabindex="-1" aria-labelledby="noteLabel" aria-hidden="true">
