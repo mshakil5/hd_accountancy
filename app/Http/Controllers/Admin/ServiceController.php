@@ -1073,4 +1073,18 @@ class ServiceController extends Controller
         return response()->json(['success' => true, 'message' => 'Message saved successfully']);
     }
 
+    public function toggleContinuous(Request $request)
+    {
+        $clientService = ClientService::find($request->id);
+
+        if ($clientService) {
+            $clientService->continuous = !$clientService->continuous;
+            $clientService->save();
+
+            return response()->json(['success' => true, 'new_status' => $clientService->continuous]);
+        }
+
+        return response()->json(['success' => false, 'message' => 'Service not found']);
+    }
+
 }

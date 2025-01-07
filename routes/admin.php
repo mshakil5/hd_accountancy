@@ -277,6 +277,8 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     //SubServices crud
     Route::post('/sub-service', [SubServiceController::class, 'store']);
 
+    Route::post('/toggle-continuous', [ServiceController::class, 'toggleContinuous'])->name('toggle.continuous');
+
     //Web Services crud
     Route::get('/web-service', [WebServiceController::class, 'index'])->name('allWebService');
     Route::post('/web-service', [WebServiceController::class, 'store']);

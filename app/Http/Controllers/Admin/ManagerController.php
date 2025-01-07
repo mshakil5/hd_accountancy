@@ -13,7 +13,7 @@ class ManagerController extends Controller
 {
     public function index()
     {
-        $data = User::where('type', '2')->with('role:name')->select('id', 'first_name', 'last_name', 'phone', 'email', 'role_id')->orderby('id','DESC')->get();
+        $data = User::where('type', '2')->with('role:id,name')->select('id', 'first_name', 'last_name', 'phone', 'email', 'role_id')->orderby('id','DESC')->get();
         $roles = Role::select('id', 'name')->get();
         return view('admin.manager.index', compact('data', 'roles'));
     }

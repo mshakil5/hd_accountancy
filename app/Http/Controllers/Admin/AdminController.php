@@ -23,7 +23,7 @@ class AdminController extends Controller
 {
     public function getAdmin()
     {
-        $data = User::where('type', '1')->with('role:name')->select('id', 'first_name', 'last_name', 'email', 'phone', 'role_id')->orderby('id','DESC')->get();
+        $data = User::where('type', '1')->with('role:id,name')->select('id', 'first_name', 'last_name', 'email', 'phone', 'role_id')->orderby('id','DESC')->get();
         $roles = Role::select('id', 'name')->get();
         return view('admin.admin.index', compact('data', 'roles'));
     }

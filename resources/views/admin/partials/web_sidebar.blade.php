@@ -375,6 +375,8 @@
             </a>
         </li>
 
+        @endif
+        
         <li class="nav-item">
             <a class="nav-link collapsed" href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                 <i class="bi bi-box-arrow-right"></i>
@@ -384,8 +386,6 @@
                 @csrf
             </form>
         </li>
-
-        @endif
 
     </ul>
 

@@ -54,6 +54,7 @@
 
     var table = $('#clientsTable').DataTable({
         serverSide: true,
+        processing: true,
         ajax: "{{ route('get.Clients') }}",
         columns: [
             {data: 'DT_RowIndex', name: 'DT_RowIndex'},
@@ -66,8 +67,10 @@
                 data: 'status',
                 name: 'status',
                 render: function(data, type, full, meta) {
-                    var statusClass = data ? 'btn btn-secondary' : 'btn btn-danger';
-                    var statusText = data ? '<i class="fas fa-toggle-on"></i>' : '<i class="fas fa-toggle-off"></i>';
+                    var isActive = data == 1;
+                    var statusClass = isActive ? 'btn btn-secondary' : 'btn btn-danger';
+                    var statusText = isActive ? '<i class="fas fa-toggle-on"></i>' : '<i class="fas fa-toggle-off"></i>';
+                    
                     var statusButton = '<button class="' + statusClass + '" onclick="changeStatus(' + full.id + ')" ' + (canEditDelete ? '' : 'disabled') + '>' + statusText + '</button>';
                     return statusButton;
                 }
@@ -137,7 +140,7 @@
             },
             success: function(response) {
                 if (response.success) {
-                    $('#clientsTable').DataTable().ajax.reload();
+                    $('#clientsTable').DataTable().ajax.reload(null, false);
                     Toastify({
                         text: "Status changed successfully!"
                     }).showToast();

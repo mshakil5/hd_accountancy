@@ -636,13 +636,12 @@
                     data: 'status',
                     name: 'status',
                     render: function(data, type, full, meta) {
-                        if (type === 'display') {
-                            var statusClass = data ? 'btn btn-secondary' : 'btn btn-danger';
-                            var statusIcon = data ? '<i class="fas fa-toggle-on"></i>' : '<i class="fas fa-toggle-off"></i>';
-                            return '<button class="' + statusClass + '" onclick="changeStatus(' + full.id + ')">' + statusIcon + '</button>';
-                        }
-                        return data;
-                    },
+                        var isActive = data == 1;
+                        var statusClass = isActive ? 'btn btn-secondary' : 'btn btn-danger';
+                        var statusIcon = isActive ? '<i class="fas fa-toggle-on"></i>' : '<i class="fas fa-toggle-off"></i>';
+                        
+                        return '<button class="' + statusClass + '" onclick="changeStatus(' + full.id + ')">' + statusIcon + '</button>';
+                    }
                 },
                 {
                     data: 'id',
