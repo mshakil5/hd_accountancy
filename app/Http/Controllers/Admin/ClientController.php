@@ -28,12 +28,24 @@ class ClientController extends Controller
 
     public function getClients(Request $request)
     {
-        if ($request->ajax()) {
-            $data = Client::with(['manager:id,first_name'])
-                          ->select('id', 'refid', 'name', 'phone', 'email', 'status')
-                          ->orderBy('id', 'desc')
-                          ->get();
+        $authUserId = auth()->id();
+        $filter = $request->input('filter', 'all');
     
+        if ($request->ajax()) {
+            $query = Client::with(['clientType', 'manager', 'clientSubServices']);
+        
+            if ($filter == 'assigned') {
+                $query->whereHas('clientSubServices', function ($subQuery) use ($authUserId) {
+                    $subQuery->where('staff_id', $authUserId);
+                })
+                ->orWhereHas('clientServices', function ($subQuery) use ($authUserId) {
+                    $subQuery->where('manager_id', $authUserId);
+                })
+                ->orWhere('manager_id', $authUserId);
+            }
+        
+            $data = $query->distinct()->orderBy('id', 'desc')->get();
+
             return Datatables::of($data)
                 ->addIndexColumn()
                 ->addColumn('manager_first_name', function ($row) {
@@ -42,7 +54,7 @@ class ClientController extends Controller
                 ->rawColumns(['manager_first_name'])
                 ->make(true);
         }
-    }    
+    }
 
     public function indexStaff()
     {
@@ -60,10 +72,15 @@ class ClientController extends Controller
             if ($filter == 'assigned') {
                 $query->whereHas('clientSubServices', function ($query) use ($authUserId) {
                     $query->where('staff_id', $authUserId);
-                });
+                })
+                ->orWhereHas('clientServices', function ($subQuery) use ($authUserId) {
+                    $subQuery->where('manager_id', $authUserId);
+                })
+                ->orWhere('manager_id', $authUserId);
+
             }
     
-            $data = $query->orderBy('id', 'desc')->get();
+            $data = $query->distinct()->orderBy('id', 'desc')->get();
     
             return Datatables::of($data)
                 ->addIndexColumn()
@@ -105,9 +122,11 @@ class ClientController extends Controller
             if ($filter == 'assigned') {
                 $query->whereHas('clientSubServices', function ($subQuery) use ($authUserId) {
                     $subQuery->where('staff_id', $authUserId);
-                });
-            } elseif ($filter == 'manager') {
-                $query->where('manager_id', $authUserId);
+                })
+                ->orWhereHas('clientServices', function ($subQuery) use ($authUserId) {
+                    $subQuery->where('manager_id', $authUserId);
+                })
+                ->orWhere('manager_id', $authUserId);
             }
     
             $data = $query->distinct()->orderBy('id', 'desc')->get();

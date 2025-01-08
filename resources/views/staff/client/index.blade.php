@@ -5,7 +5,7 @@
 <section class="section dashboard">
     <div class="row">
         <div class="col-lg-12 px-0 border shadow-sm">
-            <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center">
+            <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
                 <i class="bx bxs-user-plus fs-4 me-2"></i> Client List
                 <select id="clientFilter" class="form-select ms-auto" aria-label="Filter Clients" style="max-width: 200px;">
                     <option value="all" selected>All Clients</option>

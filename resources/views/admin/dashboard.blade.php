@@ -239,7 +239,7 @@
                     <div class="col-lg-5">
                         <div class="col-lg-12 px-0 border shadow-sm mb-3">
 
-                            <p class="p-2 bg-theme-light txt-theme px-3 mb-0 text-capitalize d-flex align-items-center">
+                            <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
                                 <i class="bx bxs-user-plus fs-4 me-2"></i>Todays Deadline
                             </p>
 
@@ -261,7 +261,7 @@
                     <!-- Task to be asssigned -->
                     <div class="col-lg-7">
                         <div class="col-lg-12 px-0 border shadow-sm mb-3">
-                            <p class="p-2 bg-theme-light txt-theme px-3 mb-0 text-capitalize d-flex align-items-center">
+                            <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
                                 <i class="bx bxs-user-plus fs-4 me-2"></i>Task Need To Be Assigned
                             </p>
                             <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
@@ -344,7 +344,7 @@
             <div class="col-lg-12">
                 <div class="col-lg-12 px-0 border shadow-sm mb-3">
 
-                    <p class="p-2 bg-theme-light txt-theme px-3 mb-0 text-capitalize d-flex align-items-center">
+                    <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
                         <i class="bx bxs-user-plus fs-4 me-2"></i>Assigned Work List
                     </p>
                     <!-- Works assigned to a user and staff -->
@@ -428,7 +428,7 @@
             <div class="col-lg-12">
                 <div class="col-lg-12 px-0 border shadow-sm mb-3">
 
-                    <p class="p-2 bg-theme-light txt-theme px-3 mb-0 text-capitalize d-flex align-items-center">
+                    <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
                         <i class="bx bxs-user-plus fs-4 me-2"></i>Completed Work List
                     </p>
                     <!-- Works assigned to a user and staff -->
@@ -517,7 +517,7 @@
                 <div class="col-lg-6">
                     <div class="col-lg-12 px-0 border shadow-sm mb-3">
 
-                        <p class="p-2 bg-theme-light txt-theme px-3 mb-0 text-capitalize d-flex align-items-center">
+                        <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
                             <i class="bx bxs-user-plus fs-4 me-2"></i>Assigned One Time Work List
                         </p>
                         <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
@@ -541,7 +541,7 @@
                 <div class="col-lg-6">
                     <div class="col-lg-12 px-0 border shadow-sm mb-3">
 
-                        <p class="p-2 bg-theme-light txt-theme px-3 mb-0 text-capitalize d-flex align-items-center">
+                        <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
                             <i class="bx bxs-user-plus fs-4 me-2"></i>Completed One Time Work List
                         </p>
                         <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
@@ -565,7 +565,7 @@
             <div class="row">
                 <div class="col-lg-6 mb-3">
                     <div class="col-lg-12 px-0 border shadow-sm mb-3">
-                            <p class="p-2 bg-theme-light txt-theme px-3 mb-0 text-capitalize d-flex align-items-center">
+                            <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
                                 <i class="bx bxs-user-plus fs-4 me-2"></i>Your Notes
                             </p>
                             <div class="text-start my-3 mx-3">
@@ -594,7 +594,7 @@
             <div class="col-lg-12">
                 <div class="col-lg-12 px-0 border shadow-sm mb-3">
 
-                    <p class="p-2 bg-theme-light txt-theme px-3 mb-0 text-capitalize d-flex align-items-center">
+                    <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
                         <i class="bx bxs-user-plus fs-4 me-2"></i>Currently logged-in staffs
                     </p>
 
@@ -662,7 +662,7 @@
             @if(count($lateStaff) > 0)
             <div class="col-lg-12">
                 <div class="col-lg-12 px-0 border shadow-sm mb-3">
-                    <p class="p-2 bg-theme-light txt-theme px-3 mb-0 text-capitalize d-flex align-items-center">
+                    <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
                         <i class="bx bxs-user-plus fs-4 me-2"></i>Late Staffs
                     </p>
                     <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
@@ -692,7 +692,7 @@
             @if(count($filteredLogs) > 0)
             <div class="col-lg-12">
                 <div class="col-lg-12 px-0 border shadow-sm mb-3">
-                    <p class="p-2 bg-theme-light txt-theme px-3 mb-0 text-capitalize d-flex align-items-center">
+                    <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
                         <i class="bx bxs-user-plus fs-4 me-2"></i>Departure Status
                     </p>
                     <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
@@ -725,7 +725,7 @@
             @if(count($absentStaff) > 0)
             <div class="col-lg-12">
                 <div class="col-lg-12 px-0 border shadow-sm mb-3">
-                    <p class="p-2 bg-theme-light txt-theme px-3 mb-0 text-capitalize d-flex align-items-center">
+                    <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
                         <i class="bx bxs-user-plus fs-4 me-2"></i>Today's Absent Staffs
                     </p>
                     <div class="table-wrapper my-4 mx-auto" style="width: 95%;">

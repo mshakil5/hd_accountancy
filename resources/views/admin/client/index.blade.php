@@ -6,7 +6,11 @@
     <div class="row">
         <div class="col-lg-12 px-0 shadow-sm">
             <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center">
-                <i class="bx bxs-user-plus fs-4 me-2"></i> All Clients
+                <i class="bx bxs-user-plus fs-4 me-2"></i> Client list
+                <select id="clientFilter" class="form-select ms-auto" aria-label="Filter Clients" style="max-width: 200px;">
+                    <option value="all" selected>All Clients</option>
+                    <option value="assigned">Assigned Clients</option>
+                </select>
             </p>
             <div class="row px-3">
                 <div class="col-lg-12 p-3 d-flex justify-content-end">
@@ -55,7 +59,12 @@
     var table = $('#clientsTable').DataTable({
         serverSide: true,
         processing: true,
-        ajax: "{{ route('get.Clients') }}",
+        ajax: {
+            url: "{{ route('get.Clients') }}",
+            data: function(d) {
+                d.filter = $('#clientFilter').val();
+            }
+        },
         columns: [
             {data: 'DT_RowIndex', name: 'DT_RowIndex'},
             {data: 'refid', name: 'refid'},
@@ -86,6 +95,10 @@
                 }
             }
         ]
+    });
+
+    $('#clientFilter').on('change', function() {
+        table.ajax.reload();
     });
  });
 </script>
