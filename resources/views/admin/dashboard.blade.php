@@ -157,7 +157,7 @@
                                 <div class="col-2 text-center">
                                     <h5 class="mb-3">Deadline</h5>
                                     <div class="form-check">
-                                        <input type="date" id="service_deadline serviceDeadline" class="form-control mt-2" name="service_deadline" value="">
+                                        <input type="text" id="service_deadline" class="form-control mt-2 serviceDeadline" name="service_deadline">
                                     </div>
                                 </div>
                             </div>
@@ -2125,6 +2125,7 @@
                 data: data,
                 success: function(response) {
                     toastr.success("Task updated successfully", "Success!");
+                    $('#assignTaskSection').hide();
                     $('#servicesTable').DataTable().ajax.reload();
                     $('#completedServices').DataTable().ajax.reload();
                     $('#serviceStaffTable').DataTable().ajax.reload();
