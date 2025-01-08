@@ -346,7 +346,7 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::post('/update-client-service', [StaffController::class, 'updateClientService']);
 
     // Change Status of sub service
-    Route::post('/update-sub-service-status', [ServiceController::class,'updateSubServiceStatus']);
+    // Route::post('/update-sub-service-status', [ServiceController::class,'updateSubServiceStatus']);
 
     // prorota make
     Route::get('/prorota', [ProrotaController::class, 'index'])->name('prorota');
@@ -576,22 +576,22 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     //My tasks
     Route::get('/my-tasks', [AdminController::class, 'getAdminTasks'])->name('my.tasks');
     Route::get('/get-assigned-services', [AdminController::class, 'getAllAssignedServices']);
-    Route::get('/get-note', [AdminController::class, 'getNotes']);
+    // Route::get('/get-note', [AdminController::class, 'getNotes']);
     Route::get('/get-completed-service', [AdminController::class, 'getCompetedServices']);
     Route::get('/get-completed-services-as-manager', [AdminController::class, 'getCompetedServicesAsManager']);
     Route::get('/get-one-time-jobs', [AdminController::class, 'getOneTimeJobs']);
-    Route::get('/getClientSubServices/{clientserviceId}', [AdminController::class, 'getClientSubServices']);
+    Route::get('/getClientSubServices-admin/{clientserviceId}', [AdminController::class, 'getClientSubServices']);
     Route::post('client-service-status-chnange', [AdminController::class, 'changeServiceStatus']);
     Route::post('/update-sub-service-staff', [AdminController::class, 'updateSubServiceStaff']);
     Route::post('/update-sub-service-status', [AdminController::class,'updateSubServiceStatus']);
     Route::post('/change-sub-service-status', [AdminController::class,'changeSubServiceStatus']);
     Route::post('/start-work-time', [AdminController::class,'startWorkTime']);
     Route::post('/stop-work-time', [AdminController::class,'stopWorkTime']);
-    Route::get('/getServiceMessage/{clientSubServiceId}', [AdminController::class, 'getServiceMessages']);
-    Route::post('/store-message', [AdminController::class,'storeMessage']);
+    // Route::get('/getServiceMessage/{clientSubServiceId}', [AdminController::class, 'getServiceMessages']);
+    // Route::post('/store-message', [AdminController::class,'storeMessage']);
     Route::post('/update-job-status/{id}', [AdminController::class, 'updateJobStatus']);
-    Route::get('/getServiceComment/{clientServiceId}', [AdminController::class, 'getServiceComment']);
-    Route::post('/store-comment', [AdminController::class, 'storeComment']);
+    // Route::get('/getServiceComment/{clientServiceId}', [AdminController::class, 'getServiceComment']);
+    // Route::post('/store-comment', [AdminController::class, 'storeComment']);
 
     //Note
     Route::get('/get-note', [NoteController::class, 'getNotes']);

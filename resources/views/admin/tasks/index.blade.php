@@ -881,7 +881,7 @@
             $('#service_deadline').val(deadline);
 
             $.ajax({
-                url: '/admin/getClientSubServices/' + clientserviceId,
+                url: '/admin/getClientSubServices-admin/' + clientserviceId,
                 type: "GET",
                 dataType: "json",
                 success: function(data) {
@@ -1419,7 +1419,7 @@
             $('#service_deadline1').val(deadline);
 
             $.ajax({
-                url: '/admin/getClientSubServices/' + clientserviceId,
+                url: '/admin/getClientSubServices-admin/' + clientserviceId,
                 type: "GET",
                 dataType: "json",
                 success: function(data) {
@@ -1449,7 +1449,7 @@
             $('#service_deadline1').val(deadline);
 
             $.ajax({
-                url: '/admin/getClientSubServices/' + clientserviceId,
+                url: '/admin/getClientSubServices-admin/' + clientserviceId,
                 type: "GET",
                 dataType: "json",
                 success: function(data) {
