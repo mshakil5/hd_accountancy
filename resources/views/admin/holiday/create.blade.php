@@ -118,17 +118,13 @@
                 contentType: 'application/json',
                 dataType: 'json',
                 success: function (response) {
-                    swal({
-                        title: "Success!",
-                        text: "Holiday scheduled successfully",
-                        icon: "success",
-                        button: "OK",
-                    });
+                    toastr.success("Holiday created successfully", "Success");
                     window.setTimeout(function(){
                         location.reload();
                     }, 2000);
                 },
                 error: function (xhr, status, error) {
+                    toastr.error("An error occurred. Please try again later.", "Error");
                     console.error(xhr.responseText);
                 },
                 complete: function() {

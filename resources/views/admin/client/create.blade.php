@@ -282,24 +282,14 @@
                     saveDetailsSpan.removeClass('text-dark');
                     saveButton.prop('disabled', false);
                     if (response.status === 200) {
-                        swal({
-                            title: "Success!",
-                            text: "Client details created successfully",
-                            icon: "success",
-                            button: "OK",
-                        });
+                        toastr.success("Client details created successfully", "Success!");
 
                         var clientId = response.client_id;
                         window.setTimeout(function() {
                             window.location.href = "{{ route('client.update.form', ':id') }}".replace(':id', clientId);
                         }, 1000);
                     } else {
-                        swal({
-                            title: "Error",
-                            text: response.message[Object.keys(response.message)[0]],
-                            icon: "error",
-                            button: "OK",
-                        });
+                        toastr.error(response.message[Object.keys(response.message)[0]], "Error");
                     }
                 },
                 error: function(xhr) {
@@ -311,13 +301,7 @@
                     if (xhr.responseJSON && xhr.responseJSON.errors) {
                         errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
                     }
-
-                    swal({
-                        title: "Error",
-                        text: errorMessage,
-                        icon: "error",
-                        button: "OK",
-                    });
+                    toastr.error(errorMessage, "Error");
                 }
             });
 

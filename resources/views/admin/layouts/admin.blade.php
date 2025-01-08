@@ -29,7 +29,6 @@
   <link href="{{ asset('assets/vendor/datatables/dataTables.bootstrap4.min.css')}}" rel="stylesheet">
   <link href="{{ asset('assets/vendor/datatables/jquery.dataTables.min.css')}}" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link href="{{ asset('assets/vendor/toastify/toastify.min.css')}}" rel="stylesheet">
   <link href="{{ asset('assets/vendor/datatables/buttons.dataTables.min.css')}}" rel="stylesheet">
   <link href="{{ asset('assets/vendor/summernote/summernote-bs4.min.css')}}" rel="stylesheet">
   <link href="{{ asset('assets/vendor/toastr/toastr.css')}}" rel="stylesheet">
@@ -82,9 +81,7 @@
   <script src="{{ asset('assets/vendor/datatables/buttons.colVis.min.js')}}"></script>
   <script src="{{ asset('assets/vendor/datatables/pdfmake.min.js')}}"></script>
   <script src="{{ asset('assets/vendor/datatables/vfs_fonts.js')}}"></script>
-  <script src="{{ asset('assets/vendor/toastify/toastify-js.js')}}"></script>
   <script src="{{ asset('assets/vendor/moment/moment.min.js')}}"></script>
-  <script src="{{ asset('assets/vendor/sweet-alert/sweetalert.min.js')}}"></script>
   <script src="{{ asset('assets/vendor/summernote/summernote.min.js')}}"></script>
   <script src="{{ asset('assets/vendor/toastr/toastr.min.js')}}"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"></script>

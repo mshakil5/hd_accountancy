@@ -147,12 +147,7 @@
                   note: note
               },
               success: function(response) {
-                  swal({
-                    title: "Success!",
-                    text: "Updated successfully",
-                    icon: "success",
-                    button: "OK",
-                });
+                toastr.success("Updated successfully", "Success");
 
                 setTimeout(function() {
                     location.reload();
@@ -163,13 +158,8 @@
                     var errorMessage = response.message;
                     var errors = response.errors; 
 
-                    swal({
-                        title: "Error!",
-                        text: errorMessage,
-                        icon: "error",
-                        footer: '<strong>Errors:</strong><br>' + JSON.stringify(errors),
-                        button: "OK",
-                    });
+                    toastr.error('Errors: ' + JSON.stringify(errors), 'Error');
+
                 }
           });
       });

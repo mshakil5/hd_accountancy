@@ -237,15 +237,10 @@
                 data:form_data,
                 success: function (d) {
                     if (d.status == 303) {
-                        $(".ermsg").html(d.message);
+                        // $(".ermsg").html(d.message);
                     }else if(d.status == 300){
-                      $(".ermsg").html(d.message);
-                      swal({
-                            title: "Success!",
-                            text: "Admin created successfully",
-                            icon: "success",
-                            button: "OK",
-                        });
+                      // $(".ermsg").html(d.message);
+                      toastr.success("Admin created successfully", "Success!");
                       window.setTimeout(function(){location.reload()},2000)
                       }
                 },
@@ -275,16 +270,11 @@
                   processData: false,
                   data:form_data,
                   success: function(d){
-                      console.log(d);
+                      // console.log(d);
                       if (d.status == 303) {
-                        $(".ermsg").html(d.message);
+                        // $(".ermsg").html(d.message);
                       }else if(d.status == 300){
-                        swal({
-                            title: "Success!",
-                            text: "Admin updated successfully",
-                            icon: "success",
-                            button: "OK",
-                        });
+                        toastr.success("Admin updated successfully", "Success!");
                       window.setTimeout(function(){location.reload()},2000)
                       }
                   },

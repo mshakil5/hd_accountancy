@@ -224,13 +224,9 @@
                 data: formData,
                 async: false,
                 success: function (response) {
-                        swal({
-                            title: "Success!",
-                            text: "Staff schedule updated successfully",
-                            icon: "success",
-                            button: "OK",
-                        });
-                        console.log(response)
+                    toastr.success('Updated successfully', 'Success');
+
+                        // console.log(response)
                     // setTimeout(function() {
                     //     window.location.href = "{{ route('prorota') }}";
                     // }, 2000);

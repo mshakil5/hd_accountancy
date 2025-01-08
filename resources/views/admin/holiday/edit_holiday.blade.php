@@ -114,12 +114,8 @@
                 data: data,
                 dataType: "json",
                 success: function(response) {
-                    swal({
-                        title: "Success!",
-                        text: "Updated successfully",
-                        icon: "success",
-                        button: "OK",
-                    });
+                    toastr.success('Updated successfully', 'Success');
+
                 },
                 error: function(xhr, status, error) {
                     console.log(xhr.responseText);

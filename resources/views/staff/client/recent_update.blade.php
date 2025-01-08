@@ -115,11 +115,11 @@
                 contentType: false,
 
                 success: function (response) {
-                    swal("Success", response.message, "success");
+                    toastr.success(response.message, 'Success');
                     setTimeout(() => location.reload(), 2000);
                 },
                 error: function (xhr) {
-                    swal("Error", xhr.responseJSON.message || "An error occurred.", "error");
+                  toastr.error(xhr.responseJSON.message || "An error occurred.", 'Error');
                 }
             });
         });
@@ -152,11 +152,11 @@
                 processData: false,
                 contentType: false,
                 success: function (response) {
-                    swal("Success", response.message, "success");
+                  toastr.success(response.message, 'Success');
                     setTimeout(() => location.reload(), 2000);
                 },
                 error: function (xhr) {
-                    swal("Error", xhr.responseJSON.message || "An error occurred.", "error");
+                  toastr.error(xhr.responseJSON.message || "An error occurred.", 'Error');
                 }
             });
         });
@@ -181,30 +181,26 @@
 
         $('#recentUpdateTable').on('click', '.delete-recent-update', function () {
             var update = $(this).closest('tr').data('recent-update');
-            swal({
-                title: "Are you sure?",
-                text: "Once deleted, you will not be able to recover this update!",
-                icon: "warning",
-                buttons: true,
-                dangerMode: true,
-            }).then((willDelete) => {
-                if (willDelete) {
-                    $.ajax({
-                        url: `{{ url('/staff/recent-updates') }}/${update.id}`,
-                        type: 'DELETE',
-                        data: {
-                            _token: "{{ csrf_token() }}"
-                        },
-                        success: function (response) {
-                            swal("Success", response.message, "success");
-                            setTimeout(() => location.reload(), 2000);
-                        },
-                        error: function (xhr) {
-                            swal("Error", xhr.responseJSON.message || "An error occurred.", "error");
-                        }
-                    });
-                }
-            });
+            
+            var confirmDelete = confirm("Are you sure? Once deleted, you will not be able to recover this update!");
+            
+            if (confirmDelete) {
+                $.ajax({
+                    url: `{{ url('/staff/recent-updates') }}/${update.id}`,
+                    type: 'DELETE',
+                    data: {
+                        _token: "{{ csrf_token() }}"
+                    },
+                    success: function (response) {
+                        toastr.success(response.message, "Success");
+                        setTimeout(() => location.reload(), 2000);
+                    },
+                    error: function (xhr) {
+                        console.error("Error response:", xhr.responseJSON.message || "An error occurred.");
+                        toastr.error(xhr.responseJSON.message || "An error occurred.", "Error");
+                    }
+                });
+            }
         });
 
         $("#recentUpdateTable").DataTable({});

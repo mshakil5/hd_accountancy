@@ -200,13 +200,7 @@
                                 $(".ermsg").html(d.message);
                                 pagetop();
                             } else if (d.status == 300) {
-
-                                swal({
-                                    icon: "success",
-                                    title: 'success',
-                                    text: 'Updated Successfully',
-                                    button: 'OK'
-                                });
+                                $(".ermsg").html(d.message);
                                 window.setTimeout(function () { location.reload() }, 2000);
                             }
                         },

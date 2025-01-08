@@ -106,12 +106,7 @@
     let about_yourself = document.getElementById('about_yourself').value;
 
     if (!name || !email || !phone || !linkedin_profile || !cv || !about_yourself) {
-      swal({
-        icon: 'warning',
-        title: 'Error',
-        text: 'Please fill out all required fields.',
-        button: 'OK'
-      });
+      toastr.warning('Please fill out all required fields.', 'Error');
       return;
     }
 
@@ -142,12 +137,7 @@
       success: function(response) {
         document.getElementById('loader3').style.display = 'none';
         document.getElementById('submitBtn').disabled = false;
-        swal({
-          icon: 'success',
-          title: 'Success',
-          text: 'Submitted successfully!',
-          button: 'OK'
-        });
+        toastr.success('Submitted successfully!', 'Success');
 
         document.getElementById('name').value = '';
         document.getElementById('email').value = '';
@@ -161,13 +151,7 @@
           document.getElementById('loader3').style.display = 'none';
           document.getElementById('submitBtn').disabled = false;
               // console.error(xhr.responseText);
-
-            swal({
-                  icon: 'error',
-                  title: 'Error',
-                  text: 'An error occurred. Please try again.',
-                  button: 'OK'
-              });
+            toastr.error('An error occurred. Please try again.', 'Error');
         }
     });
   });

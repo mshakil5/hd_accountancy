@@ -947,9 +947,7 @@
                 note: note
             },
             success: function (response) {
-                Toastify({
-                    text: "Note saved!"
-                }).showToast();
+                toastr.success("Note saved!", "Success!");
 
                 $('#note-message').val('');
                 $('#note').modal('hide');
@@ -1030,9 +1028,7 @@
                 _token: $('meta[name="csrf-token"]').attr('content')
             },
             success: function (response) {
-                Toastify({
-                    text: "Note assigned successfully!"
-                }).showToast();
+                toastr.success("Note assigned successfully!", "Success!");
 
                 $('#actionModal').modal('hide');
                 $('#notesTable').DataTable().ajax.reload();
@@ -1381,13 +1377,9 @@
                 success: function(response) {
                     if (response.success) {
                         $('#serviceStaffTable').DataTable().ajax.reload();
-                        Toastify({
-                            text: "Status changed successfully!"
-                        }).showToast();
+                        toastr.success("Status changed successfully!", "Success!");
                     } else {
-                        Toastify({
-                            text: "Failed to change status."
-                        }).showToast();
+                        toastr.error("Failed to change status.", "Error!");
                     }
                 },
                 error: function(xhr, status, error) {}
@@ -1560,12 +1552,7 @@
                     newStatus: newStatus
                 },
                 success: function(response) {
-                    swal({
-                        title: "Success!",
-                        text: "Status chnaged successfully",
-                        icon: "success",
-                        button: "OK",
-                    });
+                    toastr.success("Status changed successfully", "Success!");
                     setTimeout(function() {
                         location.reload();
                     }, 2000);
@@ -1701,9 +1688,7 @@
                 },
                 success: function(response) {
                     if (response.success) {
-                        Toastify({
-                            text: "Status changed successfully!"
-                        }).showToast();
+                        toastr.success("Status changed successfully!", "Success!");
 
                         if ($.fn.DataTable.isDataTable('#assignedServices')) {
                             $('#assignedServices').DataTable().ajax.reload(null, false);
@@ -1714,16 +1699,12 @@
                         }
 
                     } else {
-                        Toastify({
-                            text: "An error occurred!"
-                        }).showToast();
+                        toastr.error("An error occurred!", "Error!");
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.log(xhr.responseText);
-                    Toastify({
-                        text: "An error occurred!"
-                    }).showToast();
+                    // console.log(xhr.responseText);
+                    toastr.error("An error occurred!", "Error!");
                 }
             });
         });
@@ -2143,13 +2124,7 @@
                 type: 'POST',
                 data: data,
                 success: function(response) {
-                    // console.log(response);
-                    swal({
-                        title: "Success!",
-                        text: "Task updated successfully",
-                        icon: "success",
-                        button: "OK",
-                    });
+                    toastr.success("Task updated successfully", "Success!");
                     $('#servicesTable').DataTable().ajax.reload();
                     $('#completedServices').DataTable().ajax.reload();
                     $('#serviceStaffTable').DataTable().ajax.reload();
@@ -2242,12 +2217,7 @@
                     _token: '{{ csrf_token() }}'
                 },
                 success: function(response) {
-                    swal({
-                        title: "Success!",
-                        text: "Note sent successfully",
-                        icon: "success",
-                        button: "OK",
-                    });
+                    toastr.success("Note sent successfully", "Success!");
                     setTimeout(function() {
                         location.reload();
                     }, 2000);
@@ -2286,12 +2256,7 @@
                     note: note
                 },
                 success: function(response) {
-                    swal({
-                        title: "Success!",
-                        text: "Staff logged out successfully",
-                        icon: "success",
-                        button: "OK",
-                    });
+                    toastr.success("Staff logged out successfully", "Success!");
                     window.setTimeout(function() {
                         location.reload()
                     }, 2000);

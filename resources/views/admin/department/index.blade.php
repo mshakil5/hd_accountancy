@@ -169,12 +169,7 @@
                         $(".ermsg").html(d.message);
                     }else if(d.status == 300){
                       // $(".ermsg").html(d.message);
-                      swal({
-                            title: "Success!",
-                            text: "Department created successfully",
-                            icon: "success",
-                            button: "OK",
-                        });
+                      toastr.success("Department created successfully", "Success!");
                       window.setTimeout(function(){location.reload()},2000)
                     }
                 },
@@ -204,12 +199,7 @@
                           $(".ermsg").html(d.message);
                       }else if(d.status == 300){
                         // $(".ermsg").html(d.message);
-                        swal({
-                            title: "Success!",
-                            text: "Department updated successfully",
-                            icon: "success",
-                            button: "OK",
-                        });
+                        toastr.success("Department updated successfully", "Success!");
                           window.setTimeout(function(){location.reload()},2000)
                       }
                   },
@@ -246,12 +236,7 @@
                 success: function(d){
                     if(d.success) {
                         // alert(d.message);
-                        swal({
-                            title: "Success!",
-                            text: "Department deleted successfully",
-                            icon: "success",
-                            button: "OK",
-                        });
+                        toastr.success("Department deleted successfully", "Success!");
                          window.setTimeout(function(){location.reload()},2000)
                     }
                 },

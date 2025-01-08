@@ -630,9 +630,7 @@
                 note: note
             },
             success: function (response) {
-                Toastify({
-                    text: "Note saved!"
-                }).showToast();
+                toastr.success("Note saved!");
 
                 $('#note-message').val('');
                 $('#note').modal('hide');
@@ -714,9 +712,7 @@
                 _token: $('meta[name="csrf-token"]').attr('content')
             },
             success: function (response) {
-                Toastify({
-                    text: "Note assigned successfully!"
-                }).showToast();
+                toastr.success("Note assigned successfully!");
 
                 $('#actionModal').modal('hide');
                 $('#notesTable').DataTable().ajax.reload();
@@ -886,9 +882,8 @@
                 },
                 success: function(response) {
                     if (response.status === 200) {
-                        Toastify({
-                            text: "Status changed successfully!"
-                        }).showToast();
+                        toastr.success("Status updated successfully!");
+
                         if ($.fn.DataTable.isDataTable('#OneTimeJobsTable')) {
                             $('#OneTimeJobsTable').DataTable().ajax.reload(null, false);
                         }
@@ -975,9 +970,7 @@
                 },
                 success: function(response) {
                     if (response.success) {
-                        Toastify({
-                        text: "Status changed successfully!"
-                    }).showToast();
+                        toastr.success("Status changed successfully!");
 
                     if ($.fn.DataTable.isDataTable('#serviceManagerTable')) {
                         $('#serviceManagerTable').DataTable().ajax.reload(null, false);
@@ -992,15 +985,13 @@
                     }
                     
                     } else {
-                        Toastify({
-                            text: "An error occurred!"
-                        }).showToast();
+                        toastr.error("An error occurred!");
+
                     }
                 },
                 error: function(xhr, status, error) {
-                    Toastify({
-                        text: "An error occurred!"
-                    }).showToast();
+                    toastr.error("An error occurred!");
+
                 }
             });
         });
@@ -1156,9 +1147,8 @@
                     newStaffId: newStaffId
                 },
                 success: function(response) {
-                    Toastify({
-                        text: "Staff changed successfully!"
-                    }).showToast();
+                    toastr.success("Staff changed successfully!");
+
                     $('#assignTaskSection').hide();
                     $('#completedTaskSection').hide();
 
@@ -1268,9 +1258,7 @@
                     newStatus: newStatus
                 },
                 success: function(response) {
-                    Toastify({
-                        text: "Status changed successfully!"
-                    }).showToast();
+                    toastr.success("Status changed successfully!");
                     
                     $('#assignTaskSection').hide();
                     $('#completedTaskSection').hide();
@@ -1320,9 +1308,7 @@
                     _token: "{{ csrf_token() }}"
                 },
                 success: function(response) {
-                    Toastify({
-                        text: "Work started successfully!"
-                    }).showToast();
+                    toastr.success("Work started successfully!");
                     
                     $('#assignTaskSection').hide();
                     $('#completedTaskSection').hide();
@@ -1355,9 +1341,7 @@
                     _token: "{{ csrf_token() }}"
                 },
                 success: function(response) {
-                    Toastify({
-                        text: "Work stopped successfully!"
-                    }).showToast();
+                    toastr.success("Work stopped successfully!");
                     
                     $('#assignTaskSection').hide();
                     $('#completedTaskSection').hide();
@@ -1390,9 +1374,7 @@
                     _token: "{{ csrf_token() }}"
                 },
                 success: function(response) {
-                    Toastify({
-                        text: "Break time has started successfully!"
-                    }).showToast();
+                    toastr.success("Break time started successfully!");
 
                     $('#assignTaskSection').hide();
 
@@ -1426,9 +1408,7 @@
                     _token: "{{ csrf_token() }}"
                 },
                 success: function(response) {
-                    Toastify({
-                        text: "Break time has stopped successfully!"
-                    }).showToast();
+                    toastr.success("Break time stopped successfully!");
 
                     $('#assignTaskSection').hide();
 
@@ -1686,9 +1666,7 @@
                     newStatus: newStatus
                 },
                 success: function(response) {
-                    Toastify({
-                        text: "Status changed successfully!"
-                    }).showToast();
+                    toastr.success("Status changed successfully!");
                     $('#completedTaskSection').hide();
 
                     if ($.fn.DataTable.isDataTable('#serviceManagerTable')) {
@@ -1738,9 +1716,7 @@
             type: 'GET',
             success: function(response) {
                 if (response.status === 'ongoing') {
-                   Toastify({
-                        text: "You have an ongoing task. Please complete it before logging out!"
-                    }).showToast(); 
+                    toastr.warning("You have an ongoing task. Please complete it before logging out!", "Warning");
                 } else {
                     $('#noteModal').modal('show');
                 }
@@ -1977,9 +1953,7 @@
                 type: 'POST',
                 data: formData,
                 success: function(response) {
-                    Toastify({
-                        text: "Record saved and you will be logged out now!"
-                    }).showToast();
+                    toastr.success("Record saved and you will be logged out now!", "Success");
 
                     setTimeout(function() {
                         location.reload();

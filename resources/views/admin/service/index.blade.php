@@ -208,12 +208,8 @@
         
                                     } else if (d.status == 300) {
                     
-                                        swal({
-                                            title: "Success!",
-                                            text: "Created successfully",
-                                            icon: "success",
-                                            button: "OK",
-                                        });
+                                        toastr.success("Created successfully", "Success");
+
                                         window.setTimeout(function() {
                                             location.reload()
                                         }, 2000)
@@ -282,12 +278,8 @@
                         if (d.status == 303) {
                         } else if (d.status == 300) {
         
-                            swal({
-                                title: "Success!",
-                                text: "Updated successfully",
-                                icon: "success",
-                                button: "OK",
-                            });
+                            toastr.success("Updated successfully", "Success");
+
                             window.setTimeout(function() {
                                 location.reload()
                             }, 2000)
@@ -325,12 +317,8 @@
                 success: function(d) {
                     if (d.success) {
                         // alert(d.message);
-                        swal({
-                            title: "Success!",
-                            text: "Deleted successfully",
-                            icon: "success",
-                            button: "OK",
-                        });
+                        toastr.success("Deleted successfully", "Success");
+
                         window.setTimeout(function() {
                             location.reload()
                         }, 2000)
@@ -342,12 +330,8 @@
                         errorMessage = xhr.responseJSON.message;
                     }
 
-                    swal({
-                        title: "Error!",
-                        text: errorMessage,
-                        icon: "error",
-                        button: "OK",
-                    });
+                    toastr.error(errorMessage, "Error");
+
                 }
             });
         });
@@ -423,12 +407,8 @@
                 },
                 success: function(response) {
                     if (response.assigned) {
-                        swal({
-                            title: "Error!",
-                            text: "You can't remove this sub-service as it is assigned to a client.",
-                            icon: "error",
-                            button: "OK",
-                        });
+                        toastr.error("You can't remove this sub-service as it is assigned to a client.", "Error");
+
                     } else {
                         $this.closest('.input-group').remove();
                     }

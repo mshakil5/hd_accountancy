@@ -248,15 +248,10 @@
                 data:form_data,
                 success: function (d) {
                     if (d.status == 303) {
-                        $(".ermsg").html(d.message);
+                        // $(".ermsg").html(d.message);
                     }else if(d.status == 300){
                       // $(".ermsg").html(d.message);
-                      swal({
-                            title: "Success!",
-                            text: "Manager created successfully",
-                            icon: "success",
-                            button: "OK",
-                        });
+                      toastr.success("Manager created successfully", "Success!");
                       window.setTimeout(function(){location.reload()},2000)
                     }
                 },
@@ -288,15 +283,10 @@
                   success: function(d){
                       console.log(d);
                       if (d.status == 303) {
-                          $(".ermsg").html(d.message);
+                          // $(".ermsg").html(d.message);
                       }else if(d.status == 300){
                         // $(".ermsg").html(d.message);
-                        swal({
-                            title: "Success!",
-                            text: "Manager updated successfully",
-                            icon: "success",
-                            button: "OK",
-                        });
+                        toastr.success("Manager updated successfully", "Success!");
                           window.setTimeout(function(){location.reload()},2000)
                       }
                   },
@@ -333,12 +323,7 @@
                 success: function(d){
                     if(d.success) {
                         // alert(d.message);
-                        swal({
-                            title: "Success!",
-                            text: "Manager deleted successfully",
-                            icon: "success",
-                            button: "OK",
-                        });
+                        toastr.success("Manager deleted successfully", "Success!");
                          window.setTimeout(function(){location.reload()},2000)
                     }
                 },

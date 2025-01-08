@@ -80,12 +80,8 @@
                     sequence_status: sequenceStatus
                 },
                 success: function(response) {
-                    swal({
-                        title: "Success!",
-                        text: "Updated successfully",
-                        icon: "success",
-                        button: "OK",
-                    });
+                    toastr.success('Updated successfully', 'Success!');
+
                     window.setTimeout(function(){location.reload()},2000);
                 },
                 error: function(xhr, status, error) {

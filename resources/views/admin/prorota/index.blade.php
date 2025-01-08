@@ -91,18 +91,11 @@
                     },
                     success: function(response) {
                         if (response.status === 200) {
-                            swal({
-                                title: "Success!",
-                                text: "Data deleted successfully",
-                                icon: "success",
-                                button: "OK",
-                            });
+                            toastr.success("Deleted successfully", 'Success');
                             $('#thisTable').DataTable().ajax.reload();
                         } else {
-                                Toastify({
-                                    text: "Failed to delete."
-                                }).showToast();
-                            }
+                        toastr.error("Failed to delete.", "Error!");
+                        }
                     },
                     error: function(xhr, status, error) {
                     

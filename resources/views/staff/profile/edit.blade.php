@@ -133,14 +133,7 @@
                 contentType: false,
                 processData: false
             }).done(function(response) {
-                Toastify({
-                    text: "Updated successfully!",
-                    duration: 3000,
-                    close: true,
-                    gravity: "top",
-                    position: "right",
-                    backgroundColor: "green",
-                }).showToast();
+                toastr.success("Updated successfully!");
 
                 window.setTimeout(function() {
                     location.reload();
@@ -153,14 +146,7 @@
                     errorMessage = xhr.responseJSON.errors[firstErrorKey][0];
                 }
 
-                Toastify({
-                    text: errorMessage,
-                    duration: 4000,
-                    close: true,
-                    gravity: "top",
-                    position: "right",
-                    backgroundColor: "red",
-                }).showToast();
+                toastr.error(errorMessage);
             });
 
         });

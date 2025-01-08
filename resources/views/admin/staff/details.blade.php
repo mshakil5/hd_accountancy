@@ -195,12 +195,7 @@
                     data: formData,
                     async: false,
                     success: function (response) {
-                        swal({
-                            title: "Success!",
-                            text: "Staff updated successfully",
-                            icon: "success",
-                            button: "OK",
-                        });
+                        toastr.success('Staff updated successfully', 'Success!');
 
                         setTimeout(function() {
                             window.location.href = "{{ route('allStaff') }}";

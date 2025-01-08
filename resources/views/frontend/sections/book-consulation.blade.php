@@ -191,32 +191,17 @@
         let today = new Date().toISOString().split('T')[0];
 
         if (!date || !time || !time_zone || !meet_type || !first_name || !last_name || !email || !phone || !discussion) {
-            swal({
-                icon: 'warning',
-                title: 'Error',
-                text: 'Please fill out all required fields.',
-                button: 'OK'
-            });
+            toastr.warning('Please fill out all required fields.', 'Error');
             return;
         }
 
         if (date < today) {
-            swal({
-                icon: 'warning',
-                title: 'Invalid Date',
-                text: 'The selected date must be today or a future date.',
-                button: 'OK'
-            });
+            toastr.warning('The selected date must be today or a future date.', 'Invalid Date');
             return;
         }
 
         if (!emailRegex.test(email)) {
-            swal({
-                icon: 'warning',
-                title: 'Invalid Email',
-                text: 'Please enter a valid email address.',
-                button: 'OK'
-            });
+            toastr.warning('Please enter a valid email address.', 'Invalid Email');
             return;
         }
 
@@ -248,12 +233,7 @@
             success: function(response) {
                 document.getElementById('loader1').style.display = 'none';
                 document.getElementById('submitBtn').disabled = false;
-                swal({
-                    icon: 'success',
-                    title: 'Success',
-                    text: 'Meeting scheduled successfully!',
-                    button: 'OK'
-                });
+                toastr.success('Meeting scheduled successfully!', 'Success');
 
                 $('#date').val('');
                 $('#datepicker').datepicker('update', '');
@@ -271,12 +251,7 @@
                 document.getElementById('submitBtn').disabled = false;
 
                 // console.log(xhr.responseText);
-                swal({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'An error occurred. Please try again.',
-                    button: 'OK'
-                });
+                toastr.error('An error occurred. Please try again.', 'Error');
             }
         });
     });

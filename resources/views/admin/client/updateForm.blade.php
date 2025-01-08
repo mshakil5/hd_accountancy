@@ -257,12 +257,8 @@
                     data: formData,
                     async: false,
                     success: function(response) {
-                        swal({
-                            title: "Success!",
-                            text: "Client details updated successfully",
-                            icon: "success",
-                            button: "OK",
-                        });
+                        toastr.success("TClient details updated successfully", "Success!");
+
                     },
                     error: function(xhr, status, error) {
                         console.error(xhr.responseText);
@@ -270,12 +266,7 @@
                         if (xhr.responseJSON && xhr.responseJSON.errors) {
                             errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
                         }
-                        swal({
-                            title: "Error",
-                            text: errorMessage,
-                            icon: "error",
-                            button: "OK",
-                        });
+                        toastr.error(errorMessage, "Error");
                     },
                     cache: false,
                     contentType: false,
@@ -304,24 +295,15 @@
                     data: formData,
                     async: false,
                     success: function(response) {
-                        swal({
-                            title: "Success!",
-                            text: "Business Info updated successfully",
-                            icon: "success",
-                            button: "OK",
-                        });
+                        toastr.success("Business Info updated successfully", "Success!");
                     },
                     error: function(xhr, status, error) {
                         var errorMessage = "An error occurred. Please try again later.";
                         if (xhr.responseJSON && xhr.responseJSON.errors) {
                             errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
                         }
-                        swal({
-                            title: "Error",
-                            text: errorMessage,
-                            icon: "error",
-                            button: "OK",
-                        });
+                        toastr.error(errorMessage, "Error");
+
                     },
                     cache: false,
                     contentType: false,
@@ -392,12 +374,8 @@
                 type: 'POST',
                 data: formData,
                 success: function(response) {
-                    swal({
-                        title: "Success!",
-                        text: "Director Info updated successfully",
-                        icon: "success",
-                        button: "OK",
-                    });
+                    toastr.success("Director Info updated successfully", "Success!");
+
                     setTimeout(function() {
                         location.reload();
                     }, 2000);
@@ -407,12 +385,8 @@
                     if (xhr.responseJSON && xhr.responseJSON.errors) {
                         errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
                     }
-                    swal({
-                        title: "Error",
-                        text: errorMessage,
-                        icon: "error",
-                        button: "OK",
-                    });
+                    toastr.error(errorMessage, "Error");
+
                 },
                 cache: false,
                 contentType: false,
@@ -436,12 +410,7 @@
                     url: '/admin/delete-director/' + directorId,
                     type: 'DELETE',
                     success: function(response) {
-                        swal({
-                            title: "Success!",
-                            text: "Director Info deleted successfully",
-                            icon: "success",
-                            button: "OK",
-                        });
+                        toastr.success("Director Info deleted successfully", "Success!");
 
                         setTimeout(function() {
                             location.reload();
@@ -452,12 +421,7 @@
                         if (xhr.responseJSON && xhr.responseJSON.errors) {
                             errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
                         }
-                        swal({
-                            title: "Error",
-                            text: errorMessage,
-                            icon: "error",
-                            button: "OK",
-                        });
+                        toastr.error(errorMessage, "Error");
                     },
                     cache: false,
                     contentType: false,
@@ -486,12 +450,8 @@
                 async: false,
                 success: function(response) {
                     if (response.status === 200) {
-                        swal({
-                            title: "Success!",
-                            text: "Director Info created successfully",
-                            icon: "success",
-                            button: "OK",
-                        });
+                        toastr.success("Director Info created successfully", "Success!");
+
                         setTimeout(function() {
                             location.reload();
                         }, 2000);
@@ -502,12 +462,8 @@
                     if (xhr.responseJSON && xhr.responseJSON.errors) {
                         errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
                     }
-                    swal({
-                        title: "Error",
-                        text: errorMessage,
-                        icon: "error",
-                        button: "OK",
-                    });
+                    toastr.error(errorMessage, "Error");
+
                 },
                 cache: false,
                 contentType: false,
@@ -749,12 +705,8 @@
                 data: data,
                 success: function(response) {
                     // console.log(response);
-                    swal({
-                        title: "Success!",
-                        text: "Task assigned successfully",
-                        icon: "success",
-                        button: "OK",
-                    });
+                    toastr.success("Task assigned successfully", "Success!");
+
                     setTimeout(function() {
                         location.reload();
                     }, 2000);
@@ -765,12 +717,8 @@
                     if (xhr.responseJSON && xhr.responseJSON.errors) {
                         errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
                     }
-                    swal({
-                        title: "Error",
-                        text: errorMessage,
-                        icon: "error",
-                        button: "OK",
-                    });
+                    toastr.error(errorMessage, "Error");
+
                 },
             });
         });
@@ -836,12 +784,8 @@
                 data: JSON.stringify(data),
                 contentType: 'application/json',
                 success: function(response) {
-                    swal({
-                        title: "Success!",
-                        text: "Tasks updated successfully",
-                        icon: "success",
-                        button: "OK",
-                    });
+                    toastr.success("Tasks updated successfully", "Success!");
+
                     setTimeout(function() {
                         location.reload();
                     }, 2000);
@@ -852,12 +796,7 @@
                     if (xhr.responseJSON && xhr.responseJSON.errors) {
                         errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
                     }
-                    swal({
-                        title: "Error",
-                        text: errorMessage,
-                        icon: "error",
-                        button: "OK",
-                    });
+                    toastr.error(errorMessage, "Error");
                 },
             });
         });
@@ -882,12 +821,8 @@
                 async: false,
                 success: function(response) {
                     if (response.status === 200) {
-                        swal({
-                            title: "Success!",
-                            text: "Contact Info created successfully",
-                            icon: "success",
-                            button: "OK",
-                        });
+                        toastr.success("Contact Info created successfully", "Success!");
+
                         setTimeout(function() {
                             location.reload();
                         }, 2000);
@@ -898,12 +833,7 @@
                     if (xhr.responseJSON && xhr.responseJSON.errors) {
                         errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
                     }
-                    swal({
-                        title: "Error",
-                        text: errorMessage,
-                        icon: "error",
-                        button: "OK",
-                    });
+                    toastr.error(errorMessage, "Error");
                 },
                 cache: false,
                 contentType: false,
@@ -974,12 +904,8 @@
                 type: 'POST',
                 data: formData,
                 success: function(response) {
-                    swal({
-                        title: "Success!",
-                        text: "Contact Info updated successfully",
-                        icon: "success",
-                        button: "OK",
-                    });
+                    toastr.success("Contact Info updated successfully", "Success!");
+
                     setTimeout(function() {
                         location.reload();
                     }, 2000);
@@ -989,12 +915,7 @@
                     if (xhr.responseJSON && xhr.responseJSON.errors) {
                         errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
                     }
-                    swal({
-                        title: "Error",
-                        text: errorMessage,
-                        icon: "error",
-                        button: "OK",
-                    });
+                    toastr.error(errorMessage, "Error");
                 },
                 cache: false,
                 contentType: false,
@@ -1018,12 +939,8 @@
                     url: '/admin/delete-contact/' + contactId,
                     type: 'DELETE',
                     success: function(response) {
-                        swal({
-                            title: "Success!",
-                            text: "Contact Info deleted successfully",
-                            icon: "success",
-                            button: "OK",
-                        });
+                        toastr.success("Contact Info deleted successfully", "Success!");
+
                         setTimeout(function() {
                             location.reload();
                         }, 2000);
@@ -1033,12 +950,8 @@
                         if (xhr.responseJSON && xhr.responseJSON.errors) {
                             errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
                         }
-                        swal({
-                            title: "Error",
-                            text: errorMessage,
-                            icon: "error",
-                            button: "OK",
-                        });
+                        toastr.error(errorMessage, "Error");
+
                     },
                     cache: false,
                     contentType: false,
@@ -1076,11 +989,11 @@
                 processData: false,
                 contentType: false,
                 success: function (response) {
-                    swal("Success", response.message, "success");
+                    toastr.success(response.message, "Success");
                     setTimeout(() => location.reload(), 2000);
                 },
                 error: function (xhr) {
-                    swal("Error", xhr.responseJSON.message || "An error occurred.", "error");
+                    toastr.error(xhr.responseJSON.message || "An error occurred.", "Error");
                 }
             });
         });
@@ -1110,11 +1023,11 @@
                 processData: false,
                 contentType: false,
                 success: function (response) {
-                    swal("Success", response.message, "success");
+                    toastr.success(response.message, "Success");
                     setTimeout(() => location.reload(), 2000);
                 },
                 error: function (xhr) {
-                    swal("Error", xhr.responseJSON.message || "An error occurred.", "error");
+                    toastr.error(xhr.responseJSON.message || "An error occurred.", "Error");
                 }
             });
         });
@@ -1139,30 +1052,22 @@
 
         $('#recentUpdateTable').on('click', '.delete-recent-update', function () {
             var update = $(this).closest('tr').data('recent-update');
-            swal({
-                title: "Are you sure?",
-                text: "Once deleted, you will not be able to recover this update!",
-                icon: "warning",
-                buttons: true,
-                dangerMode: true,
-            }).then((willDelete) => {
-                if (willDelete) {
-                    $.ajax({
-                        url: `{{ url('/admin/recent-updates') }}/${update.id}`,
-                        type: 'DELETE',
-                        data: {
-                            _token: "{{ csrf_token() }}"
-                        },
-                        success: function (response) {
-                            swal("Success", response.message, "success");
-                            setTimeout(() => location.reload(), 2000);
-                        },
-                        error: function (xhr) {
-                            swal("Error", xhr.responseJSON.message || "An error occurred.", "error");
-                        }
-                    });
-                }
-            });
+            if (confirm("Are you sure? Once deleted, you will not be able to recover this update!")) {
+                $.ajax({
+                    url: `{{ url('/admin/recent-updates') }}/${update.id}`,
+                    type: 'DELETE',
+                    data: {
+                        _token: "{{ csrf_token() }}"
+                    },
+                    success: function (response) {
+                        toastr.success(response.message, "Success");
+                        setTimeout(() => location.reload(), 2000);
+                    },
+                    error: function (xhr) {
+                        toastr.error(xhr.responseJSON.message || "An error occurred.", "Error");
+                    }
+                });
+            }
         });
     });
 </script>

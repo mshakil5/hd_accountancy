@@ -205,12 +205,6 @@
                         $(".ermsg").html(d.message);
                     }else if(d.status == 300){
                       $(".ermsg").html(d.message);
-                      swal({
-                            title: "Success!",
-                            text: "Created successfully",
-                            icon: "success",
-                            button: "OK",
-                        });
                       window.setTimeout(function(){location.reload()},2000)
                       }
                 },
@@ -250,12 +244,6 @@
                       if (d.status == 303) {
                         $(".ermsg").html(d.message);
                       }else if(d.status == 300){
-                        swal({
-                            title: "Success!",
-                            text: "Updated successfully",
-                            icon: "success",
-                            button: "OK",
-                        });
                       window.setTimeout(function(){location.reload()},2000)
                       }
                   },

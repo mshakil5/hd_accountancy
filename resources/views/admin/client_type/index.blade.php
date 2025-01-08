@@ -154,12 +154,7 @@
                         $(".ermsg").html(d.message);
                     }else if(d.status == 300){
                       // $(".ermsg").html(d.message);
-                      swal({
-                            title: "Success!",
-                            text: "Client type created successfully",
-                            icon: "success",
-                            button: "OK",
-                        });
+                      toastr.success("Client type created successfully", "Success!");
                       window.setTimeout(function(){location.reload()},2000)
                     }
                 },
@@ -188,12 +183,7 @@
                           $(".ermsg").html(d.message);
                       }else if(d.status == 300){
                         // $(".ermsg").html(d.message);
-                          swal({
-                              title: "Success!",
-                              text: "Client Type updated successfully",
-                              icon: "success",
-                              button: "OK",
-                          });
+                         toastr.success("Client Type updated successfully", "Success!");
                           window.setTimeout(function(){location.reload()},2000)
                       }
                   },
@@ -230,12 +220,7 @@
                 success: function(d){
                     if(d.success) {
                         // alert(d.message);
-                        swal({
-                            title: "Success!",
-                            text: "Client Type deleted successfully",
-                            icon: "success",
-                            button: "OK",
-                        });
+                        toastr.success("Client Type deleted successfully", "Success!");
                          window.setTimeout(function(){location.reload()},2000)
                     }
                 },

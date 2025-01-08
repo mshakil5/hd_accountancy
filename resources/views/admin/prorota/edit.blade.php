@@ -194,21 +194,6 @@
     $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') } });
 </script>
 
-<!-- Image preview start -->
-<script>
-    document.getElementById('pic').addEventListener('change', function(event) {
-        var file = event.target.files[0];
-        var reader = new FileReader();
-
-        reader.onload = function(e) {
-            document.getElementById('imagePreview').src = e.target.result;
-        };
-
-        reader.readAsDataURL(file);
-    });
-</script>
-<!-- Image preview end -->
-
 <!-- Prorota Start -->
 <script>
     $(document).ready(function () {
@@ -224,13 +209,8 @@
                 data: formData,
                 async: false,
                 success: function (response) {
-                        swal({
-                            title: "Success!",
-                            text: "Staff schedule updated successfully",
-                            icon: "success",
-                            button: "OK",
-                        });
-                        console.log(response)
+                    toastr.success("Prorota updated successfully", "Success");
+                        // console.log(response)
                     // setTimeout(function() {
                     //     window.location.href = "{{ route('prorota') }}";
                     // }, 2000);
@@ -238,11 +218,9 @@
                 },
                 error: function (xhr, status, error) {
                     console.error("Error occurred: " + error);
-                    if(xhr.responseJSON.status == 423){
+                    if (xhr.responseJSON.status == 423) {
                         console.log(xhr.responseJSON.errors);
-                            $('#errorMessage').html(xhr.responseJSON.errors);
-                            $('#errorMessage').show();
-                            $('#successMessage').hide();
+                        toastr.error(JSON.stringify(xhr.responseJSON.errors), 'Error');
                     } else {
                         var errorMessage = "";
 
@@ -250,17 +228,12 @@
                             $.each(xhr.responseJSON.errors, function (key, value) {
                                 errorMessage += value.join(", ") + "<br>";
                             });
-
-                            $('#errorMessage').html(errorMessage);
-                        }
-                        else {
+                            toastr.error(errorMessage, 'Error');
+                        } else {
                             errorMessage = "An error occurred. Please try again later.";
-                            $('#errorMessage').html(errorMessage);
+                            toastr.error(errorMessage, 'Error');
                         }
-                            $('#errorMessage').show();
-                            $('#successMessage').hide();
                     }
-                    
                 },
                 cache: false,
                 contentType: false,

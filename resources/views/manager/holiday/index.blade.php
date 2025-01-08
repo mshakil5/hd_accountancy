@@ -183,12 +183,7 @@
                 processData: false,  
                 contentType: false,
                 success: function (response) {
-                    swal({
-                        title: "Success!",
-                        text: "Schedule created successfully",
-                        icon: "success",
-                        button: "OK",
-                    });
+                    toastr.success("Schedule created successfully", "Success");
                     window.setTimeout(function(){location.reload()}, 2000);
                 },
                 error: function (xhr, status, error) {

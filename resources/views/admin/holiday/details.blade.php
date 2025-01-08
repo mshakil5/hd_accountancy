@@ -132,12 +132,7 @@
                 data: formData,
                 async: false,
                 success: function (response) {
-                        swal({
-                            title: "Success!",
-                            text: "Staff schedule created successfully",
-                            icon: "success",
-                            button: "OK",
-                        });
+                    toastr.success('Staff schedule created successfully', 'Success');
                     setTimeout(function() {
                         window.location.href = "{{ route('prorota') }}";
                     }, 2000);

@@ -591,12 +591,8 @@
                         holiday_type_id: holidayTypeId  
                     },
                     success: function(response) {
-                        swal({
-                        title: "Success!",
-                        text: "Day updated successfully",
-                        icon: "success",
-                        button: "OK",
-                    });
+                        toastr.success("Day updated successfully", "Success!");
+
                         fetchAndDisplayHolidays(staffId);
                     },
                     error: function(xhr, status, error) {
@@ -791,25 +787,15 @@
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             },
             success: function(response) {
-                swal({
-                    title: "Success!",
-                    text: "Staff personal information updated successfully",
-                    icon: "success",
-                    button: "OK",
-                }).then(() => {
-                    $('#staffsTable').DataTable().ajax.reload(null, false);
-                });
+                toastr.success("Staff personal information updated successfully", "Success!");
+                $('#staffsTable').DataTable().ajax.reload(null, false);
+
             },
             error: function(xhr, status, error) {
-                console.error(xhr.responseText);
+                // console.error(xhr.responseText);
                 var response = JSON.parse(xhr.responseText);
                 var firstError = Object.values(response)[0][0];
-                swal({
-                    title: "Error",
-                    text: firstError,
-                    icon: "error",
-                    button: "OK",
-                })
+                toastr.error(firstError, "Error");
             }
         });
     }
@@ -840,14 +826,8 @@
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             },
             success: function(response) {
-                swal({
-                    title: "Success!",
-                    text: "Staff job details updated successfully",
-                    icon: "success",
-                    button: "OK",
-                }).then(() => {
-                    $('#staffsTable').DataTable().ajax.reload(null, false);
-                });
+                toastr.success("Staff job details updated successfully", "Success!");
+                $('#staffsTable').DataTable().ajax.reload(null, false);
             },
             error: function(xhr, status, error) {
                 console.error(xhr.responseText);
@@ -887,18 +867,11 @@
                     },
                     success: function(response) {
                         if (response.status === 200) {
-                            swal({
-                                title: "Success!",
-                                text: "Staff deleted successfully",
-                                icon: "success",
-                                button: "OK",
-                            });
+                            toastr.success("Staff deleted successfully", "Success!");
                             $('#staffsTable').DataTable().ajax.reload();
                         } else {
-                                Toastify({
-                                    text: "Failed to delete."
-                                }).showToast();
-                            }
+                            toastr.error("Failed to delete.", "Error!");
+                        }
                     },
                     error: function(xhr, status, error) {
                     
@@ -923,13 +896,9 @@
             success: function(response) {
                 if (response.success) {
                     $('#staffsTable').DataTable().ajax.reload();
-                    Toastify({
-                        text: "Status changed successfully!"
-                    }).showToast();
+                    toastr.success("Status changed successfully!", "Success!");
                 } else {
-                    Toastify({
-                        text: "Failed to change status."
-                    }).showToast();
+                    toastr.error("Failed to change status.", "Error!");
                 }
             }
         });

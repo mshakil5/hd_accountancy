@@ -599,9 +599,9 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::post('/assign-note', [NoteController::class, 'assignNote']);
 
     // roles and permission
-    Route::get('role', [RoleController::class, 'index'])->name('admin.role');
-    Route::post('role', [RoleController::class, 'store'])->name('admin.rolestore');
-    Route::get('role/{id}', [RoleController::class, 'edit'])->name('admin.roleedit');
-    Route::post('role-update', [RoleController::class, 'update'])->name('admin.roleupdate');
+    Route::get('/role', [RoleController::class, 'index'])->name('admin.role');
+    Route::post('/role', [RoleController::class, 'store'])->name('admin.rolestore');
+    Route::get('/role/{id}', [RoleController::class, 'edit'])->name('admin.roleedit');
+    Route::post('/role-update', [RoleController::class, 'update'])->name('admin.roleupdate');
 
 });

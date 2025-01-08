@@ -276,12 +276,7 @@
                     processData: false,
                     data: form_data,
                     success: function(d) {
-                        swal({
-                            title: "Success!",
-                            text: "Task assigned successfully",
-                            icon: "success",
-                            button: "OK",
-                        });
+                        toastr.success("Task Assigned successfully", "Success");
 
                         clearform();
                         $("#addThisFormContainer").hide(100);
@@ -298,12 +293,8 @@
                             errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
                         }
 
-                        swal({
-                            title: "Error!",
-                            text: errorMessage,
-                            icon: "error",
-                            button: "OK",
-                        });
+                        toastr.error(errorMessage, "Error");
+
                     }
                 });
             }

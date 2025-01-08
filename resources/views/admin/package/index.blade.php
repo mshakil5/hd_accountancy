@@ -241,12 +241,7 @@
                 $('#turnOverList').html(turnOverList);
                 $('#turnOverModal').modal('show');
             }).fail(function() {
-                swal({
-                    title: "Error!",
-                    text: "Failed to load turnovers.",
-                    icon: "error",
-                    button: "OK",
-                });
+              toastr.error('Failed to load turnovers.', 'Error');
             });
         });
 
@@ -261,12 +256,7 @@
 
             // Check if price range is empty
             if (!priceRange) {
-                swal({
-                    title: "Error!",
-                    text: "Please enter a price range.",
-                    icon: "error",
-                    button: "OK",
-                });
+                toastr.error('Please enter a price range.', 'Error');
                 return; // Stop form submission
             }
 
@@ -284,31 +274,15 @@
                     if (response.status === 'success') {
                         $('#turnOverModal').modal('hide');
                         $('#addTurnOverForm')[0].reset();
-                        swal({
-                            title: "Success!",
-                            text: "Turnover added successfully",
-                            icon: "success",
-                            button: "OK",
-                        });
-                        // Optionally reload the list of turnovers
+                          toastr.success('Turnover added successfully', 'Success');
                     } else {
-                        swal({
-                            title: "Error!",
-                            text: response.message || "An error occurred while adding the turnover.",
-                            icon: "error",
-                            button: "OK",
-                        });
-                        console.error('Error:', response.message);
+                        toastr.error(response.message || "An error occurred while adding the turnover.", 'Error');
+                        // console.error('Error:', response.message);
                     }
                 },
                 error: function(xhr, status, error) {
-                    swal({
-                        title: "Error!",
-                        text: "An error occurred while processing your request.",
-                        icon: "error",
-                        button: "OK",
-                    });
-                    console.error(xhr.responseText);
+                  toastr.error("An error occurred while adding the turnover.", 'Error');
+                    // console.error(xhr.responseText);
                 }
             });
         });
@@ -384,12 +358,7 @@
                         $(".ermsg").html(d.message);
                     }else if(d.status == 300){
                       $(".ermsg").html(d.message);
-                      swal({
-                            title: "Success!",
-                            text: "Created successfully",
-                            icon: "success",
-                            button: "OK",
-                        });
+                        toastr.success("Created successfully", 'Success');
                       window.setTimeout(function(){location.reload()},2000)
                       }
                 },
@@ -430,12 +399,7 @@
                       if (d.status == 303) {
                         $(".ermsg").html(d.message);
                       }else if(d.status == 300){
-                        swal({
-                            title: "Success!",
-                            text: "Updated successfully",
-                            icon: "success",
-                            button: "OK",
-                        });
+                        toastr.success("Updated successfully", 'Success');
                       window.setTimeout(function(){location.reload()},2000)
                       }
                   },

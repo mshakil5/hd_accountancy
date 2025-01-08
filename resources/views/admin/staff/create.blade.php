@@ -227,12 +227,7 @@
                 data: formData,
                 async: false,
                 success: function (response) {
-                        swal({
-                            title: "Success!",
-                            text: "Staff created successfully",
-                            icon: "success",
-                            button: "OK",
-                        });
+                    toastr.success("Staff created successfully", 'Success');
                     saveButton.prop('disabled', false);
                     setTimeout(function() {
                         window.location.href = "{{ route('allStaff') }}";
@@ -245,12 +240,8 @@
                     }
                         saveButton.prop('disabled', false);
 
-                        swal({
-                            title: "Error",
-                            text: errorMessage,
-                            icon: "error",
-                            button: "OK",
-                        });
+                        toastr.error(errorMessage, 'Error');
+
                 },
                 cache: false,
                 contentType: false,

@@ -178,12 +178,7 @@
                 type: "POST",
                 data: data,
                 success: function(response) {
-                    swal({
-                        title: "Success!",
-                        text: "Status changed successfully",
-                        icon: "success",
-                        button: "OK",
-                    });
+                    toastr.success("Status changed successfully", "Success");
                     setTimeout(function() {
                         location.reload();
                     }, 2000);

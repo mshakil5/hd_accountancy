@@ -120,12 +120,7 @@
          var bank_accounts = document.getElementById('bank_accounts').value.trim();
 
          if (!name || !email || !company_name || !phone || !business_type || !turnover || !vat_returns || !payroll || !bookkeeping || !bookkeeping_software || !management_account || !bank_accounts) {
-            swal({
-               icon: 'warning',
-               title: 'Error',
-               text: 'Please fill out all required fields.',
-               button: 'OK'
-            });
+            toastr.warning('Please fill out all required fields.', 'Error');
             return;
          }
 
@@ -149,22 +144,12 @@
                if (data.success) {
                   document.getElementById('loader2').style.display = 'none';
                   document.getElementById('submitForm').disabled = false;
-                  swal({
-                     icon: 'success',
-                     title: 'Success',
-                     text: 'Submitted successfully.',
-                     button: 'OK'
-                  });
+                  toastr.success('Submitted successfully!', 'Success');
                   document.getElementById('contactForm').reset();
                } else {
                   document.getElementById('loader2').style.display = 'none';
                   document.getElementById('submitForm').disabled = false;
-                  swal({
-                     icon: 'error',
-                     title: 'Submission Error',
-                     text: 'Something went wrong. Please try again.',
-                     button: 'OK'
-                  });
+                  toastr.error('An error occurred. Please try again.', 'Error');
                }
             },
             error: function(xhr, status, error) {
