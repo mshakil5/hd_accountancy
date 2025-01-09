@@ -1629,12 +1629,15 @@
                         if (!data.original) {
                             return 'N/A';
                         }
+
                         var formattedDate = data.formatted;
                         var today = moment().startOf('day');
-                        var deadline = moment(data.original).startOf('day');
-                        if (deadline.isBefore(today)) {
+                        var deadline = moment(data.original, 'DD-MM-YYYY').startOf('day');
+
+                        if (row.status != 2 && deadline.isBefore(today)) {
                             return '<span class="bg-warning">' + formattedDate + '</span>';
                         }
+
                         return formattedDate;
                     }
                 },
@@ -1649,8 +1652,9 @@
                         var formattedDate = data.formatted;
 
                         var today = moment().startOf('day');
-                        var deadline = moment(data.original).startOf('day');
-                        if (deadline.isBefore(today)) {
+                        var deadline = moment(data.original, 'DD-MM-YYYY').startOf('day');
+
+                        if (row.status != 2 && deadline.isBefore(today)) {
                             return '<span class="bg-danger">' + formattedDate + '</span>';
                         }
 
