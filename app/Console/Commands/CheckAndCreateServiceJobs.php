@@ -120,6 +120,24 @@ class CheckAndCreateServiceJobs extends Command
                     foreach ($clientService->clientSubServices as $subService) {
                         $newSubService = $subService->replicate();
                         $newSubService->client_service_id = $newClientService->id;
+                
+                        $frequency = $clientService->service_frequency;
+                        $nextDeadline = Carbon::parse($subService->deadline);
+                
+                        if ($frequency == 'Weekly') {
+                            $newSubService->deadline = $nextDeadline->addWeek()->format('d-m-Y');
+                        } elseif ($frequency == '2 Weekly') {
+                            $newSubService->deadline = $nextDeadline->addWeeks(2)->format('d-m-Y');
+                        } elseif ($frequency == '4 Weekly') {
+                            $newSubService->deadline = $nextDeadline->addWeeks(4)->format('d-m-Y');
+                        } elseif ($frequency == 'Monthly') {
+                            $newSubService->deadline = $nextDeadline->addMonth()->format('d-m-Y');
+                        } elseif ($frequency == 'Quarterly') {
+                            $newSubService->deadline = $nextDeadline->addMonths(3)->format('d-m-Y');
+                        } elseif ($frequency == 'Annually') {
+                            $newSubService->deadline = $nextDeadline->addYear()->format('d-m-Y');
+                        }
+                
                         $newSubService->save();
                     }
                 }

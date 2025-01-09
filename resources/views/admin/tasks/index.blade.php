@@ -43,7 +43,8 @@
                     </div>
                     <div class="col-md-3 text-center">
                         <h5 class="mb-3">Deadline</h5>
-                        <input type="date" id="service_deadline" class="form-control mt-2 text-center" readonly>
+                        <!-- <input type="date" id="service_deadline" class="form-control mt-2 text-center" readonly> -->
+                        <span id="service_deadline" class="form-control text-center" style="display: inline-block;"></span>
                     </div>
                 </div>
 
@@ -192,11 +193,11 @@
 
       <!-- One Time Jobs -->
       <div class="col-lg-5 mb-3">
-        <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+        <div class="col-lg-12 px-0 border shadow-sm mb-3">
             <div class="card-body px-0">
-                <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                    One Time Jobs
-                </div>
+                <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
+                        <i class="bx bxs-user-plus fs-4 me-2"></i>One Time Jobs
+                    </p>
                     <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
                     <table id="OneTimeJobsTable" class="table cell-border table-striped" style="width:100%">
                         <thead>
@@ -211,17 +212,16 @@
                 </div>
             </div>
         </div>
-    </div>
+      </div>
     <!-- One Time Jobs -->
 
     <!-- Works assigned to a user and specified staff start-->
     <div class="col-lg-7 mb-3">
-        <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
-            <div class="card-body px-0">
-                <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                    Your Assigned Tasks
-                </div>
-                <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
+        <div class="col-lg-12 px-0 border shadow-sm mb-3">
+            <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
+                <i class="bx bxs-user-plus fs-4 me-2"></i>Your Assigned Tasks
+            </p>
+            <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
                     <table id="serviceManagerTable" class="table cell-border table-striped" style="width:100%">
                         <thead>
                             <tr>
@@ -235,7 +235,6 @@
                         </thead>
                     </table>
                 </div>
-            </div>
         </div>
     </div>
     <!-- Works assigned to a user and specified staff start-->
@@ -263,7 +262,8 @@
                     </div>
                     <div class="col-md-3 text-center">
                         <h5 class="mb-3">Deadline</h5>
-                        <input type="date" id="service_deadline1" class="form-control mt-2 text-center" readonly>
+                        <!-- <input type="date" id="service_deadline1" class="form-control mt-2 text-center" readonly> -->
+                        <span id="service_deadline1" class="form-control text-center" style="display: inline-block;"></span>
                     </div>
                 </div>
 
@@ -298,24 +298,22 @@
 
     <!-- Completed tasks as staff table start-->
     <div class="col-lg-6 mb-3">
-        <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
-            <div class="card-body px-0">
-                <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                    Completed Tasks As Staff
-                </div>
-                <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                    <table id="completedTasksTable" class="table cell-border table-striped" style="width:100%">
-                        <thead>
-                            <tr>
-                                <th scope="col">Client Name</th>
-                                <th scope="col">Service Name</th>
-                                <th scope="col">Due Date</th>
-                                <th scope="col">Target Deadline</th>
-                                <th scope="col">Action</th>
-                            </tr>
-                        </thead>
-                    </table>
-                </div>
+        <div class="col-lg-12 px-0 border shadow-sm mb-3">
+            <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
+                    <i class="bx bxs-user-plus fs-4 me-2"></i>Completed Tasks As Staff
+            </p>
+            <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
+                <table id="completedTasksTable" class="table cell-border table-striped" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th scope="col">Client Name</th>
+                            <th scope="col">Service Name</th>
+                            <th scope="col">Due Date</th>
+                            <th scope="col">Target Deadline</th>
+                            <th scope="col">Action</th>
+                        </tr>
+                    </thead>
+                </table>
             </div>
         </div>
     </div>
@@ -323,26 +321,23 @@
 
     <!-- Completed tasks as manager table start-->
     <div class="col-lg-6 mb-3">
-        <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
-            <div class="card-body px-0">
-                <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                    Completed Tasks As Manager
-                </div>
-                <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                    <table id="completedTasksAsManagergTable" class="table cell-border table-striped" style="width:100%">
-                        <thead>
-                            <tr>
-                                <th scope="col">Client Name</th>
-                                <th scope="col">Service Name</th>
-                                <th scope="col">Due Date</th>
-                                <th scope="col">Target Deadline</th>
-                                <th scope="col">Status</th>
-                                <th scope="col">Action</th>
-                            </tr>
-                        </thead>
-                    </table>
-                </div>
-            </div>
+        <div class="col-lg-12 px-0 border shadow-sm mb-3">
+            <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
+                    <i class="bx bxs-user-plus fs-4 me-2"></i>Completed Tasks As Manager
+                </p>
+            <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
+                <table id="completedTasksAsManagergTable" class="table cell-border table-striped" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th scope="col">Client Name</th>
+                            <th scope="col">Service Name</th>
+                            <th scope="col">Due Date</th>
+                            <th scope="col">Target Deadline</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Action</th>
+                        </tr>
+                    </thead>
+                </table>
         </div>
     </div>
     <!-- Completed tasks as manager table end-->
@@ -873,12 +868,12 @@
             var serviceName = rowData.servicename;
             var frequency = rowData.service_frequency;
             let deadline = rowData.service_deadline;
-            deadline = deadline ? moment(deadline).format('YYYY-MM-DD') : '';
+            // deadline = deadline ? moment(deadline).format('YYYY-MM-DD') : '';
             var decodedServiceName = $('<div>').html(serviceName).text();
             $('#service_name').val(decodedServiceName);
             $('#manager_name').val(managerFirstName);
             $('#service_frequency').val(frequency);
-            $('#service_deadline').val(deadline);
+            $('#service_deadline').text(deadline);
 
             $.ajax({
                 url: '/admin/getClientSubServices-admin/' + clientserviceId,
@@ -976,7 +971,7 @@
                 var newRow = `
                     <tr>
                         <td>${subService.sub_service.name}</td>
-                        <td>${moment(subService.deadline).format('DD-MM-YYYY')}</td>
+                        <td>${subService.deadline}</td>
                         <td>${staffDropdown}</td>
                         <td>${subService.note ? subService.note : ''}</td>
                         <td>${statusText} ${statusDropdown}</td>
@@ -1409,14 +1404,14 @@
             var serviceName = rowData.servicename;
             var frequency = rowData.service_frequency;
             let deadline = rowData.service_deadline;
-            deadline = deadline ? moment(deadline).format('YYYY-MM-DD') : '';
+            // deadline = deadline ? moment(deadline).format('YYYY-MM-DD') : '';
 
             // $('#service_name1').val(serviceName);
             var decodedServiceName = $('<div>').html(serviceName).text();
             $('#service_name1').val(decodedServiceName);
             $('#manager_name1').val(managerName);
             $('#service_frequency1').val(frequency);
-            $('#service_deadline1').val(deadline);
+            $('#service_deadline1').text(deadline);
 
             $.ajax({
                 url: '/admin/getClientSubServices-admin/' + clientserviceId,
@@ -1501,7 +1496,7 @@
                 var newRow = `
                     <tr>
                         <td>${subService.sub_service.name}</td>
-                        <td>${moment(subService.deadline).format('DD-MM-YYYY')}</td>
+                        <td>${subService.deadline}</td>
                         <td>${staffName}</td>
                          <td>${subService.note ? subService.note : ''}</td>
                         <td>${statusDropdown}</td>

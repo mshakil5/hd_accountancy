@@ -308,7 +308,9 @@
                             </div>
                             <div class="col-md-3 text-center">
                                 <h5 class="mb-3">Deadline</h5>
-                                <input type="date" id="service_deadline2" class="form-control mt-2 text-center" readonly>
+                                <!-- <input type="date" id="service_deadline2" class="form-control mt-2 text-center" readonly> -->
+                                <span id="service_deadline2" class="form-control text-center" style="display: inline-block;"></span>
+                                </div>
                             </div>
                         </div>
 
@@ -391,7 +393,8 @@
                             </div>
                             <div class="col-md-3 text-center">
                                 <h5 class="mb-3">Deadline</h5>
-                                <input type="date" id="service_deadline1" class="form-control mt-2 text-center" readonly>
+                                <!-- <input type="date" id="service_deadline1" class="form-control mt-2 text-center" readonly> -->
+                                <span id="service_deadline1" class="form-control text-center" style="display: inline-block;"></span>
                             </div>
                         </div>
 
@@ -1192,7 +1195,7 @@
                 var newRow = `
                   <tr>
                       <td>${subService.sub_service.name}</td>
-                      <td>${moment(subService.deadline).format('DD-MM-YYYY')}</td>
+                      <td>${subService.deadline}</td>
                       <td>${staffName}</td>
                       <td>${subService.note ? subService.note : ''}</td>
                       <td>
@@ -1448,12 +1451,12 @@
             var decodedServiceName = $('<div>').html(serviceName).text();
             var frequency = rowData.service_frequency;
             let deadline = rowData.service_deadline;
-            deadline = deadline ? moment(deadline).format('YYYY-MM-DD') : '';
+            // deadline = deadline ? moment(deadline).format('YYYY-MM-DD') : '';
 
             $('#service_name1').val(decodedServiceName);
             $('#manager_name1').val(managerFirstName);
             $('#service_frequency1').val(frequency);
-            $('#service_deadline1').val(deadline);
+            $('#service_deadline1').text(deadline);
 
             $.ajax({
                 url: '/admin/getClientSubService/' + clientserviceId,
@@ -1512,7 +1515,7 @@
                 var newRow = `
                     <tr>
                         <td>${subService.sub_service.name}</td>
-                        <td>${moment(subService.deadline).format('DD-MM-YYYY')}</td>
+                        <td>${subService.deadline}</td>
                         <td>${staffName}</td>
                         <td>${subService.note ? subService.note : ''}</td>
                          <td>${statusDropdown}</td>
@@ -1718,13 +1721,13 @@
                 var serviceName = rowData.servicename;
                 var frequency = rowData.service_frequency;
                 let deadline = rowData.service_deadline;
-                deadline = deadline ? moment(deadline).format('YYYY-MM-DD') : '';
+                // deadline = deadline ? moment(deadline).format('YYYY-MM-DD') : '';
                 // $('#service_name2').val(serviceName);
                 var decodedServiceName = $('<div>').html(serviceName).text();
                 $('#service_name2').val(decodedServiceName);
                 $('#manager_name2').val(managerFirstName);
                 $('#service_frequency2').val(frequency);
-                $('#service_deadline2').val(deadline);
+                $('#service_deadline2').text(deadline.original);
 
                 $.ajax({
                     url: '/admin/getClientSubService/' + clientserviceId,
@@ -1762,7 +1765,7 @@
                 var newRow = `
                   <tr>
                       <td>${subService.sub_service.name}</td>
-                      <td>${moment(subService.deadline).format('DD-MM-YYYY')}</td>
+                      <td>${subService.deadline}</td>
                       <td>${staffName}</td>
                       <td>${subService.note ? subService.note : ''}</td>
                       <td>
@@ -1994,6 +1997,8 @@
                             'data-manager-id="' + data.manager.id + '" ' +
                             'data-manager-name="' + (data.manager.first_name + ' ' + data.manager.last_name) + '" ' +
                             'data-service-deadline="' + data.service_deadline + '"' +
+                            'data-due_date="' + data.due_date + '"' +
+                            'data-legal_deadline="' + data.legal_deadline + '"' +
                             'data-service-frequency="' + data.service_frequency + '">' +
                             'Assign</button>';
                     }
@@ -2011,7 +2016,7 @@
             <td>${subService.sub_service.name}</td>
             <input type="hidden" name="sub_service_id[]" value="${subService.sub_service_id}">
             <td>
-              <input type="date" name="deadline[]" class="form-control" value="${subService.deadline}">
+              <input type="text" name="deadline[]" class="form-control subServiceDeadline" value="${subService.deadline ? subService.deadline : ''}">
             </td>
             <td>
               <select class="form-control staffDropdown" name="staff_id[]">
@@ -2030,6 +2035,11 @@
         `;
                 subServiceTable.append(newRow);
             });
+            $('.subServiceDeadline').datepicker({
+                format: 'dd-mm-yyyy',
+                autoclose: true,
+                todayHighlight: true
+            });
         }
 
         $('#servicesTable').on('click', '.assign-btn', function() {
@@ -2041,6 +2051,8 @@
             var managerId = $(this).data('manager-id');
             var managerName = $(this).data('manager-name');
             var serviceDeadline = $(this).data('service-deadline');
+            var due_date = $(this).data('due_date');
+            var legal_deadline = $(this).data('legal_deadline');
             var serviceFrequency = $(this).data('service-frequency');
 
 
@@ -2049,6 +2061,8 @@
             $('#managerDropdown').val(managerId);
             $('#service_frequency').val(serviceFrequency);
             $('#service_deadline').val(serviceDeadline);
+            $('#legalDeadline').val(legal_deadline);
+            $('#dueDate').val(due_date);
 
             $('#assignTaskSection').toggle();
             $('#sub-service-updateButton').show();
@@ -2150,7 +2164,7 @@
             });
         });
 
-        $('.dueDate, .legalDeadline, .serviceDeadline').datepicker({
+        $('.dueDate, .legalDeadline, .serviceDeadline, .subServiceDeadline').datepicker({
             format: 'dd-mm-yyyy',
             autoclose: true,
             todayHighlight: true

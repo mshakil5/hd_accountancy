@@ -18,121 +18,157 @@
       </div>
     </div>
   </div>
+    @php
+    use Carbon\Carbon;
+
+    $currentDate = Carbon::now();
+    @endphp
 
     @if(isset($client->clientServices))
         @foreach($client->clientServices as $clientService)
-            <div class="row mt-4 subServiceDetails">
-                <div class="col-12">
-                    <h5 class="p-2 bg-theme text-white mb-0 text-capitalize">Services Details</h5>
-                    <div class="border-theme p-3 border-1">
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="row">
-                                    <div class="col-md-1 text-center">
-                                        <h5 class="mb-3">Service</h5>
-                                        <p><b>{{ isset($clientService->service->name) ? $clientService->service->name : '' }}</b></p>
-                                        <input type="hidden" name="service_id" value="{{ optional($clientService->service)->id }}">
-                                        <input type="hidden" name="client_service_id[]" value="{{ optional($clientService)->id }}">
-                                        
-                                    </div>
-                                    <div class="col-md-2 text-center">
-                                        <h5 class="mb-3">Manager</h5>
-                                        <div class="form-check">
-                                            <select class="form-control mt-2 managerDropdown" name="manager_id" style="width:100%">
-                                                <option value="">Select</option>
-                                                @foreach($managers as $manager)
-                                                    <option value="{{ $manager->id }}" {{ isset($clientService) && $clientService->manager_id == $manager->id ? 'selected' : '' }}>
-                                                        {{ $manager->first_name }} {{ $manager->last_name }} ({{ $manager->type }})
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-2 text-center">
-                                        <h5 class="mb-3">Frequency</h5>
-                                        <div class="form-check">
-                                            <select id="serviceFrequency" class="form-control serviceFrequency" name="service_frequency">
-                                                <option value="">Select Frequency</option>
-                                                <option {{ isset($clientService) && $clientService->service_frequency == 'Weekly' ? 'selected' : '' }}>Weekly</option>
-                                                <option {{ isset($clientService) && $clientService->service_frequency == '2 Weekly' ? 'selected' : '' }}>2 Weekly</option>
-                                                <option {{ isset($clientService) && $clientService->service_frequency == '4 Weekly' ? 'selected' : '' }}>4 Weekly</option>
-                                                <option {{ isset($clientService) && $clientService->service_frequency == 'Monthly' ? 'selected' : '' }}>Monthly</option>
-                                                <option {{ isset($clientService) && $clientService->service_frequency == 'Quarterly' ? 'selected' : '' }}>Quarterly</option>
-                                                <option {{ isset($clientService) && $clientService->service_frequency == 'Annually' ? 'selected' : '' }}>Annually</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-2 text-center">
-                                        <h5 class="mb-3">Due Date</h5>
-                                        <div class="form-check">
-                                        <input type="text" class="form-control dueDate" name="dueDate" id="dueDate" value="{{ \Carbon\Carbon::parse($clientService->due_date)->format('d-m-Y') }}">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-2 text-center">
-                                        <h5 class="mb-3">Target Deadline</h5>
-                                        <div class="form-check">
-                                            <input type="text" class="form-control legalDeadline" name="legalDeadline" id="legalDeadline" value="{{ \Carbon\Carbon::parse($clientService->legal_deadline)->format('d-m-Y') }}">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-2 text-center">
-                                        <h5 class="mb-3">Deadline</h5>
-                                        <div class="form-check">
-                                            <input type="text" class="form-control serviceDeadline" name="service_deadline" id="serviceDeadline" value="{{ \Carbon\Carbon::parse($clientService->service_deadline)->format('d-m-Y') }}">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-1 text-center">
-                                        <h5 class="mb-3">Action</h5>
-                                        <span class="removeSubServiceDetails" style="cursor: pointer; font-size: 24px; color: red; margin-right: 5px;">&#10006;</span>
 
-                                        <i id="continuousSwitch{{ $clientService->id }}" class="fas fa-sync" 
-                                            style="cursor: pointer; font-size: 24px; color: {{ isset($clientService->continuous) && $clientService->continuous == 1 ? '#28a745' : '#dc3545' }};" 
-                                            onclick="toggleContinuous({{ $clientService->id }}, this)">
-                                        </i>
+        @php
+            $nextDueDate = Carbon::parse($clientService->due_date);
+            $frequency = $clientService->service_frequency;
+            $isRelevant = false;
+
+            if ($frequency == 'Weekly') {
+                $startOfNextWeek = $currentDate->copy()->startOfWeek();
+                $endOfNextWeek = $currentDate->copy()->endOfWeek();
+                $isRelevant = $nextDueDate->between($startOfNextWeek, $endOfNextWeek);
+            } elseif ($frequency == '2 Weekly') {
+                $startOfNextTwoWeeks = $currentDate->copy()->addWeeks(1)->startOfWeek();
+                $endOfNextTwoWeeks = $currentDate->copy()->addWeeks(1)->endOfWeek();
+                $isRelevant = $nextDueDate->between($startOfNextTwoWeeks, $endOfNextTwoWeeks);
+            } elseif ($frequency == '4 Weekly') {
+                $startOfNextFourWeeks = $currentDate->copy()->addWeeks(3)->startOfWeek();
+                $endOfNextFourWeeks = $currentDate->copy()->addWeeks(3)->endOfWeek();
+                $isRelevant = $nextDueDate->between($startOfNextFourWeeks, $endOfNextFourWeeks);
+            } elseif ($frequency == 'Monthly') {
+                $startOfNextMonth = $currentDate->copy()->addMonth()->startOfMonth();
+                $endOfNextMonth = $currentDate->copy()->addMonth()->endOfMonth();
+                $isRelevant = $nextDueDate->between($startOfNextMonth, $endOfNextMonth);
+            } elseif ($frequency == 'Quarterly') {
+                $startOfNextQuarter = $currentDate->copy()->addMonths(1)->startOfMonth();
+                $endOfNextQuarter = $currentDate->copy()->addMonths(3)->endOfMonth();
+                $isRelevant = $nextDueDate->between($startOfNextQuarter, $endOfNextQuarter);
+            } elseif ($frequency == 'Annually') {
+                $startOfNextYear = $currentDate->copy()->addYear()->startOfYear();
+                $endOfNextYear = $currentDate->copy()->addYear()->endOfYear();
+                $isRelevant = $nextDueDate->between($startOfNextYear, $endOfNextYear);
+            }
+        @endphp
+
+        <div class="row mt-4 subServiceDetails {{ !$isRelevant ? 'd-none' : '' }}">
+            <div class="col-12">
+                <h5 class="p-2 bg-theme text-white mb-0 text-capitalize">Services Details</h5>
+                <div class="border-theme p-3 border-1">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="row">
+                                <div class="col-md-1 text-center">
+                                    <h5 class="mb-3">Service</h5>
+                                    <p><b>{{ isset($clientService->service->name) ? $clientService->service->name : '' }}</b></p>
+                                    <input type="hidden" name="service_id" value="{{ optional($clientService->service)->id }}">
+                                    <input type="hidden" name="client_service_id[]" value="{{ optional($clientService)->id }}">
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <h5 class="mb-3">Manager</h5>
+                                    <div class="form-check">
+                                        <select class="form-control mt-2 managerDropdown" name="manager_id" style="width:100%">
+                                            <option value="">Select</option>
+                                            @foreach($managers as $manager)
+                                                <option value="{{ $manager->id }}" {{ isset($clientService) && $clientService->manager_id == $manager->id ? 'selected' : '' }}>
+                                                    {{ $manager->first_name }} {{ $manager->last_name }} ({{ $manager->type }})
+                                                </option>
+                                            @endforeach
+                                        </select>
                                     </div>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <h5 class="mb-3">Frequency</h5>
+                                    <div class="form-check">
+                                        <select id="serviceFrequency" class="form-control serviceFrequency" name="service_frequency">
+                                            <option value="">Select Frequency</option>
+                                            <option {{ isset($clientService) && $clientService->service_frequency == 'Weekly' ? 'selected' : '' }}>Weekly</option>
+                                            <option {{ isset($clientService) && $clientService->service_frequency == '2 Weekly' ? 'selected' : '' }}>2 Weekly</option>
+                                            <option {{ isset($clientService) && $clientService->service_frequency == '4 Weekly' ? 'selected' : '' }}>4 Weekly</option>
+                                            <option {{ isset($clientService) && $clientService->service_frequency == 'Monthly' ? 'selected' : '' }}>Monthly</option>
+                                            <option {{ isset($clientService) && $clientService->service_frequency == 'Quarterly' ? 'selected' : '' }}>Quarterly</option>
+                                            <option {{ isset($clientService) && $clientService->service_frequency == 'Annually' ? 'selected' : '' }}>Annually</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <h5 class="mb-3">Due Date</h5>
+                                    <div class="form-check">
+                                        <input type="text" class="form-control dueDate" name="dueDate" id="dueDate" value="{{ \Carbon\Carbon::parse($clientService->due_date)->format('d-m-Y') }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <h5 class="mb-3">Target Deadline</h5>
+                                    <div class="form-check">
+                                        <input type="text" class="form-control legalDeadline" name="legalDeadline" id="legalDeadline" value="{{ \Carbon\Carbon::parse($clientService->legal_deadline)->format('d-m-Y') }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <h5 class="mb-3">Deadline</h5>
+                                    <div class="form-check">
+                                        <input type="text" class="form-control serviceDeadline" name="service_deadline" id="serviceDeadline" value="{{ \Carbon\Carbon::parse($clientService->service_deadline)->format('d-m-Y') }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-1 text-center">
+                                    <h5 class="mb-3">Action</h5>
+                                    <span class="removeSubServiceDetails" style="cursor: pointer; font-size: 24px; color: red; margin-right: 5px;">&#10006;</span>
+                                    <i id="continuousSwitch{{ $clientService->id }}" class="fas fa-sync" 
+                                        style="cursor: pointer; font-size: 24px; color: {{ isset($clientService->continuous) && $clientService->continuous == 1 ? '#28a745' : '#dc3545' }};" 
+                                        onclick="toggleContinuous({{ $clientService->id }}, this)">
+                                    </i>
                                 </div>
                             </div>
                         </div>
-                        <table class="table mt-3">
-                            <thead>
-                                <tr>
-                                    <th>Sub Service</th>
-                                    <th>Deadline</th>
-                                    <th>Staff</th>
-                                    <th>Note</th>
-                                    <th class="text-center">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($clientService->clientSubServices as $clientSubService)
-                                    <tr>
-                                        <input type="hidden" name="client_sub_service_id[]" value="{{ $clientSubService->id }}">
-                                         <input type="hidden" name="sub_service_id[]" value="{{ $clientSubService->subService->id }}">
-                                        <td>{{ isset($clientSubService->subService->name) ? $clientSubService->subService->name : '' }}</td>
-        
-                                        <td>
-                                            <input type="date" id="deadline" name="deadline" class="form-control" value="{{ isset($clientSubService->deadline) ? $clientSubService->deadline : '' }}">
-                                        </td>
-                                        <td>
-                                            <select class="form-control staffDropdown" id="selectedStaff"name="staff_id" style="width:100%">
-                                                <option value="">Select Staff</option>
-                                                @foreach($staffs as $staff)
-                                                    <option value="{{ $staff->id }}" {{ isset($clientSubService->staff_id) && $clientSubService->staff_id == $staff->id ? 'selected' : '' }}>
-                                                        {{ $staff->first_name }} {{ $staff->last_name }} ({{ $staff->type }})
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <textarea name="note" id="note" rows="1" class="form-control" placeholder="Note for this task">{{ isset($clientSubService->note) ? $clientSubService->note : '' }}</textarea>
-                                        </td>
-                                        <td class="text-center"><span class="removeSubServiceRow" style="cursor: pointer; font-size: 24px; color: red;">&#10006;</span></td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
                     </div>
+                    <table class="table mt-3">
+                        <thead>
+                            <tr>
+                                <th>Sub Service</th>
+                                <th>Deadline</th>
+                                <th>Staff</th>
+                                <th>Note</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($clientService->clientSubServices as $clientSubService)
+                                <tr>
+                                    <input type="hidden" name="client_sub_service_id[]" value="{{ $clientSubService->id }}">
+                                    <input type="hidden" name="sub_service_id[]" value="{{ $clientSubService->subService->id }}">
+                                    <td>{{ isset($clientSubService->subService->name) ? $clientSubService->subService->name : '' }}</td>
+                                    <td>
+                                        <input type="text" id="deadline" name="deadline" class="form-control subServiceDeadline" value="{{ isset($clientSubService->deadline) ? $clientSubService->deadline : '' }}">
+                                    </td>
+                                    <td>
+                                        <select class="form-control staffDropdown" id="selectedStaff" name="staff_id" style="width:100%">
+                                            <option value="">Select Staff</option>
+                                            @foreach($staffs as $staff)
+                                                <option value="{{ $staff->id }}" {{ isset($clientSubService->staff_id) && $clientSubService->staff_id == $staff->id ? 'selected' : '' }}>
+                                                    {{ $staff->first_name }} {{ $staff->last_name }} ({{ $staff->type }})
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <textarea name="note" id="note" rows="1" class="form-control" placeholder="Note for this task">{{ isset($clientSubService->note) ? $clientSubService->note : '' }}</textarea>
+                                    </td>
+                                    <td class="text-center"><span class="removeSubServiceRow" style="cursor: pointer; font-size: 24px; color: red;">&#10006;</span></td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
             </div>
+        </div>
+
         @endforeach
     @endif
 

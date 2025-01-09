@@ -802,6 +802,10 @@ class ServiceController extends Controller
 
             $data = ClientService::with('clientSubServices')
                 // ->whereIn('status', [0, 1, 2])
+                ->whereNotNull('service_deadline')
+                ->whereNotNull('due_date')
+                ->whereNotNull('legal_deadline')
+                ->whereNotNull('service_frequency')
                 ->where('is_admin_approved', 0)
                 ->where('type', 1)
                 ->where('due_date', '<=', now()->endOfDay())

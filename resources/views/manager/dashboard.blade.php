@@ -43,7 +43,8 @@
                         </div>
                         <div class="col-md-3 text-center">
                             <h5 class="mb-3">Deadline</h5>
-                            <input type="date" id="service_deadline" class="form-control mt-2 text-center" readonly>
+                            <!-- <input type="date" id="service_deadline" class="form-control mt-2 text-center" readonly> -->
+                            <span id="service_deadline" class="form-control text-center" style="display: inline-block;"></span>
                         </div>
                     </div>
 
@@ -370,7 +371,8 @@
                         </div>
                         <div class="col-md-3 text-center">
                             <h5 class="mb-3">Deadline</h5>
-                            <input type="date" id="service_deadline1" class="form-control mt-2 text-center" readonly>
+                            <!-- <input type="date" id="service_deadline1" class="form-control mt-2 text-center" readonly> -->
+                            <span id="service_deadline1" class="form-control text-center" style="display: inline-block;"></span>
                         </div>
                     </div>
 
@@ -1004,12 +1006,12 @@
             var serviceName = rowData.servicename;
             var frequency = rowData.service_frequency;
             let deadline = rowData.service_deadline;
-            deadline = deadline ? moment(deadline).format('YYYY-MM-DD') : '';
+            // deadline = deadline ? moment(deadline).format('YYYY-MM-DD') : '';
             var decodedServiceName = $('<div>').html(serviceName).text();
             $('#service_name').val(decodedServiceName);
             $('#manager_name').val(managerFirstName);
             $('#service_frequency').val(frequency);
-            $('#service_deadline').val(deadline);
+            $('#service_deadline').text(deadline);
 
             $.ajax({
                 url: '/manager/getClientSubServices/' + clientserviceId,
@@ -1107,7 +1109,7 @@
                 var newRow = `
                     <tr>
                         <td>${subService.sub_service.name}</td>
-                        <td>${moment(subService.deadline).format('DD-MM-YYYY')}</td>
+                        <td>${subService.deadline}</td>
                         <td>${staffDropdown}</td>
                         <td>${subService.note ? subService.note : ''}</td>
                         <td>${statusText} ${statusDropdown}</td>
@@ -1540,14 +1542,14 @@
             var serviceName = rowData.servicename;
             var frequency = rowData.service_frequency;
             let deadline = rowData.service_deadline;
-            deadline = deadline ? moment(deadline).format('YYYY-MM-DD') : '';
+            // deadline = deadline ? moment(deadline).format('YYYY-MM-DD') : '';
 
             // $('#service_name1').val(serviceName);
             var decodedServiceName = $('<div>').html(serviceName).text();
             $('#service_name1').val(decodedServiceName);
             $('#manager_name1').val(managerName);
             $('#service_frequency1').val(frequency);
-            $('#service_deadline1').val(deadline);
+            $('#service_deadline1').text(deadline);
 
             $.ajax({
                 url: '/manager/getClientSubServices/' + clientserviceId,
@@ -1631,7 +1633,7 @@
                 var newRow = `
                     <tr>
                         <td>${subService.sub_service.name}</td>
-                        <td>${moment(subService.deadline).format('DD-MM-YYYY')}</td>
+                        <td>${subService.deadline}</td>
                         <td>${staffName}</td>
                          <td>${subService.note ? subService.note : ''}</td>
                         <td>${statusDropdown}</td>

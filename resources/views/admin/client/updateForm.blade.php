@@ -604,7 +604,7 @@
                             var newRow = `
                                     <tr>
                                     <td>${value.name}</td>
-                                    <td><input type="date" id="deadline" name="deadline" class="form-control"></td>
+                                    <td><input type="text" id="deadline" name="deadline" class="form-control subServiceDeadline"></td>
                                     <td>
                                         <select class="form-control staffDropdown" id="selectedStaff" name="staff_id">
                                         <option value="">Select Staff</option>
@@ -623,6 +623,12 @@
                                     </tr>
                                 `;
                             $('.subServiceDetails:last').find('tbody').append(newRow);
+
+                            $('.subServiceDetails:last').find('.subServiceDeadline').datepicker({
+                                format: 'dd-mm-yyyy',
+                                autoclose: true,
+                                todayHighlight: true
+                            });
 
                             $('.dueDate, .legalDeadline, .serviceDeadline').datepicker({
                                 format: 'dd-mm-yyyy',
@@ -670,7 +676,7 @@
 
                 $(this).find('tbody tr').each(function() {
                     var subServiceId = $(this).find('.sub-service-id').attr('data-sub-service-id');
-                    var deadline = $(this).find('input[type="date"]').val();
+                    var deadline = $(this).find('#deadline').val();
                     var note = $(this).find('textarea').val();
                     var staffId = $(this).find('.staffDropdown').val();
 
@@ -1082,7 +1088,7 @@
 <!-- Data table initialize -->
 
 <script>
-    $('.dueDate, .legalDeadline, .serviceDeadline').datepicker({
+    $('.dueDate, .legalDeadline, .serviceDeadline, .subServiceDeadline').datepicker({
         format: 'dd-mm-yyyy',
         autoclose: true,
         todayHighlight: true
