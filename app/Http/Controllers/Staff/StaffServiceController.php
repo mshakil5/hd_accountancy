@@ -23,13 +23,14 @@ class StaffServiceController extends Controller
 {
     public function getServicesClientStaff(Request $request)
     {
+        $today = Carbon::today()->format('d-m-Y');
         if ($request->ajax()) {
             $data = ClientService::where('type', '!=', 2)->with('clientSubServices')
                 ->whereHas('clientSubServices', function ($query) {
                     $query->whereIn('sequence_status', [0, 1])
                         ->where('staff_id', Auth::id());
                 })
-                ->where('due_date', '<=', now()->endOfDay())
+                ->where('due_date', '<=', $today)
                 ->orderBy('id', 'desc')
                 ->get();
 
@@ -77,13 +78,14 @@ class StaffServiceController extends Controller
 
     public function getCompetedServices(Request $request)
     {
+        $today = Carbon::today()->format('d-m-Y');
         if ($request->ajax()) {
             $data = ClientService::where('type', '!=', 2)->with('clientSubServices')
                 ->whereHas('clientSubServices', function ($query)  {
                     $query->where('sequence_status', 2)
                         ->where('staff_id', Auth::id());
                 })
-                ->where('due_date', '<=', now()->endOfDay())
+                ->where('due_date', '<=', $today)
                 ->orderBy('id', 'desc')
                 ->get();
 

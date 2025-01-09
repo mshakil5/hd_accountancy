@@ -327,7 +327,7 @@
             <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
                 <div class="card-body px-0">
                     <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                        Your Assigned Tasks
+                        Assigned Tasks
                     </div>
                     <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
                         <table id="serviceManagerTable" class="table cell-border table-striped" style="width:100%">

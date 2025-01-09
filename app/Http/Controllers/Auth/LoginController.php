@@ -72,17 +72,15 @@ class LoginController extends Controller
             $checkLoggedUser = UserAttendanceLog::where('user_id', $user->id)->whereNull('end_time')->whereDate('created_at', $today)->first();
 
             if(!$checkLoggedUser){
-                if($user->type == 'staff' || $user->type == 'manager'){
+                // if($user->type == 'staff' || $user->type == 'manager'){
                     $attendanceLog = new UserAttendanceLog();
                     $attendanceLog->user_id = $user->id;
                     $attendanceLog->start_time = now();
                     $attendanceLog->status = 0;
                     $attendanceLog->session_id = Session::getId();
                     $attendanceLog->save();
-                }
+                // }
             }
-
-            
 
             if (auth()->user()->type == 'admin') {
                 return redirect()->route('admin.home');

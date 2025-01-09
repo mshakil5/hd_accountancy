@@ -800,6 +800,8 @@ class ServiceController extends Controller
     {
         if ($request->ajax()) {
 
+            $today = Carbon::today()->format('d-m-Y');
+
             $data = ClientService::with('clientSubServices')
                 // ->whereIn('status', [0, 1, 2])
                 ->whereNotNull('service_deadline')
@@ -808,7 +810,7 @@ class ServiceController extends Controller
                 ->whereNotNull('service_frequency')
                 ->where('is_admin_approved', 0)
                 ->where('type', 1)
-                ->where('due_date', '<=', now()->endOfDay())
+                ->where('due_date', '<=', $today)
                 ->orderBy('id', 'desc')
                 ->get();
 
@@ -940,13 +942,13 @@ class ServiceController extends Controller
     public function getTodaysDeadlineService(Request $request)
     {
         if ($request->ajax()) {
-            $data = ClientService::where('type', 2)
+            $today = Carbon::today()->format('d-m-Y');
+            $data = ClientService::where('type', 1)
                 ->with('clientSubServices')
-                ->whereDate('service_deadline', '=', today())
+                ->whereDate('service_deadline', $today)
                 // ->whereHas('clientSubServices', function ($query) {
                 //     $query->whereNotNull('staff_id');
                 // })
-                ->where('type', 1)
                 ->orderBy('id', 'desc')
                 ->get();
 
