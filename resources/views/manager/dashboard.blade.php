@@ -1046,7 +1046,7 @@
                     if (subService.client_service && subService.client_service.manager_id == authUserId) {
                         staffDropdown = '<select class="form-select change-staff" data-sub-service-id="' + subService.id + '">';
                         staffs.forEach(function(staffMember) {
-                            staffDropdown += '<option value="' + staffMember.id + '" ' + (staffMember.id == subService.staff_id ? 'selected' : '') + '>' + staffMember.first_name + '</option>';
+                            staffDropdown += '<option value="' + staffMember.id + '" ' + (staffMember.id == subService.staff_id ? 'selected' : '') + '>' + staffMember.first_name + ' ' + staffMember.last_name + ' (' + staffMember.type + ')</option>';
                         });
                         staffDropdown += '</select>';
                     }

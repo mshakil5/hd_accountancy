@@ -188,7 +188,7 @@ class AdminController extends Controller
     {
         $users = User::whereIn('type', ['3','2', '1'])->select('id', 'first_name', 'last_name', 'type')->orderby('id','DESC')->get();
         $clients = Client::orderBy('id', 'DESC')->select('id', 'name', 'refid')->get();
-        $staffs = User::whereIn('type', ['3','2', '1'])->select('id', 'first_name', 'last_name')->orderby('id','DESC')->get();
+        $staffs = User::whereIn('type', ['3','2', '1'])->select('id', 'first_name', 'last_name', 'type')->orderby('id','DESC')->get();
         $subServices = SubService::orderby('id','DESC')->select('id', 'name')->get();
         return view('admin.tasks.index', compact('users', 'clients', 'staffs', 'subServices'));
     }
