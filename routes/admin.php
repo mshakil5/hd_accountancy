@@ -47,6 +47,7 @@ use App\Http\Controllers\Admin\OneTimeJobController;
 use App\Http\Controllers\Admin\RecentUpdateController;
 use App\Http\Controllers\Admin\NoteController;
 use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\LogoutController;
 
 //Fallback route
 Route::fallback(function () {
@@ -603,5 +604,13 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::post('/role', [RoleController::class, 'store'])->name('admin.rolestore');
     Route::get('/role/{id}', [RoleController::class, 'edit'])->name('admin.roleedit');
     Route::post('/role-update', [RoleController::class, 'update'])->name('admin.roleupdate');
+
+    Route::post('/logout', [LogoutController::class, 'logout'])->name('admin.logout');
+    
+    Route::get('/check-work-time-status', [LogoutController::class,'checkWorkTimeStatus']);
+
+    Route::get('/get-completed-services-modal', [LogoutController::class, 'getCompetedServicesModal']);
+
+    Route::post('/save-notes', [LogoutController::class, 'saveNotes']);
 
 });

@@ -173,9 +173,6 @@
                     <div class="modal-body">
                         <div class="report-box border-theme sales-card p-4 rounded-4 border-3">
                             <div class="card-body p-0">
-                                <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                                    Your Time
-                                </div>
                                 <div class="d-flex gap-3 my-5">
                                     <div class="text-center flex-fill">
                                         <div class="fs-6 txt-theme fw-bold">Active Time</div>

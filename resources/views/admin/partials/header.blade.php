@@ -248,10 +248,11 @@
           <i class="bi bi-list toggle-sidebar-btn curp text-black fs-4" onclick="toggleSidebar();"></i>
         </div>
         <div class="col-auto d-flex align-items-center">
+          <i class="bi bi-clock fs-4 txt-theme mx-2" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#timeModal2"></i>
           <a>
-            <i class="bi bi-person fs-4 txt-theme mx-2"></i> 
             <span class="fw-bold txt-theme fs-6">
               {{ auth()->user()->first_name }} {{ auth()->user()->last_name }}
+              <i class="bi bi-person fs-4 txt-theme mx-2"></i> 
             </span>
           </a>
         </div>

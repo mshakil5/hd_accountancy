@@ -61,6 +61,8 @@
 
       @yield('content')
 
+      @include('admin.modals.time_modal')
+
   </main>
   <!--Main -->
 
@@ -112,6 +114,8 @@
   </script>
 
   @yield('script')
+
+  @include('admin.modals.time_modal_script')
 
 </body>
 
