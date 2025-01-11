@@ -184,7 +184,7 @@
                           $(".ermsg").html(d.message);
                       }else if(d.status == 300){
                         // $(".ermsg").html(d.message);
-                        toastr.success("Holiday type updated successfully", "Success"););
+                        toastr.success("Holiday type updated successfully", "Success");
                           window.setTimeout(function(){location.reload()},2000)
                       }
                   },

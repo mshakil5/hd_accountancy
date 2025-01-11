@@ -33,10 +33,16 @@ class ProrotaController extends Controller
 
     public function create()
     {
-        $staffs = User::whereIn('type', ['2','3'])->select('id','first_name','last_name','email')->orderby('id','DESC')->get();
-        // dd($staffs);
+        $staffs = User::whereIn('type', ['2', '3'])
+            ->whereNotIn('id', function ($query) {
+                $query->select('staff_id')->from('prorotas');
+            })
+            ->select('id', 'first_name', 'last_name', 'email')
+            ->orderBy('id', 'DESC')
+            ->get();
+    
         return view('admin.prorota.create', compact('staffs'));
-    }
+    }    
 
     public function store(Request $request)
     {

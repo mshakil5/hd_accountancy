@@ -40,8 +40,9 @@
                                                 <label for="country">Employee</label>
                                                 <div class="mt-2">
                                                     <input type="hidden" name="prorota_id" id="prorota_id" class="form-control" value="{{$data->id}}" >
-                                                    <select class="form-control select2 my-2" id="staff_id" name="staff_id">
-                                                        <option value="" selected disabled>Choose Employee</option>
+                                                    <input type="hidden" name="staff_id" value="{{ $data->staff_id }}">
+                                                    <select class="form-control select2 my-2" id="staff_id" name="staff_id" disabled>
+                                                        <option value="" >Choose Employee</option>
                                                         @foreach($staffs as $staff)
                                                         <option value="{{ $staff->id }}" @if ($data->staff_id == $staff->id) selected @endif>{{ $staff->first_name }} {{ $staff->last_name }}</option>
                                                         @endforeach
@@ -49,7 +50,7 @@
                                                 </div>
                                             </div>
                                             
-                                            <div class="col-lg-4">
+                                            <div class="col-lg-4 d-none">
                                                 <label for="schedule_type">Schedule Type</label>
                                                   <div class="mt-2">
                                                     <select class="form-control my-2" name="schedule_type" id="schedule_type">
