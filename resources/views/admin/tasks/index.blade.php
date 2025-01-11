@@ -1434,14 +1434,14 @@
             var serviceName = rowData.servicename;
             var frequency = rowData.service_frequency;
             let deadline = rowData.service_deadline;
-            deadline = deadline ? moment(deadline).format('YYYY-MM-DD') : '';
+            // deadline = deadline ? moment(deadline).format('YYYY-MM-DD') : '';
 
             // $('#service_name1').val(serviceName);
             var decodedServiceName = $('<div>').html(serviceName).text();
             $('#service_name1').val(decodedServiceName);
             $('#manager_name1').val(managerName);
             $('#service_frequency1').val(frequency);
-            $('#service_deadline1').val(deadline);
+            $('#service_deadline1').text(deadline);
 
             $.ajax({
                 url: '/admin/getClientSubServices-admin/' + clientserviceId,
