@@ -63,6 +63,7 @@ class HomeController extends Controller
         $today = Carbon::today();
 
         $loggedStaff = UserAttendanceLog::with(['user:id,first_name,last_name'])
+            ->where('user_id', '!=', auth()->id())
             ->select('id', 'user_id', 'start_time', 'end_time', 'status')
             ->where('status', 0)
             ->whereNull('end_time')
@@ -110,6 +111,7 @@ class HomeController extends Controller
             ->values(); 
 
         $lateStaff = UserAttendanceLog::with(['user:id,first_name,last_name'])
+            ->where('user_id', '!=', auth()->id())
             ->select(['id', 'user_id', 'start_time'])
             ->whereDate('start_time', Carbon::today())
             ->orderBy('start_time', 'asc')

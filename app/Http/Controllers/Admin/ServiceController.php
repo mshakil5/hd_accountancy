@@ -368,11 +368,13 @@ class ServiceController extends Controller
 
     public function getCompletedServices(Request $request)
     {
+        $today = Carbon::today()->format('d-m-Y');
         if ($request->ajax()) {
             $data = ClientService::where('type', 1)->with('clientSubServices')
                 // ->where('status', 2)
                 ->where('is_admin_approved', 1)
-                ->where('due_date', '<=', now()->endOfDay())
+                ->where('type', 1)
+                ->where('due_date', '<=', $today)
                 ->orderBy('id', 'desc')
                 ->get();
 
@@ -811,6 +813,9 @@ class ServiceController extends Controller
                 ->where('is_admin_approved', 0)
                 ->where('type', 1)
                 ->where('due_date', '<=', $today)
+                ->whereHas('clientSubServices', function ($query) {
+                    $query->whereNotNull('staff_id');
+                })
                 ->orderBy('id', 'desc')
                 ->get();
 
@@ -945,10 +950,10 @@ class ServiceController extends Controller
             $today = Carbon::today()->format('d-m-Y');
             $data = ClientService::where('type', 1)
                 ->with('clientSubServices')
-                ->whereDate('service_deadline', $today)
-                // ->whereHas('clientSubServices', function ($query) {
-                //     $query->whereNotNull('staff_id');
-                // })
+                ->where('service_deadline', $today)
+                ->whereHas('clientSubServices', function ($query) {
+                    $query->whereNotNull('staff_id');
+                })
                 ->orderBy('id', 'desc')
                 ->get();
 

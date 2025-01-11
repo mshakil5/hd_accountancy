@@ -92,10 +92,12 @@
                                     <div class="col-md-1 text-center">
                                         <h5 class="mb-3">Action</h5>
                                         <span class="removeSubServiceDetails" style="cursor: pointer; font-size: 24px; color: red; margin-right: 5px;">&#10006;</span>
-                                        <i id="continuousSwitch{{ $clientService->id }}" class="fas fa-sync" 
-                                            style="cursor: pointer; font-size: 24px; color: {{ isset($clientService->continuous) && $clientService->continuous == 1 ? '#28a745' : '#dc3545' }};" 
-                                            onclick="toggleContinuous({{ $clientService->id }}, this)">
-                                        </i>
+                                        @if($clientService->is_next_date_added == 0)
+                                            <i id="continuousSwitch{{ $clientService->id }}" class="fas fa-sync" 
+                                                style="cursor: pointer; font-size: 24px; color: {{ isset($clientService->continuous) && $clientService->continuous == 1 ? '#28a745' : '#dc3545' }};" 
+                                                onclick="toggleContinuous({{ $clientService->id }}, this)">
+                                            </i>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
