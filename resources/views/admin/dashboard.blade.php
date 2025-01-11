@@ -247,8 +247,8 @@
                                 <table table id="todaysDeadlineTable" class="table cell-border table-striped" style="width:100%">
                                     <thead>
                                         <tr>
-                                            <th scope="col">Service Name</th>
                                             <th scope="col">Client Name</th>
+                                            <th scope="col">Service Name</th>
                                             <th scope="col">Action</th>
                                         </tr>
                                     </thead>
@@ -1856,13 +1856,14 @@
                 url: '/admin/get-todays-deadline-service',
                 type: 'GET',
             },
-            columns: [{
-                    data: 'servicename',
-                    name: 'servicename'
-                },
+            columns: [
                 {
                     data: 'clientname',
                     name: 'clientname'
+                },
+                {
+                    data: 'servicename',
+                    name: 'servicename'
                 },
                 {
                     data: 'action',
