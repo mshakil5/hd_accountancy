@@ -7,6 +7,7 @@
 /public/storage
 /storage/*.key
 /vendor
+googlea2fa14d30a9d300f.html
 
 .env
 .env.backup
