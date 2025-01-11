@@ -117,32 +117,6 @@
                             <div class="sub-box-header txt-theme">
                                 <div class="row w-100">
                                     <div class="col-lg-6 d-flex">
-                                        <span>Task completed</span>
-                                    </div>
-                                    <div class="col-lg-6 text-end">
-                                        <span id="completedTaskCount">count:</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-lg-12 d-flex" id="completedTasksContainer">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>Service Name</th>
-                                            <th>Created By</th>
-                                            <th>Assign Date</th>
-                                            <th>Due Date</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
-                            </div>
-
-
-                            <div class="sub-box-header txt-theme">
-                                <div class="row w-100">
-                                    <div class="col-lg-6 d-flex">
                                         <span>Work In Progress</span>
                                     </div>
                                     <div class="col-lg-6 text-end">
@@ -165,7 +139,6 @@
                                 </table>
                             </div>
 
-
                             <div class="sub-box-header txt-theme">
                                 <div class="row w-100">
                                     <div class="col-lg-6 d-flex">
@@ -178,6 +151,31 @@
                             </div>
 
                             <div class="col-lg-12 d-flex" id="dueTasksContainer">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Service Name</th>
+                                            <th>Created By</th>
+                                            <th>Assign Date</th>
+                                            <th>Due Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+
+                            <div class="sub-box-header txt-theme">
+                                <div class="row w-100">
+                                    <div class="col-lg-6 d-flex">
+                                        <span>Task completed</span>
+                                    </div>
+                                    <div class="col-lg-6 text-end">
+                                        <span id="completedTaskCount">count:</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-12 d-flex" id="completedTasksContainer">
                                 <table class="table">
                                     <thead>
                                         <tr>
