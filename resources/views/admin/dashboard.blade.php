@@ -1429,7 +1429,7 @@
                         return `
                             <select class="form-control approval-status-change" data-id="${row.id}">
                                 <option value="1" ${data == 1 ? 'selected' : ''}>Completed</option>
-                                <option value="0" ${data == 0 ? 'selected' : ''}>Processign</option>
+                                <option value="0" ${data == 0 ? 'selected' : ''}>Processing</option>
                             </select>
                         `;
                     }

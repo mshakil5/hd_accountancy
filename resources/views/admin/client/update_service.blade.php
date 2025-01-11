@@ -28,7 +28,7 @@
         @foreach($client->clientServices as $clientService)
 
             @php
-                $isRelevant = in_array($clientService->status, [0, 1]);
+                $isRelevant = ($clientService->is_admin_approved == 0);
             @endphp
 
             <div class="row mt-4 subServiceDetails {{ !$isRelevant ? 'd-none' : '' }}">
