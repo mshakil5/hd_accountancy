@@ -38,6 +38,8 @@
 
         @include('frontend.partials.date-picker-css')
 
+        <meta name="google-site-verification" content="B66_NizNd9PxdegluYuSlPYKQVJDPFfFY5TKA2RmdTI" />
+
         <!-- Google tag (gtag.js) -->
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-NH9VPXW8Z0">
         </script>
