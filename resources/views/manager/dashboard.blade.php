@@ -1039,7 +1039,6 @@
                 });
 
                 var staffDropdown = '';               
-                if ([0, 1, 2].includes(subService.sequence_status)) {
                     if (subService.client_service && subService.client_service.manager_id == authUserId) {
                         staffDropdown = '<select class="form-select change-staff" data-sub-service-id="' + subService.id + '">';
                         staffs.forEach(function(staffMember) {
@@ -1047,9 +1046,6 @@
                         });
                         staffDropdown += '</select>';
                     }
-                } else {
-                    staffDropdown = subService.staff ? (subService.staff.first_name + ' ' + (subService.staff.last_name || '')).trim() : 'N/A';
-                }
 
                 var staffName = subService.staff ? (subService.staff.first_name + ' ' + (subService.staff.last_name || '')).trim() : 'N/A';
                 var isAuthUserStaff = authUserId == subService.staff_id;
