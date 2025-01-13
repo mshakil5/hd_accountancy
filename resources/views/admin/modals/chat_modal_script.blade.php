@@ -2,9 +2,11 @@
   $(document).ready(function () {
 
     function loadMessages() {
+      const filter = $('#date-filter').val();
       $.ajax({
         url: "{{ route('chats.get') }}",
         method: "GET",
+        data: { filter: filter },
         success: function (response) {
           let messageHtml = '';
 
@@ -30,6 +32,10 @@
         }
       });
     }
+
+    $('#date-filter').change(function() {
+      loadMessages();
+    });
 
     $('#chatModal').on('show.bs.modal', function () {
       loadMessages();

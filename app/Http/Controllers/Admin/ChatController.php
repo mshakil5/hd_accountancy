@@ -17,16 +17,24 @@ class ChatController extends Controller
             ->whereNull('client_service_id')
             ->update(['status' => 0]);
     
-        $messages = ServiceMessage::where('staff_id', Auth::id())
+        $query = ServiceMessage::where('staff_id', Auth::id())
             ->whereNull('client_sub_service_id')
             ->whereNull('client_service_id')
             ->select('id', 'message', 'created_at', 'created_by')
-            ->with('user:id,first_name,last_name')
-            ->latest()
-            ->get();
+            ->with('user:id,first_name,last_name');
+    
+        if ($request->filter === 'today') {
+            $query->whereDate('created_at', today());
+        } elseif ($request->filter === 'last7days') {
+            $query->where('created_at', '>=', now()->subDays(7));
+        } elseif ($request->filter === 'last30days') {
+            $query->where('created_at', '>=', now()->subDays(30));
+        }
+    
+        $messages = $query->latest()->get();
     
         return response()->json($messages);
-    }    
+    }     
 
     public function sendMessage(Request $request)
     {

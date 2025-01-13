@@ -87,7 +87,17 @@
               <div class="tab-content mt-3">
                 <div class="tab-pane fade show active" id="message-history" role="tabpanel" aria-labelledby="message-history-tab">
                   <div class="message-history-section p-3 border rounded bg-light">
-                    <h6 class="text-primary">Messages:</h6>
+                    <div class="d-flex justify-content-between mb-2">
+                      <h6 class="text-primary">Messages:</h6>
+                      <div class="message-history-filter">
+                        <label for="date-filter" class="form-label d-none">Filter by Date:</label>
+                        <select id="date-filter" class="form-control" style="width: 150px;">
+                          <option value="today" selected>Today</option>
+                          <option value="last7days">Last 7 Days</option>
+                          <option value="last30days">Last 30 Days</option>
+                        </select>
+                      </div>
+                    </div>
                     <div id="messageList">
                       <p class="text-muted">No messages available.</p>
                     </div>
@@ -175,9 +185,11 @@
     $(document).ready(function () {
 
       function loadMessages() {
+        const filter = $('#date-filter').val();
         $.ajax({
           url: "{{ route('chats.get.manager') }}",
           method: "GET",
+          data: { filter: filter },
           success: function (response) {
             let messageHtml = '';
 
