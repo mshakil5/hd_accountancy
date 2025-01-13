@@ -62,6 +62,7 @@
       @yield('content')
 
       @include('admin.modals.time_modal')
+      @include('admin.modals.chat_modal')
 
   </main>
   <!--Main -->
@@ -116,6 +117,7 @@
   @yield('script')
 
   @include('admin.modals.time_modal_script')
+  @include('admin.modals.chat_modal_script')
 
 </body>
 

@@ -29,6 +29,7 @@
         </div>
         <div class="col-lg-6 justify-content-end d-flex align-items-center pe-3">
           <i class="bi bi-clock fs-4 txt-theme mx-2" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#timeModal1"></i>
+          <i id="chatIcon" class="bi bi-chat-dots fs-4 txt-theme mx-2" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#chatModal"></i>
            <a href="{{ route('staff.profile.edit') }}">
             <span class="fw-bold txt-theme fs-6">{{ auth()->user()->first_name }} {{ auth()->user()->last_name }}</span>
             <i class="bi bi-person fs-4 txt-theme mx-2"></i> 

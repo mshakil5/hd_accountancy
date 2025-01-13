@@ -1,4 +1,5 @@
-<!-- <header id="header" class="header fixed-top d-flex align-items-center"> 
+{{-- 
+<header id="header" class="header fixed-top d-flex align-items-center"> 
     <div class="d-flex align-items-center justify-content-between">
       <a href="index.html" class="logo d-flex align-items-center">
         <img src="assets/img/logo.png" alt="">
@@ -223,7 +224,8 @@
       </ul>
     </nav> 
 
-</header> -->
+</header>
+--}}
 
 <header id="header" class=" site-main-header">
     <div class="container-fluid">
@@ -249,6 +251,7 @@
         </div>
         <div class="col-auto d-flex align-items-center">
           <i class="bi bi-clock fs-4 txt-theme mx-2" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#timeModal2"></i>
+          <i id="chatIcon" class="bi bi-chat-dots fs-4 txt-theme mx-2" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#chatModal"></i>
           <a>
             <span class="fw-bold txt-theme fs-6">
               {{ auth()->user()->first_name }} {{ auth()->user()->last_name }}
@@ -259,3 +262,14 @@
       </div>
     </div>
 </header>
+
+<style>
+  #chatIcon {
+    font-size: 2.2rem;
+    transition: transform 0.3s ease, color 0.3s ease;
+  }
+
+  #chatIcon.new-message {
+    color: #dc3545;
+  }
+</style>

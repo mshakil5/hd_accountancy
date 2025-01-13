@@ -17,6 +17,7 @@ use App\Http\Controllers\Frontend\FrontendController;
 use App\Http\Controllers\Staff\RecentUpdateController;
 use App\Http\Controllers\Manager\OneTimeJobController;
 use App\Http\Controllers\Manager\NoteController;
+use App\Http\Controllers\Manager\ChatController;
   
 /*
 |--------------------------------------------------------------------------
@@ -201,6 +202,10 @@ Route::middleware(['auth', 'user-access:manager'])->group(function () {
     Route::get('/manager/get-note', [NoteController::class, 'getNotesByManager']);
     Route::post('/manager/save-note', [NoteController::class, 'saveNoteByManager']);
     Route::post('/manager/assign-note', [NoteController::class, 'assignNoteByManager']);
+
+    Route::get('/chats', [ChatController::class, 'getMessagesByManager'])->name('chats.get.manager');
+    Route::post('/chats/send', [ChatController::class, 'sendMessageByManager'])->name('chats.send.manager');
+    Route::get('/unread-messages', [ChatController::class, 'getUnreadMessagesByManager'])->name('unread-messages.manager');
     
 });
 
@@ -292,6 +297,10 @@ Route::middleware(['auth', 'user-access:staff'])->group(function () {
     Route::get('/staff/get-note', [NoteController::class, 'getNotesByStaff']);
     Route::post('/staff/save-note', [NoteController::class, 'saveNoteByStaff']);
     Route::post('/staff/assign-note', [NoteController::class, 'assignNoteByStaff']);
+
+    Route::get('/chats', [ChatController::class, 'getMessagesByStaff'])->name('chats.get.staff');
+    Route::post('/chats/send', [ChatController::class, 'sendMessageByStaff'])->name('chats.send.staff');
+    Route::get('/unread-messages', [ChatController::class, 'getUnreadMessagesByStaff'])->name('unread-messages.staff');
 });
 
 //User

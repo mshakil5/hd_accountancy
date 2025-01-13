@@ -11,6 +11,8 @@ class ServiceMessage extends Model
     use HasFactory;
     use SoftDeletes;
 
+    protected $guarded = [];
+
     public function user()
     {
         return $this->belongsTo(User::class, 'created_by');

@@ -48,6 +48,7 @@ use App\Http\Controllers\Admin\RecentUpdateController;
 use App\Http\Controllers\Admin\NoteController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\LogoutController;
+use App\Http\Controllers\Admin\ChatController;
 
 //Fallback route
 Route::fallback(function () {
@@ -612,5 +613,9 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/get-completed-services-modal', [LogoutController::class, 'getCompetedServicesModal']);
 
     Route::post('/save-notes', [LogoutController::class, 'saveNotes']);
+
+    Route::get('/chats', [ChatController::class, 'getMessages'])->name('chats.get');
+    Route::post('/chats/send', [ChatController::class, 'sendMessage'])->name('chats.send');
+    Route::get('/unread-messages', [ChatController::class, 'getUnreadMessages'])->name('unread-messages');
 
 });
