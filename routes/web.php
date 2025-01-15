@@ -203,9 +203,9 @@ Route::middleware(['auth', 'user-access:manager'])->group(function () {
     Route::post('/manager/save-note', [NoteController::class, 'saveNoteByManager']);
     Route::post('/manager/assign-note', [NoteController::class, 'assignNoteByManager']);
 
-    Route::get('/chats', [ChatController::class, 'getMessagesByManager'])->name('chats.get.manager');
-    Route::post('/chats/send', [ChatController::class, 'sendMessageByManager'])->name('chats.send.manager');
-    Route::get('/unread-messages', [ChatController::class, 'getUnreadMessagesByManager'])->name('unread-messages.manager');
+    Route::get('/manager/chats', [ChatController::class, 'getMessagesByManager'])->name('chats.get.manager');
+    Route::post('/manager/chats/send', [ChatController::class, 'sendMessageByManager'])->name('chats.send.manager');
+    Route::get('/manager/unread-messages', [ChatController::class, 'getUnreadMessagesByManager'])->name('unread-messages.manager');
     
 });
 
