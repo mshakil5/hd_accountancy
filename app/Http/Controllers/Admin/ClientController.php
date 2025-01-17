@@ -51,7 +51,10 @@ class ClientController extends Controller
                 ->addColumn('manager_first_name', function ($row) {
                     return $row->manager->first_name ?? '';
                 })
-                ->rawColumns(['manager_first_name'])
+                ->addColumn('client_type_name', function ($row) {
+                    return $row->clientType->name ?? '';
+                })
+                ->rawColumns(['manager_first_name', 'client_type_name'])
                 ->make(true);
         }
     }
@@ -86,6 +89,9 @@ class ClientController extends Controller
                 ->addIndexColumn()
                 ->editColumn('manager.first_name', function ($row) {
                     return $row->manager->first_name ?? '';
+                })
+                ->addColumn('client_type_name', function ($row) {
+                    return $row->clientType->name ?? '';
                 })
                 ->make(true);
         }
@@ -135,6 +141,9 @@ class ClientController extends Controller
                 ->addIndexColumn()
                 ->editColumn('manager.first_name', function ($row) {
                     return $row->manager->first_name ?? '';
+                })
+                ->addColumn('client_type_name', function ($row) {
+                    return $row->clientType->name ?? '';
                 })
                 ->make(true);
         }
@@ -533,6 +542,12 @@ class ClientController extends Controller
         $director = ContactInfo::findOrFail($id);
         $director->delete();
         return response()->json(['message' => 'Director deleted successfully']);
+    }
+
+    public function clientReport($id)
+    {
+        $client = Client::with(['clientType', 'manager', 'businessInfo', 'directorInfos', 'clientServices.clientSubServices', 'contactInfos', 'recentUpdates.user'])->find($id);
+        return view('admin.client.report', compact('client'));
     }
 
 }

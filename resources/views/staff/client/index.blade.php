@@ -22,6 +22,7 @@
                             <th scope="col">Manager</th>
                             <th scope="col">Phone</th>
                             <th scope="col">Email</th>
+                            <th scope="col">Client Type</th>
                             <th scope="col">Recent Update</th>
                         </tr>
                     </thead>
@@ -60,6 +61,7 @@
                 },
                 { data: 'phone', name: 'phone', defaultContent: '' },
                 { data: 'email', name: 'email', defaultContent: '' },
+                { data: 'client_type_name', name: 'client_type_name', defaultContent: '' },
                 { 
                     data: 'recent_update', 
                     name: 'recent_update',

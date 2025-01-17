@@ -33,6 +33,7 @@
                             <th scope="col">Manager</th>
                             <th scope="col">Phone</th>
                             <th scope="col">Email</th>
+                            <th scope="col">Client Type</th>
                             <th scope="col">Status</th>
                             <th scope="col">Action</th>
                         </tr>
@@ -73,6 +74,10 @@
             {data: 'phone', name: 'phone'},
             {data: 'email', name: 'email'},
             {
+                data: 'client_type_name',
+                name: 'client_type_name'
+            },
+            {
                 data: 'status',
                 name: 'status',
                 render: function(data, type, full, meta) {
@@ -90,8 +95,10 @@
                 render: function(data, type, full, meta) {
                     var editButtonHtml = canEditDelete ? '<a href="{{ url('admin/client/update-form') }}/' + data + '" class="btn btn-secondary"><i class="fas fa-edit"></i></a>' : '<button class="btn btn-secondary" disabled><i class="fas fa-edit"></i></button>';
                     var deleteButtonHtml = canEditDelete ? '<a href="#" class="btn btn-danger delete-client" data-client-id="' + data + '" style="margin-left: 10px;"><i class="fas fa-trash"></i></a>' : '<button class="btn btn-danger" disabled style="margin-left: 10px;"><i class="fas fa-trash"></i></button>';
+                    
+                    var viewButtonHtml = '<a href="{{ url('admin/client/report') }}/' + data + '" class="btn btn-primary" style="margin-right: 10px;"><i class="fas fa-eye"></i></a>';
 
-                    return editButtonHtml + deleteButtonHtml;
+                    return viewButtonHtml + editButtonHtml + deleteButtonHtml;
                 }
             }
         ]
