@@ -193,15 +193,19 @@
 
                         <div class="container-fluid">
                             <div class="row mt-3">
-                                <div class="col-md-4 text-center">
+                                <div class="col-md-3 text-center">
+                                    <h5 class="mb-3">Client Name</h5>
+                                    <input type="text" id="client_name3" class="form-control mt-2 text-center" readonly>
+                                </div>
+                                <div class="col-md-3 text-center">
                                     <h5 class="mb-3">Service</h5>
                                     <input type="text" id="service_name3" class="form-control mt-2 text-center" readonly>
                                 </div>
-                                <div class="col-md-4 text-center">
+                                <div class="col-md-3 text-center">
                                     <h5 class="mb-3">Manager</h5>
                                     <input type="text" id="manager_name3" class="form-control mt-2 text-center" value="" readonly>
                                 </div>
-                                <div class="col-md-4 text-center">
+                                <div class="col-md-3 text-center">
                                     <h5 class="mb-3">Frequency</h5>
                                     <input type="text" id="service_frequency3" class="form-control mt-2 text-center" readonly>
                                 </div>
@@ -294,23 +298,29 @@
 
                     <div class="container-fluid">
                         <div class="row mt-3">
-                            <div class="col-md-3 text-center">
+                            <div class="col-md-2 text-center">
+                                <h5 class="mb-3">Client Name</h5>
+                                <input type="text" id="client_name2" class="form-control mt-2 text-center" readonly>
+                            </div>
+                            <div class="col-md-2 text-center">
                                 <h5 class="mb-3">Service</h5>
                                 <input type="text" id="service_name2" class="form-control mt-2 text-center" readonly>
                             </div>
-                            <div class="col-md-3 text-center">
+                            <div class="col-md-2 text-center">
                                 <h5 class="mb-3">Manager</h5>
                                 <input type="text" id="manager_name2" class="form-control mt-2 text-center" value="" readonly>
                             </div>
-                            <div class="col-md-3 text-center">
+                            <div class="col-md-2 text-center">
                                 <h5 class="mb-3">Frequency</h5>
                                 <input type="text" id="service_frequency2" class="form-control mt-2 text-center" readonly>
                             </div>
-                            <div class="col-md-3 text-center">
+                            <div class="col-md-2 text-center">
+                                <h5 class="mb-3">Due Date</h5>
+                                <span id="due_date2" class="form-control text-center" style="display: inline-block;"></span>
+                            </div>
+                            <div class="col-md-2 text-center">
                                 <h5 class="mb-3">Deadline</h5>
-                                <!-- <input type="date" id="service_deadline2" class="form-control mt-2 text-center" readonly> -->
                                 <span id="service_deadline2" class="form-control text-center" style="display: inline-block;"></span>
-                                </div>
                             </div>
                         </div>
 
@@ -379,21 +389,28 @@
 
                     <div class="container-fluid">
                         <div class="row mt-3">
-                            <div class="col-md-3 text-center">
+                            <div class="col-md-2 text-center">
+                                <h5 class="mb-3">Client Name</h5>
+                                <input type="text" id="client_name1" class="form-control mt-2 text-center" readonly>
+                            </div>
+                            <div class="col-md-2 text-center">
                                 <h5 class="mb-3">Service</h5>
                                 <input type="text" id="service_name1" class="form-control mt-2 text-center" readonly>
                             </div>
-                            <div class="col-md-3 text-center">
+                            <div class="col-md-2 text-center">
                                 <h5 class="mb-3">Manager</h5>
                                 <input type="text" id="manager_name1" class="form-control mt-2 text-center" value="" readonly>
                             </div>
-                            <div class="col-md-3 text-center">
+                            <div class="col-md-2 text-center">
                                 <h5 class="mb-3">Frequency</h5>
                                 <input type="text" id="service_frequency1" class="form-control mt-2 text-center" readonly>
                             </div>
-                            <div class="col-md-3 text-center">
+                            <div class="col-md-2 text-center">
+                                <h5 class="mb-3">Due Date</h5>
+                                <span id="due_date1" class="form-control text-center" style="display: inline-block;"></span>
+                            </div>
+                            <div class="col-md-2 text-center">
                                 <h5 class="mb-3">Deadline</h5>
-                                <!-- <input type="date" id="service_deadline1" class="form-control mt-2 text-center" readonly> -->
                                 <span id="service_deadline1" class="form-control text-center" style="display: inline-block;"></span>
                             </div>
                         </div>
@@ -1451,12 +1468,16 @@
             var decodedServiceName = $('<div>').html(serviceName).text();
             var frequency = rowData.service_frequency;
             let deadline = rowData.service_deadline;
+            let dueDate = rowData.due_date;
+            let client = rowData.clientname;
             // deadline = deadline ? moment(deadline).format('YYYY-MM-DD') : '';
 
             $('#service_name1').val(decodedServiceName);
             $('#manager_name1').val(managerFirstName);
             $('#service_frequency1').val(frequency);
+            $('#client_name1').val(client);
             $('#service_deadline1').text(deadline);
+            $('#due_date1').text(dueDate);
 
             $.ajax({
                 url: '/admin/getClientSubService/' + clientserviceId,
@@ -1728,10 +1749,14 @@
                 // deadline = deadline ? moment(deadline).format('YYYY-MM-DD') : '';
                 // $('#service_name2').val(serviceName);
                 var decodedServiceName = $('<div>').html(serviceName).text();
+                let dueDate = rowData.due_date;
+                let client = rowData.clientname;
                 $('#service_name2').val(decodedServiceName);
                 $('#manager_name2').val(managerFirstName);
                 $('#service_frequency2').val(frequency);
                 $('#service_deadline2').text(deadline.original);
+                $('#due_date2').text(dueDate);
+                $('#client_name2').val(client);
 
                 $.ajax({
                     url: '/admin/getClientSubService/' + clientserviceId,
@@ -1884,7 +1909,9 @@
                 var frequency = rowData.service_frequency;
                 let deadline = rowData.service_deadline;
                 deadline = deadline ? moment(deadline).format('YYYY-MM-DD') : '';
+                clientName = rowData.clientname;
 
+                $('#client_name3').val(clientName); 
                 $('#service_name3').val(serviceName);
                 $('#manager_name3').val(managerFirstName);
                 $('#service_frequency3').val(frequency);

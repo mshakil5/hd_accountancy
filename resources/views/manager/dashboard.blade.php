@@ -29,19 +29,28 @@
 
                 <div class="container-fluid">
                     <div class="row mt-3">
-                        <div class="col-md-3 text-center">
+                        <div class="col-md-2 text-center">
+                            <h5 class="mb-3">Client Name</h5>
+                            <input type="text" id="client_name" class="form-control mt-2 text-center" readonly>
+                        </div>
+                        <div class="col-md-2 text-center">
                             <h5 class="mb-3">Service</h5>
                             <input type="text" id="service_name" class="form-control mt-2 text-center" readonly>
                         </div>
-                        <div class="col-md-3 text-center">
+                        <div class="col-md-2 text-center">
                             <h5 class="mb-3">Manager</h5>
                             <input type="text" id="manager_name" class="form-control mt-2 text-center" value="" readonly>
                         </div>
-                        <div class="col-md-3 text-center">
+                        <div class="col-md-2 text-center">
                             <h5 class="mb-3">Frequency</h5>
                             <input type="text" id="service_frequency" class="form-control mt-2 text-center" readonly>
                         </div>
-                        <div class="col-md-3 text-center">
+                        <div class="col-md-2 text-center">
+                            <h5 class="mb-3">Due Date</h5>
+                            <!-- <input type="date" id="service_deadline" class="form-control mt-2 text-center" readonly> -->
+                            <span id="due_date" class="form-control text-center" style="display: inline-block;"></span>
+                        </div>
+                        <div class="col-md-2 text-center">
                             <h5 class="mb-3">Deadline</h5>
                             <!-- <input type="date" id="service_deadline" class="form-control mt-2 text-center" readonly> -->
                             <span id="service_deadline" class="form-control text-center" style="display: inline-block;"></span>
@@ -354,19 +363,28 @@
 
                 <div class="container-fluid">
                     <div class="row mt-3">
-                        <div class="col-md-3 text-center">
+                        <div class="col-md-2 text-center">
+                            <h5 class="mb-3">Client Name</h5>
+                            <input type="text" id="client_name1" class="form-control mt-2 text-center" readonly>
+                        </div>
+                        <div class="col-md-2 text-center">
                             <h5 class="mb-3">Service</h5>
                             <input type="text" id="service_name1" class="form-control mt-2 text-center" readonly>
                         </div>
-                        <div class="col-md-3 text-center">
+                        <div class="col-md-2 text-center">
                             <h5 class="mb-3">Manager</h5>
                             <input type="text" id="manager_name1" class="form-control mt-2 text-center" readonly>
                         </div>
-                        <div class="col-md-3 text-center">
+                        <div class="col-md-2 text-center">
                             <h5 class="mb-3">Frequency</h5>
                             <input type="text" id="service_frequency1" class="form-control mt-2 text-center" readonly>
                         </div>
-                        <div class="col-md-3 text-center">
+                        <div class="col-md-2 text-center">
+                            <h5 class="mb-3">Due Date</h5>
+                            <!-- <input type="date" id="service_deadline1" class="form-control mt-2 text-center" readonly> -->
+                            <span id="due_date1" class="form-control text-center" style="display: inline-block;"></span>
+                        </div>
+                        <div class="col-md-2 text-center">
                             <h5 class="mb-3">Deadline</h5>
                             <!-- <input type="date" id="service_deadline1" class="form-control mt-2 text-center" readonly> -->
                             <span id="service_deadline1" class="form-control text-center" style="display: inline-block;"></span>
@@ -1003,12 +1021,16 @@
             var serviceName = rowData.servicename;
             var frequency = rowData.service_frequency;
             let deadline = rowData.service_deadline;
+            let clientName = rowData.clientname;
+            let dueDate = rowData.due_date;
             // deadline = deadline ? moment(deadline).format('YYYY-MM-DD') : '';
             var decodedServiceName = $('<div>').html(serviceName).text();
             $('#service_name').val(decodedServiceName);
             $('#manager_name').val(managerFirstName);
             $('#service_frequency').val(frequency);
             $('#service_deadline').text(deadline);
+            $('#client_name').val(clientName);
+            $('#due_date').text(dueDate);
 
             $.ajax({
                 url: '/manager/getClientSubServices/' + clientserviceId,
@@ -1535,6 +1557,8 @@
             var serviceName = rowData.servicename;
             var frequency = rowData.service_frequency;
             let deadline = rowData.service_deadline;
+            let clientName = rowData.clientname;
+            let dueDate = rowData.due_date;
             // deadline = deadline ? moment(deadline).format('YYYY-MM-DD') : '';
 
             // $('#service_name1').val(serviceName);
@@ -1543,6 +1567,8 @@
             $('#manager_name1').val(managerName);
             $('#service_frequency1').val(frequency);
             $('#service_deadline1').text(deadline);
+            $('#client_name1').val(clientName);
+            $('#due_date1').text(dueDate);
 
             $.ajax({
                 url: '/manager/getClientSubServices/' + clientserviceId,
@@ -1564,6 +1590,8 @@
             var serviceName = rowData.servicename;
             var frequency = rowData.service_frequency;
             let deadline = rowData.service_deadline;
+            let clientName = rowData.clientname;
+            let dueDate = rowData.due_date;
             // deadline = deadline ? moment(deadline).format('YYYY-MM-DD') : '';
 
             // $('#service_name1').val(serviceName);
@@ -1572,6 +1600,8 @@
             $('#manager_name1').val(managerName);
             $('#service_frequency1').val(frequency);
             $('#service_deadline1').text(deadline);
+            $('#client_name1').val(clientName);
+            $('#due_date1').text(dueDate);
 
             $.ajax({
                 url: '/manager/getClientSubServices/' + clientserviceId,
