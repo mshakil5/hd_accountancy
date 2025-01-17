@@ -996,20 +996,21 @@
                     return (workTime.end_time == null || workTime.end_time == "") && workTime.is_break == 0;
                 });
 
-                if (subService.sequence_status == 0) {
-                    if (isAuthUserStaff && !hasActiveWorkTime) {
-                        statusDropdown = `
-                            <select class="form-select change-service-status" data-sub-service-id="${subService.id}">
-                                <option value="0" selected>Processing</option>
-                                <option value="2">Completed</option>
-                            </select>`;
-                    } else {
+                if (isAuthUserStaff) {
+                    statusDropdown = `
+                    <select class="form-select change-service-status" data-sub-service-id="${subService.id}">
+                        <option value="1" ${subService.sequence_status == 1 ? 'selected' : ''}>Not started</option>
+                        <option value="0" ${subService.sequence_status == 0 ? 'selected' : ''}>Processing</option>
+                        <option value="2" ${subService.sequence_status == 2 ? 'selected' : ''}>Completed</option>
+                    </select>`;
+                } else {
+                    if (subService.sequence_status == 0) {
                         statusText = 'Processing';
+                    } else if (subService.sequence_status == 1) {
+                        statusText = 'Work isn\'t started yet';
+                    } else if (subService.sequence_status == 2) {
+                        statusText = 'Work is completed';
                     }
-                } else if (subService.sequence_status == 1) {
-                    statusText = 'Work isn\'t started yet';
-                } else if (subService.sequence_status == 2) {
-                    statusText = 'Work is completed';
                 }
 
                 var startButton = '';
@@ -1028,7 +1029,7 @@
                     duration = `<div>${hours}h ${minutes}m ${seconds}s</div>`;
                 }
 
-                if (isAuthUserStaff && subService.sequence_status == 0) {
+                if (isAuthUserStaff) {
                     if (hasActiveWorkTime) {
                         stopButton = `<button type="button" class="btn btn-danger stop-timer" data-sub-service-id="${subService.id}">Stop</button>`;
                     } else {
