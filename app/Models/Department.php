@@ -12,13 +12,7 @@ class Department extends Model
     use HasFactory;
     use SoftDeletes;
 
-    protected $fillable = [
-        'name',
-        'description',
-        'status',
-        'updated_by',
-        'created_by',
-    ];
+    protected $guarded = [];
 
     public function users()
     {

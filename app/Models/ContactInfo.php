@@ -12,17 +12,8 @@ class ContactInfo extends Model
     use HasFactory;
     use SoftDeletes;
     
-    protected $fillable = [
-        'client_id',
-        'greeting',
-        'first_name',
-        'last_name',
-        'job_title',
-        'email',
-        'phone',
-        'created_by',
-        'updated_by',
-    ];
+    protected $guarded = [];
+    
     public function client()
     {
         return $this->belongsTo(Client::class);

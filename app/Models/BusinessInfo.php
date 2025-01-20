@@ -12,19 +12,7 @@ class BusinessInfo extends Model
     use HasFactory;
     use SoftDeletes;
 
-    protected $fillable = [
-        'client_id',
-        'nature_of_business',
-        'company_number',
-        'year_end_date',
-        'due_date',
-        'confirmation_due_date',
-        'authorization_code',
-        'company_utr',
-        'status',
-        'created_by',
-        'updated_by',
-    ];
+    protected $guarded = [];
 
     public function client()
     {

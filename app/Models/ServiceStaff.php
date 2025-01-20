@@ -10,16 +10,7 @@ class ServiceStaff extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = [
-        'client_id',
-        'staff_id',
-        'assigned_services',
-        'deadline',
-        'note',
-        'status',
-        'created_by',
-        'updated_by',
-    ];
+    protected $guarded = [];
 
     protected $casts = [
         'assigned_services' => 'array',

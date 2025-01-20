@@ -12,19 +12,7 @@ class UserAttendanceLog extends Model
     use HasFactory;
     use SoftDeletes;
 
-    protected $fillable = [
-        'user_id',
-        'start_time',
-        'end_time',
-        'note',
-        'status',
-        'is_late',
-        'session_id',
-        'idle_time',
-        'duration',
-        'created_by',
-        'updated_by',
-    ];
+    protected $guarded = [];
 
     public function user()
     {

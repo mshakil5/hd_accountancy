@@ -9,19 +9,7 @@ class HolidayRequest extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'staff_id',
-        'holiday_type_id',
-        'start_date',
-        'end_date',
-        'comment',
-        'admin_note',
-        'total_day',
-        'status',
-        'staff_notification',
-        'created_by',
-        'updated_by'
-    ];
+    protected $guarded = [];
 
     public function staff()
     {

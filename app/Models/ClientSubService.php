@@ -10,22 +10,7 @@ class ClientSubService extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'client_service_id',
-        'client_id',
-        'sub_service_id',
-        'manager_id',
-        'staff_id',
-        'deadline',
-        'note',
-        'status',
-        'sequence_id',
-        'sequence_status',
-        'manager_notification',
-        'staff_notification',
-        'created_by',
-        'updated_by',
-    ];
+    protected $guarded = [];
 
 
     public function clientService()

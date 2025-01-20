@@ -10,14 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class SubService extends Model
 {
 
-    protected $fillable = [
-        'service_id',
-        'name',
-        'deadline',
-        'deadline',
-        'note',
-        'status'
-    ];
+    protected $guarded = [];
 
     use HasFactory;
     use SoftDeletes;

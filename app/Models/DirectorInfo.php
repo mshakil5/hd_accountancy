@@ -12,21 +12,7 @@ class DirectorInfo extends Model
     use HasFactory;
     use SoftDeletes;
 
-    protected $fillable = [
-        'client_id',
-        'name',
-        'phone',
-        'email',
-        'address',
-        'dob',
-        'ni_number',
-        'utr_number',
-        'utr_authorization',
-        'nino',
-        'status',
-        'created_by',
-        'updated_by',
-    ];
+    protected $guarded = [];
 
     public function client()
     {

@@ -14,11 +14,7 @@ class Service extends Model
     use HasFactory;
     use SoftDeletes;
 
-    protected $fillable = [
-        'name',
-        'tag',
-        'status'
-    ];
+    protected $guarded = [];
 
     public function clients()
     {
