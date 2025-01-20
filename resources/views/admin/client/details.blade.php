@@ -17,30 +17,34 @@
             <input type="email" class="form-control my-2" id="email" name="email" placeholder="Enter email" value="{{ $client->email }}">
         </div>
         <div class="col-lg-4">
-            <label for="">Phone <span class="text-danger">*</span></label>
+            <label for="">Primary Phone <span class="text-danger">*</span></label>
             <input type="number" class="form-control my-2" id="phone" name="phone" placeholder="Enter phone" value="{{ $client->phone }}">
         </div>
         <div class="col-lg-4">
-            <label for="">Address Line 1 <span class="text-danger">*</span></label>
-            <textarea class="form-control my-2" id="address_line1" name="address_line1" placeholder="Enter address line 1">{{ $client->address_line1 }}</textarea>
-        </div>
-        <div class="col-lg-4">
-            <label for="">Address Line 2</label>
-            <textarea class="form-control my-2" id="address_line2" name="address_line2" placeholder="Enter address line 2">{{ $client->address_line2 }}</textarea>
-        </div>
-        <div class="col-lg-4">
-            <label for="">Address Line 3</label>
-            <textarea class="form-control my-2" id="address_line3" name="address_line3" placeholder="Enter address line 3">{{ $client->address_line3 }}</textarea>
+            <label for="">Secondary Phone</label>
+            <input type="number" class="form-control my-2" id="phone2" name="phone2" placeholder="Enter phone" value="{{ $client->phone2 }}">
         </div>
         <div class="col-lg-4">
             <label for="">Trading Address</label>
             <textarea class="form-control my-2" id="trading_address" name="trading_address" placeholder="Enter trading address">{{ $client->trading_address }}</textarea>
         </div>
         <div class="col-lg-4">
+            <label for=""> Registered Address Line 1</label>
+            <textarea class="form-control my-2" id="address_line1" name="address_line1" placeholder="Enter address line 1">{{ $client->address_line1 }}</textarea>
+        </div>
+        <div class="col-lg-4">
+            <label for="">Address Line 2</label>
+            <textarea class="form-control my-2" id="address_line2" name="address_line2" placeholder="Enter address line 2">{{ $client->address_line2 }}</textarea>
+        </div>
+        <div class="col-lg-4 d-none">
+            <label for="">Address Line 3</label>
+            <textarea class="form-control my-2" id="address_line3" name="address_line3" placeholder="Enter address line 3">{{ $client->address_line3 }}</textarea>
+        </div>
+        <div class="col-lg-4">
             <label for="">City</label>
             <input type="text" class="form-control my-2" id="city" name="city" placeholder="Enter city" value="{{ $client->city }}">
         </div>
-        <div class="col-lg-4">
+        <div class="col-lg-4 d-none">
             <label for="">Town</label>
             <input type="text" class="form-control my-2" id="town" name="town" placeholder="Enter state" value="{{ $client->town }}">
         </div>
@@ -48,7 +52,7 @@
             <label for="">Postal Code</label>
             <input type="text" class="form-control my-2" id="postcode" name="postcode" placeholder="Enter postal code" value="{{ $client->postcode }}">
         </div>
-        <div class="col-lg-4">
+        <div class="col-lg-4 d-none">
             <label for="country">Country</label>
             <div class="mt-2">
                 <select class="form-control my-2" id="country" name="country">
@@ -65,11 +69,6 @@
                 <i class="bi bi-paperclip position-absolute top-50 translate-middle-y"
                     style="right: 8px;"></i>
             </div>
-        </div>
-
-        <div class="col-lg-4">
-            <label for="">Reference ID <span class="text-danger">*</span></label>
-            <input type="text" class="form-control my-2" id="reference_id" name="reference_id" placeholder="Enter reference id" value="{{ isset($client) && isset($client->refid) ? $client->refid : '' }}">
         </div>
 
     </div>

@@ -16,7 +16,12 @@
                 </div>
 
                 <div class="col-lg-3">
-                    <label for="country">Client Type </label>
+                    <label for="">Reference ID <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control my-2" id="reference_id" name="reference_id" placeholder="Ex: LT-001" value="{{ isset($client) && isset($client->refid) ? $client->refid : '' }}">
+                </div>
+
+                <div class="col-lg-3">
+                    <label for="country">Client Type <span class="text-danger">*</span> </label>
                     <div class="mt-2">
                         <select class="form-control my-2" id="client_type_id" name="client_type_id">
                             <option value="">Please select</option>
@@ -28,12 +33,12 @@
                 </div>
 
                 <div class="col-lg-3">
-                    <label for="">Client Manager <span class="text-danger">*</span></label>
+                    <label for="">Client Manager</label>
                     <div class="mt-2">
                         <select class="form-control my-2" name="manager_id" id="manager_id">
                             <option value="">Please select</option>
                             @foreach($managers as $manager)
-                            <option value="{{ $manager->id }}" data-id-number="{{ $manager->id_number }}" {{ $client->manager_id == $manager->id ? 'selected' : '' }}>{{ $manager->first_name }} {{ $manager->last_name }}</option>
+                            <option value="{{ $manager->id }}" data-id-number="{{ $manager->id_number }}" {{ $client->manager_id == $manager->id ? 'selected' : '' }}>{{ $manager->first_name }} {{ $manager->last_name }} ({{ $manager->type }})</option>
                             @endforeach
                         </select>
                     </div>
@@ -62,9 +67,6 @@
                                 <li class="nav-item flex-fill" role="presentation">
                                     <button class="nav-link w-100" id="contact-info-tab" data-bs-toggle="tab" data-bs-target="#contact-info" type="button" role="tab" aria-controls="contact-info" aria-selected="false">Contact-info</button>
                                 </li>
-                                <li class="nav-item flex-fill d-none" role="presentation">
-                                    <button class="nav-link w-100" id="custom-field-tab" data-bs-toggle="tab" data-bs-target="#custom-field" type="button" role="tab" aria-controls="custom-field" aria-selected="false">Custom-field</button>
-                                </li>
                                 <li class="nav-item flex-fill" role="presentation">
                                     <button class="nav-link w-100" id="recent-update-tab" data-bs-toggle="tab" data-bs-target="#recent-update" type="button" role="tab" aria-controls="recent-update" aria-selected="false">Recent-update</button>
                                 </li>
@@ -75,39 +77,33 @@
                             <div class="tab-content pt-2" id="myTabjustifiedContent">
                                 <!-- Client details form -->
                                 <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
-                                    @include('admin.client.update_details')
+                                    @include('admin.client.details')
                                 </div>
                                 <!-- Client details -->
 
                                 <!-- Business info  -->
                                 <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
-                                    @include('admin.client.update_business')
+                                    @include('admin.client.business')
                                 </div>
                                 <!-- Business info  -->
 
                                 <!-- Director info -->
                                 <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
-                                    @include('admin.client.update_director')
+                                    @include('admin.client.director')
                                 </div>
                                 <!-- Director info -->
 
                                 <!-- Service -->
                                 <div class="tab-pane fade" id="service" role="tabpanel" aria-labelledby="service-tab">
-                                    @include('admin.client.update_service')
+                                    @include('admin.client.service')
                                 </div>
                                 <!-- Service -->
 
                                 <!-- Contact Info -->
                                 <div class="tab-pane fade" id="contact-info" role="tabpanel" aria-labelledby="contact-info-tab">
-                                    @include('admin.client.update_contact')
+                                    @include('admin.client.contact')
                                 </div>
                                 <!-- Contact Info -->
-
-                                <!-- Custom Field -->
-                                <div class="tab-pane fade" id="custom-field" role="tabpanel" aria-labelledby="custom-field-tab">
-                                    custom-field
-                                </div>
-                                <!-- Custom Field -->
 
                                 <!-- Recent Update -->
                                 <div class="tab-pane fade" id="recent-update" role="tabpanel" aria-labelledby="recent-update-tab">
@@ -169,6 +165,7 @@
             formData.append('name', $('#name').val());
             formData.append('client_type_id', $('#client_type_id').val());
             formData.append('manager_id', $('#manager_id').val());
+            formData.append('reference_id', $('#reference_id').val());
 
             if (clientId) {
                 $.ajax({
@@ -259,6 +256,7 @@
             $('#ni_number').val(directorInfo.ni_number);
             $('#utr_number').val(directorInfo.utr_number);
             $('#utr_authorization').val(directorInfo.utr_authorization);
+            $('#directors_tax_return').val(directorInfo.directors_tax_return);
             $('#nino').val(directorInfo.nino);
 
             $('#directorIdInput').val(directorInfo.id);
@@ -796,6 +794,7 @@
             $('#job_title').val(contactInfo.job_title);
             $('#contact-email').val(contactInfo.email);
             $('#contact-phone').val(contactInfo.phone);
+            $('#company').val(contactInfo.company);
 
             $('#contactIdInput').val(contactInfo.id);
 

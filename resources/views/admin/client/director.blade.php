@@ -12,38 +12,48 @@
                     <form id="directorForm">
                         <input type="hidden" id="directorIdInput" name="director_id">
                         <div class="form-group">
-                            <label for="name">Director Name <span class="text-danger">*</span></label>
+                            <label for="name">Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control my-2" id="dir-name" name="name" placeholder="Enter name">
                         </div>
                         <div class="form-group">
-                            <label for="phone">Director Phone <span class="text-danger">*</span></label>
+                            <label for="phone">Phone <span class="text-danger">*</span></label>
                             <input type="number" class="form-control my-2" id="dir-phone" name="phone" placeholder="Enter phone number">
                         </div>
                         <div class="form-group">
-                            <label for="email">Director Email <span class="text-danger">*</span></label>
+                            <label for="email">Email <span class="text-danger">*</span></label>
                             <input type="email" class="form-control my-2" id="dir-email" name="email" placeholder="Enter email">
                         </div>
                         <div class="form-group">
-                            <label for="address">Director Address</label>
+                            <label for="address">Address Line <span class="text-danger">*</span></label>
                             <input type="text" class="form-control my-2" id="address" name="address" placeholder="Enter address">
                         </div>
                         <div class="form-group">
-                            <label for="dob">Date Of Birth</label>
+                            <label for="dob">Date Of Birth <span class="text-danger">*</span></label>
                             <input type="date" class="form-control my-2" id="dob" name="dob" placeholder="Enter date of birth">
                         </div>
                         <div class="form-group">
-                            <label for="ni_number">NI Number</label>
+                            <label for="ni_number">NI Number <span class="text-danger">*</span></label>
                             <input type="text" class="form-control my-2" id="ni_number" name="ni_number" placeholder="Enter NI number">
+                        </div>
+                        <div class="form-group">
+                            <label for="directors_tax_return">Director's Tax Return</label>
+                            <select class="form-control my-2" id="directors_tax_return" name="directors_tax_return">
+                                <option value="0">No</option>
+                                <option value="1">Yes</option>
+                            </select>
                         </div>
                         <div class="form-group">
                             <label for="utr_number">UTR Number</label>
                             <input type="number" class="form-control my-2" id="utr_number" name="utr_number" placeholder="Enter UTR number">
                         </div>
                         <div class="form-group">
-                            <label for="utr_authorization">UTR Authorization</label>
-                            <input type="number" class="form-control my-2" id="utr_authorization" name="utr_authorization" placeholder="Enter UTR authorization">
+                            <label for="utr_authorization">DIR UTR Authorization</label>
+                            <select class="form-control my-2" id="utr_authorization" name="utr_authorization">
+                                <option value="0">No</option>
+                                <option value="1">Yes</option>
+                            </select>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group d-none">
                             <label for="nino">NINO</label>
                             <input type="text" class="form-control my-2" id="nino" name="nino" placeholder="Enter NINO number">
                         </div>

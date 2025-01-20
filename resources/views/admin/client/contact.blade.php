@@ -28,16 +28,20 @@
                             <input type="text" class="form-control my-2" id="last_name" name="last_name" placeholder="Enter last name">
                         </div>
                         <div class="form-group">
-                            <label for="job_title">Job Title <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control my-2" id="job_title" name="job_title" placeholder="Enter job title">
-                        </div>
-                        <div class="form-group">
                             <label for="contact-email">Email <span class="text-danger">*</span></label>
                             <input type="email" class="form-control my-2" id="contact-email" name="email" placeholder="Enter email">
                         </div>
                         <div class="form-group">
                             <label for="contact-phone">Phone <span class="text-danger">*</span></label>
                             <input type="number" class="form-control my-2" id="contact-phone" name="phone" placeholder="Enter phone number">
+                        </div>
+                        <div class="form-group">
+                            <label for="job_title">Job Title</label>
+                            <input type="text" class="form-control my-2" id="job_title" name="job_title" placeholder="Enter job title">
+                        </div>
+                        <div class="form-group">
+                            <label for="company">Company</label>
+                            <input type="text" class="form-control my-2" id="company" name="company" placeholder="Enter company">
                         </div>
                         <div class="text-center">
                             <button id="contact-cancelButton" class="btn btn-sm btn-outline-dark" type="button">Cancel</button>
