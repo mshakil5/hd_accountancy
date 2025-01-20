@@ -73,6 +73,9 @@
                                 <li class="nav-item flex-fill" role="presentation">
                                     <button class="nav-link w-100" id="about-business-tab" data-bs-toggle="tab" data-bs-target="#about-business" type="button" role="tab" aria-controls="about-business" aria-selected="false">About Business</button>
                                 </li>
+                                <li class="nav-item flex-fill" role="presentation">
+                                    <button class="nav-link w-100" id="accountancy-tab" data-bs-toggle="tab" data-bs-target="#accountancy" type="button" role="tab" aria-controls="accountancy" aria-selected="false">Accountancy Fees</button>
+                                </li>
                             </ul>
                             <!-- Tabs end -->
 
@@ -117,6 +120,12 @@
                                 <!-- About Business-->
                                 <div class="tab-pane fade" id="about-business" role="tabpanel" aria-labelledby="about-business-tab">
                                     @include('admin.client.about_business')
+                                </div>
+                                <!-- About Business -->
+
+                                <!-- Accountancy-->
+                                <div class="tab-pane fade" id="accountancy" role="tabpanel" aria-labelledby="accountancy-tab">
+                                    @include('admin.client.accountancy')
                                 </div>
                                 <!-- About Business -->
 
@@ -1052,6 +1061,27 @@ $(document).ready(function() {
                 toastr.success(response.message, "Success");
             },
             error: function(xhr, status, error) {
+                toastr.error(xhr.responseJSON.message || "An error occurred.", "Error");
+                console.error(xhr.responseText);
+            }
+        });
+    });
+
+    $('#accountancyForm').on('submit', function(e) {
+        e.preventDefault();
+
+        let formData = new FormData(this);
+
+        $.ajax({
+            url: '{{ route("accountancy-fee.storeOrUpdate") }}',
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                toastr.success(response.message, "Success");
+            },
+            error: function(xhr) {
                 toastr.error(xhr.responseJSON.message || "An error occurred.", "Error");
                 console.error(xhr.responseText);
             }

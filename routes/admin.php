@@ -130,6 +130,8 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     //Client Delete
     Route::delete('/delete-client/{id}', [ClientController::class, 'deleteClient'])->name('delete.client');
 
+    Route::get('/client/report/{id}', [ClientController::class, 'clientReport'])->name('client.report');
+
     //Client status change
     Route::post('/client-change-status', [ClientController::class,'changeStatus'])->name('client.change.status');
 
@@ -617,5 +619,9 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/chats', [ChatController::class, 'getMessages'])->name('chats.get');
     Route::post('/chats/send', [ChatController::class, 'sendMessage'])->name('chats.send');
     Route::get('/unread-messages', [ChatController::class, 'getUnreadMessages'])->name('unread-messages');
+
+    Route::post('/client-about-business', [ClientController::class, 'clientAboutBusinessUpdate'])->name('aboutBusiness.update');
+
+    Route::post('/accountancy-fee', [ClientController::class, 'clientAccountancyFee'])->name('accountancy-fee.storeOrUpdate');
 
 });

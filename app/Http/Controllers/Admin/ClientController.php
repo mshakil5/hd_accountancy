@@ -244,7 +244,7 @@ class ClientController extends Controller
 
     public function updateForm($id)
     {
-        $client = Client::with(['clientType', 'manager', 'businessInfo', 'directorInfos', 'clientServices', 'contactInfos', 'recentUpdates.user'])->find($id);
+        $client = Client::with(['clientType', 'manager', 'businessInfo', 'directorInfos', 'clientServices', 'contactInfos', 'recentUpdates.user', 'accountancyFee'])->find($id);
         $client->recentUpdates = $client->recentUpdates()->orderBy('id', 'desc')->get();
         $clientTypes = ClientType::select('id', 'name')->orderby('id', 'DESC')->get();
         $managers = User::whereIn('type', ['1', '2'])->select('id', 'first_name', 'last_name', 'type')->orderby('id', 'DESC')->get();
@@ -558,7 +558,7 @@ class ClientController extends Controller
 
     public function clientReport($id)
     {
-        $client = Client::with(['clientType', 'manager', 'businessInfo', 'directorInfos', 'clientServices.clientSubServices', 'contactInfos', 'recentUpdates.user'])->find($id);
+        $client = Client::with(['clientType', 'manager', 'businessInfo', 'directorInfos', 'clientServices.clientSubServices', 'contactInfos', 'recentUpdates.user', 'accountancyFee'])->find($id);
         return view('admin.client.report', compact('client'));
     }
 
@@ -576,6 +576,45 @@ class ClientController extends Controller
         return response()->json([
             'message' => 'Updated successfully!',
         ]);
+    }
+
+    public function clientAccountancyFee(Request $request)
+    {
+        $request->validate([
+            'client_id' => 'required',
+            'annual_agreed_fees' => 'required|numeric',
+            'monthly_standing_order' => 'required|boolean',
+            'monthly_amount' => 'required|numeric',
+            'next_review' => 'nullable|date',
+            'comment' => 'nullable|string',
+            'fees_discussion' => 'nullable|string',
+        ]);
+
+        $client = Client::findOrFail($request->client_id);
+
+        $accountancyFee = $client->accountancyFee;
+
+        if ($accountancyFee) {
+            $accountancyFee->update([
+                'annual_agreed_fees' => $request->annual_agreed_fees,
+                'monthly_standing_order' => $request->monthly_standing_order,
+                'monthly_amount' => $request->monthly_amount,
+                'next_review' => $request->next_review,
+                'comment' => $request->comment,
+                'fees_discussion' => $request->fees_discussion,
+            ]);
+        } else {
+            $client->accountancyFee()->create([
+                'annual_agreed_fees' => $request->annual_agreed_fees,
+                'monthly_standing_order' => $request->monthly_standing_order,
+                'monthly_amount' => $request->monthly_amount,
+                'next_review' => $request->next_review,
+                'comment' => $request->comment,
+                'fees_discussion' => $request->fees_discussion,
+            ]);
+        }
+
+        return response()->json(['message' => 'Accountancy fee updated successfully']);
     }
 
 

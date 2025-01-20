@@ -64,4 +64,9 @@ class Client extends Model
         return $this->hasMany(RecentUpdate::class);
     }
 
+    public function accountancyFee()
+    {
+        return $this->hasOne(AccountancyFee::class);
+    }
+
 }
