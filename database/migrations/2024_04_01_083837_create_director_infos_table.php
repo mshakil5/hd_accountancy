@@ -22,7 +22,8 @@ return new class extends Migration
             $table->string('dob')->nullable();
             $table->string('ni_number')->nullable();
             $table->string('utr_number')->nullable();
-            $table->string('utr_authorization')->nullable();
+            $table->integer('utr_authorization')->default(1);
+            $table->integer('directors_tax_return')->default(1);
             $table->string('nino')->nullable();
             $table->boolean('status')->default(1);
             $table->string('created_by')->nullable();

@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('photo')->nullable();
             $table->string('email');
             $table->string('phone')->nullable();
+            $table->string('phone2')->nullable();
             $table->string('address_line1')->nullable();
             $table->string('address_line2')->nullable();
             $table->string('address_line3')->nullable();

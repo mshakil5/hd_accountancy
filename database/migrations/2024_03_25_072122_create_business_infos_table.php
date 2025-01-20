@@ -23,7 +23,11 @@ return new class extends Migration
             $table->string('authorization_code')->nullable();
             $table->string('company_utr')->nullable();
             $table->integer('vat_number',30)->nullable();
-            $table->integer('hmrc_authorisation')->default(1);
+            $table->integer('ct_authorization')->default(1);
+            $table->string('paye_ref_number')->nullable();
+            $table->integer('paye_authorization')->default(1);
+            $table->string('account_office_ref_number')->nullable();
+            $table->integer('vat_authorization')->default(1);
             $table->boolean('status')->default(1);
             $table->string('created_by')->nullable();
             $table->string('updated_by')->nullable();
