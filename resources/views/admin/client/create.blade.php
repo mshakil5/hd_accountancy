@@ -9,29 +9,18 @@
                 <i class='bx bxs-user-plus fs-4 me-2'></i> New Client Entry
             </p>
 
-            <!-- Success and Error message -->
-            <div class="row my-4 px-3">
-                <div class="col-lg-12">
-                    <div id="successMessage" class="alert alert-success" style="display: none;">
-                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                        <b></b>
-                    </div>
-                    <div id="errorMessage" class="alert alert-danger" style="display: none;">
-                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                        <b></b>
-                    </div>
-                </div>
-            </div>
-            <!-- Success and Error message -->
-
-            <!-- Top 3 -->
+            <!-- Top 4 -->
             <div class="row my-4 px-3">
                 <div class="col-lg-3">
                     <label for="">Client Name <span class="text-danger">*</span></label>
-                    <input for="myForm" type="text" value="{{ isset($client->name) ? $client->name : '' }}" class="form-control mt-2" name="name" id="name" required placeholder="Enter client name">
+                    <input for="name" type="text" value="{{ isset($client->name) ? $client->name : '' }}" class="form-control mt-2" name="name" id="name" required placeholder="Ex: John">
                 </div>
                 <div class="col-lg-3">
-                    <label for="">Client Type </label>
+                    <label for="">Reference ID <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control my-2" id="reference_id" name="reference_id" placeholder="Ex: LT-001" value="{{ isset($client) && isset($client->refid) ? $client->refid : '' }}">
+                </div>
+                <div class="col-lg-3">
+                    <label for="">Client Type <span class="text-danger">*</span></label>
                     <div class="mt-2">
                         <select name="client_type_id" class="form-control mt-2" id="client_type_id">
                             <option value="" selected>Select client</option>
@@ -42,19 +31,18 @@
                     </div>
                 </div>
                 <div class="col-lg-3">
-                    <label for="">Client Manager <span class="text-danger">*</span></label>
+                    <label for="">Client Manager</label>
                     <div class="mt-2">
                         <select class="form-control mt-2" name="manager_id" id="manager_id">
                             <option value="" selected>Select manager</option>
                             @foreach($managers as $manager)
-                            <option value="{{ $manager->id }}" {{ isset($client->manager) && $client->manager->id == $manager->id ? 'selected' : '' }}>{{ $manager->first_name }}</option>
+                            <option value="{{ $manager->id }}" {{ isset($client->manager) && $client->manager->id == $manager->id ? 'selected' : '' }}>{{ $manager->first_name }} {{ $manager->first_name }} ({{ $manager->type }})</option>
                             @endforeach
                         </select>
                     </div>
                 </div>
             </div>
-            <!-- Top 3 -->
-
+            <!-- Top 4 -->
             <div class="row px-3">
                 <div class="col-lg-12">
                     <div class="card">
@@ -85,9 +73,7 @@
                             </ul>
                             <!-- Tabs end -->
 
-                            <!-- All Form Start -->
                             <div class="tab-content pt-2" id="myTabjustifiedContent">
-                                <!-- Client details form -->
                                 <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
                                     <form id="detailsForm">
                                         <div class="row my-4">
@@ -109,41 +95,46 @@
                                             </div>
                                             <div class="col-lg-4">
                                                 <label for="">Email <span class="text-danger">*</span></label>
-                                                <input type="email" class="form-control my-2" id="email" name="email" value="{{ isset($client) && isset($client->email) ? $client->email : '' }}" placeholder="Enter email" required>
+                                                <input type="email" class="form-control my-2" id="email" name="email" value="{{ isset($client) && isset($client->email) ? $client->email : '' }}" placeholder="Ex: john@example.com" required>
                                             </div>
                                             <div class="col-lg-4">
-                                                <label for="">Phone <span class="text-danger">*</span></label>
-                                                <input type="number" class="form-control my-2" id="phone" name="phone" value="{{ isset($client) && isset($client->phone) ? $client->phone : '' }}" placeholder="Enter phone">
+                                                <label for="">Primary Phone <span class="text-danger">*</span></label>
+                                                <input type="number" class="form-control my-2" id="phone" name="phone" value="{{ isset($client) && isset($client->phone) ? $client->phone : '' }}" placeholder="Ex: 1234567890" required>
                                             </div>
                                             <div class="col-lg-4">
-                                                <label for="">Address Line 1 <span class="text-danger">*</span></label>
-                                                <textarea class="form-control my-2" id="address_line1" name="address_line1" placeholder="Enter address line 1">{{ isset($client) && isset($client->address_line1) ? $client->address_line1 : '' }}</textarea>
+                                                <label for="">Secondary Phone </label>
+                                                <input type="number" class="form-control my-2" id="phone2" name="phone2" value="{{ isset($client) && isset($client->phone2) ? $client->phone2 : '' }}" placeholder="Ex: 1234567890">
+                                            </div>
+                                            
+                                            <div class="col-lg-4">
+                                                <label for="">Trading Address</label>
+                                                <textarea class="form-control my-2" id="trading_address" name="trading_address" placeholder="Ex: 34 WHITE ROSE AVENUE, Moldgreen, Huddersfield, HD59TZ">{{ isset($client) && isset($client->trading_address) ? $client->trading_address : '' }}</textarea>
+                                            </div>
+                                            <div class="col-lg-4">
+                                                <label for=""> Registered Address Line 1</label>
+                                                <textarea class="form-control my-2" id="address_line1" name="address_line1" placeholder="Ex: 34 WHITE ROSE AVENUE">{{ isset($client) && isset($client->address_line1) ? $client->address_line1 : '' }}</textarea>
                                             </div>
                                             <div class="col-lg-4">
                                                 <label for="">Address Line 2</label>
-                                                <textarea class="form-control my-2" id="address_line2" name="address_line2" placeholder="Enter address line 2">{{ isset($client) && isset($client->address_line2) ? $client->address_line2 : '' }}</textarea>
+                                                <textarea class="form-control my-2" id="address_line2" name="address_line2" placeholder="Ex: Moldgreen">{{ isset($client) && isset($client->address_line2) ? $client->address_line2 : '' }}</textarea>
                                             </div>
-                                            <div class="col-lg-4">
+                                            <div class="col-lg-4 d-none">
                                                 <label for="">Address Line 3</label>
                                                 <textarea class="form-control my-2" id="address_line3" name="address_line3" placeholder="Enter address line 3">{{ isset($client) && isset($client->address_line3) ? $client->address_line3 : '' }}</textarea>
                                             </div>
                                             <div class="col-lg-4">
-                                                <label for="">Trading Address</label>
-                                                <textarea class="form-control my-2" id="trading_address" name="trading_address" placeholder="Enter trading address">{{ isset($client) && isset($client->trading_address) ? $client->trading_address : '' }}</textarea>
-                                            </div>
-                                            <div class="col-lg-4">
                                                 <label for="">City </label>
-                                                <input type="text" class="form-control my-2" id="city" name="city" value="{{ isset($client) && isset($client->city) ? $client->city : '' }}" placeholder="Enter city">
+                                                <input type="text" class="form-control my-2" id="city" name="city" value="{{ isset($client) && isset($client->city) ? $client->city : '' }}" placeholder="Ex: Huddersfield">
                                             </div>
-                                            <div class="col-lg-4">
+                                            <div class="col-lg-4 d-none">
                                                 <label for="">Town </label>
                                                 <input type="text" class="form-control my-2" id="town" name="town" placeholder="Enter town" value="{{ isset($client) && isset($client->town) ? $client->town : '' }}">
                                             </div>
                                             <div class="col-lg-4">
                                                 <label for="">Postal Code </label>
-                                                <input type="text" class="form-control my-2" id="postcode" name="postcode" placeholder="Enter postal code" value="{{ isset($client) && isset($client->postcode) ? $client->postcode : '' }}">
+                                                <input type="text" class="form-control my-2" id="postcode" name="postcode" placeholder="Ex: HD59TZ" value="{{ isset($client) && isset($client->postcode) ? $client->postcode : '' }}">
                                             </div>
-                                            <div class="col-lg-4">
+                                            <div class="col-lg-4 d-none">
                                                 <label for="country">Country</label>
                                                 <div class="mt-2">
                                                     <select class="form-control my-2" id="country" name="country">
@@ -163,12 +154,6 @@
                                                         style="right: 8px;"></i>
                                                 </div>
                                             </div>
-
-                                            <div class="col-lg-4">
-                                                <label for="">Reference ID <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control my-2" id="reference_id" name="reference_id" placeholder="Enter reference id" value="{{ isset($client) && isset($client->refid) ? $client->refid : '' }}">
-                                            </div>
-
                                         </div>
                                         <div class="row">
                                             <div class="col-lg-4 mx-auto text-center">
@@ -182,43 +167,7 @@
                                         </div>
                                     </form>
                                 </div>
-                                <!-- Client details -->
-
-                                <!-- Business info  -->
-                                <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
-                                </div>
-                                <!-- Business info  -->
-
-                                <!-- Director info -->
-                                <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
-                                </div>
-                                <!-- Director info -->
-
-                                <!-- Service -->
-                                <div class="tab-pane fade" id="service" role="tabpanel" aria-labelledby="service-tab">
-                                </div>
-                                <!-- Service -->
-
-                                <!-- Contact Info -->
-                                <div class="tab-pane fade" id="contact-info" role="tabpanel" aria-labelledby="contact-info-tab">
-                                </div>
-                                <!-- Contact Info -->
-
-                                <!-- Custom Field -->
-                                <div class="tab-pane fade" id="custom-field" role="tabpanel" aria-labelledby="custom-field-tab">
-                                    custom-field
-                                </div>
-                                <!-- Custom Field -->
-
-                                <!-- Recent Update -->
-                                <div class="tab-pane fade" id="recent-update" role="tabpanel" aria-labelledby="recent-update-tab">
-                                    recent-update
-                                </div>
-                                <!-- Recent Update -->
-
                             </div>
-
-                            <!-- All Form End -->
                         </div>
                     </div>
                 </div>
@@ -268,6 +217,7 @@
             formData.append('name', $('#name').val());
             formData.append('client_type_id', $('#client_type_id').val());
             formData.append('manager_id', $('#manager_id').val());
+            formData.append('reference_id', $('#reference_id').val());
 
             $.ajax({
                 url: "{{URL::to('/admin/client')}}",
