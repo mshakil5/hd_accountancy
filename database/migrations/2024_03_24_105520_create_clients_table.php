@@ -27,6 +27,7 @@ return new class extends Migration
             $table->string('address_line2')->nullable();
             $table->string('address_line3')->nullable();
             $table->string('trading_address')->nullable();
+            $table->longText('about_business')->nullable();
             $table->string('city')->nullable();
             $table->string('town')->nullable();
             $table->string('postcode')->nullable();

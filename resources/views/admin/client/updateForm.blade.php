@@ -70,6 +70,9 @@
                                 <li class="nav-item flex-fill" role="presentation">
                                     <button class="nav-link w-100" id="recent-update-tab" data-bs-toggle="tab" data-bs-target="#recent-update" type="button" role="tab" aria-controls="recent-update" aria-selected="false">Recent-update</button>
                                 </li>
+                                <li class="nav-item flex-fill" role="presentation">
+                                    <button class="nav-link w-100" id="about-business-tab" data-bs-toggle="tab" data-bs-target="#about-business" type="button" role="tab" aria-controls="about-business" aria-selected="false">About Business</button>
+                                </li>
                             </ul>
                             <!-- Tabs end -->
 
@@ -110,6 +113,12 @@
                                     @include('admin.client.recent_update')
                                 </div>
                                 <!-- Recent Update -->
+
+                                <!-- About Business-->
+                                <div class="tab-pane fade" id="about-business" role="tabpanel" aria-labelledby="about-business-tab">
+                                    @include('admin.client.about_business')
+                                </div>
+                                <!-- About Business -->
 
                             </div>
 
@@ -1012,6 +1021,43 @@
         autoclose: true,
         todayHighlight: true
     });
+</script>
+
+<script>
+$(document).ready(function() {
+    $('.summernote').summernote({
+        height: 300, 
+        toolbar: [
+            ['style', ['bold', 'italic', 'underline', 'clear']],
+            ['font', ['strikethrough', 'superscript', 'subscript']],
+            ['para', ['ul', 'ol', 'paragraph']],
+            ['view', ['codeview', 'help']]
+        ]
+    });
+
+    $('#aboutBusiness-updateButton').on('click', function(e) {
+        e.preventDefault();
+
+        let aboutBusinessData = {
+            about_business: $('#about_business').val(),
+            id: '{{ $client->id ?? '' }}',
+            _token: '{{ csrf_token() }}'
+        };
+
+        $.ajax({
+            url: '{{ route("aboutBusiness.update") }}',
+            type: 'POST',
+            data: aboutBusinessData,
+            success: function(response) {
+                toastr.success(response.message, "Success");
+            },
+            error: function(xhr, status, error) {
+                toastr.error(xhr.responseJSON.message || "An error occurred.", "Error");
+                console.error(xhr.responseText);
+            }
+        });
+    });
+});
 </script>
 
 @endsection

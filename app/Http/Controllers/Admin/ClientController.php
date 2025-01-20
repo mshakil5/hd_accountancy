@@ -562,4 +562,21 @@ class ClientController extends Controller
         return view('admin.client.report', compact('client'));
     }
 
+    public function clientAboutBusinessUpdate(Request $request)
+    {
+        $request->validate([
+            'about_business' => 'nullable|string',
+            'id' => 'required',
+        ]);
+
+        $client = Client::findOrFail($request->id);
+        $client->about_business = $request->about_business;
+        $client->save();
+
+        return response()->json([
+            'message' => 'Updated successfully!',
+        ]);
+    }
+
+
 }
