@@ -46,6 +46,7 @@ class ContactInfoController extends Controller
         $data->job_title = $request->job_title;
         $data->email = $request->email;
         $data->phone = $request->phone;
+        $data->company = $request->company;
         $data->created_by = Auth::id();
 
         if ($data->save()) {

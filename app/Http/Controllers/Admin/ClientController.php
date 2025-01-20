@@ -151,7 +151,7 @@ class ClientController extends Controller
 
     public function create()
     {
-        $managers = User::where('type', '2')->select('id', 'first_name')->orderby('id', 'DESC')->get();
+        $managers = User::whereIn('type', ['1', '2'])->select('id', 'first_name', 'last_name', 'type')->orderby('id', 'DESC')->get();
         $clientTypes = ClientType::select('id', 'name')->orderby('id', 'DESC')->get();
         $client = "";
         return view('admin.client.create', compact('clientTypes', 'managers', 'client'));
@@ -161,16 +161,17 @@ class ClientController extends Controller
     {
          $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'client_type_id' => 'nullable',
-            'manager_id' => 'required',
+            'client_type_id' => 'required',
+            'reference_id' => 'required',
+            'manager_id' => 'nullable',
             'email' => 'required|email|unique:clients',
             'phone' => 'required|numeric|digits:11',
-            'address_line1' => 'required|string|max:255',
+            'phone2' => 'nullable|numeric|digits:11',
+            'address_line1' => 'nullable|string|max:255',
             'address_line2' => 'nullable|string|max:255',
             'trading_address' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:255',
             'town' => 'nullable|string|max:255',
-            'reference_id' => 'required',
             'postcode' => 'nullable|string',
             'country' => 'nullable|string|max:255',
             'photo' => 'nullable|mimes:jpeg,png,jpg,gif,svg,pdf|max:8048',
@@ -189,6 +190,7 @@ class ClientController extends Controller
         $data->manager_id = $request->manager_id;
         $data->email = $request->email;
         $data->phone = $request->phone;
+        $data->phone2 = $request->phone2;
         $data->address_line1 = $request->address_line1;
         $data->address_line2 = $request->address_line2;
         $data->address_line3 = $request->address_line3;
@@ -258,12 +260,13 @@ class ClientController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'client_type_id' => 'nullable',
-            'manager_id' => 'required',
+            'client_type_id' => 'required',
+            'manager_id' => 'nullable',
             'reference_id' => 'required',
             'email' => 'required|email',
             'phone' => 'required|numeric|digits:11',
-            'address_line1' => 'required|string|max:255',
+            'phone2' => 'nullable|numeric|digits:11',
+            'address_line1' => 'nullable|string|max:255',
             'address_line2' => 'nullable|string|max:255',
             'trading_address' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:255',
@@ -290,6 +293,7 @@ class ClientController extends Controller
         $client->manager_id = $request->manager_id;
         $client->email = $request->email;
         $client->phone = $request->phone;
+        $client->phone2 = $request->phone2;
         $client->address_line1 = $request->address_line1;
         $client->address_line2 = $request->address_line2;
         $client->address_line3 = $request->address_line3;
@@ -337,13 +341,13 @@ class ClientController extends Controller
     public function updateClientBusinessInfo(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'nature_of_business' => 'required|string',
+            'nature_of_business' => 'nullable|string',
             'company_number' => 'required|string',
             'year_end_date' => 'nullable|date',
             'due_date' => 'nullable|date',
-            'confirmation_due_date' => 'nullable|date|same:due_date',
-            'authorization_code' => 'nullable|string',
-            'company_utr' => 'nullable|string',
+            'confirmation_due_date' => 'nullable|date',
+            'authorization_code' => 'required|string',
+            'company_utr' => 'required|string',
             'status' => 'required',
         ]);
     
@@ -361,9 +365,13 @@ class ClientController extends Controller
                 'confirmation_due_date' => $request->confirmation_due_date,
                 'authorization_code' => $request->authorization_code,
                 'company_utr' => $request->company_utr,
-                'hmrc_authorisation' => $request->hmrc_authorisation,
+                'ct_authorization' => $request->ct_authorization,
                 'vat_number' => $request->vat_number,
                 'status' => $request->status,
+                'paye_ref_number' => $request->paye_ref_number,
+                'paye_authorization' => $request->paye_authorization,
+                'account_office_ref_number' => $request->account_office_ref_number,
+                'vat_authorization' => $request->vat_authorization,
                 'updated_by' => Auth::id(),
             ]
         );
@@ -412,6 +420,8 @@ class ClientController extends Controller
         $director->utr_number = $request->utr_number;
         $director->utr_authorization = $request->utr_authorization;
         $director->nino = $request->nino;
+        $director->directors_tax_return = $request->directors_tax_return;
+        $director->updated_by = Auth::id();
 
         if ($director->save()) {
             return response()->json(['status' => 200, 'message' => 'Director info updated successfully']);
@@ -503,6 +513,8 @@ class ClientController extends Controller
         $contactInfo->job_title = $request->job_title;
         $contactInfo->email = $request->email;
         $contactInfo->phone = $request->phone;
+        $contactInfo->company = $request->company;
+        $contactInfo->updated_by = Auth::id();
 
         if ($contactInfo->save()) {
             return response()->json(['status' => 200, 'message' => 'Contact info updated successfully']);

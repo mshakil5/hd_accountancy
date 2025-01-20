@@ -26,9 +26,9 @@ class DirectorInfoController extends Controller
             'name' => 'required|string',
             'phone' => 'required',
             'email' => 'required',
-            // 'address' => 'required',
-            // 'dob' => 'required',
-            // 'ni_number' => 'required', 
+            'address' => 'required',
+            'dob' => 'required',
+            'ni_number' => 'required', 
             // 'utr_number' => 'required', 
             // 'utr_authorization' => 'required', 
             // 'nino' => 'required', 
@@ -52,6 +52,7 @@ class DirectorInfoController extends Controller
         $data->utr_number = $request->utr_number;
         $data->utr_authorization = $request->utr_authorization;
         $data->nino = $request->nino;
+        $data->directors_tax_return = $request->directors_tax_return;
         $data->created_by = Auth::id();
 
         if ($data->save()) {
@@ -137,8 +138,9 @@ class DirectorInfoController extends Controller
         $data->address = $request->address;
         $data->dob = $request->dob;
         $data->ni_number = $request->ni_number;
-        $data->utr_number = $request->utr_number	;
+        $data->utr_number = $request->utr_number;
         $data->utr_authorization = $request->utr_authorization;
+        $data->directors_tax_return = $request->directors_tax_return;
         $data->nino = $request->nino;
         $data->ni_number = $request->ni_number;
         $data->status = $request->status;
