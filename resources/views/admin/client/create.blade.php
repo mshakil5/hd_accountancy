@@ -70,6 +70,12 @@
                                 <li class="nav-item flex-fill" role="presentation">
                                     <button class="nav-link w-100 @if(!isset($client->id)) disabled @endif" id="recent-update-tab" data-bs-toggle="tab" data-bs-target="#recent-update" type="button" role="tab" aria-controls="recent-update" aria-selected="false">Recent-update</button>
                                 </li>
+                                <li class="nav-item flex-fill" role="presentation">
+                                    <button class="nav-link w-100 @if(!isset($client->id)) disabled @endif" id="about-business-tab" data-bs-toggle="tab" data-bs-target="#about-business" type="button" role="tab" aria-controls="about-business" aria-selected="false">About Business</button>
+                                </li>
+                                <li class="nav-item flex-fill" role="presentation">
+                                    <button class="nav-link w-100 @if(!isset($client->id)) disabled @endif" id="accountancy-tab" data-bs-toggle="tab" data-bs-target="#accountancy" type="button" role="tab" aria-controls="accountancy" aria-selected="false">Accountancy Fees</button>
+                                </li>
                             </ul>
                             <!-- Tabs end -->
 

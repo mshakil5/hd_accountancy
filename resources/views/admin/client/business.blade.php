@@ -19,7 +19,7 @@
         </div>
         <div class="col-lg-4">
             <label for="authorization_code">Company Auth Code <span class="text-danger">*</span></label>
-            <input type="number" class="form-control my-2" id="authorization_code" name="authorization_code" placeholder="Enter company auth code" value="{{ $businessInfo->authorization_code ?? '' }}">
+            <input type="text" class="form-control my-2" id="authorization_code" name="authorization_code" placeholder="Enter company auth code" value="{{ $businessInfo->authorization_code ?? '' }}">
         </div>
         <div class="col-lg-4">
             <label for="company_utr">Company UTR <span class="text-danger">*</span></label>
