@@ -39,4 +39,9 @@ class ClientService extends Model
     {
         return $this->hasMany(ServiceMessage::class, 'client_service_id', 'id');
     }
+
+    public function directorInfo()
+    {
+        return $this->belongsTo(DirectorInfo::class, 'director_info_id');
+    }
 }

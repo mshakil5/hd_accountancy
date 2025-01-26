@@ -33,20 +33,30 @@
 
             <div class="row mt-4 subServiceDetails {{ !$isRelevant ? 'd-none' : '' }}">
                 <div class="col-12">
-                    <h5 class="p-2 bg-theme text-white mb-0 text-capitalize">Services Details</h5>
+                    <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center">
+                    {{ isset($clientService->service->name) ? $clientService->service->name : '' }}
+                    @if($clientService->director_info_id)
+                        <select class="form-select ms-auto directorDropdown" name="director_id" style="max-width: 200px;">
+                            <option value="">Select Director</option>
+                            @foreach($directorInfos as $director)
+                                <option value="{{ $director->id }}" 
+                                    {{ $director->id == $clientService->director_info_id ? 'selected' : '' }}>
+                                    {{ $director->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    @endif
+                    </p>
                     <div class="border-theme p-3 border-1">
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="row">
-                                    <div class="col-md-1 text-center">
-                                        <h5 class="mb-3">Service</h5>
-                                        <p><b>{{ isset($clientService->service->name) ? $clientService->service->name : '' }}</b></p>
-                                        <input type="hidden" name="service_id" value="{{ optional($clientService->service)->id }}">
-                                        <input type="hidden" name="client_service_id[]" value="{{ optional($clientService)->id }}">
-                                    </div>
-                                    <div class="col-md-2 text-center">
+                                    <div class="col-md-3 text-center">
                                         <h5 class="mb-3">Manager</h5>
                                         <div class="form-check">
+                                        <input type="hidden" name="service_id" value="{{ optional($clientService->service)->id }}">
+                                        <input type="hidden" name="director_info_id" value="{{ optional($clientService)->director_info_id }}">
+                                        <input type="hidden" name="client_service_id[]" value="{{ optional($clientService)->id }}">
                                             <select class="form-control mt-2 managerDropdown" name="manager_id" style="width:100%">
                                                 <option value="">Select</option>
                                                 @foreach($managers as $manager)

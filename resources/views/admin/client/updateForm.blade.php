@@ -441,50 +441,56 @@
                     type: "GET",
                     dataType: "json",
                     success: function(data) {
+                        var serviceName = $('#serviceDropdown option:selected').text();
                         var subServiceDetailsTemplate = `
                             <div class="row mt-4 subServiceDetails">
                                 <div class="col-12">
-                                <h5 class="p-2 bg-theme text-white mb-0 text-capitalize">Services Details</h5>
-                                <div class="border-theme p-3 border-1">
-                                    <div class="row mt-2">
-                                    <!-- Sub-service details -->
+                                    <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center">
+                                        ${serviceName}
+                                        ${serviceId == 27 ? `
+                                        <select class="form-select ms-auto directorDropdown" name="director_id" style="max-width: 200px;">
+                                            <option value="">Select Director</option>
+                                             @foreach($directorInfos as $director)
+                                             <option value="{{ $director->id }}">{{ $director->name }}</option>
+                                             @endforeach
+                                        </select>
+                                        ` : ''}
+                                    </p>
+                                    
+                                    <div class="border-theme p-3 border-1">
+                                        <div class="row mt-2">
+                                        <!-- Sub-service details -->
+                                        </div>
+                                        <table class="table mt-3">
+                                        <thead>
+                                            <tr>
+                                            <th>Sub Service</th>
+                                            <th>Deadline</th>
+                                            <th>Staff</th>
+                                            <th>Note</th>
+                                            <th style="text-align: center;">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- Sub-service rows  -->
+                                        </tbody>
+                                        </table>
                                     </div>
-                                    <table class="table mt-3">
-                                    <thead>
-                                        <tr>
-                                        <th>Sub Service</th>
-                                        <th>Deadline</th>
-                                        <th>Staff</th>
-                                        <th>Note</th>
-                                        <th style="text-align: center;">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <!-- Sub-service rows  -->
-                                    </tbody>
-                                    </table>
-                                </div>
                                 </div>
                             </div>
                             `;
 
                         $('#serviceForm').append(subServiceDetailsTemplate);
 
-                        var serviceName = $('#serviceDropdown option:selected').text();
-
                         var serviceFields = `
                             <div class="row">
                                 <div class="col-md-12">
                                 <div class="row">
-                                    <div class="col-md-1 text-center">
-                                    <h5 class="mb-3">Service</h5>
-                                    <p> <b>${serviceName}</b> </p>
-                                    <input type="hidden" name="service_id" value="${serviceId}">
-                                    <input type="hidden" name="client_service_id[]" value="">
-                                    </div>
-                                    <div class="col-md-2 text-center">
-                                        <h5 class="mb-3">Manager</h5>
+                                    <div class="col-md-3 text-center">
+                                        <h5>Manager</h5>
                                         <div class="form-check">
+                                            <input type="hidden" name="service_id" value="${serviceId}">
+                                            <input type="hidden" name="client_service_id[]" value="">
                                             <select class="form-control mt-2 managerDropdown" name="manager_id">
                                             <option value="">Select</option>
                                             @foreach($managers as $manager)
@@ -494,7 +500,7 @@
                                         </div>
                                     </div>
                                     <div class="col-md-2 text-center">
-                                        <h5 class="mb-3">Frequency</h5>
+                                        <h5>Frequency</h5>
                                         <div class="form-check">
                                             <select class="form-control mt-2 serviceFrequency" id="serviceFrequency" name="service_frequency">
                                             <option value="">Select Frequency</option>
@@ -508,26 +514,26 @@
                                         </div>
                                     </div>
                                     <div class="col-md-2 text-center">
-                                        <h5 class="mb-3">Due Date</h5>
+                                        <h5>Due Date</h5>
                                         <div class="form-check">
                                             <input type="text" class="form-control dueDate" id="dueDate" name="dueDate">
                                         </div>
                                     </div>
                                     <div class="col-md-2 text-center">
-                                        <h5 class="mb-3">Target Deadline</h5>
+                                        <h5>Target Deadline</h5>
                                         <div class="form-check">
                                             <input type="text" class="form-control legalDeadline" id="legalDeadline" name="legalDeadline">
                                         </div>
                                     </div>
                                     <div class="col-md-2 text-center">
-                                        <h5 class="mb-3">Deadline</h5>
+                                        <h5>Deadline</h5>
                                         <div class="form-check">
                                             <input type="text" class="form-control serviceDeadline" id="serviceDeadline" name="service_deadline">
                                         </div>
                                     </div>
                                     <div class="col-md-1 text-center">
-                                    <h5 class="mb-1">Action</h5>
-                                    <span class="removeSubServiceDetails" style="cursor: pointer; font-size: 24px; color: red;">&#10006;</span>
+                                        <h5>Action</h5>
+                                        <span class="removeSubServiceDetails" style="cursor: pointer; font-size: 24px; color: red;">&#10006;</span>
                                     </div>
                                 </div>
                                 </div>
@@ -608,6 +614,7 @@
                 var service_deadline = $(this).find('.serviceDeadline').val();
                 var due_date = $(this).find('.dueDate').val();
                 var legal_deadline = $(this).find('.legalDeadline').val();
+                var directorId = $(this).find('.directorDropdown').val();
                 var subServices = [];
 
                 $(this).find('tbody tr').each(function() {
@@ -632,6 +639,7 @@
                     subServices: subServices,
                     due_date: due_date,
                     legal_deadline: legal_deadline,
+                    director_info_id: directorId
                 });
             });
 
@@ -681,6 +689,7 @@
                 var serviceId = $(this).find('input[name="service_id"]').val();
                 var clientServiceId = $(this).find('input[name="client_service_id[]"]').val();
                 var managerId = $(this).find('.managerDropdown').val();
+                var directorId = $(this).find('.directorDropdown').val();
                 var service_frequency = $(this).find('#serviceFrequency').val();
                 var service_deadline = $(this).find('#serviceDeadline').val();
                 var due_date = $(this).find('#dueDate').val();
@@ -707,6 +716,7 @@
                     serviceId: serviceId,
                     client_service_id: clientServiceId,
                     managerId: managerId,
+                    director_info_id: directorId,
                     service_frequency: service_frequency,
                     service_deadline: service_deadline,
                     due_date: due_date,

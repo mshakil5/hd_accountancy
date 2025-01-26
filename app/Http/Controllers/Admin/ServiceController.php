@@ -483,6 +483,7 @@ class ServiceController extends Controller
             $clientService->client_id = $request->clientId;
             $clientService->service_id = $serviceData['serviceId'];
             $clientService->manager_id = $serviceData['managerId'];
+            $clientService->director_info_id = $serviceData['director_info_id'];
             $clientService->service_frequency = $serviceData['service_frequency'];
             $clientService->service_deadline = $serviceData['service_deadline'];
             $clientService->due_date = $serviceData['due_date'];
@@ -573,6 +574,7 @@ class ServiceController extends Controller
                 $clientService->next_service_deadline = $nextServiceDeadline;
                 $clientService->next_due_date = $nextDueDate;
                 $clientService->next_legal_deadline = $nextLegalDeadline;
+                $clientService->director_info_id = $serviceData['director_info_id'];
                 $clientService->save();
 
                 $serviceData['client_service_id'] = $clientService->id;
@@ -581,6 +583,7 @@ class ServiceController extends Controller
                 if ($existingService) {
                     $existingService->update([
                         'manager_id' => $serviceData['managerId'],
+                        'director_info_id' => $serviceData['director_info_id'],
                         'service_frequency' => $serviceData['service_frequency'],
                         'service_deadline' => $serviceData['service_deadline'],
                         'due_date' => $serviceData['due_date'],
