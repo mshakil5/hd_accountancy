@@ -56,6 +56,7 @@
                                         <div class="form-check">
                                         <input type="hidden" name="service_id" value="{{ optional($clientService->service)->id }}">
                                         <input type="hidden" name="director_info_id" value="{{ optional($clientService)->director_info_id }}">
+                                        <input type="hidden" name="service_data_id" value="{{ $clientService->service->serviceid ?? '' }}">
                                         <input type="hidden" name="client_service_id[]" value="{{ optional($clientService)->id }}">
                                             <select class="form-control mt-2 managerDropdown" name="manager_id" style="width:100%">
                                                 <option value="">Select</option>

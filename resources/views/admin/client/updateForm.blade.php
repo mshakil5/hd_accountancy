@@ -457,6 +457,7 @@
                                              <option value="{{ $director->id }}">{{ $director->name }}</option>
                                              @endforeach
                                         </select>
+                                        <input type="hidden" name="service_data_id" value="${serviceDataId}">
                                         ` : ''}
                                     </p>
                                     
@@ -618,6 +619,7 @@
                 var due_date = $(this).find('.dueDate').val();
                 var legal_deadline = $(this).find('.legalDeadline').val();
                 var directorId = $(this).find('.directorDropdown').val();
+                var serviceDataId = $(this).closest('.subServiceDetails').find('input[name="service_data_id"]').val();
                 var subServices = [];
 
                 $(this).find('tbody tr').each(function() {
@@ -642,7 +644,8 @@
                     subServices: subServices,
                     due_date: due_date,
                     legal_deadline: legal_deadline,
-                    director_info_id: directorId
+                    director_info_id: directorId,
+                    service_data_Id: serviceDataId
                 });
             });
 
@@ -665,7 +668,7 @@
                     }, 2000);
                 },
                 error: function(xhr, status, error) {
-                    // console.log(xhr.responseText);
+                    console.log(xhr.responseText);
                     var errorMessage = "An error occurred. Please try again later.";
                     if (xhr.responseJSON && xhr.responseJSON.errors) {
                         errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
@@ -697,6 +700,7 @@
                 var service_deadline = $(this).find('#serviceDeadline').val();
                 var due_date = $(this).find('#dueDate').val();
                 var legal_deadline = $(this).find('#legalDeadline').val();
+                var serviceDataId = $(this).closest('.subServiceDetails').find('input[name="service_data_id"]').val();
                 var subServices = [];
 
                 $(this).find('tbody tr').each(function() {
@@ -720,6 +724,7 @@
                     client_service_id: clientServiceId,
                     managerId: managerId,
                     director_info_id: directorId,
+                    service_data_Id: serviceDataId,
                     service_frequency: service_frequency,
                     service_deadline: service_deadline,
                     due_date: due_date,
@@ -732,6 +737,8 @@
                 clientId: clientId,
                 services: services
             };
+
+            // console.log(data);
 
             $.ajax({
                 url: '/admin/update-service',
@@ -746,7 +753,7 @@
                     }, 2000);
                 },
                 error: function(xhr, status, error) {
-                    // console.log(xhr.responseText);
+                    console.log(xhr.responseText);
                     var errorMessage = "An error occurred. Please try again later.";
                     if (xhr.responseJSON && xhr.responseJSON.errors) {
                         errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
