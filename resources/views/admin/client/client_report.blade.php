@@ -14,11 +14,11 @@
             </tr>
             <tr>
               <td><b>Client Type:</b></td>
-              <td><span>{{ $client->clientType ? $client->clientType->name : '' }}</span></td>
+              <td><span>{{ $client->clientType ? $client->clientType->name : '&nbsp;' }}</span></td>
             </tr>
             <tr>
               <td><b>Client Manager:</b></td>
-              <td><span>{{ $client->manager ? $client->manager->first_name . ' ' . $client->manager->last_name : '' }}</span></td>
+              <td><span>{{ $client->manager ? $client->manager->first_name . '' . $client->manager->last_name : '&nbsp;' }}</span></td>
             </tr>
           </table>
         </div>
@@ -60,14 +60,14 @@
           <hr class="mt-2" style="height: 1px; background-color: #233969;">
           @foreach ($client->recentUpdates as $recentUpdate)
           <div class="col-3">
-              {{ $recentUpdate ? \Carbon\Carbon::parse($recentUpdate->created_at)->format('d-m-Y') : '' }}
+              {{ $recentUpdate ? \Carbon\Carbon::parse($recentUpdate->created_at)->format('d-m-Y') : '&nbsp;' }}
           </div>
           <div class="col-5">
-              {!! $recentUpdate ? $recentUpdate->note : '' !!}
+              {!! $recentUpdate ? $recentUpdate->note : '&nbsp;' !!}
           </div>
           <div class="col-4">
-              {{ $recentUpdate->user ? $recentUpdate->user->first_name : '' }}
-              {{ $recentUpdate->user ? $recentUpdate->user->last_name : '' }} ({{ $recentUpdate->user ? $recentUpdate->user->type : '' }})
+              {{ $recentUpdate->user ? $recentUpdate->user->first_name : '&nbsp;' }}
+              {{ $recentUpdate->user ? $recentUpdate->user->last_name : '&nbsp;' }} ({{ $recentUpdate->user ? $recentUpdate->user->type : '&nbsp;' }})
           </div>
       @endforeach
         </div>
@@ -110,7 +110,7 @@
               </div>
           </div>
       </div>
-  </div>
+    </div>
 
     @if ($client->businessInfo)
     <div class="sub-box-header mt-3">
@@ -280,7 +280,7 @@
             <ol class="list-unstyled">
                 @foreach ($approvedServices as $key => $service)
                     @if ($key % 2 == 0)
-                        <li>{{ $number++ }}. {{ $service->service ? $service->service->name : '' }}</li>
+                        <li>{{ $number++ }}. {{ $service->service ? $service->service->name : '&nbsp;' }}</li>
                     @endif
                 @endforeach
             </ol>
@@ -290,7 +290,7 @@
             <ol class="list-unstyled">
                 @foreach ($approvedServices as $key => $service)
                     @if ($key % 2 != 0)
-                        <li>{{ $number++ }}. {{ $service->service ? $service->service->name : '' }}</li>
+                        <li>{{ $number++ }}. {{ $service->service ? $service->service->name : '&nbsp;' }}</li>
                     @endif
                 @endforeach
             </ol>
@@ -322,27 +322,27 @@
                             <td><b>Contact Name:</b></td>
                             <td>
                                 <span>
-                                    {{ $contact ? $contact->greeting : '' }} 
-                                    {{ $contact ? $contact->first_name : '' }} 
-                                    {{ $contact ? $contact->last_name : '' }}
+                                    {{ $contact ? $contact->greeting : '&nbsp;' }} 
+                                    {{ $contact ? $contact->first_name : '&nbsp;' }} 
+                                    {{ $contact ? $contact->last_name : '&nbsp;' }}
                                 </span>
                             </td>
                         </tr>
                         <tr>
                             <td><b>Job Title:</b></td>
-                            <td><span>{{ $contact ? $contact->job_title : '' }}</span></td>
+                            <td><span>{{ $contact ? $contact->job_title : '&nbsp;' }}</span></td>
                         </tr>
                         <tr>
                             <td><b>Company:</b></td>
-                            <td><span>{{ $contact ? $contact->company : '' }}</span></td>
+                            <td><span>{{ $contact ? $contact->company : '&nbsp;' }}</span></td>
                         </tr>
                         <tr>
                             <td><b>Email:</b></td>
-                            <td><span>{{ $contact ? $contact->email : '' }}</span></td>
+                            <td><span>{{ $contact ? $contact->email : '&nbsp;' }}</span></td>
                         </tr>
                         <tr>
                             <td><b>Phone:</b></td>
-                            <td><span>{{ $contact ? $contact->phone : '' }}</span></td>
+                            <td><span>{{ $contact ? $contact->phone : '&nbsp;' }}</span></td>
                         </tr>
                     </table>
                 </div>
@@ -385,32 +385,32 @@
     <div class="col-lg-12 pt-3">
         <div class="row px-3 my-2 txt-theme">
             <div class="col-lg-12">
-                <table class="w-100 text-capitalize" style="table-layout: fixed; width: 100%;">
-                    <tr>
-                        <td><b>Annual Agreed Fees :</b></td>
-                        <td><span>{{ $client->accountancyFee->annual_agreed_fees ?? '' }}</span></td>
-                    </tr>
-                    <tr>
-                        <td><b>Company:</b></td>
-                        <td><span>{{ $client->accountancyFee->monthly_standing_order == 1 ? 'Yes' : 'No' }} <td><span>
-                    </tr>
-                    <tr>
-                        <td><b>Monthly Amount :</b></td>
-                        <td><span>{{ $client->accountancyFee->monthly_amount ?? '' }}</span></td>
-                    </tr>
-                    <tr>
-                        <td><b>Next Review :</b></td>
-                        <td><span>{{ $client->accountancyFee->next_review ? \Carbon\Carbon::parse($client->accountancyFee->next_review)->format('d-m-Y') : '' }}</span></td>
-                    </tr>
-                    <tr>
-                        <td><b>Comment :</b></td>
-                        <td><span>{!! $client->accountancyFee->comment ?? '' !!}</span></td>
-                    </tr>
-                    <tr>
-                        <td><b>Fees Discussion :</b></td>
-                        <td><span>{!! $client->accountancyFee->fees_discussion ?? '' !!}</span></td>
-                    </tr>
-                </table>
+                <div class="row mb-2">
+                    <div class="col-3"><b>Annual Agreed Fees:</b></div>
+                    <div class="col-9">{{ $client->accountancyFee->annual_agreed_fees ?? '&nbsp;' }}</div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-3"><b>Company:</b></div>
+                    <div class="col-9">{{ $client->accountancyFee->monthly_standing_order == 1 ? 'Yes' : 'No' }}</div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-3"><b>Monthly Amount:</b></div>
+                    <div class="col-9">{{ $client->accountancyFee->monthly_amount ?? '&nbsp;' }}</div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-3"><b>Next Review:</b></div>
+                    <div class="col-9">
+                        {{ $client->accountancyFee->next_review ? \Carbon\Carbon::parse($client->accountancyFee->next_review)->format('d-m-Y') : '&nbsp;' }}
+                    </div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-3"><b>Comment:</b></div>
+                    <div class="col-9">{!! $client->accountancyFee->comment ?? '&nbsp;' !!}</div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-3"><b>Fees Discussion:</b></div>
+                    <div class="col-9">{!! $client->accountancyFee->fees_discussion ?? '&nbsp;' !!}</div>
+                </div>
             </div>
         </div>
     </div>

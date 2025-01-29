@@ -421,6 +421,8 @@
 <script>
     $(document).ready(function() {
         $('#serviceDropdown').change(function() {
+            var selectedOption = $(this).find(':selected');
+            var serviceDataId = selectedOption.data('service-id');
             var serviceId = $(this).val();
             if (serviceId) {
 
@@ -448,7 +450,7 @@
                                 <div class="col-12">
                                     <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center">
                                         ${serviceName}
-                                        ${serviceId == 27 ? `
+                                        ${serviceDataId == 1 ? `
                                         <select class="form-select ms-auto directorDropdown" name="director_id" style="max-width: 200px;">
                                             <option value="">Select Director</option>
                                              @foreach($directorInfos as $director)

@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('services', function (Blueprint $table) {
             $table->id();
             $table->string('name')->nullable();
+            $table->integer('serviceid')->nullable();
             $table->string('tag')->nullable();
             $table->boolean('status')->default(1); // 1 == Normal service , 2 == One time service
             $table->string('created_by')->nullable();

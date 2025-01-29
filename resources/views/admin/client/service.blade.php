@@ -8,7 +8,7 @@
             <select id="serviceDropdown" class="form-control mt-1 select2" style="width:100%">
               <option value="" selected >Select Service</option>
               @foreach($services as $service)
-              <option value="{{ $service->id }}" {{ isset($client->clientService->service_id) && $client->clientService->service_id == $service->id? 'selected' : '' }}>
+              <option value="{{ $service->id }}" data-service-id="{{$service->serviceid}}" {{ isset($client->clientService->service_id) && $client->clientService->service_id == $service->id? 'selected' : '' }}>
                 {{ $service->name }}
               </option>
               @endforeach
