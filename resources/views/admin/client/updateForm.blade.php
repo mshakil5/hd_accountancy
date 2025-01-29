@@ -233,6 +233,7 @@
                         toastr.success("Business Info updated successfully", "Success!");
                     },
                     error: function(xhr, status, error) {
+                        console.error(xhr.responseText);
                         var errorMessage = "An error occurred. Please try again later.";
                         if (xhr.responseJSON && xhr.responseJSON.errors) {
                             errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
