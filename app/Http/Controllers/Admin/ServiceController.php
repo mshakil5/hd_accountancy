@@ -512,7 +512,7 @@ class ServiceController extends Controller
             $clientService->next_service_deadline = $nextServiceDeadline;
             $clientService->next_due_date = $nextDueDate;
             $clientService->next_legal_deadline = $nextLegalDeadline;
-            // $clientService->save();
+            $clientService->save();
 
             if (isset($serviceData['subServices'])) {
                 foreach ($serviceData['subServices'] as $key => $subServiceData) {
@@ -529,7 +529,7 @@ class ServiceController extends Controller
                     if ($key === 0) {
                         $clientSubService->sequence_status = 0;
                     }
-                    // $clientSubService->save();
+                    $clientSubService->save();
                 }
             }
         }
