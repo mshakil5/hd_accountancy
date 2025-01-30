@@ -36,8 +36,14 @@ class StaffServiceController extends Controller
 
             return DataTables::of($data)
 
+                // ->addColumn('clientname', function (ClientService $clientservice) {
+                //     return $clientservice->client ? $clientservice->client->name : " ";
+                // })
                 ->addColumn('clientname', function (ClientService $clientservice) {
-                    return $clientservice->client ? $clientservice->client->name : " ";
+                    if ($clientservice->director_info_id) {
+                        return $clientservice->directorInfo->name;
+                    }
+                    return $clientservice->client->name;
                 })
                 ->addColumn('servicename', function (ClientService $clientservice) {
                     return $clientservice->service ? $clientservice->service->name : " ";
@@ -62,8 +68,14 @@ class StaffServiceController extends Controller
 
             return DataTables::of($data)
 
+                // ->addColumn('clientname', function (ClientService $clientservice) {
+                //     return $clientservice->client ? $clientservice->client->name : " ";
+                // })
                 ->addColumn('clientname', function (ClientService $clientservice) {
-                    return $clientservice->client ? $clientservice->client->name : " ";
+                    if ($clientservice->director_info_id) {
+                        return $clientservice->directorInfo->name;
+                    }
+                    return $clientservice->client->name;
                 })
                 ->addColumn('servicename', function (ClientService $clientservice) {
                     return $clientservice->service ? $clientservice->service->name : " ";
@@ -91,7 +103,13 @@ class StaffServiceController extends Controller
 
             return DataTables::of($data)
 
+                // ->addColumn('clientname', function (ClientService $clientservice) {
+                //     return $clientservice->client->name;
+                // })
                 ->addColumn('clientname', function (ClientService $clientservice) {
+                    if ($clientservice->director_info_id) {
+                        return $clientservice->directorInfo->name;
+                    }
                     return $clientservice->client->name;
                 })
                 ->addColumn('servicename', function (ClientService $clientservice) {

@@ -1910,9 +1910,10 @@
                 let deadline = rowData.service_deadline;
                 deadline = deadline ? moment(deadline).format('YYYY-MM-DD') : '';
                 clientName = rowData.clientname;
+                var decodedServiceName = $('<div>').html(serviceName).text();
 
                 $('#client_name3').val(clientName); 
-                $('#service_name3').val(serviceName);
+                $('#service_name3').val(decodedServiceName);
                 $('#manager_name3').val(managerFirstName);
                 $('#service_frequency3').val(frequency);
 
@@ -1989,8 +1990,8 @@
                 }
             },
             columns: [{
-                    data: 'client.name',
-                    name: 'client.name'
+                    data: 'clientname',
+                    name: 'clientname'
                 },
                 {
                     data: 'service.name',

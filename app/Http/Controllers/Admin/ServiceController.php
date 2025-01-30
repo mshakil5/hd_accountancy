@@ -349,6 +349,12 @@ class ServiceController extends Controller
                 ->get();
 
             return DataTables::of($data)
+                ->addColumn('clientname', function (ClientService $clientservice) {
+                    if ($clientservice->director_info_id) {
+                        return $clientservice->directorInfo->name;
+                    }
+                    return $clientservice->client->name;
+                })
                 ->make(true);
         }
     }
@@ -380,9 +386,17 @@ class ServiceController extends Controller
 
             return DataTables::of($data)
 
+                // ->addColumn('clientname', function (ClientService $clientservice) {
+                //     return $clientservice->client->name;
+                // })
+
                 ->addColumn('clientname', function (ClientService $clientservice) {
+                    if ($clientservice->director_info_id) {
+                        return $clientservice->directorInfo->name;
+                    }
                     return $clientservice->client->name;
                 })
+
                 ->addColumn('servicename', function (ClientService $clientservice) {
                     return $clientservice->service->name;
                 })
@@ -436,11 +450,17 @@ class ServiceController extends Controller
                 'serviceId' => 'required|integer',
                 'managerId' => 'required|integer',
                 'service_frequency' => 'required',
-                'service_deadline' => 'required',
                 'due_date' => 'required',
+                'service_deadline' => 'required',
                 'legal_deadline' => 'required',
                 'subServices' => 'required|array',
             ]);
+
+            if (isset($serviceData['service_data_Id']) && $serviceData['service_data_Id'] == 1) {
+                $validator->addRules([
+                    'director_info_id' => 'required|integer',
+                ]);
+            }            
 
             if ($validator->fails()) {
                 return response()->json(['status' => 422, 'errors' => $validator->errors()->toArray()], 422);
@@ -483,7 +503,7 @@ class ServiceController extends Controller
             $clientService->client_id = $request->clientId;
             $clientService->service_id = $serviceData['serviceId'];
             $clientService->manager_id = $serviceData['managerId'];
-            $clientService->director_info_id = $serviceData['director_info_id'];
+            $clientService->director_info_id = $serviceData['director_info_id'] ?? null;
             $clientService->service_frequency = $serviceData['service_frequency'];
             $clientService->service_deadline = $serviceData['service_deadline'];
             $clientService->due_date = $serviceData['due_date'];
@@ -492,7 +512,7 @@ class ServiceController extends Controller
             $clientService->next_service_deadline = $nextServiceDeadline;
             $clientService->next_due_date = $nextDueDate;
             $clientService->next_legal_deadline = $nextLegalDeadline;
-            $clientService->save();
+            // $clientService->save();
 
             if (isset($serviceData['subServices'])) {
                 foreach ($serviceData['subServices'] as $key => $subServiceData) {
@@ -509,7 +529,7 @@ class ServiceController extends Controller
                     if ($key === 0) {
                         $clientSubService->sequence_status = 0;
                     }
-                    $clientSubService->save();
+                    // $clientSubService->save();
                 }
             }
         }
@@ -524,11 +544,26 @@ class ServiceController extends Controller
             'services' => 'nullable|array',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json(['status' => 422, 'errors' => $validator->errors()->toArray()], 422);
-        }
-
         foreach ($request->services as $serviceData) {
+            $validator = Validator::make($serviceData, [
+                'serviceId' => 'required|integer',
+                'managerId' => 'required|integer',
+                'service_frequency' => 'required',
+                'due_date' => 'required',
+                'service_deadline' => 'required',
+                'legal_deadline' => 'required',
+                'subServices' => 'required|array',
+            ]);
+
+            if (isset($serviceData['service_data_Id']) && $serviceData['service_data_Id'] == 1) {
+                $validator->addRules([
+                    'director_info_id' => 'required|integer',
+                ]);
+            }
+
+            if ($validator->fails()) {
+                return response()->json(['status' => 422, 'errors' => $validator->errors()->toArray()], 422);
+            }
             
             $nextServiceDeadline = '';
             $nextDueDate = '';
@@ -574,7 +609,7 @@ class ServiceController extends Controller
                 $clientService->next_service_deadline = $nextServiceDeadline;
                 $clientService->next_due_date = $nextDueDate;
                 $clientService->next_legal_deadline = $nextLegalDeadline;
-                $clientService->director_info_id = $serviceData['director_info_id'];
+                $clientService->director_info_id = $serviceData['director_info_id'] ?? null;
                 $clientService->save();
 
                 $serviceData['client_service_id'] = $clientService->id;
@@ -583,7 +618,7 @@ class ServiceController extends Controller
                 if ($existingService) {
                     $existingService->update([
                         'manager_id' => $serviceData['managerId'],
-                        'director_info_id' => $serviceData['director_info_id'],
+                        'director_info_id' => $serviceData['director_info_id'] ?? null,
                         'service_frequency' => $serviceData['service_frequency'],
                         'service_deadline' => $serviceData['service_deadline'],
                         'due_date' => $serviceData['due_date'],
@@ -824,8 +859,14 @@ class ServiceController extends Controller
 
             return DataTables::of($data)
 
+                // ->addColumn('clientname', function (ClientService $clientservice) {
+                //     return $clientservice->client ? $clientservice->client->name : '';
+                // })
                 ->addColumn('clientname', function (ClientService $clientservice) {
-                    return $clientservice->client ? $clientservice->client->name : '';
+                    if ($clientservice->director_info_id) {
+                        return $clientservice->directorInfo->name;
+                    }
+                    return $clientservice->client->name;
                 })
                 ->addColumn('servicename', function (ClientService $clientservice) {
                     return $clientservice->service ? $clientservice->service->name : '';
@@ -963,6 +1004,9 @@ class ServiceController extends Controller
             return DataTables::of($data)
 
                 ->addColumn('clientname', function (ClientService $clientservice) {
+                    if ($clientservice->director_info_id) {
+                        return $clientservice->directorInfo->name;
+                    }
                     return $clientservice->client->name;
                 })
                 ->addColumn('servicename', function (ClientService $clientservice) {
