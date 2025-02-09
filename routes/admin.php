@@ -127,6 +127,8 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/create-client', [ClientController::class, 'create'])->name('createClient');
     Route::post('/client', [ClientController::class, 'store']);
 
+    Route::get('/client-details/activities/{id}', [ClientController::class, 'showClientDetailsActivities'])->name('clientDetails.activities');
+
     //Client Delete
     Route::delete('/delete-client/{id}', [ClientController::class, 'deleteClient'])->name('delete.client');
 

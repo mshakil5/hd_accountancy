@@ -93,12 +93,20 @@
                 data: 'id',
                 name: 'details',
                 render: function(data, type, full, meta) {
-                    var editButtonHtml = canEditDelete ? '<a href="{{ url('admin/client/update-form') }}/' + data + '" class="btn btn-secondary"><i class="fas fa-edit"></i></a>' : '<button class="btn btn-secondary" disabled><i class="fas fa-edit"></i></button>';
-                    var deleteButtonHtml = canEditDelete ? '<a href="#" class="btn btn-danger delete-client" data-client-id="' + data + '" style="margin-left: 10px;"><i class="fas fa-trash"></i></a>' : '<button class="btn btn-danger" disabled style="margin-left: 10px;"><i class="fas fa-trash"></i></button>';
-                    
-                    var viewButtonHtml = '<a href="{{ url('admin/client/report') }}/' + data + '" class="btn btn-primary" style="margin-right: 10px;"><i class="fas fa-eye"></i></a>';
 
-                    return viewButtonHtml + editButtonHtml + deleteButtonHtml;
+                    var editButtonHtml = canEditDelete ? 
+                        '<a href="{{ url('admin/client/update-form') }}/' + data + '" class="btn btn-secondary" style="margin-right: 10px;"><i class="fas fa-edit"></i></a>' : 
+                        '<button class="btn btn-secondary" disabled style="margin-right: 10px;"><i class="fas fa-edit"></i></button>';
+
+                    var deleteButtonHtml = canEditDelete ? 
+                        '<a href="#" class="btn btn-danger delete-client" data-client-id="' + data + '" style="margin-left: 10px;"><i class="fas fa-trash"></i></a>' : 
+                        '<button class="btn btn-danger" disabled style="margin-left: 10px;"><i class="fas fa-trash"></i></button>';
+
+                    var viewButtonHtml = '<a href="{{ url('admin/client/report') }}/' + data + '" class="btn btn-primary" style="margin-right: 15px;"><i class="fas fa-eye"></i></a>';
+
+                    var logButtonHtml = '<a href="{{ url('admin/client-details/activities') }}/' + data + '" class="btn btn-warning" style="margin-right: 0px;"><i class="fas fa-history"></i></a>';
+
+                    return viewButtonHtml + logButtonHtml+ editButtonHtml + deleteButtonHtml;
                 }
             }
         ]

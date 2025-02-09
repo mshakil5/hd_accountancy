@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Spatie\Activitylog\Models\Activity;
 
 class ClientController extends Controller
 {
@@ -254,6 +255,24 @@ class ClientController extends Controller
         $services = Service::where('status', '1')->select('id', 'name', 'serviceid')->orderby('id', 'DESC')->get();
         $staffs = User::whereIn('type', ['3', '2', '1'])->select('id', 'first_name', 'last_name', 'type')->orderby('id', 'DESC')->get();
         return view('admin.client.updateForm', compact('client', 'clientTypes', 'managers', 'businessInfo', 'directorInfos', 'contactInfo', 'services', 'staffs'));
+    }
+
+    public function showClientDetailsActivities($id)
+    {
+        $client = Client::find($id);
+
+        if (!$client) {
+            return redirect()->route('clients.index')->with('error', 'Client not found.');
+        }
+
+        $activities = Activity::with('causer')
+                              ->where('subject_type', Client::class)
+                              ->where('subject_id', $client->id)
+                              ->latest()
+                              ->get();
+
+
+        return view('admin.client.activities', compact('client', 'activities'));
     }
 
     public function updateClientDetails(Request $request, $id)
