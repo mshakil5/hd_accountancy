@@ -92,8 +92,9 @@
 @section('script')
 <script>
     $(function () {
-      $("#example1").DataTable({
-      });
+        $("#example1").DataTable({
+            pageLength: 100
+        });
     });
 </script>
 
@@ -110,7 +111,7 @@
           var rowId = $(this).attr('rid');
           $('#start_time_' + rowId).prop('disabled', false);
           $('#end_time_' + rowId).prop('disabled', false);
-          $('#duration_' + rowId).prop('disabled', false);
+        //   $('#duration_' + rowId).prop('disabled', false);
           $('#note_' + rowId).prop('disabled', false);
 
           $(this).hide();
@@ -122,7 +123,7 @@
           var rowId = $(this).attr('rid');
           $('#start_time_' + rowId).prop('disabled', true).val($('#start_time_' + rowId).data('orig'));
           $('#end_time_' + rowId).prop('disabled', true).val($('#end_time_' + rowId).data('orig'));
-          $('#duration_' + rowId).prop('disabled', true).val($('#duration_' + rowId).data('orig'));
+        //   $('#duration_' + rowId).prop('disabled', true).val($('#duration_' + rowId).data('orig'));
           $('#note_' + rowId).prop('disabled', true).val($('#note_' + rowId).data('orig'));
 
           $('.edit-btn[rid="' + rowId + '"]').show();
@@ -132,7 +133,7 @@
 
       $('.update-btn').click(function() {
           var rowId = $(this).attr('rid');
-          console.log(rowId);
+        //   console.log(rowId);
           var startTime = $('#start_time_' + rowId).val();
           var endTime = $('#end_time_' + rowId).val();
           var note = $('#note_' + rowId).val();

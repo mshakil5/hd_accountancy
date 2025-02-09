@@ -316,8 +316,11 @@ class StaffController extends Controller
         $startTime = Carbon::createFromFormat('d-m-Y H:i:s', $request->input('start_time'));
         $endTime = Carbon::createFromFormat('d-m-Y H:i:s', $request->input('end_time'));
 
+        $durationInSeconds = $endTime->diffInSeconds($startTime);
+
         $staff->start_time = $startTime;
         $staff->end_time = $endTime;
+        $staff->duration = $durationInSeconds;
         $staff->note = $request->input('note');
         $staff->save();
         
