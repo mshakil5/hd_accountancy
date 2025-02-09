@@ -10,6 +10,10 @@
                     <i class="fas fa-arrow-left"></i> Back
                 </a>
 
+                <a href="{{ route('clientBusinessInfo.activities', $client->id) }}" class="btn btn-info mb-3">
+                    <i class="fas fa-briefcase"></i> Business Info Activities
+                </a>
+
                 <div class="card card-secondary">
                     <div class="card-header">
                         <h3 class="card-title">Activities for Client: {{ $client->name }}</h3>

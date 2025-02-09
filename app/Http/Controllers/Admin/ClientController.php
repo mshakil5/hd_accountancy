@@ -272,7 +272,25 @@ class ClientController extends Controller
                               ->get();
 
 
-        return view('admin.client.activities', compact('client', 'activities'));
+        return view('admin.client.client_details_activities', compact('client', 'activities'));
+    }
+
+    public function showClientBusinessInfoActivities($id)
+    {
+        $client = Client::findOrFail($id);
+
+        $businessInfo = BusinessInfo::where('client_id', $client->id)->first();
+
+        if (!$businessInfo) {
+            return redirect()->back()->with('error', 'No Business Info found for this client.');
+        }
+
+        $activities = Activity::where('subject_type', BusinessInfo::class)
+                            ->where('subject_id', $businessInfo->id)
+                            ->latest()
+                            ->get();
+
+        return view('admin.client.business_info_activities', compact('client', 'activities'));
     }
 
     public function updateClientDetails(Request $request, $id)
