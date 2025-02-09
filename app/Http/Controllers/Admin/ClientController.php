@@ -18,6 +18,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Spatie\Activitylog\Models\Activity;
+use App\Models\AccountancyFee;
 
 class ClientController extends Controller
 {
@@ -291,6 +292,28 @@ class ClientController extends Controller
                             ->get();
 
         return view('admin.client.business_info_activities', compact('client', 'activities'));
+    }
+
+    public function showClientAccountancyFeesActivities($id)
+    {
+        $client = Client::find($id);
+
+        if (!$client) {
+            return redirect()->route('clients.index')->with('error', 'Client not found.');
+        }
+
+        $accountancyFees = AccountancyFee::where('client_id', $client->id)->first();
+
+        if (!$accountancyFees) {
+            return redirect()->back()->with('error', 'No Accountancy Fee found for this client.');
+        }
+
+        $activities = Activity::where('subject_type', AccountancyFee::class)
+                            ->where('subject_id', $accountancyFees->id)
+                            ->latest()
+                            ->get();
+
+        return view('admin.client.accountancy_fees_activities', compact('client', 'accountancyFees', 'activities'));
     }
 
     public function updateClientDetails(Request $request, $id)

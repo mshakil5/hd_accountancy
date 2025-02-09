@@ -131,6 +131,8 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
 
     Route::get('/client-businessinfo/activities/{id}', [ClientController::class, 'showClientBusinessInfoActivities'])->name('clientBusinessInfo.activities');
 
+    Route::get('/client-accountancy-fees/activities/{id}', [ClientController::class, 'showClientAccountancyFeesActivities'])->name('clientAccountancyFees.activities');
+
     //Client Delete
     Route::delete('/delete-client/{id}', [ClientController::class, 'deleteClient'])->name('delete.client');
 
