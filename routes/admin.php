@@ -348,6 +348,8 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
 
     Route::get('/all-attendence-records', [StaffController::class, 'allPrevLogStaffs'])->name('allPrevLogStaffs');
 
+    Route::get('/attendance/log/{id}', [StaffController::class, 'attendanceLog'])->name('attendance.log');
+
     Route::post('/prev-staffs/update/{id}', [StaffController::class, 'updateLogs']);
 
     // Today's staff's task details and edit by admin

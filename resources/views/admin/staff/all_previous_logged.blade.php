@@ -31,6 +31,7 @@
                                     <th style="text-align: center">Logout Time</th>
                                     <th style="text-align: center">Duration</th>
                                     <th style="text-align: center">Note</th>
+                                    <th style="text-align: center">Log</th>
                                     <th style="text-align: center">Action</th>
                                 </tr>
                             </thead>
@@ -50,6 +51,11 @@
                                     </td>
                                     <td style="text-align: center">
                                         <input type="text" class="form-control" value="{{ $staff->note }}" id="note_{{ $staff->id }}" disabled>
+                                    </td>
+                                    <td style="text-align: center">
+                                        <a class="btn btn-link" href="{{ route('attendance.log', ['id' => $staff->id]) }}">
+                                            <i class="fa fa-file-text" style="font-size: 20px;"></i>
+                                        </a>
                                     </td>
                                     <td style="text-align: center">
                                         <a class="btn btn-link edit-btn" rid="{{ $staff->id }}"><i class="fa fa-edit" style="font-size: 20px;"></i></a>

@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Role;
+use Spatie\Activitylog\Models\Activity;
 
 class StaffController extends Controller
 {
@@ -285,6 +286,23 @@ class StaffController extends Controller
             });
 
         return view('admin.staff.previous_logged', compact('previouslyLoggedStaff'));
+    }    
+
+    public function attendanceLog($id)
+    {
+        $attendanceLog = UserAttendanceLog::find($id);
+    
+        if (!$attendanceLog) {
+            return redirect()->back()->with('error', 'Attendance log not found.');
+        }
+    
+        $activities = Activity::with('causer')
+            ->where('subject_type', UserAttendanceLog::class)
+            ->where('subject_id', $attendanceLog->id)
+            ->latest()
+            ->get();
+    
+        return view('admin.staff.attendance_log', compact('attendanceLog', 'activities'));
     }    
 
     public function allPrevLogStaffs()
