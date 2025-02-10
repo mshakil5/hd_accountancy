@@ -7,13 +7,26 @@ use App\Models\Service;
 use App\Models\ClientSubService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class ClientService extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
     protected $table = 'client_service';
+    protected static $logAttributes = ['*'];
+    protected static $logOnlyDirty = true;
+    protected static $logName = 'client_service';
 
     protected $guarded = [];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(array_diff(array_keys($this->getAttributes()), ['created_at', 'updated_at', 'deleted_at']))
+            ->useLogName('client_service')
+            ->setDescriptionForEvent(fn(string $eventName) => "Client Service record has been {$eventName}");
+    }
 
     public function client()
     {
