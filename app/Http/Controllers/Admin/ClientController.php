@@ -297,8 +297,19 @@ class ClientController extends Controller
                 ->latest()
                 ->get();
         }
+
+        $contacts = $client->contactInfos;
+
+        $contactActivities = [];
+
+        foreach ($contacts as $contact) {
+            $contactActivities[$contact->id] = Activity::where('subject_type', ContactInfo::class)
+                ->where('subject_id', $contact->id)
+                ->latest()
+                ->get();
+        }
     
-        return view('admin.client.activities', compact('client', 'clientActivities', 'businessInfoActivities', 'accountancyFeeActivities', 'directors', 'directorActivities'));
+        return view('admin.client.activities', compact('client', 'clientActivities', 'businessInfoActivities', 'accountancyFeeActivities', 'directors', 'directorActivities', 'contacts', 'contactActivities'));
     }
 
     public function updateClientDetails(Request $request, $id)
