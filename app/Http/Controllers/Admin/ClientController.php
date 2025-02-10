@@ -258,62 +258,37 @@ class ClientController extends Controller
         return view('admin.client.updateForm', compact('client', 'clientTypes', 'managers', 'businessInfo', 'directorInfos', 'contactInfo', 'services', 'staffs'));
     }
 
-    public function showClientDetailsActivities($id)
+    public function showClientActivities($id)
     {
         $client = Client::find($id);
-
+    
         if (!$client) {
             return redirect()->route('clients.index')->with('error', 'Client not found.');
         }
-
-        $activities = Activity::with('causer')
-                              ->where('subject_type', Client::class)
-                              ->where('subject_id', $client->id)
-                              ->latest()
-                              ->get();
-
-
-        return view('admin.client.client_details_activities', compact('client', 'activities'));
-    }
-
-    public function showClientBusinessInfoActivities($id)
-    {
-        $client = Client::findOrFail($id);
-
-        $businessInfo = BusinessInfo::where('client_id', $client->id)->first();
-
-        if (!$businessInfo) {
-            return redirect()->back()->with('error', 'No Business Info found for this client.');
-        }
-
-        $activities = Activity::where('subject_type', BusinessInfo::class)
-                            ->where('subject_id', $businessInfo->id)
-                            ->latest()
-                            ->get();
-
-        return view('admin.client.business_info_activities', compact('client', 'activities'));
-    }
-
-    public function showClientAccountancyFeesActivities($id)
-    {
-        $client = Client::find($id);
-
-        if (!$client) {
-            return redirect()->route('clients.index')->with('error', 'Client not found.');
-        }
-
-        $accountancyFees = AccountancyFee::where('client_id', $client->id)->first();
-
-        if (!$accountancyFees) {
-            return redirect()->back()->with('error', 'No Accountancy Fee found for this client.');
-        }
-
-        $activities = Activity::where('subject_type', AccountancyFee::class)
-                            ->where('subject_id', $accountancyFees->id)
-                            ->latest()
-                            ->get();
-
-        return view('admin.client.accountancy_fees_activities', compact('client', 'accountancyFees', 'activities'));
+    
+        $clientActivities = Activity::with('causer')
+            ->where('subject_type', Client::class)
+            ->where('subject_id', $client->id)
+            ->latest()
+            ->get();
+    
+        $businessInfo = $client->businessInfo;
+        $businessInfoActivities = $businessInfo
+            ? Activity::where('subject_type', BusinessInfo::class)
+                ->where('subject_id', $businessInfo->id)
+                ->latest()
+                ->get()
+            : collect();
+    
+        $accountancyFee = $client->accountancyFee;
+        $accountancyFeeActivities = $accountancyFee
+            ? Activity::where('subject_type', AccountancyFee::class)
+                ->where('subject_id', $accountancyFee->id)
+                ->latest()
+                ->get()
+            : collect();
+    
+        return view('admin.client.activities', compact('client', 'clientActivities', 'businessInfoActivities', 'accountancyFeeActivities'));
     }
 
     public function updateClientDetails(Request $request, $id)
