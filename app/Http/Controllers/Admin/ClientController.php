@@ -260,10 +260,10 @@ class ClientController extends Controller
 
     public function showClientActivities($id)
     {
-        $client = Client::find($id);
-    
+        $client = Client::withTrashed()->find($id);
+
         if (!$client) {
-            return redirect()->route('clients.index')->with('error', 'Client not found.');
+            return redirect()->back()->with('error', 'Client not found.');
         }
     
         $clientActivities = Activity::with('causer')
