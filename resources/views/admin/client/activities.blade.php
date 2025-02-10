@@ -19,6 +19,9 @@
                         <button class="nav-link" id="business-tab" data-bs-toggle="tab" data-bs-target="#business" type="button" role="tab" aria-controls="business" aria-selected="false">Business Info</button>
                     </li>
                     <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="director-tab" data-bs-toggle="tab" data-bs-target="#director" type="button" role="tab" aria-controls="director" aria-selected="false">Director Info</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
                         <button class="nav-link" id="accountancy-tab" data-bs-toggle="tab" data-bs-target="#accountancy" type="button" role="tab" aria-controls="accountancy" aria-selected="false">Accountancy Fees</button>
                     </li>
                 </ul>
@@ -47,6 +50,22 @@
                             <p class="mt-3">No Accountancy Fees Activities found.</p>
                         @endif
                     </div>
+
+                    <div class="tab-pane fade" id="director" role="tabpanel" aria-labelledby="director-tab">
+                        <div class="mt-1">
+                            <label for="directorSelect">Select Director:</label>
+                            <select class="form-control" id="directorSelect">
+                                <option value="">-- Select Director --</option>
+                                @foreach($directors as $director)
+                                    <option value="{{ $director->id }}">{{ $director->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div id="directorActivitiesContainer" class="mt-1">
+                            <p>Select a director to view activities.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -59,5 +78,27 @@
     $(document).ready(function () {
         $('.table-activities').DataTable();
     });
+
+    document.getElementById('directorSelect').addEventListener('change', function () {
+        const directorId = this.value;
+        const activitiesContainer = document.getElementById('directorActivitiesContainer');
+
+        activitiesContainer.innerHTML = ''; // Clear previous activities
+
+        @foreach($directorActivities as $id => $activities)
+            if (directorId == {{ $id }}) {
+                @if($activities->isNotEmpty())
+                    activitiesContainer.innerHTML = `{!! view('admin.client.partials.activities_table', ['activities' => $activities])->render() !!}`;
+                @else
+                    activitiesContainer.innerHTML = '<p class="mt-3">No activities found for this director.</p>';
+                @endif
+            }
+        @endforeach
+
+        if (!directorId) {
+            activitiesContainer.innerHTML = '<p>Select a director to view activities.</p>';
+        }
+    });
+
 </script>
 @endsection

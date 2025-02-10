@@ -287,8 +287,18 @@ class ClientController extends Controller
                 ->latest()
                 ->get()
             : collect();
+
+        $directors = $client->directorInfos;
+        $directorActivities = [];
     
-        return view('admin.client.activities', compact('client', 'clientActivities', 'businessInfoActivities', 'accountancyFeeActivities'));
+        foreach ($directors as $director) {
+            $directorActivities[$director->id] = Activity::where('subject_type', DirectorInfo::class)
+                ->where('subject_id', $director->id)
+                ->latest()
+                ->get();
+        }
+    
+        return view('admin.client.activities', compact('client', 'clientActivities', 'businessInfoActivities', 'accountancyFeeActivities', 'directors', 'directorActivities'));
     }
 
     public function updateClientDetails(Request $request, $id)
