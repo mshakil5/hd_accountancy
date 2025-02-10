@@ -387,7 +387,7 @@
     <div class="sub-box-header mt-3">
         <div class="row w-100">
             <div class="col-lg-6 d-flex txt-theme">
-                <span>ABOUT BUSINESS</span>
+                <span>ACCOUNTANCY FEES</span>
             </div>
         </div>
     </div>
