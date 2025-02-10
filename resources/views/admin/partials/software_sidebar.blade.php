@@ -67,7 +67,7 @@
 
     @if (in_array('7', json_decode(Auth::user()->role->permission)) || in_array('8', json_decode(Auth::user()->role->permission)))
 
-    <li class="nav-item {{ request()->routeIs('allClient','createClient','client.update.form','createNewClient') ? 'active' : '' }}">
+    <li class="nav-item {{ request()->routeIs('allClient', 'createClient', 'client.update.form', 'createNewClient', 'client.activities') ? 'active' : '' }}">
       <a class="nav-link collapsed" href="{{ route('allClient') }}">
         <i class="bi bi-person"></i>
         <span>Client</span>
