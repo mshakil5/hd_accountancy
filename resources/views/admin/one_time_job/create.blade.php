@@ -97,6 +97,7 @@
                                     <th>Assigned To</th>
                                     <th>Deadline</th>
                                     <th>Status</th>
+                                    <th>Log</th>
                                     <th>Comment</th>
                                 </tr>
                             </thead>
@@ -213,6 +214,17 @@
                     };
 
                     return statusMap[data] ?? 'Unknown Status';
+                }
+            },
+            {
+                data: 'activity',
+                name: 'activity',
+                render: function (data, type, row) {
+                    return `
+                        <a href="{{ url('admin/one-time-job-activity') }}/${row.id}" class="btn btn-primary">
+                            <i class="fas fa-book"></i>
+                        </a>
+                    `;
                 }
             },
             {

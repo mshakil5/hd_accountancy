@@ -11,9 +11,28 @@ use App\Models\ClientService;
 use App\Models\ClientSubService;
 use Carbon\Carbon;
 use DataTables;
+use Spatie\Activitylog\Models\Activity;
 
 class OneTimeJobController extends Controller
 {
+
+    public function showOneTimeJobActivity($id)
+    {
+        $clientService = ClientService::find($id);
+
+        if (!$clientService) {
+            return redirect()->back()->with('error', 'Client Service not found.');
+        }
+
+        $clientServiceActivities = Activity::with('causer')
+            ->where('subject_type', ClientService::class)
+            ->where('subject_id', $clientService->id)
+            ->latest()
+            ->get();
+
+        return view('admin.one_time_job.activities', compact('clientService', 'clientServiceActivities'));
+    }
+
     public function create()
     {
         $managerAndStaffs = User::whereIn('type', ['2', '3'])->select('id', 'first_name', 'last_name', 'type')->orderby('id', 'DESC')->get();

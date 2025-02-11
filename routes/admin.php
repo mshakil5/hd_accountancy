@@ -587,6 +587,8 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/one-time-job/data', [OneTimeJobController::class, 'getData'])->name('client-services.data');
     Route::post('/one-time-job', [OneTimeJobController::class, 'store']);
 
+    Route::get('/one-time-job-activity/{id}', [OneTimeJobController::class, 'showOneTimeJobActivity'])->name('client-service.activity');
+
     //My tasks
     Route::get('/my-tasks', [AdminController::class, 'getAdminTasks'])->name('my.tasks');
     Route::get('/get-assigned-services', [AdminController::class, 'getAllAssignedServices']);
