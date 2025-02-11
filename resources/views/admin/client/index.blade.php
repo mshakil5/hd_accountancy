@@ -104,7 +104,7 @@
 
                     var viewButtonHtml = '<a href="{{ url('admin/client/report') }}/' + data + '" class="btn btn-primary" style="margin-right: 15px;"><i class="fas fa-eye"></i></a>';
 
-                    var logButtonHtml = '<a href="{{ url('admin/client-activities') }}/' + data + '" class="btn btn-warning" style="margin-right: 0px;"><i class="fas fa-book"></i></a>';
+                    var logButtonHtml = '<a href="{{ url('admin/client-activities') }}/' + data + '" class="btn btn-primary" style="margin-right: 0px;"><i class="fas fa-book"></i></a>';
 
                     return viewButtonHtml + logButtonHtml+ editButtonHtml + deleteButtonHtml;
                 }
