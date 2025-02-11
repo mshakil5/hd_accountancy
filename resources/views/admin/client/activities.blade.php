@@ -39,13 +39,13 @@
                 <div class="tab-content pt-3" id="activityTabsContent">
                     <!-- Client Details Tab -->
                     <div class="tab-pane fade show active" id="client" role="tabpanel" aria-labelledby="client-tab">
-                        @include('admin.client.partials.activities_table', ['activities' => $clientActivities])
+                        @include('admin.partials.activities_table', ['activities' => $clientActivities])
                     </div>
 
                     <!-- Business Info Tab -->
                     <div class="tab-pane fade" id="business" role="tabpanel" aria-labelledby="business-tab">
                         @if($businessInfoActivities->isNotEmpty())
-                            @include('admin.client.partials.activities_table', ['activities' => $businessInfoActivities])
+                            @include('admin.partials.activities_table', ['activities' => $businessInfoActivities])
                         @else
                             <p class="mt-3">No Business Info Activities found.</p>
                         @endif
@@ -111,7 +111,7 @@
                     <!-- Accountancy Fees Tab -->
                     <div class="tab-pane fade" id="accountancy" role="tabpanel" aria-labelledby="accountancy-tab">
                         @if($accountancyFeeActivities->isNotEmpty())
-                            @include('admin.client.partials.activities_table', ['activities' => $accountancyFeeActivities])
+                            @include('admin.partials.activities_table', ['activities' => $accountancyFeeActivities])
                         @else
                             <p class="mt-3">No Accountancy Fees Activities found.</p>
                         @endif
@@ -149,7 +149,7 @@
         @foreach($contactActivities as $id => $activities)
             if (contactId == {{ $id }}) {
                 @if($activities->isNotEmpty())
-                    activitiesContainer.html(`{!! view('admin.client.partials.activities_table', ['activities' => $activities])->render() !!}`);
+                    activitiesContainer.html(`{!! view('admin.partials.activities_table', ['activities' => $activities])->render() !!}`);
                     initializeDataTable();
                 @else
                     activitiesContainer.html('<p class="mt-3">No activities found for this contact.</p>');
@@ -171,7 +171,7 @@
         @foreach($directorActivities as $id => $activities)
             if (directorId == {{ $id }}) {
                 @if($activities->isNotEmpty())
-                    activitiesContainer.html(`{!! view('admin.client.partials.activities_table', ['activities' => $activities])->render() !!}`);
+                    activitiesContainer.html(`{!! view('admin.partials.activities_table', ['activities' => $activities])->render() !!}`);
                     initializeDataTable();
                 @else
                     activitiesContainer.html('<p class="mt-3">No activities found for this director.</p>');
@@ -193,7 +193,7 @@
         @foreach($clientServiceActivities as $id => $activities)
             if (serviceId == {{ $id }}) {
                 @if($activities->isNotEmpty())
-                    activitiesContainer.html(`{!! view('admin.client.partials.activities_table', ['activities' => $activities])->render() !!}`);
+                    activitiesContainer.html(`{!! view('admin.partials.activities_table', ['activities' => $activities])->render() !!}`);
                     initializeDataTable();
                 @else
                     activitiesContainer.html('<p class="mt-3">No activities found for this service.</p>');

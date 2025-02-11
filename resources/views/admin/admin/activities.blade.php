@@ -10,7 +10,7 @@
         <div class="card shadow-sm border-theme border-2 pt-4">
             <div class="card-body">
                 @if($userActivities->isNotEmpty())
-                    @include('admin.client.partials.activities_table', ['activities' => $userActivities])
+                    @include('admin.partials.activities_table', ['activities' => $userActivities])
                 @else
                     <p class="text-center">No activities found.</p>
                 @endif
