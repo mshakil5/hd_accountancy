@@ -284,6 +284,8 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::post('/service-update', [ServiceController::class, 'update']);
     Route::get('/service/{id}', [ServiceController::class, 'delete']);
 
+    Route::get('/service-activity/{id}', [ServiceController::class, 'showActivity'])->name('service.activity');
+
     Route::post('/check-sub-service-assignment', [ServiceController::class, 'checkAssignment']);
 
     //SubServices crud

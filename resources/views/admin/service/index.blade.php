@@ -99,6 +99,7 @@
                                     <th style="text-align: center">Sl</th>
                                     <th style="text-align: center">Name</th>
                                     <th style="text-align: center">Sub services</th>
+                                    <th style="text-align: center">Log</th>
                                     <th style="text-align: center">Action</th>
                                 </tr>
                             </thead>
@@ -114,6 +115,11 @@
                                         ,
                                         @endif
                                         @endforeach
+                                    </td>
+                                    <td style="text-align: center">
+                                        <a class="btn btn-primary" href="{{ route('service.activity', ['id' => $data->id]) }}">
+                                            <i class="fas fa-book"></i>
+                                        </a>
                                     </td>
                                     <td style="text-align: center">
                                         <a class="btn btn-link" id="EditBtn" rid="{{$data->id}}"><i class="fa fa-edit" style="font-size: 20px;"></i></a>

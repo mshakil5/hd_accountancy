@@ -16,9 +16,32 @@ use App\Models\ServiceMessage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Carbon;
+use Spatie\Activitylog\Models\Activity;
 
 class ServiceController extends Controller
 {
+
+    public function showActivity($id)
+    {
+        $service = Service::find($id);
+
+        if (!$service) {
+            return redirect()->back()->with('error', 'Service not found.');
+        }
+
+        $serviceActivities = Activity::where('subject_type', Service::class)
+            ->where('subject_id', $service->id)
+            ->latest()
+            ->get();
+
+        $subServiceActivities = Activity::whereIn('subject_type', [SubService::class])
+            ->whereIn('subject_id', $service->subServices->pluck('id'))
+            ->latest()
+            ->get();
+
+        return view('admin.service.activities', compact('service', 'serviceActivities', 'subServiceActivities'));
+    }
+
     public function index()
     {
         $data = Service::with('subServices')->where('status', 1)->orderBy('id', 'DESC')->get();
