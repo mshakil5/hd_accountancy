@@ -123,6 +123,8 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::post('/department-update', [DepartmentController::class, 'update']);
     Route::get('/department/{id}', [DepartmentController::class, 'delete']);
 
+    Route::get('/department-activities/{id}', [DepartmentController::class, 'showDepartmentActivities'])->name('department.activities');
+
     //Clients crud
     Route::get('/client', [ClientController::class, 'index'])->name('allClient');
     Route::get('/client-list', [ClientController::class, 'getClients'])->name('get.Clients');

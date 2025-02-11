@@ -91,6 +91,7 @@
                   <th style="text-align: center">Sl</th>
                   <th style="text-align: center">Name</th>
                   <th style="text-align: center">Description</th>
+                  <th style="text-align: center">Log</th>
                   <th style="text-align: center">Action</th>
                 </tr>
                 </thead>
@@ -100,6 +101,12 @@
                     <td style="text-align: center">{{ $key + 1 }}</td>
                     <td style="text-align: center">{{$data->name}}</td>
                     <td style="text-align: center">{!!$data->description!!}</td>
+                    <td style="text-align: center">
+                      <a href="{{ route('department.activities', $data->id) }}" class="btn btn-link">
+                        <i class="fas fa-book" style="font-size: 20px;"></i>
+                      </a>
+                    </td>
+
                     <td style="text-align: center">
                       <a class="btn btn-link" id="EditBtn" rid="{{$data->id}}"><i class="fa fa-edit" style="font-size: 20px;"></i></a>
                       <a class="btn btn-link" id="deleteBtn" rid="{{$data->id}}"><i class="fas fa-trash" style="color: red; font-size: 20px;"></i></a>

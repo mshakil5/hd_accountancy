@@ -6,9 +6,27 @@ use App\Models\Department;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Spatie\Activitylog\Models\Activity;
 
 class DepartmentController extends Controller
 {
+
+    public function showDepartmentActivities($id)
+    {
+        $department = Department::withTrashed()->find($id);
+
+        if (!$department) {
+            return redirect()->back()->with('error', 'Department not found.');
+        }
+
+        $departmentActivities = Activity::with('causer')
+            ->where('subject_type', Department::class)
+            ->where('subject_id', $department->id)
+            ->latest()
+            ->get();
+
+        return view('admin.department.activities', compact('department', 'departmentActivities'));
+    }
     public function index()
     {
         $data = Department::orderby('id','DESC')->select('id', 'name' , 'description')->get();
