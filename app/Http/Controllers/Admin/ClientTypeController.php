@@ -6,9 +6,28 @@ use App\Models\ClientType;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Spatie\Activitylog\Models\Activity;
 
 class ClientTypeController extends Controller
 {
+
+    public function showClientTypeActivities($id)
+    {
+        $clientType = ClientType::withTrashed()->find($id);
+
+        if (!$clientType) {
+            return redirect()->back()->with('error', 'Client Type not found.');
+        }
+
+        $clientTypeActivities = Activity::with('causer')
+            ->where('subject_type', ClientType::class)
+            ->where('subject_id', $clientType->id)
+            ->latest()
+            ->get();
+
+        return view('admin.client_type.activities', compact('clientType', 'clientTypeActivities'));
+    }
+
     public function index()
     {
         $data = ClientType::orderby('id','DESC')->select('id', 'name')->get();

@@ -275,6 +275,8 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::post('/client-type-update', [ClientTypeController::class, 'update']);
     Route::get('/client-type/{id}', [ClientTypeController::class, 'delete']);
 
+    Route::get('/client-type-activities/{id}', [ClientTypeController::class, 'showClientTypeActivities'])->name('client.type.activities');
+
     //Services crud
     Route::get('/service', [ServiceController::class, 'index'])->name('allService');
     Route::post('/service', [ServiceController::class, 'store']);
