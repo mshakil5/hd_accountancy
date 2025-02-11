@@ -82,6 +82,8 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/staff/{id}/edit', [StaffController::class, 'edit']);
     Route::post('/staff-update', [StaffController::class, 'update']);
     Route::get('/staff/{id}', [StaffController::class, 'delete']);
+
+    Route::get('/user-activities/{id}', [AdminController::class, 'showUserActivities'])->name('user.activities');
     
     //Staff Delete
     Route::delete('/delete-staff/{id}', [StaffController::class, 'deleteStaff'])->name('delete.staff');

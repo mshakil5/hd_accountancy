@@ -18,9 +18,27 @@ use Illuminate\Support\Facades\Validator;
 use App\Models\WorkTime;
 use App\Models\ServiceMessage;
 use App\Models\Role;
+use Spatie\Activitylog\Models\Activity;
 
 class AdminController extends Controller
 {
+
+    public function showUserActivities($id)
+    {
+        $user = User::withTrashed()->find($id);
+
+        if (!$user) {
+            return redirect()->back()->with('error', 'User not found.');
+        }
+
+        $userActivities = Activity::with('causer')
+            ->where('subject_type', User::class)
+            ->where('subject_id', $user->id)
+            ->latest()
+            ->get();
+
+        return view('admin.admin.activities', compact('user', 'userActivities'));
+    }
     public function getAdmin()
     {
         $data = User::where('type', '1')->with('role:id,name')->select('id', 'first_name', 'last_name', 'email', 'phone', 'role_id')->orderby('id','DESC')->get();

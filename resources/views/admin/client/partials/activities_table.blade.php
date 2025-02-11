@@ -24,7 +24,7 @@
                             @if(isset($newAttributes[$key]) && $oldValue != $newAttributes[$key])
                                 <li>
                                     <strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong>
-                                    <span class="text-danger">Old: {{ $oldValue }}</span>,
+                                    <span class="text-danger">Old: {{ $oldValue }}</span> →
                                     <span class="text-success">New: {{ $newAttributes[$key] }}</span>
                                 </li>
                             @endif

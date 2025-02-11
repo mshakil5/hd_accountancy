@@ -11,11 +11,12 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
-    use SoftDeletes;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes, LogsActivity;
     /**
      * The attributes that are mass assignable.
      *
@@ -41,6 +42,18 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    protected static $logAttributes = ['*'];
+    protected static $logOnlyDirty = true;
+    protected static $logName = 'user';
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(array_diff(array_keys($this->getAttributes()), ['password', 'remember_token', 'created_at', 'updated_at', 'deleted_at']))
+            ->useLogName('user')
+            ->setDescriptionForEvent(fn(string $eventName) => "User record has been {$eventName}");
+    }
 
     public function department()
     {

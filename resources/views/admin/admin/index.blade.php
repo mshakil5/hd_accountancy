@@ -140,6 +140,7 @@
                   <th>Phone</th>
                   <th>Email</th>
                   <th>Role</th>
+                  <th>Log</th>
                   <th>Action</th>
                 </tr>
                 </thead>
@@ -152,6 +153,11 @@
                     <td>{{$data->phone}}</td>
                     <td>{{$data->email}}</td>
                     <td>{{$data->role ? $data->role->name : ''}}</td>
+                    <td>
+                        <a href="{{ route('user.activities', $data->id) }}" class="btn btn-link">
+                            <i class="fa fa-book" style="font-size: 20px;"></i>
+                        </a>
+                    </td>
                     <td>
                       <a class="btn btn-link" id="EditBtn" rid="{{$data->id}}"><i class="fa fa-edit" style="font-size: 20px;"></i></a>
                       {{-- 
