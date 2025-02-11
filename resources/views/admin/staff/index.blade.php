@@ -50,6 +50,7 @@
                                 <th scope="col">Staff ID</th>
                                 <th scope="col">Name</th>
                                 <th scope="col">Status</th> 
+                                <th scope="col">Log</th> 
                                 <th scope="col">Action</th> 
                             </tr>
                         </thead>
@@ -635,6 +636,19 @@
                         var statusIcon = isActive ? '<i class="fas fa-toggle-on"></i>' : '<i class="fas fa-toggle-off"></i>';
                         
                         return '<button class="' + statusClass + '" onclick="changeStatus(' + full.id + ')">' + statusIcon + '</button>';
+                    }
+                },
+                {
+                    data: 'id',
+                    name: 'activities',
+                    orderable: false,
+                    searchable: false,
+                    render: function(data, type, full, meta) {
+                        if (type === 'display') {
+                            let route = "{{ route('user.activities', ':id') }}".replace(':id', data);
+                            return '<a href="' + route + '" class="btn btn-primary"><i class="fas fa-book"></i></a>';
+                        }
+                        return null;
                     }
                 },
                 {
