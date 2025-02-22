@@ -164,6 +164,13 @@
 
     @endif
 
+    <li class="nav-item {{ (request()->is('admin/report*')) ? 'active' : '' }}">
+      <a class="nav-link collapsed" href="{{ route('report.index') }}">
+        <i class="fas fa-chart-line"></i>
+        <span>Report</span>
+      </a>
+    </li>
+
     @if (in_array('17', json_decode(Auth::user()->role->permission)))
 
     <li class="nav-item {{ (request()->is('admin/role*')) ? 'active' : '' }}">

@@ -49,6 +49,7 @@ use App\Http\Controllers\Admin\NoteController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\LogoutController;
 use App\Http\Controllers\Admin\ChatController;
+use App\Http\Controllers\Admin\ReportController;
 
 //Fallback route
 Route::fallback(function () {
@@ -394,6 +395,11 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     //Holiday Report
     Route::get('/holiday-report', [HolidayController::class, 'holidayReport'])->name('holidayReport');
     Route::post('/get-holiday-data', [HolidayController::class, 'getHolidayData'])->name('getHolidayData');
+
+    //Report
+    Route::get('/report', [ReportController::class, 'index'])->name('report.index');
+
+    Route::get('/create-report', [ReportController::class, 'createReport'])->name('report.create');
 
     // User absent log
     Route::post('/add-comment', [LogController::class, 'addComment'])->name('add.comment');
