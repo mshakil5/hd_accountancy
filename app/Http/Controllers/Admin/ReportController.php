@@ -35,10 +35,15 @@ class ReportController extends Controller
     
         $periods = [];
         for ($i = 0; $i <= $comparePeriods; $i++) { 
-            $pastStart = $startDate->copy()->subMonths($i * $monthsDiff);
-            $pastEnd = $endDate->copy()->subMonths($i * $monthsDiff);
-            $periods[] = $pastStart->format('M Y') . ' - ' . $pastEnd->format('M Y');
-        }
+          $pastStart = $startDate->copy()->subMonths($i * $monthsDiff);
+          $pastEnd = $endDate->copy()->subMonths($i * $monthsDiff);
+      
+          $periodLabel = $pastStart->format('M Y') . ' - ' . $pastEnd->format('M Y');
+          
+          if (!in_array($periodLabel, $periods)) {
+              $periods[] = $periodLabel;
+          }
+      }
     
         $query = WorkTime::query()
             ->select(

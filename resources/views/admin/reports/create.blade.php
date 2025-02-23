@@ -102,7 +102,7 @@
             compare_with: compare_with,
         },
         success: function (response) {
-            console.log(response);
+            // console.log(response);
 
             if (!response.periods || !Array.isArray(response.periods)) {
                 console.error("Invalid periods data:", response.periods);
