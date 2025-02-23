@@ -10,9 +10,34 @@ use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Spatie\Activitylog\Models\Activity;
 
 class ProrotaController extends Controller
 {
+
+  public function prorotaLog($id)
+  {
+      $prorota = Prorota::find($id);
+  
+      if (!$prorota) {
+          return redirect()->back()->with('error', 'Prorota record not found.');
+      }
+  
+      $prorotaLogs = Activity::with('causer')
+          ->where('subject_type', Prorota::class)
+          ->where('subject_id', $prorota->id)
+          ->latest()
+          ->get();
+  
+      $prorotaDetailLogs = Activity::with('causer')
+          ->where('subject_type', ProrotaDetail::class)
+          ->whereIn('subject_id', $prorota->prorotaDetail->pluck('id'))
+          ->latest()
+          ->get();
+  
+      return view('admin.prorota.prorota_log', compact('prorota', 'prorotaLogs', 'prorotaDetailLogs'));
+  }
+
     public function index()
     {   
         return view('admin.prorota.index');
@@ -25,8 +50,11 @@ class ProrotaController extends Controller
             return DataTables::of($data)
                 ->addIndexColumn()
                 ->addColumn('staff_name', function($row) {
-                    return $row->staff ? $row->staff->first_name : '';
-                })
+                  $firstName = $row->staff ? $row->staff->first_name : '';
+                  $lastName = $row->staff ? $row->staff->last_name : '';
+                  
+                  return trim($firstName . ' ' . $lastName);
+              })
                 ->make(true);
         }
     }

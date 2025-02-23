@@ -27,7 +27,8 @@
                             <th scope="col">Sl</th>
                             <th scope="col">Staff Name</th>
                             <!-- <th scope="col">Schedule Type</th> -->
-                            <th scope="col">Schedule</th>
+                            <th scope="col">Details</th>
+                            <th scope="col">Log</th>
                             <th scope="col">Action</th> 
                         </tr>
                     </thead>
@@ -58,6 +59,13 @@
                 render: function(data, type, full, meta) {
                     var viewButtonHtml = '<a href="{{ url('admin/prorota/details') }}/' + data + '" class="btn btn-success"><i class="fa fa-eye"></i></a>';
                     return viewButtonHtml;
+                }
+            },
+            {
+                data: 'id',
+                name: 'log',
+                render: function(data, type, full, meta) {
+                    return '<a href="{{ url('admin/prorota-log') }}/' + data + '" class="btn btn-primary"><i class="fa fa-file-alt"></i></a>';
                 }
             },
             {
