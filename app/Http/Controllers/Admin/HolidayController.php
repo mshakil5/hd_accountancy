@@ -14,6 +14,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
+use Spatie\Activitylog\Models\Activity;
 
 class HolidayController extends Controller
 {
@@ -28,6 +29,23 @@ class HolidayController extends Controller
         $staffs = User::whereIn('type', ['2','3'])->select('id','first_name','last_name','email')->orderby('id','DESC')->get();
         $holidayTypes = HolidayType::orderBy('id', 'desc')->select('id', 'type')->get();
         return view('admin.holiday.create', compact('staffs','holidayTypes'));
+    }
+
+    public function holidayLog($id)
+    {
+        $holidayRequest = HolidayRequest::find($id);
+  
+        if (!$holidayRequest) {
+            return redirect()->back()->with('error', 'Holiday request not found.');
+        }
+  
+        $activities = Activity::with('causer')
+            ->where('subject_type', HolidayRequest::class)
+            ->where('subject_id', $holidayRequest->id)
+            ->latest()
+            ->get();
+  
+        return view('admin.holiday.holiday_log', compact('holidayRequest', 'activities'));
     }
 
     public function store(Request $request)

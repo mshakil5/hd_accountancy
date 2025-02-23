@@ -65,7 +65,8 @@
                             <th scope="col">End Date</th>
                             <th scope="col">Comment</th>
                             <th scope="col">Total Days</th>
-                            <th scope="col">Change Status</th> 
+                            <th scope="col">Status</th> 
+                            <th scope="col">Log</th> 
                             <th scope="col">Action</th>
                         </tr>
                     </thead>
@@ -120,6 +121,15 @@
                                 <option value="2" ${data === 2 ? 'selected' : ''}>Declined</option>
                             </select>`;
                         return dropdown;
+                    }
+                },
+                {
+                    data: null,
+                    render: function(data, type, row) {
+                        var logUrl = "{{ url('/admin/holiday-log') }}/" + row.id;
+                        return `<a href="${logUrl}" class="btn btn-primary">
+                                    <i class="fa fa-file-alt" style="font-size: 18px;"></i>
+                                </a>`;
                     }
                 },
                 {

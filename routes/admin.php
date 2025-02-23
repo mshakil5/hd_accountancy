@@ -375,6 +375,8 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::delete('/delete-prorota/{id}', [ProrotaController::class, 'deleteData'])->name('delete.prorota');
     Route::get('/prorota/edit/{id}', [ProrotaController::class,'edit'])->name('prorota.edit');
 
+    Route::get('/prorota-log/{id}', [ProrotaController::class, 'prorotaLog'])->name('prorota.log');
+
     
     // holiday make
     Route::get('/holiday', [HolidayController::class, 'index'])->name('holiday');
@@ -391,6 +393,8 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
 
     // get holiday type
     Route::post('/get-holiday-type', [HolidayController::class, 'getHolidayType'])->name('get.holiday.type');
+
+    Route::get('/holiday-log/{id}', [HolidayController::class, 'holidayLog'])->name('holiday.log');
 
     //Holiday Report
     Route::get('/holiday-report', [HolidayController::class, 'holidayReport'])->name('holidayReport');
@@ -412,6 +416,8 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/holiday-type/{id}/edit', [HolidayTypeController::class, 'edit']);
     Route::post('/holiday-type-update', [HolidayTypeController::class, 'update']);
     Route::get('/holiday-type/{id}', [HolidayTypeController::class, 'delete']);
+
+    Route::get('/holiday-type-log/{id}', [HolidayTypeController::class, 'holidayTypeLog'])->name('holidayType.log');
 
     // company information
     Route::get('/company-details', [CompanyDetailsController::class, 'index'])->name('admin.companyDetail');
