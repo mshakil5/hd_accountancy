@@ -401,6 +401,8 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
 
     Route::get('/create-report', [ReportController::class, 'createReport'])->name('report.create');
 
+    Route::get('/generate-report', [ReportController::class, 'generateReport'])->name('report.generate');
+
     // User absent log
     Route::post('/add-comment', [LogController::class, 'addComment'])->name('add.comment');
 

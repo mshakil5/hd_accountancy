@@ -39,6 +39,12 @@
   <link href="{{ asset('assets/css/style.css')}}" rel="stylesheet">
   <link href="{{ asset('assets/css/customize.css')}}" rel="stylesheet">
 
+  <style>
+    .select2-selection{
+      height: 40px !important;
+    }
+  </style>
+
 </head>
 
 <body>
