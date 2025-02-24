@@ -8,7 +8,7 @@
       <div class="col-12">
         <div class="card card-danger">
           <div class="card-header">
-            <h3 class="card-title">Trash Bin</h3>
+            <h3 class="card-title">Recycle Bin</h3>
             @if(session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
             @endif

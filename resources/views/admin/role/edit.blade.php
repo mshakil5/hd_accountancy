@@ -112,11 +112,6 @@
                       </td>
                     </tr>
                     @endif
-                  </table>
-                </div>
-
-                <div class="col-md-6">
-                  <table class="table table-hover">
                     @if(in_array(10, $permissions))
                     <tr>
                       <td><label class="control-label">Manage Admin Tasks</label></td>
@@ -125,6 +120,10 @@
                       </td>
                     </tr>
                     @endif
+                  </table>
+                </div>
+                <div class="col-md-6">
+                  <table class="table table-hover">
                     @if(in_array(11, $permissions))
                     <tr>
                       <td><label class="control-label">Manage One Time Tasks</label></td>
@@ -178,6 +177,14 @@
                       <td><label class="control-label">Manage Role & Permission</label></td>
                       <td>
                         <label style="margin-top: -9px" class="switch"><input name="permission[]" type="checkbox" value="17" @foreach (json_decode($data->permission) as $permission) @if ($permission == 17) checked @endif @endforeach><span class="slider round"></span></label>
+                      </td>
+                    </tr>
+                    @endif
+                    @if(in_array(19, $permissions))
+                    <tr>
+                      <td><label class="control-label">Manage Recycle Bin</label></td>
+                      <td>
+                        <label style="margin-top: -9px" class="switch"><input name="permission[]" type="checkbox" value="19" @foreach (json_decode($data->permission) as $permission) @if ($permission == 19) checked @endif @endforeach><span class="slider round"></span></label>
                       </td>
                     </tr>
                     @endif

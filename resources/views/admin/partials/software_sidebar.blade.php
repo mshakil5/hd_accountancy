@@ -103,7 +103,7 @@
     <li class="nav-item {{ request()->routeIs('oneTimeJob.create') ? 'active' : '' }}">
       <a class="nav-link collapsed" href="{{ route('oneTimeJob.create') }}">
         <i class="bi bi-journal-text"></i>
-        <span>One Time Job</span>
+        <span>One Time Tasks</span>
       </a>
     </li>
 
@@ -141,13 +141,6 @@
     </li>
 
     @endif
-
-    <li class="nav-item {{ request()->routeIs('trash-bin') ? 'active' : '' }}">
-      <a class="nav-link collapsed" href="{{ route('trash-bin') }}">
-          <i class="bi bi-trash"></i>
-          <span>Trash Bin</span>
-      </a>
-    </li>
 
     @if (in_array('15', json_decode(Auth::user()->role->permission)))
 
@@ -187,6 +180,17 @@
       </a>
     </li>
 
+    @endif
+
+    @if (in_array('19', json_decode(Auth::user()->role->permission)))
+
+    <li class="nav-item {{ request()->routeIs('trash-bin') ? 'active' : '' }}">
+      <a class="nav-link collapsed" href="{{ route('trash-bin') }}">
+          <i class="bi bi-trash"></i>
+          <span>Recycle Bin</span>
+      </a>
+    </li>
+    
     @endif
 
     <li class="nav-item">
