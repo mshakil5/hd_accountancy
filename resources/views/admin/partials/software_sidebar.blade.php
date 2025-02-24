@@ -142,6 +142,13 @@
 
     @endif
 
+    <li class="nav-item {{ request()->routeIs('trash-bin') ? 'active' : '' }}">
+      <a class="nav-link collapsed" href="{{ route('trash-bin') }}">
+          <i class="bi bi-trash"></i>
+          <span>Trash Bin</span>
+      </a>
+    </li>
+
     @if (in_array('15', json_decode(Auth::user()->role->permission)))
 
     <li class="nav-item {{ request()->routeIs('allHolidayType') ? 'active' : '' }}">

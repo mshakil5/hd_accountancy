@@ -50,6 +50,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\LogoutController;
 use App\Http\Controllers\Admin\ChatController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\TrashBinController;
 
 //Fallback route
 Route::fallback(function () {
@@ -651,5 +652,9 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::post('/client-about-business', [ClientController::class, 'clientAboutBusinessUpdate'])->name('aboutBusiness.update');
 
     Route::post('/accountancy-fee', [ClientController::class, 'clientAccountancyFee'])->name('accountancy-fee.storeOrUpdate');
+
+    Route::get('/trash-bin', [TrashBinController::class, 'index'])->name('trash-bin');
+    Route::get('/trash-bin/restore', [TrashBinController::class, 'restore'])->name('restore.record');
+    Route::get('/trash-bin/delete', [TrashBinController::class, 'forceDelete'])->name('forceDelete.record');
 
 });
