@@ -42,7 +42,7 @@
                       <a href="{{ route('restore.record', ['model' => $model, 'id' => $record->id]) }}" class="btn btn-success btn-sm">
                         <i class="fas fa-undo"></i> Restore
                       </a>
-                      <a href="{{ route('forceDelete.record', ['model' => $model, 'id' => $record->id]) }}" class="btn btn-danger btn-sm">
+                      <a href="{{ route('forceDelete.record', ['model' => $model, 'id' => $record->id]) }}" class="btn btn-danger btn-sm d-none">
                         <i class="fas fa-trash-alt"></i> Delete Permanently
                       </a>
                     </td>
