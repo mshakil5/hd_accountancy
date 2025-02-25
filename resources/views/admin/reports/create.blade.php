@@ -60,14 +60,29 @@
       <div class="card shadow-sm mt-4 border-1 border-theme" id="report_card" style="display: none;">
         <div class="card-body py-4">
             <h2 class="fw-bold mb-2" id="report_title"></h2>
+            <h2 class="fw-bold mb-2" id="detail_report_title" style="display: none;"></h2>
             <p class="text-muted my-2" id="report_base_name"></p>
             <p class="text-muted mb-4" id="report_date_range"></p>
     
-            <div class="table-responsive">
+            <div class="table-responsive" id="report_table_container">
                 <table class="table table-bordered report-table">
                     <thead class="table-light"></thead>
                     <tbody></tbody>
                 </table>
+            </div>
+
+            <div class="table-responsive mt-4" id="detailed_table_container" style="display: none;">
+              <table class="table table-bordered detailed-table">
+                  <thead class="table-light"></thead>
+                  <tbody></tbody>
+                  <tfoot>
+                    <tr>
+                        <td colspan="3" class="text-center">
+                            <button type="button" class="btn btn-danger btn-cancel-report">Back</button>
+                        </td>
+                    </tr>
+                </tfoot>
+              </table>
             </div>
     
             <div class="d-flex justify-content-center gap-3 mt-3">
@@ -139,8 +154,6 @@
             compare_with: compare_with,
         },
         success: function (response) {
-            // console.log(response);
-
             if (!response.work_times || !Array.isArray(response.work_times)) {
                 console.error("Invalid response format:", response);
                 toastr.error("Failed to generate report.");
@@ -181,21 +194,27 @@
                             periods: {}
                         };
                     }
-                    clients[key].periods[period.period] = (record.total_duration / 3600).toFixed(2) + " hr";
+                    let hoursWorked = (record.total_duration / 3600).toFixed(2);
+                    clients[key].periods[period.period] = hoursWorked;
 
                     totalHours[period.period] += record.total_duration / 3600;
                 });
             });
 
             Object.values(clients).forEach(client => {
-              console.log(client);
                 tbody += `<tr>
                             <td>${client.refid ?? 'N/A'}</td>
                             <td><a href="/admin/client/report/${client.client_id}" class="text-primary">${client.client_name}</a></td>`;
 
                 response.work_times.forEach(period => {
-                    let hoursWorked = client.periods[period.period] || "0 hr";
-                    tbody += `<td class="text-center">${hoursWorked}</td>`;
+                    let hoursWorked = client.periods[period.period] || "0";
+                    let clickableClass = parseFloat(hoursWorked) > 0 ? "clickable-hour text-primary" : "";
+                    let cursorStyle = parseFloat(hoursWorked) > 0 ? "cursor: pointer;" : "";
+
+                    tbody += `<td class="text-center ${clickableClass}" style="${cursorStyle}" 
+                               data-period="${period.period}" data-client="${client.client_id}">
+                               ${hoursWorked} hr
+                             </td>`;
                 });
 
                 tbody += `</tr>`;
@@ -217,6 +236,72 @@
         }
     });
   });
+
+  $(document).on('click', '.clickable-hour', function() {
+    let clientId = $(this).data('client');
+    let period = $(this).data('period');
+
+    $.ajax({
+        url: "{{ route('report.details') }}",
+        type: "GET",
+        data: {
+            client_id: clientId,
+            period: period,
+        },
+        success: function(response) {
+            if (!response.details || response.details.length === 0) {
+                toastr.warning("No details found for this period.");
+                return;
+            }
+
+            $('#detail_report_title').text(response.client_name + " - " + period).show();
+            $('#report_title').hide();
+            $('#report_table_container').hide();
+
+            let thead = `<tr>
+                            <th>Date</th>
+                            <th class="text-center">Time (hr)</th>
+                            <th class="text-center">Service Name</th>
+                         </tr>`;
+            $('.detailed-table thead').html(thead);
+
+            let tbody = '';
+            let totalHours = 0;
+
+            response.details.forEach(record => {
+                let hours = (record.duration / 3600).toFixed(2);
+                totalHours += parseFloat(hours);
+
+                tbody += `<tr>
+                            <td>${record.date}</td>
+                            <td class="text-center">${hours} hr</td>
+                            <td class="text-center">${record.service_name ?? 'N/A'}</td>
+                          </tr>`;
+            });
+
+            tbody += `<tr class="fw-bold">
+                        <td colspan="1" class="text-end">Total</td>
+                        <td class="text-center">${totalHours.toFixed(2)} hr</td>
+                        <td></td>
+                      </tr>`;
+
+            $('.detailed-table tbody').html(tbody);
+            $('#detailed_table_container').show();
+        },
+        error: function(xhr) {
+            console.error("AJAX Error:", xhr.responseText);
+            toastr.error("Failed to fetch details.");
+        }
+    });
+  });
+
+  $(document).on('click', '.btn-cancel-report', function () {
+    $('#detailed_table_container').hide();
+    $('#report_title').show();
+    $('#report_table_container').show();
+    $('#detail_report_title').hide();
+  });
+
 </script>
 
 @endsection
