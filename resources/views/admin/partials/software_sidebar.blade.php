@@ -164,8 +164,8 @@
 
     @endif
 
-    <li class="nav-item {{ (request()->is('admin/report*')) ? 'active' : '' }}">
-      <a class="nav-link collapsed" href="{{ route('report.index') }}">
+    <li class="nav-item {{ (request()->is('admin/create-report*')) ? 'active' : '' }}">
+      <a class="nav-link collapsed" href="{{ route('report.create') }}">
         <i class="fas fa-chart-line"></i>
         <span>Report</span>
       </a>

@@ -9,21 +9,25 @@
               <div class="px-3">
                   <div class="row my-2">
                       <div class="col-lg-4">
-                          <label for="staff_id" class="form-label fw-bold">Report Name</label>
+                          <label for="staff_id" class="form-label fw-bold">Report Name </label>
                           <input type="text" class="form-control rounded-1 border-1 border-theme bg-white" id="report_name">
                       </div>
                       <div class="col-lg-2">
-                          <label for="start_date" class="form-label fw-bold">Report Base</label>
-                          <select class="form-select rounded-1 border-1 border-theme bg-white" id="report_base">
-                              <option value="emplpyee">Employee</option>
-                          </select>
+                        <label for="report_base" class="form-label fw-bold">Report Base</label>
+                        <select class="form-select rounded-1 border-1 border-theme bg-white" id="report_base">
+                            <option value="employee">Employee</option>
+                            <option value="client">Client</option>
+                        </select>
                       </div>
-                      <div class="col-lg-2">
-                          <label for="end_date" class="form-label fw-bold">Base Name</label>
-                            <select class="form-select rounded-1 border-1 border-theme bg-white select2" id="base_name">
+                    
+                      <div class="col-lg-4">
+                          <label for="base_name" class="form-label fw-bold">Base Name</label>
+                          <select class="form-select rounded-1 border-1 border-theme bg-white select2" id="base_name">
                               <option value="All">All</option>
-                              @foreach ($clients as $client)
-                                <option value="{{ $client->id }}">{{ $client->name }}</option>
+                              @foreach ($employees as $employee)
+                                  <option value="{{ $employee->id }}" data-type="employee">
+                                    {{ $employee->id_number }} - {{ $employee->first_name }} {{ $employee->last_name }}
+                                  </option>
                               @endforeach
                           </select>
                       </div>
@@ -35,13 +39,13 @@
                         <input type="text" class="form-control float-right bg-white" id="reservation">
                     </div>
 
-                      <div class="col-lg-2">
+                      <div class="col-lg-4">
                           <label for="start_date" class="form-label fw-bold">Compare With</label>
                           <select class="form-select rounded-1 border-1 border-theme bg-white" id="compare_with">
-                              <option value="5">5 Periods</option>
-                              <option value="4">4 Periods</option>
-                              <option value="3">3 Periods</option>
-                              <option value="2">2 Periods</option>
+                              <option value="5">Compare With 5 Periods</option>
+                              <option value="4">Compare With 4 Periods</option>
+                              <option value="3">Compare With 3 Periods</option>
+                              <option value="2">Compare With 2 Periods</option>
                           </select>
                       </div>
                       <div class="col-lg-2">
@@ -55,8 +59,9 @@
 
       <div class="card shadow-sm mt-4 border-1 border-theme" id="report_card" style="display: none;">
         <div class="card-body py-4">
-            <h5 class="fw-bold" id="report_title"></h5>
-            <p class="text-muted mb-3" id="report_date_range"></p>
+            <h2 class="fw-bold mb-2" id="report_title"></h2>
+            <p class="text-muted my-2" id="report_base_name"></p>
+            <p class="text-muted mb-4" id="report_date_range"></p>
     
             <div class="table-responsive">
                 <table class="table table-bordered report-table">
@@ -66,8 +71,7 @@
             </div>
     
             <div class="d-flex justify-content-center gap-3 mt-3">
-                <button class="btn btn-primary">Save</button>
-                <button class="btn btn-primary">Export As</button>
+                <button class="btn btn-primary">Export</button>
             </div>
         </div>
       </div>
@@ -80,6 +84,32 @@
 @section('script')
 
 <script>
+  $(document).ready(function() {
+      let employees = @json($employees);
+      let clients = @json($clients);
+
+      $('#report_base').change(function() {
+          let selectedType = $(this).val();
+          let baseNameSelect = $('#base_name');
+          
+          baseNameSelect.empty().append('<option value="All">All</option>');
+
+          if (selectedType === 'employee') {
+              employees.forEach(employee => {
+                  baseNameSelect.append(`<option value="${employee.id}">${employee.id_number ? employee.id_number + ' - ' : ''}${employee.first_name} ${employee.last_name}</option>`);
+              });
+          } else {
+              clients.forEach(client => {
+                  baseNameSelect.append(`<option value="${client.id}">${client.refid} - ${client.name}</option>`);
+              });
+          }
+
+          baseNameSelect.trigger('change');
+      });
+
+      $('.select2').select2();
+  });
+
   $('#reservation').daterangepicker({
     locale: {
         format: 'DD/MM/YYYY'
@@ -88,15 +118,22 @@
 
   $(document).on('click', '.btn-generate-report', function () {
     let report_name = $('#report_name').val();
+    let report_base = $('#report_base').val();
     let base_name = $('#base_name').val();
     let date_range = $('#reservation').val();
     let compare_with = $('#compare_with').val();
+
+    if (!report_name || !report_base || !base_name || !date_range || !compare_with) {
+        toastr.error("Please fill all fields.");
+        return;
+    }
 
     $.ajax({
         url: "{{ route('report.generate') }}",
         type: "GET",
         data: {
             report_name: report_name,
+            report_base: report_base,
             base_name: base_name,
             date_range: date_range,
             compare_with: compare_with,
@@ -104,41 +141,61 @@
         success: function (response) {
             // console.log(response);
 
-            if (!response.periods || !Array.isArray(response.periods)) {
-                console.error("Invalid periods data:", response.periods);
+            if (!response.work_times || !Array.isArray(response.work_times)) {
+                console.error("Invalid response format:", response);
+                toastr.error("Failed to generate report.");
                 return;
             }
 
             $('#report_title').text(response.report_name);
-            $('#report_date_range').text(date_range);
+            $('#report_base_name').text(response.report_base);
+            $('#report_date_range').text(response.date_range);
             $('#report_card').show();
 
             let thead = `<tr>
                             <th>Ref ID</th>
-                            <th>Client Names</th>`;
-            response.periods.forEach(period => {
-                thead += `<th class="text-center">${period}</th>`;
+                            <th>Client Name</th>`;
+            response.work_times.forEach(period => {
+                thead += `<th class="text-center">${period.period}</th>`;
             });
             thead += `</tr>`;
             $('.report-table thead').html(thead);
 
             let tbody = '';
-            let totalHours = {}; 
+            let totalHours = {};
 
-            response.periods.forEach(period => {
-                totalHours[period] = 0;
+            response.work_times.forEach(period => {
+                totalHours[period.period] = 0;
             });
 
-            response.report_data.forEach(row => {
-                tbody += `<tr>
-                            <td>${row.client_ref}</td>
-                            <td><a href="#" class="text-primary">${row.client_name}</a></td>`;
+            let clients = {};
 
-                response.periods.forEach(period => {
-                    let hoursWorked = row.hours[period] || "0 hr";
+            response.work_times.forEach(period => {
+                period.records.forEach(record => {
+                    let key = record.client_id;
+                    if (!clients[key]) {
+                        clients[key] = {
+                            client_id: record.client_id,
+                            client_name: record.client_name,
+                            refid: record.refid,
+                            periods: {}
+                        };
+                    }
+                    clients[key].periods[period.period] = (record.total_duration / 3600).toFixed(2) + " hr";
+
+                    totalHours[period.period] += record.total_duration / 3600;
+                });
+            });
+
+            Object.values(clients).forEach(client => {
+              console.log(client);
+                tbody += `<tr>
+                            <td>${client.refid ?? 'N/A'}</td>
+                            <td><a href="/admin/client/report/${client.client_id}" class="text-primary">${client.client_name}</a></td>`;
+
+                response.work_times.forEach(period => {
+                    let hoursWorked = client.periods[period.period] || "0 hr";
                     tbody += `<td class="text-center">${hoursWorked}</td>`;
-                    
-                    totalHours[period] += parseFloat(hoursWorked);
                 });
 
                 tbody += `</tr>`;
@@ -148,8 +205,8 @@
 
             let totalRow = `<tr class="fw-bold">
                                 <td colspan="2" class="text-end">Total</td>`;
-            response.periods.forEach(period => {
-                totalRow += `<td class="text-center">${totalHours[period].toFixed(2)} hr</td>`;
+            response.work_times.forEach(period => {
+                totalRow += `<td class="text-center">${totalHours[period.period].toFixed(2)} hr</td>`;
             });
             totalRow += `</tr>`;
 

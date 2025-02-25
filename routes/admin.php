@@ -401,9 +401,6 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/holiday-report', [HolidayController::class, 'holidayReport'])->name('holidayReport');
     Route::post('/get-holiday-data', [HolidayController::class, 'getHolidayData'])->name('getHolidayData');
 
-    //Report
-    Route::get('/report', [ReportController::class, 'index'])->name('report.index');
-
     Route::get('/create-report', [ReportController::class, 'createReport'])->name('report.create');
 
     Route::get('/generate-report', [ReportController::class, 'generateReport'])->name('report.generate');
