@@ -191,17 +191,17 @@
         let today = new Date().toISOString().split('T')[0];
 
         if (!date || !time || !time_zone || !meet_type || !first_name || !last_name || !email || !phone || !discussion) {
-            toastr.warning('Please fill out all required fields.', 'Error');
+            toastr.error('Please fill out all required fields.');
             return;
         }
 
         if (date < today) {
-            toastr.warning('The selected date must be today or a future date.', 'Invalid Date');
+            toastr.error('The selected date must be today or a future date.');
             return;
         }
 
         if (!emailRegex.test(email)) {
-            toastr.warning('Please enter a valid email address.', 'Invalid Email');
+            toastr.error('Please enter a valid email address.');
             return;
         }
 
@@ -233,7 +233,7 @@
             success: function(response) {
                 document.getElementById('loader1').style.display = 'none';
                 document.getElementById('submitBtn').disabled = false;
-                toastr.success('Meeting scheduled successfully!', 'Success');
+                toastr.success('Meeting scheduled successfully!');
 
                 $('#date').val('');
                 $('#datepicker').datepicker('update', '');
@@ -251,7 +251,7 @@
                 document.getElementById('submitBtn').disabled = false;
 
                 // console.log(xhr.responseText);
-                toastr.error('An error occurred. Please try again.', 'Error');
+                toastr.error('An error occurred. Please try again.');
             }
         });
     });

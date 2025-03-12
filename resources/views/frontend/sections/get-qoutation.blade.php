@@ -120,7 +120,7 @@
          var bank_accounts = document.getElementById('bank_accounts').value.trim();
 
          if (!name || !email || !company_name || !phone || !business_type || !turnover || !vat_returns || !payroll || !bookkeeping || !bookkeeping_software || !management_account || !bank_accounts) {
-            toastr.warning('Please fill out all required fields.', 'Error');
+            toastr.error('Please fill out all required fields.');
             return;
          }
 
@@ -144,12 +144,12 @@
                if (data.success) {
                   document.getElementById('loader2').style.display = 'none';
                   document.getElementById('submitForm').disabled = false;
-                  toastr.success('Submitted successfully!', 'Success');
+                  toastr.success('Submitted successfully!');
                   document.getElementById('contactForm').reset();
                } else {
                   document.getElementById('loader2').style.display = 'none';
                   document.getElementById('submitForm').disabled = false;
-                  toastr.error('An error occurred. Please try again.', 'Error');
+                  toastr.error('An error occurred. Please try again.');
                }
             },
             error: function(xhr, status, error) {
