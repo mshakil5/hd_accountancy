@@ -64,7 +64,7 @@
   @endif
 
   <!-- Main -->
-  <main id="main" class="main mt-2">
+  <main id="main" class="main mt-0">
 
       @yield('content')
 

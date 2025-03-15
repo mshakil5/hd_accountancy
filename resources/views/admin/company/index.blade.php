@@ -18,7 +18,7 @@
         <div class="alert alert-danger pt-3 mb-3" id="errMessage">{{ session()->get('error') }}</div>
     @endif
 
-        <div class="card card-secondary">
+        <div class="card card-secondary border-theme border-2">
           <div class="card-header">
             <h3 class="card-title">Comapny Informations</h3>
           </div>

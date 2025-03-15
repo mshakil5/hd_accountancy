@@ -6,7 +6,7 @@
   <div class="container-fluid">
     <div class="row justify-content-md-center">
       <div class="col-md-10">
-        <div class="card card-secondary">
+        <div class="card card-secondary border-theme border-2">
           <div class="card-header">
             <h3 class="card-title">Package Page Meta Data</h3>
           </div>

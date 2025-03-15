@@ -3,7 +3,7 @@
 @section('content')
 
 <!-- Main content -->
-<section class="content mt-3" id="newBtnSection">
+<section class="content" id="newBtnSection">
     <div class="container-fluid">
       <div class="row">
         <div class="col-2">
@@ -23,7 +23,7 @@
           <!-- right column -->
           <div class="col-md-8">
             <!-- general form elements disabled -->
-            <div class="card card-secondary">
+            <div class="card card-secondary border-theme border-2">
               <div class="card-header">
                 <h3 class="card-title">Add new manager</h3>
               </div>
@@ -130,7 +130,7 @@
         <div class="col-12">
           <!-- /.card -->
 
-          <div class="card card-secondary">
+          <div class=card card-secondary border-theme border-2 border-theme border-2">
             <div class="card-header">
               <h3 class="card-title">All Managers</h3>
             </div>

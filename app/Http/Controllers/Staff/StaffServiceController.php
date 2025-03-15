@@ -576,7 +576,7 @@ class StaffServiceController extends Controller
                 $endTime = $today . ' ' . $request->end_times[$i] . ':00';
                 $workTime->start_time = Carbon::parse($startTime);
                 $workTime->end_time = Carbon::parse($endTime);
-                $workTime->staff_id = $userId;
+                $workTime->staff_id = $staffId;
                 $workTime->type = 2;
                 $workTime->duration = $workTime->end_time->diffInSeconds($workTime->start_time);
                 $workTime->start_date = $today;

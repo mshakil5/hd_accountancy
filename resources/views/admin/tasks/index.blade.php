@@ -203,7 +203,7 @@
       <!-- One Time Jobs -->
       <div class="col-lg-5 mb-3">
         <div class="col-lg-12 px-0 border shadow-sm mb-3">
-            <div class="card-body px-0">
+            <div class="card-body px-0 border-theme border-2">
                 <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
                         <i class="bx bxs-user-plus fs-4 me-2"></i>One Time Jobs
                     </p>
@@ -227,6 +227,7 @@
     <!-- Works assigned to a user and specified staff start-->
     <div class="col-lg-7 mb-3">
         <div class="col-lg-12 px-0 border shadow-sm mb-3">
+          <div class="card-body px-0 border-theme border-2">
             <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
                 <i class="bx bxs-user-plus fs-4 me-2"></i>Your Assigned Tasks
             </p>
@@ -244,6 +245,7 @@
                         </thead>
                     </table>
                 </div>
+              </div>
         </div>
     </div>
     <!-- Works assigned to a user and specified staff start-->
@@ -317,6 +319,7 @@
     <!-- Completed tasks as staff table start-->
     <div class="col-lg-6 mb-3">
         <div class="col-lg-12 px-0 border shadow-sm mb-3">
+          <div class="card-body px-0 border-theme border-2">
             <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
                     <i class="bx bxs-user-plus fs-4 me-2"></i>Completed Tasks As Staff
             </p>
@@ -334,12 +337,14 @@
                 </table>
             </div>
         </div>
+      </div>
     </div>
     <!-- Completed tasks as staff table end-->
 
     <!-- Completed tasks as manager table start-->
     <div class="col-lg-6 mb-3">
         <div class="col-lg-12 px-0 border shadow-sm mb-3">
+          <div class="card-body px-0 border-theme border-2">
             <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
                     <i class="bx bxs-user-plus fs-4 me-2"></i>Completed Tasks As Manager
                 </p>
@@ -356,6 +361,7 @@
                         </tr>
                     </thead>
                 </table>
+              </div>
         </div>
     </div>
     <!-- Completed tasks as manager table end-->

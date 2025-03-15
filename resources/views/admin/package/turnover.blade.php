@@ -25,7 +25,7 @@
       <!-- right column -->
       <div class="col-md-8">
         <!-- general form elements disabled -->
-        <div class="card card-secondary">
+        <div class="card card-secondary border-theme border-2">
           <div class="card-header">
             <h3 class="card-title">Add new</h3>
           </div>
@@ -113,7 +113,7 @@
       <div class="row">
         <div class="col-12">
           <!-- /.card -->
-          <div class="card card-secondary">
+          <div class="card card-secondary border-theme border-2">
             <div class="card-header">
               <h3 class="card-title">Turnovers of {{ $packageName }}</h3>
             </div>

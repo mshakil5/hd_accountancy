@@ -9,7 +9,7 @@
                     <i class="fas fa-arrow-left"></i> Back
                 </a>
 
-                <div class="card card-secondary">
+                <div class="card card-secondary border-theme border-2">
                     <div class="card-header">
                     </div>
                     <div class="card-body">

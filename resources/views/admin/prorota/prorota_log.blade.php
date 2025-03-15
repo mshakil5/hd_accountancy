@@ -10,7 +10,7 @@
                 </a>
 
                 <!-- Prorota Log -->
-                <div class="card card-secondary">
+                <div class="card card-secondary border-theme border-2">
                     <div class="card-header">
                         <h3 class="card-title">Prorota Log</h3>
                     </div>

@@ -23,7 +23,7 @@
             <!-- right column -->
             <div class="col-md-6">
                 <!-- general form elements disabled -->
-                <div class="card card-secondary">
+                <div class="card card-secondary border-theme border-2">
                     <div class="card-header">
                         <h3 class="card-title">Add new one time job</h3>
                     </div>
@@ -82,7 +82,7 @@
             <div class="col-12">
                 <!-- /.card -->
 
-                <div class="card card-secondary">
+                <div class="card card-secondary border-theme border-2">
                     <div class="card-header">
                         <h3 class="card-title">One Time Jobs</h3>
                     </div>

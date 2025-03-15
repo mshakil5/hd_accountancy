@@ -9,7 +9,7 @@
         <div class="col-12">
           <!-- /.card -->
 
-          <div class="card card-secondary">
+          <div class="card card-secondary border-theme border-2">
             <div class="card-header">
               <h3 class="card-title">All Data</h3>
             </div>

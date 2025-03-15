@@ -6,7 +6,7 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-12">
-                <div class="card card-secondary">
+                <div class="card card-secondary border-theme border-2">
                     <div class="card-header">
                         <h2>Today's Task Details for {{ $staffName }}</h2>
                     </div>

@@ -84,7 +84,7 @@
   <div class="col-md-7">
     <div class="card">
       <div class="card-header text-center">
-        <h3 class="card-title">Create Role</h3>
+        <h3 class="card-title">Create New Role</h3>
       </div>
       <div class="card-body ir-table">
         <form action="" method="post" enctype="multipart/form-data">

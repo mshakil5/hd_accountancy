@@ -11,13 +11,16 @@ class RoleController extends Controller
 {
     public function index()
     {
-        if (auth()->user()->role_id == 1) {
-            $roles = Role::where('id', '!=', 1)->get();
-        } else {
-            $roles = Role::where('created_by', auth()->user()->id)
-                ->where('id', '!=', 1)
+        // if (auth()->user()->role_id == 1) {
+        //     $roles = Role::where('id', '!=', 1)->get();
+        // } else {
+        //     $roles = Role::where('created_by', auth()->user()->id)
+        //         ->where('id', '!=', 1)
+        //         ->get();
+        // }
+
+        $roles = Role::where('created_by', auth()->user()->id)
                 ->get();
-        }
 
         $user = auth()->user();
 
