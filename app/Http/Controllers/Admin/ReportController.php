@@ -181,11 +181,47 @@ class ReportController extends Controller
         });
     
         $response = [
+            'client_id' => $clientId,
             'client_name' => optional($workTimes->first()->clientSubService->client)->name ?? '',
             'details' => $responseDetails->values()->toArray(),
         ];
     
         return response()->json($response);
+    }
+
+    public function fetchHourlyWorkTimeDetails(Request $request)
+    {
+        $clientId = $request->client_id;
+        $date = $request->date;
+        $date = Carbon::parse($date)->format('Y-m-d');
+    
+        $workTimes = WorkTime::whereNotNull('client_sub_service_id')
+            ->whereHas('clientSubService', function ($query) use ($clientId) {
+                $query->where('client_id', $clientId);
+            })
+            ->whereNotNull('staff_id')
+            ->where('is_break', 0)
+            ->whereDate('start_date', $date)
+            ->with('staff') 
+            ->get(['id', 'staff_id', 'client_sub_service_id', 'start_time', 'end_time', 'duration', 'is_break', 'type']);
+    
+        if ($workTimes->isEmpty()) {
+            return response()->json(['details' => []]);
+        }
+    
+        $responseDetails = $workTimes->map(function ($workTime) {
+            $staff = $workTime->staff;
+    
+            return [
+                'staff_id' => optional($staff)->id_number ?? '',
+                'staff_name' => optional($staff)->first_name . ' ' . optional($staff)->last_name,
+                'duration' => $workTime->duration,
+                'type' => $workTime->type,
+                'service_name' => optional($workTime->clientSubService->subService)->name ?? '',
+            ];
+        });
+    
+        return response()->json(['details' => $responseDetails]);
     }
     
     

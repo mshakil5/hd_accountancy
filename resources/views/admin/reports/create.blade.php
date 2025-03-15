@@ -77,8 +77,22 @@
                   <tbody></tbody>
                   <tfoot>
                     <tr>
-                        <td colspan="3" class="text-center">
+                        <td colspan="4" class="text-center">
                             <button type="button" class="btn btn-danger btn-cancel-report">Back</button>
+                        </td>
+                    </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            <div class="table-responsive mt-4" id="hourly_detailed_table_container" style="display: none;">
+              <table class="table table-bordered hourly-detailed-table">
+                  <thead class="table-light"></thead>
+                  <tbody></tbody>
+                  <tfoot>
+                    <tr>
+                        <td colspan="5" class="text-center">
+                            <button type="button" class="btn btn-danger hourly-cancel-report">Back</button>
                         </td>
                     </tr>
                 </tfoot>
@@ -209,6 +223,7 @@
                 response.work_times.forEach(period => {
                     let hoursWorked = client.periods[period.period] || "0";
                     let clickableClass = parseFloat(hoursWorked) > 0 ? "clickable-hour text-primary" : "";
+
                     let cursorStyle = parseFloat(hoursWorked) > 0 ? "cursor: pointer;" : "";
 
                     tbody += `<td class="text-center ${clickableClass}" style="${cursorStyle}" 
@@ -250,7 +265,7 @@
             period: period,
         },
         success: function(response) {
-          // console.log(response);
+          console.log(response);
             if (!response.details || response.details.length === 0) {
                 toastr.warning("No details found for this period.");
                 return;
@@ -286,7 +301,9 @@
 
                 tbody += `<tr>
                             <td>${record.date}</td>
-                            <td class="text-center">${hours} hr</td>
+                            <td class="text-center clickable-hour-detail text-primary" style="cursor: pointer;" data-client-id="${response.client_id}" data-date="${record.date}">
+                                ${hours} hr
+                            </td>
                             <td class="text-center">${serviceName}</td>
                             <td class="text-center">${additionalWork}</td>
                           </tr>`;
@@ -306,6 +323,85 @@
             toastr.error("Failed to fetch details.");
         }
     });
+  });
+
+  $(document).on('click', '.clickable-hour-detail', function() {
+      let clientId = $(this).data('client-id');
+      let date = $(this).data('date');
+
+      $.ajax({
+          url: "{{ route('report.hourly.details') }}",
+          type: "GET",
+          data: {
+              client_id: clientId,
+              date: date,
+          },
+          success: function(response) {
+              console.log(response);
+
+              if (!response.details || response.details.length === 0) {
+                  toastr.warning("No details found for this period.");
+                  return;
+              }
+
+              $('#detailed_table_container').hide();
+
+              let thead = `<tr>
+                              <th>Staff ID</th>
+                              <th>Staff Name</th>
+                              <th class="text-center">Time (hr)</th>
+                              <th class="text-center">Service Name</th>
+                              <th class="text-center">Additional Work</th>
+                          </tr>`;
+              $('.hourly-detailed-table thead').html(thead);
+
+              let tbody = '';
+              let totalHours = 0;
+
+              response.details.forEach(record => {
+                console.log(record);
+                  let hours = (record.duration / 3600).toFixed(2);
+                  totalHours += parseFloat(hours);
+
+                  let serviceName = '';
+                  let additionalWork = '';
+
+                  if (record.type == 2) {
+                      additionalWork = record.service_name;
+                  } else {
+                      serviceName = record.service_name;
+                  }
+
+                  tbody += `<tr>
+                              <td>${record.staff_id}</td>
+                              <td>${record.staff_name}</td>
+                              <td class="text-center text-primary">
+                                  ${hours} hr
+                              </td>
+                              <td class="text-center">${serviceName}</td>
+                              <td class="text-center">${additionalWork}</td>
+                            </tr>`;
+              });
+
+              tbody += `<tr class="fw-bold">
+                          <td colspan="2" class="text-end">Total</td>
+                          <td class="text-center">${totalHours.toFixed(2)} hr</td>
+                          <td colspan="2"></td>
+                        </tr>`;
+
+              $('.hourly-detailed-table tbody').html(tbody);
+              $('#hourly_detailed_table_container').show();
+          },
+          error: function(xhr , status, error) {
+              console.error(xhr.responseText);
+              toastr.error("Failed to fetch details.");
+          }
+      });
+  });
+
+  $(document).on('click', '.hourly-cancel-report', function() {
+    $('#detailed_table_container').show();
+    $('#hourly_detailed_table_container').hide();
   });
 
   $(document).on('click', '.btn-cancel-report', function () {

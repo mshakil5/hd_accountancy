@@ -16,4 +16,9 @@ class WorkTime extends Model
         return $this->belongsTo(ClientSubService::class);
     }
 
+    public function staff()
+    {
+        return $this->belongsTo(User::class, 'staff_id');
+    }
+
 }
