@@ -566,13 +566,20 @@ class StaffServiceController extends Controller
                 $clientSubService->sub_service_id = $request->sub_service_ids[$i];
                 $clientSubService->note = $request->notes[$i];
                 $clientSubService->staff_id = $staffId;
+                $clientSubService->type = 2;
                 $clientSubService->save();
 
                 $workTime = new WorkTime();
                 $workTime->client_sub_service_id = $clientSubService->id;
-                $workTime->start_time = $request->start_times[$i];
-                $workTime->end_time = $request->end_times[$i];
-                $workTime->staff_id = $staffId;
+                $today = Carbon::now()->format('Y-m-d');
+                $startTime = $today . ' ' . $request->start_times[$i] . ':00';
+                $endTime = $today . ' ' . $request->end_times[$i] . ':00';
+                $workTime->start_time = Carbon::parse($startTime);
+                $workTime->end_time = Carbon::parse($endTime);
+                $workTime->staff_id = $userId;
+                $workTime->type = 2;
+                $workTime->duration = $workTime->end_time->diffInSeconds($workTime->start_time);
+                $workTime->start_date = $today;
                 $workTime->save();
             }
         }

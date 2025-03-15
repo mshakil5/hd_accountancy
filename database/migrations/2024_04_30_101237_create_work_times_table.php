@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('duration')->nullable();
             $table->boolean('is_break')->default(0);
             $table->boolean('status')->default(1);
+            $table->boolean('type')->default(1); // 1 = Normal job work time , 2 = Additional job work time
             $table->foreign('manager_id')->references('id')->on('users')->where('type', 2)->onDelete('cascade');
             $table->foreign('staff_id')->references('id')->on('users')->where('type', 3)->onDelete('cascade');
             $table->foreign('client_sub_service_id')->references('id')->on('client_sub_services')->onDelete('cascade');

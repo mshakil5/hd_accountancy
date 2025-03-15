@@ -134,7 +134,10 @@
                             <label>End Time:</label>
                             <input type="time" class="form-control px-3 py-2 end-time" style="width: 130px;">
                         </div>
-                        <button type="button" class="btn btn-danger btn-remove-note-row">-</button>
+                        <div class="d-flex flex-column">
+                          <label class="label label-primary" style="visibility:hidden;">Action</label>
+                          <button type="button" class="btn btn-danger btn-remove-note-row">-</button>
+                        </div>
                     </div>
                 </div>`;
 
@@ -147,6 +150,38 @@
 
         $('#saveNoteBtn').click(function(e) {
             e.preventDefault();
+
+            var isValid = true;
+
+            $('#additionalWorkRows').each(function() {
+                var clientSelected = $(this).find('.client-name').val();
+                var startTime = $(this).find('.start-time').val();
+                var endTime = $(this).find('.end-time').val();
+
+                if (clientSelected) {
+                    if (!startTime) {
+                        isValid = false;
+                        $(this).find('.start-time').addClass('is-invalid');
+                    } else {
+                        $(this).find('.start-time').removeClass('is-invalid');
+                    }
+
+                    if (!endTime) {
+                        isValid = false;
+                        $(this).find('.end-time').addClass('is-invalid');
+                    } else {
+                        $(this).find('.end-time').removeClass('is-invalid');
+                    }
+                } else {
+                    $(this).find('.start-time').removeClass('is-invalid');
+                    $(this).find('.end-time').removeClass('is-invalid');
+                }
+            });
+
+            if (!isValid) {
+                alert('Please fill all required fields!');
+                return;
+            }
 
             var formData = {
                 _token: '{{ csrf_token() }}',
