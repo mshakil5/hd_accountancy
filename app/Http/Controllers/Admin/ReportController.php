@@ -148,28 +148,41 @@ class ReportController extends Controller
         $dates = explode(' to ', $dateRange);
         $startDate = Carbon::parse($dates[0])->format('Y-m-d');
         $endDate = Carbon::parse($dates[1])->format('Y-m-d');
-
+    
         $clientSubServiceIds = ClientSubService::where('client_id', $clientId)->pluck('id');
     
         $workTimes = WorkTime::whereNotNull('client_sub_service_id')
             ->whereNotNull('staff_id')
             ->whereIn('client_sub_service_id', $clientSubServiceIds)
             ->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate])
-            ->get(['created_at', 'duration', 'client_sub_service_id']);
+            ->get(['created_at', 'duration', 'client_sub_service_id', 'type']);
     
         if ($workTimes->isEmpty()) {
             return response()->json(['details' => []]);
         }
     
+        $groupedWorkTimes = $workTimes->groupBy(function ($workTime) {
+            return Carbon::parse($workTime->created_at)->format('d F Y') . '-' . optional($workTime->clientSubService->subService)->id . '-' . $workTime->type;
+        });
+    
+        $responseDetails = $groupedWorkTimes->map(function ($group) {
+            $totalDuration = $group->sum('duration');
+            $firstRecord = $group->first();
+            $date = Carbon::parse($firstRecord->created_at)->format('d F Y');
+            $subServiceName = optional($firstRecord->clientSubService->subService)->name ?? '';
+            $type = $firstRecord->type;
+    
+            return [
+                'date' => $date,
+                'duration' => $totalDuration,
+                'service_name' => $subServiceName,
+                'type' => $type,
+            ];
+        });
+    
         $response = [
             'client_name' => optional($workTimes->first()->clientSubService->client)->name ?? '',
-            'details' => $workTimes->map(function ($workTime) {
-                return [
-                    'date' => Carbon::parse($workTime->created_at)->format('d F Y'),
-                    'duration' => $workTime->duration,
-                    'service_name' => optional($workTime->clientSubService->subService)->name ?? '',
-                ];
-            }),
+            'details' => $responseDetails->values()->toArray(),
         ];
     
         return response()->json($response);

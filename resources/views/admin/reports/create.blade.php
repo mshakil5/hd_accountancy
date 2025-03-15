@@ -231,8 +231,9 @@
 
             $('.report-table tbody').append(totalRow);
         },
-        error: function (xhr) {
-            console.error("AJAX Error:", xhr.responseText);
+        error: function (xhr, status, error) {
+           toastr.error("Failed to fetch.");
+           console.error("AJAX Error:", xhr.responseText);
         }
     });
   });
@@ -249,6 +250,7 @@
             period: period,
         },
         success: function(response) {
+          // console.log(response);
             if (!response.details || response.details.length === 0) {
                 toastr.warning("No details found for this period.");
                 return;
@@ -262,6 +264,7 @@
                             <th>Date</th>
                             <th class="text-center">Time (hr)</th>
                             <th class="text-center">Service Name</th>
+                            <th class="text-center">Additional Work</th>
                          </tr>`;
             $('.detailed-table thead').html(thead);
 
@@ -272,10 +275,20 @@
                 let hours = (record.duration / 3600).toFixed(2);
                 totalHours += parseFloat(hours);
 
+                let serviceName = '';
+                let additionalWork = '';
+
+                if (record.type == 2) {
+                    additionalWork = record.service_name;
+                } else {
+                    serviceName = record.service_name;
+                }
+
                 tbody += `<tr>
                             <td>${record.date}</td>
                             <td class="text-center">${hours} hr</td>
-                            <td class="text-center">${record.service_name ?? 'N/A'}</td>
+                            <td class="text-center">${serviceName}</td>
+                            <td class="text-center">${additionalWork}</td>
                           </tr>`;
             });
 
@@ -288,8 +301,8 @@
             $('.detailed-table tbody').html(tbody);
             $('#detailed_table_container').show();
         },
-        error: function(xhr) {
-            console.error("AJAX Error:", xhr.responseText);
+        error: function(xhr , status, error) {
+            console.error(xhr.responseText);
             toastr.error("Failed to fetch details.");
         }
     });
