@@ -202,24 +202,33 @@ class ReportController extends Controller
             ->whereNotNull('staff_id')
             ->where('is_break', 0)
             ->whereDate('start_date', $date)
-            ->with('staff') 
+            ->with('staff', 'clientSubService.subService')
             ->get(['id', 'staff_id', 'client_sub_service_id', 'start_time', 'end_time', 'duration', 'is_break', 'type']);
     
         if ($workTimes->isEmpty()) {
             return response()->json(['details' => []]);
         }
     
-        $responseDetails = $workTimes->map(function ($workTime) {
-            $staff = $workTime->staff;
+        $groupedWorkTimes = $workTimes->groupBy(function ($workTime) {
+            return $workTime->staff_id . '-' . $workTime->clientSubService->subService->id . '-' . $workTime->type;
+        });
     
-            return [
+        $responseDetails = [];
+        
+        foreach ($groupedWorkTimes as $group) {
+            $firstWorkTime = $group->first();
+            $totalDuration = $group->sum('duration');
+    
+            $staff = $firstWorkTime->staff;
+    
+            $responseDetails[] = [
                 'staff_id' => optional($staff)->id_number ?? '',
                 'staff_name' => optional($staff)->first_name . ' ' . optional($staff)->last_name,
-                'duration' => $workTime->duration,
-                'type' => $workTime->type,
-                'service_name' => optional($workTime->clientSubService->subService)->name ?? '',
+                'duration' => $totalDuration,
+                'type' => $firstWorkTime->type,
+                'service_name' => optional($firstWorkTime->clientSubService->subService)->name ?? '',
             ];
-        });
+        }
     
         return response()->json(['details' => $responseDetails]);
     }

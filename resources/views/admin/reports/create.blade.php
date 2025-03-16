@@ -265,7 +265,7 @@
             period: period,
         },
         success: function(response) {
-          console.log(response);
+          // console.log(response);
             if (!response.details || response.details.length === 0) {
                 toastr.warning("No details found for this period.");
                 return;
@@ -337,7 +337,7 @@
               date: date,
           },
           success: function(response) {
-              console.log(response);
+              // console.log(response);
 
               if (!response.details || response.details.length === 0) {
                   toastr.warning("No details found for this period.");
@@ -359,7 +359,7 @@
               let totalHours = 0;
 
               response.details.forEach(record => {
-                console.log(record);
+                // console.log(record);
                   let hours = (record.duration / 3600).toFixed(2);
                   totalHours += parseFloat(hours);
 
