@@ -9,19 +9,18 @@
               <div class="px-3">
                   <div class="row my-2">
                       <div class="col-lg-4">
-                          <label for="staff_id" class="form-label fw-bold">Report Name </label>
+                          <label for="staff_id" class="form-label fw-bold">Report Name <span class="text-danger">*</span></label>
                           <input type="text" class="form-control rounded-1 border-1 border-theme bg-white" id="report_name">
                       </div>
-                      <div class="col-lg-2">
-                        <label for="report_base" class="form-label fw-bold">Report Base</label>
+                      <div class="col-lg-3">
+                        <label for="report_base" class="form-label fw-bold">Report Base <span class="text-danger">*</span></label>
                         <select class="form-select rounded-1 border-1 border-theme bg-white" id="report_base">
                             <option value="employee">Employee</option>
                             <option value="client">Client</option>
                         </select>
                       </div>
-                    
                       <div class="col-lg-4">
-                          <label for="base_name" class="form-label fw-bold">Base Name</label>
+                          <label for="base_name" class="form-label fw-bold">Base Name <span class="text-danger">*</span></label>
                           <select class="form-select rounded-1 border-1 border-theme bg-white select2" id="base_name">
                               <option value="All">All</option>
                               @foreach ($employees as $employee)
@@ -34,13 +33,13 @@
                   </div>
 
                   <div class="row my-2">
-                    <div class="col-lg-4">
-                      <label for="reservation" class="form-label fw-bold">Date Range</label>
-                        <input type="text" class="form-control float-right bg-white" id="reservation">
-                    </div>
+                      <div class="col-lg-4">
+                        <label for="reservation" class="form-label fw-bold">Date Range <span class="text-danger">*</span></label>
+                          <input type="text" class="form-control float-right bg-white" id="reservation">
+                      </div>
 
                       <div class="col-lg-4">
-                          <label for="start_date" class="form-label fw-bold">Compare With</label>
+                          <label for="start_date" class="form-label fw-bold">Compare With <span class="text-danger">*</span></label>
                           <select class="form-select rounded-1 border-1 border-theme bg-white" id="compare_with">
                               <option value="5">Compare With 5 Periods</option>
                               <option value="4">Compare With 4 Periods</option>
@@ -48,7 +47,8 @@
                               <option value="2">Compare With 2 Periods</option>
                           </select>
                       </div>
-                      <div class="col-lg-2">
+
+                      <div class="col-lg-3 d-flex align-items-end">
                           <label for="" class="form-label label-primary" style="visibility:hidden;">Action</label>
                           <button type="button" class="btn bg-theme text-light btn-outline-dark btn-generate-report">Generate Report</button>
                       </div>
@@ -65,20 +65,20 @@
             <p class="text-muted mb-4" id="report_date_range"></p>
     
             <div class="table-responsive" id="report_table_container">
-                <table class="table table-bordered report-table">
-                    <thead class="table-light"></thead>
+                <table class="table report-table">
+                    <thead></thead>
                     <tbody></tbody>
                 </table>
             </div>
 
             <div class="table-responsive mt-4" id="detailed_table_container" style="display: none;">
-              <table class="table table-bordered detailed-table">
-                  <thead class="table-light"></thead>
+              <table class="table detailed-table">
+                  <thead></thead>
                   <tbody></tbody>
                   <tfoot>
                     <tr>
-                        <td colspan="4" class="text-center">
-                            <button type="button" class="btn btn-danger btn-cancel-report">Back</button>
+                        <td colspan="4" class="text-center no-print">
+                            <button type="button" class="btn btn-primary btn-cancel-report">Back</button>
                         </td>
                     </tr>
                 </tfoot>
@@ -86,27 +86,55 @@
             </div>
 
             <div class="table-responsive mt-4" id="hourly_detailed_table_container" style="display: none;">
-              <table class="table table-bordered hourly-detailed-table">
-                  <thead class="table-light"></thead>
+              <table class="table hourly-detailed-table">
+                  <thead></thead>
                   <tbody></tbody>
                   <tfoot>
                     <tr>
-                        <td colspan="5" class="text-center">
-                            <button type="button" class="btn btn-danger hourly-cancel-report">Back</button>
+                        <td colspan="5" class="text-center no-print">
+                            <button type="button" class="btn btn-primary hourly-cancel-report">Back</button>
                         </td>
                     </tr>
                 </tfoot>
               </table>
             </div>
     
-            <div class="d-flex justify-content-center gap-3 mt-3">
-                <button class="btn btn-primary">Export</button>
+            <div class="d-flex justify-content-center gap-3 mt-5 no-print">
+                <button onclick="window.print()" class="btn btn-primary btn-lg">Export</button>
             </div>
         </div>
       </div>
     
   </div>
 </section>
+
+<style>
+  @media print {
+      body * {
+          visibility: hidden;
+      }
+      #report_card, #report_card * {
+          visibility: visible;
+      }
+      #report_card {
+          position: absolute;
+          left: 0;
+          top: 0;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+          width: 100%;
+          font-size: 12px;
+      }
+      .no-print {
+          display: none !important;
+      }
+  }
+
+  .period-header {
+        font-style: italic;
+        font-weight: 600;
+    }
+</style>
 
 @endsection
 
@@ -182,9 +210,9 @@
             let thead = `<tr>
                             <th>Ref ID</th>
                             <th>Client Name</th>`;
-            response.work_times.forEach(period => {
-                thead += `<th class="text-center">${period.period}</th>`;
-            });
+                            response.work_times.forEach(period => {
+                                thead += `<th class="text-center period-header">${period.period}</th>`;
+                            });
             thead += `</tr>`;
             $('.report-table thead').html(thead);
 
@@ -218,10 +246,12 @@
             Object.values(clients).forEach(client => {
                 tbody += `<tr>
                             <td>${client.refid ?? 'N/A'}</td>
-                            <td><a href="/admin/client/report/${client.client_id}" class="text-primary">${client.client_name}</a></td>`;
+                            <td>
+                                <a href="/admin/client/report/${client.client_id}" class="text-primary" target="_blank">${client.client_name}</a>
+                            </td>`;
 
                 response.work_times.forEach(period => {
-                    let hoursWorked = client.periods[period.period] || "0";
+                    let hoursWorked = client.periods[period.period] || "0.00";
                     let clickableClass = parseFloat(hoursWorked) > 0 ? "clickable-hour text-primary" : "";
 
                     let cursorStyle = parseFloat(hoursWorked) > 0 ? "cursor: pointer;" : "";
@@ -276,10 +306,10 @@
             $('#report_table_container').hide();
 
             let thead = `<tr>
-                            <th>Date</th>
-                            <th class="text-center">Time (hr)</th>
-                            <th class="text-center">Service Name</th>
-                            <th class="text-center">Additional Work</th>
+                            <th class="period-header">Date</th>
+                            <th class="text-center period-header">Time</th>
+                            <th class="text-center period-header">Service Name</th>      
+                            <th class="text-center period-header">Additional Work</th>
                          </tr>`;
             $('.detailed-table thead').html(thead);
 
@@ -312,7 +342,7 @@
             tbody += `<tr class="fw-bold">
                         <td colspan="1" class="text-end">Total</td>
                         <td class="text-center">${totalHours.toFixed(2)} hr</td>
-                        <td></td>
+                        <td colspan="2"></td>
                       </tr>`;
 
             $('.detailed-table tbody').html(tbody);
@@ -349,9 +379,9 @@
               let thead = `<tr>
                               <th>Staff ID</th>
                               <th>Staff Name</th>
-                              <th class="text-center">Time (hr)</th>
-                              <th class="text-center">Service Name</th>
-                              <th class="text-center">Additional Work</th>
+                              <th class="text-center period-header">Time</th>
+                              <th class="text-center period-header">Service Name</th>
+                              <th class="text-center period-header">Additional Work</th>
                           </tr>`;
               $('.hourly-detailed-table thead').html(thead);
 
