@@ -17,12 +17,17 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use Laravel\Passport\HasApiTokens;
 
 class Client extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivity;
+    use HasApiTokens, HasFactory, SoftDeletes, LogsActivity;
 
     protected $guarded = [];
+
+    protected $hidden = [
+        'password',
+    ];
 
     protected static $logAttributes = ['*'];
     protected static $logOnlyDirty = true;
