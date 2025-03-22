@@ -154,21 +154,36 @@
 
 <!-- Image preview start -->
 <script>
-    document.getElementById('pic').addEventListener('change', function(event) {
+    $('#pic').on('change', function(event) {
         var file = event.target.files[0];
-        var reader = new FileReader();
-
-        reader.onload = function(e) {
-            document.getElementById('imagePreview').src = e.target.result;
-        };
-
-        reader.readAsDataURL(file);
+        if (file) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                $('#imagePreview').attr('src', e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
     });
 </script>
 <!-- Image preview end -->
 
 <!-- Client details update -->
 <script>
+
+    $(document).on('click', '.toggle-password', function () {
+      const target = $(this).data('target');
+      const input = $(target);
+      const icon = $(this).find('i');
+      
+      if (input.attr('type') === 'password') {
+          input.attr('type', 'text');
+          icon.removeClass('fa-eye').addClass('fa-eye-slash');
+      } else {
+          input.attr('type', 'password');
+          icon.removeClass('fa-eye-slash').addClass('fa-eye');
+      }
+    });
+
     $(document).ready(function() {
         $('#details-saveButton').click(function(event) {
             event.preventDefault();
@@ -184,6 +199,10 @@
             formData.append('client_type_id', $('#client_type_id').val());
             formData.append('manager_id', $('#manager_id').val());
             formData.append('reference_id', $('#reference_id').val());
+
+            // for (var pair of formData.entries()) {
+            //     console.log(pair[0] + ': ' + pair[1]);
+            // }
 
             if (clientId) {
                 $.ajax({

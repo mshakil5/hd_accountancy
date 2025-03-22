@@ -21,6 +21,7 @@ return new class extends Migration
             $table->foreign('manager_id')->references('id')->on('users')->where('type', 2)->onDelete('cascade');
             $table->string('photo')->nullable();
             $table->string('email');
+            $table->string('password')->nullable();
             $table->string('phone')->nullable();
             $table->string('phone2')->nullable();
             $table->string('address_line1')->nullable();

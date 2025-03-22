@@ -33,7 +33,7 @@
     </div>
     <div class="row">
         <div class="col-lg-4 mx-auto text-center">
-            <button id="business-saveButton" class="btn btn-sm bg-theme text-light btn-outline-dark">Update</button>
+            <button class="btn btn-sm bg-theme text-light btn-outline-dark">Update</button>
         </div>
     </div>
 </form>

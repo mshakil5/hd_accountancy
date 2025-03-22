@@ -71,6 +71,26 @@
             </div>
         </div>
 
+        <div class="col-lg-4">
+            <label for="password" class="mb-2">Password</label>
+            <div class="input-group">
+                <input type="password" class="form-control" name="password" id="password">
+                <button type="button" class="btn btn-outline-secondary toggle-password" data-target="#password">
+                    <i class="fa fa-eye"></i>
+                </button>
+            </div>
+        </div>
+    
+        <div class="col-lg-4">
+            <label for="confirm_password" class="mb-2">Confirm Password</label>
+            <div class="input-group">
+                <input type="password" class="form-control" name="confirm_password" id="confirm_password">
+                <button type="button" class="btn btn-outline-secondary toggle-password" data-target="#confirm_password">
+                    <i class="fa fa-eye"></i>
+                </button>
+            </div>
+        </div>
+
     </div>
     <div class="row">
         <div class="col-lg-4 mx-auto text-center">

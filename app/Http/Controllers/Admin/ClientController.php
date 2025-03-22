@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Spatie\Activitylog\Models\Activity;
 use App\Models\AccountancyFee;
+use Illuminate\Support\Facades\Hash;
 
 class ClientController extends Controller
 {
@@ -180,6 +181,13 @@ class ClientController extends Controller
             'photo_id' => 'nullable|mimes:jpeg,png,jpg,gif,svg,pdf|max:8048'
         ]);
 
+        if ($request->filled('password')) {
+            $validator->addRules([
+                'password' => 'required|min:6',
+                'confirm_password' => 'required|same:password'
+            ]);
+        }
+
         if ($validator->fails()) {
             return response()->json(['status' => 422, 'errors' => $validator->errors()], 422);
         }
@@ -201,7 +209,9 @@ class ClientController extends Controller
         $data->town = $request->town;
         $data->postcode = $request->postcode;
         $data->country = $request->country;
-        $data->photo_id = $request->photo_id;
+        if ($request->filled('password')) {
+            $data->password = Hash::make($request->password);
+        }
         $data->created_by = Auth::id();
 
         if ($request->hasFile('photo')) {
@@ -353,6 +363,13 @@ class ClientController extends Controller
             'photo_id' => 'nullable|mimes:jpeg,png,jpg,gif,svg,pdf|max:8048'
         ]);
 
+        if ($request->filled('password')) {
+            $validator->addRules([
+                'password' => 'required|min:6',
+                'confirm_password' => 'required|same:password'
+            ]);
+        }
+
         if ($validator->fails()) {
             return response()->json(['status' => 422, 'errors' => $validator->errors()], 422);
         }
@@ -378,6 +395,9 @@ class ClientController extends Controller
         $client->town = $request->town;
         $client->postcode = $request->postcode;
         $client->country = $request->country;
+        if ($request->filled('password')) {
+            $client->password = Hash::make($request->password);
+        }
         $client->updated_by = Auth::id();
 
         if ($request->hasFile('photo')) {

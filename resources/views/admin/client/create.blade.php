@@ -160,6 +160,25 @@
                                                         style="right: 8px;"></i>
                                                 </div>
                                             </div>
+                                            <div class="col-lg-4">
+                                                <label for="password" class="mb-2">Password</label>
+                                                <div class="input-group">
+                                                    <input type="password" class="form-control" name="password" id="password">
+                                                    <button type="button" class="btn btn-outline-secondary toggle-password" data-target="#password">
+                                                        <i class="fa fa-eye"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                          
+                                            <div class="col-lg-4">
+                                                <label for="confirm_password" class="mb-2">Confirm Password</label>
+                                                <div class="input-group">
+                                                    <input type="password" class="form-control" name="confirm_password" id="confirm_password">
+                                                    <button type="button" class="btn btn-outline-secondary toggle-password" data-target="#confirm_password">
+                                                        <i class="fa fa-eye"></i>
+                                                    </button>
+                                                </div>
+                                            </div>                                          
                                         </div>
                                         <div class="row">
                                             <div class="col-lg-4 mx-auto text-center">
@@ -199,13 +218,15 @@
         }, 'fast');
     }
 
-    document.getElementById('pic').addEventListener('change', function(event) {
+    $('#pic').on('change', function(event) {
         var file = event.target.files[0];
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            document.getElementById('imagePreview').src = e.target.result;
-        };
-        reader.readAsDataURL(file);
+        if (file) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                $('#imagePreview').attr('src', e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
     });
 
     $(document).ready(function() {
@@ -269,6 +290,20 @@
             event.preventDefault();
             $('#detailsForm')[0].reset();
         });
+    });
+
+    $(document).on('click', '.toggle-password', function () {
+      const target = $(this).data('target');
+      const input = $(target);
+      const icon = $(this).find('i');
+      
+      if (input.attr('type') === 'password') {
+          input.attr('type', 'text');
+          icon.removeClass('fa-eye').addClass('fa-eye-slash');
+      } else {
+          input.attr('type', 'password');
+          icon.removeClass('fa-eye-slash').addClass('fa-eye');
+      }
     });
 </script>
 
