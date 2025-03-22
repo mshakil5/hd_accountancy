@@ -136,8 +136,8 @@
     }
 </style>
 
-<link href="{{ asset('assets/vendor/daterangepicker/daterangepicker.css')}}" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-daterangepicker/3.0.5/daterangepicker.min.css" integrity="sha512-rBi1cGvEdd3NmSAQhPWId5Nd6QxE8To4ADjM2a6n0BrqQdisZ/RPUlm0YycDzvNL1HHAh1nKZqI0kSbif+5upQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
 @endsection
 
 @section('script')
@@ -402,6 +402,9 @@
 
                   if (record.type == 2) {
                       additionalWork = record.service_name;
+                      if (record.service_note) {
+                          additionalWork += ` (${record.service_note})`;
+                      }
                   } else {
                       serviceName = record.service_name;
                   }
@@ -409,7 +412,7 @@
                   tbody += `<tr>
                               <td>${record.staff_id}</td>
                               <td>${record.staff_name}</td>
-                              <td class="text-center text-primary">
+                              <td class="text-center">
                                   ${hours} hr
                               </td>
                               <td class="text-center">${serviceName}</td>

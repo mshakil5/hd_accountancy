@@ -227,6 +227,7 @@ class ReportController extends Controller
                 'duration' => $totalDuration,
                 'type' => $firstWorkTime->type,
                 'service_name' => optional($firstWorkTime->clientSubService->subService)->name ?? '',
+                'service_note' => optional($firstWorkTime->clientSubService)->note ?? '',
             ];
         }
     
