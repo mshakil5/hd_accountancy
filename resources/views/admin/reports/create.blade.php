@@ -136,9 +136,13 @@
     }
 </style>
 
+<link href="{{ asset('assets/vendor/daterangepicker/daterangepicker.css')}}" rel="stylesheet">
+
 @endsection
 
 @section('script')
+
+<script src="{{ asset('assets/vendor/daterangepicker/daterangepicker.js')}}"></script>
 
 <script>
   $(document).ready(function() {

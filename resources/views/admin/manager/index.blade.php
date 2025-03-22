@@ -130,7 +130,7 @@
         <div class="col-12">
           <!-- /.card -->
 
-          <div class=card card-secondary border-theme border-2 border-theme border-2">
+          <div class="card card-secondary border-theme border-2 border-theme border-2">
             <div class="card-header">
               <h3 class="card-title">All Managers</h3>
             </div>
