@@ -6,7 +6,7 @@
         </div>
         <div class="col-lg-4">
           <div class="brand-box text-center bg-light py-2 rounded-4">
-            <img src="{{ asset('/assets/img/logo.png')}}" width="100" alt="" class="img-fluid">
+            <img src="{{ asset('assets/img/logo.png')}}" width="100" alt="" class="img-fluid">
           </div>
         </div>
         <div class="col-lg-4  d-flex align-items-end justify-content-end">
@@ -28,11 +28,11 @@
           </div>
         </div>
         <div class="col-lg-6 justify-content-end d-flex align-items-center pe-3">
-          <i class="bi bi-clock fs-4 txt-theme mx-2" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#timeModal"></i>
-          <i id="chatIcon" class="bi bi-chat-dots fs-4 txt-theme mx-2" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#chatModal"></i>
+          <i class="bi bi-clock fs-4 txt-theme mx-2" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#timeModal" title="Clock Out"></i> <span class="fw-bold txt-theme fs-6">Clock Out</span>
+          <i id="chatIcon" class="bi bi-chat-dots fs-4 txt-theme mx-2" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#chatModal" title="Messaging"></i> <span class="fw-bold txt-theme fs-6">Messaging</span>
           <a href="{{ route('manager.profile.edit') }}"> 
-            <span class="fw-bold txt-theme fs-6">{{ auth()->user()->first_name }} {{ auth()->user()->last_name }}</span>
             <i class="bi bi-person fs-4 txt-theme mx-2"></i>
+            <span class="fw-bold txt-theme fs-6">{{ auth()->user()->first_name }} {{ auth()->user()->last_name }}</span>
           </a>
         </div>
       </div>

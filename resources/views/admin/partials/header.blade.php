@@ -21,7 +21,7 @@
           <i class="bi bi-list toggle-sidebar-btn curp text-black fs-4" onclick="toggleSidebar();"></i>
         </div>
         <div class="col-auto d-flex align-items-center">
-          <i class="bi bi-clock fs-4 txt-theme mx-2" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#timeModal2" title="Log Out"></i> <span class="fw-bold txt-theme fs-6">Log Out</span>
+          <i class="bi bi-clock fs-4 txt-theme mx-2" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#timeModal2" title="Clock Out"></i> <span class="fw-bold txt-theme fs-6">Clock Out</span>
           <i id="chatIcon" class="bi bi-chat-dots fs-4 txt-theme mx-2" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#chatModal" title="Messaging"></i> <span class="fw-bold txt-theme fs-6">Messaging</span>          
           <a>
             <i class="bi bi-person fs-4 txt-theme mx-2"></i> 
