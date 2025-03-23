@@ -407,6 +407,8 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
 
     Route::get('/report/details', [ReportController::class, 'fetchWorkTimeDetails'])->name('report.details');
 
+    Route::get('/client-report/details', [ReportController::class, 'fetchClientWorkTimeDetails'])->name('client.report.details');
+
     Route::get('/hourly-report/details', [ReportController::class, 'fetchHourlyWorkTimeDetails'])->name('report.hourly.details');
 
     // User absent log

@@ -19,7 +19,7 @@
                             <option value="client">Client</option>
                         </select>
                       </div>
-                      <div class="col-lg-4">
+                      <div class="col-lg-5">
                           <label for="base_name" class="form-label fw-bold">Base Name <span class="text-danger">*</span></label>
                           <select class="form-select rounded-1 border-1 border-theme bg-white select2" id="base_name">
                               <option value="All">All</option>
@@ -50,7 +50,12 @@
 
                       <div class="col-lg-3 d-flex align-items-end">
                           <label for="" class="form-label label-primary" style="visibility:hidden;">Action</label>
-                          <button type="button" class="btn bg-theme text-light btn-outline-dark btn-generate-report">Generate Report</button>
+                          <button type="button" class="btn bg-theme text-light btn-outline-dark btn-generate-report" title="Generate Report">Generate Report</button>
+                      </div>
+
+                      <div class="col-lg-1">
+                          <label for="" class="form-label label-primary" style="visibility:hidden;">Action</label>
+                          <button type="button" class="btn btn-theme btn-outline-dark" id="btn-refresh"><i class="fas fa-sync-alt" title="Refresh"></i></button>
                       </div>
                   </div>
               </div>
@@ -77,11 +82,11 @@
                   <tbody></tbody>
                   <tfoot>
                     <tr>
-                        <td colspan="4" class="text-center no-print">
-                            <button type="button" class="btn btn-primary btn-cancel-report">Back</button>
+                        <td class="text-center py-2 no-print" style="width: 100%;" colspan="6">
+                            <button type="button" class="btn btn-primary btn-cancel-report ">Back</button>
                         </td>
                     </tr>
-                </tfoot>
+                  </tfoot>                
               </table>
             </div>
 
@@ -134,6 +139,13 @@
         font-style: italic;
         font-weight: 600;
     }
+
+  #btn-refresh:hover {
+      visibility: visible !important;
+      opacity: 1 !important;
+      display: inline-block !important;
+  }
+
 </style>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-daterangepicker/3.0.5/daterangepicker.min.css" integrity="sha512-rBi1cGvEdd3NmSAQhPWId5Nd6QxE8To4ADjM2a6n0BrqQdisZ/RPUlm0YycDzvNL1HHAh1nKZqI0kSbif+5upQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -171,6 +183,10 @@
       $('.select2').select2();
   });
 
+  $(document).on('click', '#btn-refresh', function() {
+      $('#report_card').hide();
+  });
+
   $('#reservation').daterangepicker({
     locale: {
         format: 'DD/MM/YYYY'
@@ -200,6 +216,11 @@
             compare_with: compare_with,
         },
         success: function (response) {
+
+          // console.log(response);
+
+          if(response.report_base == 'employee') {
+
             if (!response.work_times || !Array.isArray(response.work_times)) {
                 console.error("Invalid response format:", response);
                 toastr.error("Failed to generate report.");
@@ -207,7 +228,7 @@
             }
 
             $('#report_title').text(response.report_name);
-            $('#report_base_name').text(response.report_base);
+            $('#report_base_name').text(response.report_base_name);
             $('#report_date_range').text(response.date_range);
             $('#report_card').show();
 
@@ -278,13 +299,174 @@
             });
             totalRow += `</tr>`;
 
+          } 
+          else if (response.report_base == 'client') {
+            if (!response.work_times || !Array.isArray(response.work_times)) {
+                console.error("Invalid response format:", response);
+                toastr.error("Failed to generate report.");
+                return;
+            }
+
+            $('#report_title').text(response.report_name);
+            $('#report_base_name').text(response.report_base_name);
+            $('#report_date_range').text(response.date_range);
+            $('#report_card').show();
+
+            let thead = `<tr>
+                            <th>Staff ID</th>
+                            <th>Staff Name</th>`;
+            response.work_times.forEach(period => {
+                thead += `<th class="text-center period-header">${period.period}</th>`;
+            });
+            thead += `</tr>`;
+            $('.report-table thead').html(thead);
+
+            let tbody = '';
+            let totalHours = {};
+
+            response.work_times.forEach(period => {
+                totalHours[period.period] = 0;
+            });
+
+            let staff = {};
+
+            response.work_times.forEach(period => {
+                period.records.forEach(record => {
+                    let key = record.staff_id;
+                    if (!staff[key]) {
+                        staff[key] = {
+                            staff_id: record.staff_id,
+                            staff_name: record.staff_name,
+                            staff_id_number: record.staff_id_number,
+                            periods: {}
+                        };
+                    }
+                    let hoursWorked = (record.total_duration / 3600).toFixed(2);
+                    staff[key].periods[period.period] = hoursWorked;
+
+                    totalHours[period.period] += record.total_duration / 3600;
+                });
+            });
+
+            Object.values(staff).forEach(staffMember => {
+                tbody += `<tr>
+                            <td>${staffMember.staff_id_number}</td>
+                            <td>${staffMember.staff_name}</td>`;
+
+                response.work_times.forEach(period => {
+                    let hoursWorked = staffMember.periods[period.period] || "0.00";
+                    let clickableClass = parseFloat(hoursWorked) > 0 ? "clickable-client-hour text-primary" : "";
+                    let cursorStyle = parseFloat(hoursWorked) > 0 ? "cursor: pointer;" : "";
+
+                    tbody += `<td class="text-center ${clickableClass}" style="${cursorStyle}" 
+                              data-period="${period.period}"
+                              data-staff="${staffMember.staff_id}"
+                              data-staff-name="${staffMember.staff_name}">
+                              ${hoursWorked} hr
+                            </td>`;
+                });
+
+                tbody += `</tr>`;
+            });
+
+            $('.report-table tbody').html(tbody);
+
+            let totalRow = `<tr class="fw-bold">
+                                <td colspan="2" class="text-end">Total</td>`;
+            response.work_times.forEach(period => {
+                totalRow += `<td class="text-center">${totalHours[period.period].toFixed(2)} hr</td>`;
+            });
+            totalRow += `</tr>`;
+
             $('.report-table tbody').append(totalRow);
+            $('#detailed_table_container').hide();
+            $('#hourly_detailed_table_container').hide();
+            $('#detail_report_title').hide();
+          }
         },
         error: function (xhr, status, error) {
            toastr.error("Failed to fetch.");
            console.error("AJAX Error:", xhr.responseText);
         }
     });
+  });
+
+  $(document).on('click', '.clickable-client-hour', function() {
+      let staffId = $(this).data('staff');
+      let period = $(this).data('period');
+      let staffName = $(this).data('staff-name');
+
+      $.ajax({
+          url: "{{ route('client.report.details') }}",
+          type: "GET",
+          data: {
+              staff_id: staffId,
+              date: period,
+          },
+          success: function(response) {
+              // console.log(response);
+              if (!response.details || response.details.length === 0) {
+                  toastr.warning("No details found for this period.");
+                  return;
+              }
+
+              $('#detail_report_title').text(`${staffName} - ${period}`).show();
+              $('#report_title').hide();
+              $('#report_table_container').hide();
+
+              let thead = `<tr>
+                              <th>${staffName}</th>
+                              <th class="text-center period-header">Ref ID</th>
+                              <th class="text-center period-header">Client Name</th>      
+                              <th class="text-center period-header">Time</th>      
+                              <th class="text-center period-header">Service Name</th>      
+                              <th class="text-center period-header">Additional Work</th>
+                          </tr>`;
+              $('.detailed-table thead').html(thead);
+
+              let tbody = '';
+              let totalHours = 0;
+
+              response.details.forEach(record => {
+                    let hours = record.duration;
+                    totalHours += parseFloat(hours);
+
+                    let serviceName = '';
+                    let additionalWork = '';
+
+                    if (record.type == 2) {
+                        additionalWork = record.service_name;
+                        if (record.service_note) {
+                            additionalWork += ` (${record.service_note})`;
+                        }
+                    } else {
+                        serviceName = record.service_name;
+                    }
+
+                    tbody += `<tr>
+                                  <td>${record.start_date}</td>
+                                  <td class="text-center">${record.ref_id}</td>
+                                  <td class="text-center">${record.client_name}</td>
+                                  <td class="text-center">${hours}</td>
+                                  <td class="text-center">${serviceName}</td>
+                                  <td class="text-center">${additionalWork}</td>
+                              </tr>`;
+                });
+
+              tbody += `<tr class="fw-bold">
+                          <td colspan="3" class="text-end">Total</td>
+                          <td class="text-center">${totalHours.toFixed(2)} hr</td>
+                          <td colspan="2"></td>
+                        </tr>`;
+
+              $('.detailed-table tbody').html(tbody);
+              $('#detailed_table_container').show();
+          },
+          error: function(xhr, status, error) {
+              console.error(xhr.responseText);
+              toastr.error("Failed to fetch details.");
+          }
+      });
   });
 
   $(document).on('click', '.clickable-hour', function() {

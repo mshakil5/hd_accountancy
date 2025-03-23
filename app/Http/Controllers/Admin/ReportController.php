@@ -41,7 +41,9 @@ class ReportController extends Controller
         $workTimes = [];
     
         if ($reportBase === 'employee') {
-            $workTimes = $this->fetchWorkTimes($periods, $baseName, $reportName);
+            $workTimes = $this->fetchWorkTimes($periods, $baseName, $reportName, $reportBase);
+        }  elseif ($reportBase === 'client') {  
+            $workTimes = $this->fetchClientWorkTimes($periods, $baseName, $reportName, $reportBase);
         }
     
         return response()->json($workTimes);
@@ -76,7 +78,67 @@ class ReportController extends Controller
         return $results;
     }
 
-    private function fetchWorkTimes(array $periods, $staffId = null, $reportName)
+    private function fetchClientWorkTimes(array $periods, $clientId = null, $reportName, $reportBase)
+    {
+        $workTimes = [];
+        $formattedPeriods = [];
+
+        foreach ($periods as $period) {
+            $start = Carbon::createFromFormat('d/m/Y', $period['start'])->startOfDay();
+            $end = Carbon::createFromFormat('d/m/Y', $period['end'])->endOfDay();
+            
+            $formattedPeriod = $start->format('d F Y') . ' to ' . $end->format('d F Y');
+            $formattedPeriods[] = $formattedPeriod;
+
+            $query = WorkTime::whereBetween('created_at', [$start, $end])
+                            ->whereNotNull('staff_id')
+                            ->whereNotNull('client_sub_service_id');
+
+            if ($clientId && $clientId !== 'All') {
+                $query->whereHas('clientSubService', function ($q) use ($clientId) {
+                    $q->where('client_id', $clientId);
+                });
+                $clientName = optional(Client::find($clientId))->name ?? 'Unknown Client';
+            } else {
+                $clientName = 'All Clients';
+            }
+
+            $records = $query->get()->map(function ($workTime) {
+                $staff = User::find($workTime->staff_id);
+
+                return [
+                    'staff_id' => $workTime->staff_id,
+                    'staff_id_number' => $staff ? ($staff->id_number) : '',
+                    'staff_name' => $staff ? ($staff->first_name . ' ' . $staff->last_name) : 'Unknown Staff',
+                    'duration' => (int) $workTime->duration,
+                ];
+            });
+
+            $groupedRecords = $records->groupBy('staff_id')->map(function ($group, $staffId) {
+                return [
+                    'staff_id' => $staffId,
+                    'staff_id_number' => $group->first()['staff_id_number'],
+                    'staff_name' => $group->first()['staff_name'],
+                    'total_duration' => $group->sum('duration'),
+                ];
+            });
+
+            $workTimes[] = [
+                'period' => $formattedPeriod,
+                'records' => $groupedRecords->values(),
+            ];
+        }
+
+        return [
+            'report_name' => $reportName,
+            'report_base' => $reportBase,
+            'report_base_name' => $clientName,
+            'date_range' => $formattedPeriods[0] ?? '',
+            'work_times' => $workTimes,
+        ];
+    }
+
+    private function fetchWorkTimes(array $periods, $staffId = null, $reportName, $reportBase)
     {
         $workTimes = [];
         $formattedPeriods = [];
@@ -84,7 +146,7 @@ class ReportController extends Controller
         foreach ($periods as $period) {
             $start = Carbon::createFromFormat('d/m/Y', $period['start'])->startOfDay();
             $end = Carbon::createFromFormat('d/m/Y', $period['end'])->endOfDay();
-            
+    
             $formattedPeriod = $start->format('d F Y') . ' to ' . $end->format('d F Y');
             $formattedPeriods[] = $formattedPeriod;
     
@@ -93,8 +155,8 @@ class ReportController extends Controller
                              ->whereNotNull('client_sub_service_id');
     
             if ($staffId && $staffId !== 'All') {
-                $query->where('staff_id', $staffId);
-                $staffName = optional(User::find($staffId))->first_name . ' ' . optional(User::find($staffId))->last_name ?? '';
+                $staff = User::find($staffId);
+                $staffName = $staff ? ($staff->first_name . ' ' . $staff->last_name) : 'Unknown Staff';
             } else {
                 $staffName = 'All Employees';
             }
@@ -134,13 +196,14 @@ class ReportController extends Controller
         }
     
         return [
-          'report_name' => $reportName,
-          'report_base' => $staffName,
-          'date_range' => $formattedPeriods[0] ?? '',
-          'work_times' => $workTimes,
-      ];
-    } 
-     
+            'report_name' => $reportName,
+            'report_base' => $reportBase,
+            'report_base_name' => $staffName,
+            'date_range' => $formattedPeriods[0] ?? '',
+            'work_times' => $workTimes,
+        ];
+    }
+    
     public function fetchWorkTimeDetails(Request $request)
     {
         $clientId = $request->client_id;
@@ -233,6 +296,60 @@ class ReportController extends Controller
     
         return response()->json(['details' => $responseDetails]);
     }
+
+    public function fetchClientWorkTimeDetails(Request $request)
+    {
+        $staffId = $request->staff_id;
+        $dateRange = $request->date;
+        $dates = explode(' to ', $dateRange);
+        
+        $startDate = Carbon::parse($dates[0])->format('Y-m-d');
+        $endDate = Carbon::parse($dates[1])->format('Y-m-d');
+        
+        $workTimes = WorkTime::where('staff_id', $staffId)
+            ->whereBetween('start_date', [$startDate, $endDate])
+            ->whereNotNull('client_sub_service_id')
+            ->whereHas('clientSubService', function ($query) {
+                $query->whereNotNull('client_id');
+            })
+            ->whereNotNull('staff_id')
+            ->where('is_break', 0)
+            ->with('staff', 'clientSubService.subService')
+            ->get(['id', 'staff_id', 'client_sub_service_id', 'start_date', 'start_time', 'end_time', 'duration', 'is_break', 'type']);
+        
+        if ($workTimes->isEmpty()) {
+            return response()->json(['details' => []]);
+        }
+        
+        $responseDetails = [];
+    
+        foreach ($workTimes as $workTime) {
+            $hours = number_format($workTime->duration / 3600, 2);
+            
+            $staff = $workTime->staff;
+            $clientName = optional($workTime->clientSubService)->client->name;
+            $serviceName = optional($workTime->clientSubService->subService)->name ?? '';
+            
+            $additionalWork = '';
+            if ($workTime->type == 2) {
+                $additionalWork = $serviceName;
+                if ($workTime->clientSubService && $workTime->clientSubService->note) {
+                    $additionalWork .= ' (' . $workTime->clientSubService->note . ')';
+                }
+            }
+    
+            $responseDetails[] = [
+                'start_date' => Carbon::parse($workTime->start_date)->format('j F Y'),
+                'ref_id' => $workTime->staff_id,
+                'client_name' => $clientName,
+                'duration' => $hours . ' hr',
+                'service_name' => $serviceName,
+                'additionalWork' => $additionalWork,
+            ];
+        }
+        
+        return response()->json(['details' => $responseDetails]);
+    }    
     
     
 }
