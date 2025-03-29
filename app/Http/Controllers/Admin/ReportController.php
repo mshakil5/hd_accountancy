@@ -219,8 +219,6 @@ class ReportController extends Controller
             ->whereIn('client_sub_service_id', $clientSubServiceIds)
             ->whereBetween('start_date', [$startDate, $endDate])
             ->get(['created_at', 'duration', 'client_sub_service_id', 'type']);
-
-            return response()->json(['details' => $workTimes]);
     
         if ($workTimes->isEmpty()) {
             return response()->json(['details' => []]);

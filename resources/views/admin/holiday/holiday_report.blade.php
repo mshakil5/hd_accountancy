@@ -140,7 +140,7 @@
                         $.each(response, function(index, holiday) {
                             var startDateFormatted = moment(holiday.start_date).format('DD.MM.YYYY');
                             var endDateFormatted = moment(holiday.end_date).format('DD.MM.YYYY');
-                            var statusText = holiday.status === 0 ? 'Processing' : (holiday.status === 1 ? 'Approved' : 'Declined');
+                            var statusText = holiday.status == 0 ? 'Processing' : (holiday.status == 1 ? 'Approved' : 'Declined');
 
                             holidayTable.row.add([
                                 holiday.first_name + ' ' + holiday.last_name,

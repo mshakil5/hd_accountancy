@@ -112,13 +112,13 @@
                     data: 'status', 
                     name: 'status',
                     render: function(data, type, row) {
-                        var isDisabled = data === 1 || data === 2;
+                        var isDisabled = data == 1 || data == 2;
                         var disabledAttr = isDisabled ? 'disabled' : '';
                         var dropdown = `
                             <select class="form-select change-status" ${disabledAttr} data-status-id="${row.DT_RowId}" data-staff-id="${row.staff_id}" data-start-date="${row.start_date}" data-end-date="${row.end_date}" data-holiday-request-id="${row.id}">
-                                <option value="0" ${data === 0 ? 'selected' : ''}>Processing</option>
-                                <option value="1" ${data === 1 ? 'selected' : ''}>Approved</option>
-                                <option value="2" ${data === 2 ? 'selected' : ''}>Declined</option>
+                                <option value="0" ${data == 0 ? 'selected' : ''}>Processing</option>
+                                <option value="1" ${data == 1 ? 'selected' : ''}>Approved</option>
+                                <option value="2" ${data == 2 ? 'selected' : ''}>Declined</option>
                             </select>`;
                         return dropdown;
                     }
@@ -135,7 +135,7 @@
                 {
                     data: null,
                     render: function(data, type, row) {
-                        var isDisabled = row.status === 1 || row.status === 2;
+                        var isDisabled = row.status == 1 || row.status == 2;
                         var editUrl = "{{ url('/admin/edit-holiday') }}/" + row.id;
                         
                         if (isDisabled) {
