@@ -280,11 +280,19 @@
                                             </tr>
                                             <tr>
                                                 <td><b>Password:</b></td>
-                                                <td><input type="password" id="password" readonly></td>
+                                                <div class="input-group">
+                                                <td><input type="password" id="password" readonly> <button type="button" class="btn btn-outline-secondary toggle-password" data-target="#password">
+                                                  <i class="fa fa-eye"></i>
+                                                </button></td>
+                                                </div>
                                             </tr>
                                             <tr>
                                                 <td><b>Confirm Password:</b></td>
-                                                <td><input type="password" id="confirm_password" readonly></td>
+                                                <div class="input-group">
+                                                <td><input type="password" id="confirm_password" readonly><button type="button" class="btn btn-outline-secondary toggle-password" data-target="#confirm_password">
+                                                  <i class="fa fa-eye"></i>
+                                                </button></td>
+                                                </div>
                                             </tr>
                                         </table>
                                     </div>
@@ -423,6 +431,20 @@
 
 <script>
     $(document).ready(function() {
+
+      $(document).on('click', '.toggle-password', function () {
+        const target = $(this).data('target');
+        const input = $(target);
+        const icon = $(this).find('i');
+        
+        if (input.attr('type') === 'password') {
+            input.attr('type', 'text');
+            icon.removeClass('fa-eye').addClass('fa-eye-slash');
+        } else {
+            input.attr('type', 'password');
+            icon.removeClass('fa-eye-slash').addClass('fa-eye');
+        }
+      });
 
         function populateCompletedTasks(tasks) {
             var container = $('#completedTasksContainer').find('tbody');

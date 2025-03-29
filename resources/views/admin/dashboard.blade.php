@@ -1506,20 +1506,17 @@
 
                 var staffName = subService.staff ? (subService.staff.first_name + ' ' + (subService.staff.last_name || '')).trim() : 'N/A';
 
-                var duration = '';
-                var firstWorkTime = subService.work_times.filter(workTime => workTime.is_break === 0)
+                var totalDurationInSeconds = subService.work_times.filter(workTime => workTime.is_break == 0)
                     .reduce(function(acc, workTime) {
                         return acc + parseInt(workTime.duration);
                     }, 0);
 
-                if (subService.sequence_status == 2) {
-                    if (firstWorkTime) {
-                        var durationInSeconds = firstWorkTime;
-                        var hours = Math.floor(durationInSeconds / 3600);
-                        var minutes = Math.floor((durationInSeconds % 3600) / 60);
-                        var seconds = durationInSeconds % 60;
-                        duration = `<div>${hours}h ${minutes}m ${seconds}s</div>`;
-                    }
+                var duration = '';
+                if (totalDurationInSeconds > 0) {
+                    var hours = Math.floor(totalDurationInSeconds / 3600);
+                    var minutes = Math.floor((totalDurationInSeconds % 3600) / 60);
+                    var seconds = totalDurationInSeconds % 60;
+                    duration = `<div>${hours}h ${minutes}m ${seconds}s</div>`;
                 }
 
                 var statusDropdown = `

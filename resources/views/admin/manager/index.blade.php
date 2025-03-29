@@ -253,7 +253,7 @@
                 data:form_data,
                 success: function (d) {
                     if (d.status == 303) {
-                        // $(".ermsg").html(d.message);
+                        $(".ermsg").html(d.message);
                     }else if(d.status == 300){
                       // $(".ermsg").html(d.message);
                       toastr.success("Manager created successfully", "Success!");
@@ -288,7 +288,7 @@
                   success: function(d){
                       console.log(d);
                       if (d.status == 303) {
-                          // $(".ermsg").html(d.message);
+                          $(".ermsg").html(d.message);
                       }else if(d.status == 300){
                         // $(".ermsg").html(d.message);
                         toastr.success("Manager updated successfully", "Success!");

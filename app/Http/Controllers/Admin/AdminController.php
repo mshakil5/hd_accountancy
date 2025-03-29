@@ -214,10 +214,11 @@ class AdminController extends Controller
     public function getAllAssignedServices(Request $request)
     {
         $currentUserId = Auth::id();
-    
+        $today = Carbon::today()->format('d-m-Y');
+
         if ($request->ajax()) {
             $data = ClientService::where('type', '!=', 2)
-            ->where('due_date', '<=', now()->endOfDay())
+            ->where('due_date', '<=', $today)
             ->with(['clientSubServices' => function ($query) {
                     $query->where('staff_id', Auth::id());
                         //   ->whereIn('sequence_status', [0, 1]);
@@ -282,6 +283,7 @@ class AdminController extends Controller
     public function getCompetedServices(Request $request)
     {
         $managerName = Auth::user()->first_name;
+        $today = Carbon::today()->format('d-m-Y');
 
         if ($request->ajax()) {
             $data = ClientService::where('type', '!=', 2)->with('clientSubServices')
@@ -289,7 +291,7 @@ class AdminController extends Controller
                     $query->where('sequence_status', 2)
                         ->where('staff_id', Auth::id());
                 })
-                ->where('due_date', '<=', now()->endOfDay())
+                ->where('due_date', '<=', $today)
                 ->orderBy('id', 'desc')
                 ->get();
 
@@ -317,12 +319,12 @@ class AdminController extends Controller
     public function getCompetedServicesAsManager(Request $request)
     {
         $managerName = Auth::user()->first_name;
-
+        $today = Carbon::today()->format('d-m-Y');
         if ($request->ajax()) {
             $data = ClientService::where('type', '!=', 2)->with('clientSubServices')
                 ->where('manager_id', Auth::id())
                 ->where('status', 2)
-                ->where('due_date', '<=', now()->endOfDay())
+                ->where('due_date', '<=', $today)
                 ->orderBy('id', 'desc')
                 ->get();
 
