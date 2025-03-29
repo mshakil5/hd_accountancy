@@ -1637,6 +1637,8 @@
                         return acc + parseInt(workTime.duration);
                     }, 0);
 
+                var duration = '';
+                
                 if (totalDurationInSeconds > 0) {
                     var hours = Math.floor(totalDurationInSeconds / 3600);
                     var minutes = Math.floor((totalDurationInSeconds % 3600) / 60);

@@ -209,16 +209,18 @@ class ReportController extends Controller
         $clientId = $request->client_id;
         $dateRange = $request->period;
         $dates = explode(' to ', $dateRange);
-        $startDate = Carbon::parse($dates[0])->format('Y-m-d');
-        $endDate = Carbon::parse($dates[1])->format('Y-m-d');
+        $startDate = Carbon::parse($dates[0])->format('d-m-Y');
+        $endDate = Carbon::parse($dates[1])->format('d-m-Y');
     
         $clientSubServiceIds = ClientSubService::where('client_id', $clientId)->pluck('id');
     
         $workTimes = WorkTime::whereNotNull('client_sub_service_id')
             ->whereNotNull('staff_id')
             ->whereIn('client_sub_service_id', $clientSubServiceIds)
-            ->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate])
+            ->whereBetween('start_date', [$startDate, $endDate])
             ->get(['created_at', 'duration', 'client_sub_service_id', 'type']);
+
+            return response()->json(['details' => $workTimes]);
     
         if ($workTimes->isEmpty()) {
             return response()->json(['details' => []]);
@@ -256,7 +258,7 @@ class ReportController extends Controller
     {
         $clientId = $request->client_id;
         $date = $request->date;
-        $date = Carbon::parse($date)->format('Y-m-d');
+        $date = Carbon::parse($date)->format('d-m-Y');
     
         $workTimes = WorkTime::whereNotNull('client_sub_service_id')
             ->whereHas('clientSubService', function ($query) use ($clientId) {
@@ -264,9 +266,9 @@ class ReportController extends Controller
             })
             ->whereNotNull('staff_id')
             ->where('is_break', 0)
-            ->whereDate('start_date', $date)
+            ->where('start_date', $date)
             ->with('staff', 'clientSubService.subService')
-            ->get(['id', 'staff_id', 'client_sub_service_id', 'start_time', 'end_time', 'duration', 'is_break', 'type']);
+            ->get(['id', 'staff_id', 'client_sub_service_id', 'start_time', 'end_time', 'duration', 'is_break', 'type', 'start_date']);
     
         if ($workTimes->isEmpty()) {
             return response()->json(['details' => []]);
@@ -303,8 +305,8 @@ class ReportController extends Controller
         $dateRange = $request->date;
         $dates = explode(' to ', $dateRange);
         
-        $startDate = Carbon::parse($dates[0])->format('Y-m-d');
-        $endDate = Carbon::parse($dates[1])->format('Y-m-d');
+        $startDate = Carbon::parse($dates[0])->format('d-m-Y');
+        $endDate = Carbon::parse($dates[1])->format('d-m-Y');
         
         $workTimes = WorkTime::where('staff_id', $staffId)
             ->whereBetween('start_date', [$startDate, $endDate])

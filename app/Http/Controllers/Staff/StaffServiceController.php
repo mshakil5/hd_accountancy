@@ -579,7 +579,7 @@ class StaffServiceController extends Controller
                 $workTime->staff_id = $staffId;
                 $workTime->type = 2;
                 $workTime->duration = $workTime->end_time->diffInSeconds($workTime->start_time);
-                $workTime->start_date = $today;
+                $workTime->start_date = Carbon::now()->format('d-m-Y');
                 $workTime->save();
             }
         }

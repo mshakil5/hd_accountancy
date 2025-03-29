@@ -184,7 +184,7 @@
   });
 
   $(document).on('click', '#btn-refresh', function() {
-      $('#report_card').hide();
+      location.reload();
   });
 
   $('#reservation').daterangepicker({
@@ -481,7 +481,7 @@
             period: period,
         },
         success: function(response) {
-          // console.log(response);
+          console.log(response);
             if (!response.details || response.details.length === 0) {
                 toastr.warning("No details found for this period.");
                 return;
@@ -553,7 +553,7 @@
               date: date,
           },
           success: function(response) {
-              // console.log(response);
+              console.log(response);
 
               if (!response.details || response.details.length === 0) {
                   toastr.warning("No details found for this period.");
