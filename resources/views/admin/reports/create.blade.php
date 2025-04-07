@@ -105,13 +105,18 @@
             </div>
     
             <div class="d-flex justify-content-center gap-3 mt-5 no-print">
-                <button onclick="window.print()" class="btn btn-primary btn-lg">Export</button>
+                <button onclick="window.print()" class="btn btn-primary btn-lg"><i class="fas fa-print"></i> Export to PDF</button>
+                <button id="exportExcel" class="btn btn-success btn-lg"><i class="fas fa-file-excel"></i> Export to Excel</button>
             </div>
         </div>
       </div>
     
   </div>
 </section>
+
+<div id="loader" style="display: none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:9999;">
+  <div class="spinner-border text-primary spinner-border-lg" role="status" style="width: 4rem; height: 4rem;"></div>
+</div>
 
 <style>
   @media print {
@@ -155,6 +160,43 @@
 @section('script')
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-daterangepicker/3.0.5/daterangepicker.min.js" integrity="sha512-mh+AjlD3nxImTUGisMpHXW03gE6F4WdQyvuFRkjecwuWLwD2yCijw4tKA3NsEFpA1C3neiKhGXPSIGSfCYPMlQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script>
+  $(document).ready(function () {
+      $("#exportExcel").on("click", function () {
+          let visibleTable = $("#report_card").find("table:visible").get(0);
+          if (!visibleTable) {
+              toastr.error("No report table available for export.");
+              return;
+          }
+  
+          let wb = XLSX.utils.book_new();
+          
+          let visibleData = [];
+          
+          $(visibleTable).find('tr').each(function() {
+              if ($(this).closest('tfoot').length === 0) {
+                  let rowData = [];
+                  $(this).find('th, td').each(function() {
+                      if ($(this).is(':visible')) {
+                          rowData.push($(this).text().trim());
+                      }
+                  });
+                  if (rowData.length > 0) {
+                      visibleData.push(rowData);
+                  }
+              }
+          });
+  
+          let ws = XLSX.utils.aoa_to_sheet(visibleData);
+          XLSX.utils.book_append_sheet(wb, ws, "Report");
+  
+          XLSX.writeFile(wb, "report.xlsx");
+      });
+  });
+</script>
 
 <script>
   $(document).ready(function() {
@@ -214,6 +256,12 @@
             base_name: base_name,
             date_range: date_range,
             compare_with: compare_with,
+        },
+        beforeSend: function () {
+            $('#loader').show();
+        },
+        complete: function () {
+            $('#loader').hide();
         },
         success: function (response) {
 
@@ -350,7 +398,7 @@
 
             Object.values(staff).forEach(staffMember => {
                 tbody += `<tr>
-                            <td>${staffMember.staff_id_number}</td>
+                            <td>${staffMember.staff_id_number ?? ''}</td>
                             <td>${staffMember.staff_name}</td>`;
 
                 response.work_times.forEach(period => {
@@ -402,6 +450,12 @@
           data: {
               staff_id: staffId,
               date: period,
+          },
+          beforeSend: function () {
+              $('#loader').show();
+          },
+          complete: function () {
+              $('#loader').hide();
           },
           success: function(response) {
               // console.log(response);
@@ -480,6 +534,12 @@
             client_id: clientId,
             period: period,
         },
+        beforeSend: function () {
+            $('#loader').show();
+        },
+        complete: function () {
+            $('#loader').hide();
+        },
         success: function(response) {
           console.log(response);
             if (!response.details || response.details.length === 0) {
@@ -552,6 +612,12 @@
               client_id: clientId,
               date: date,
           },
+          beforeSend: function () {
+              $('#loader').show();
+          },
+          complete: function () {
+              $('#loader').hide();
+          },
           success: function(response) {
               console.log(response);
 
@@ -592,7 +658,7 @@
                   }
 
                   tbody += `<tr>
-                              <td>${record.staff_id}</td>
+                              <td>${record.staff_id ?? ''}</td>
                               <td>${record.staff_name}</td>
                               <td class="text-center">
                                   ${hours} hr
