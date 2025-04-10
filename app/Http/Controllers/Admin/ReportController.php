@@ -93,6 +93,9 @@ class ReportController extends Controller
             $query = WorkTime::whereBetween('created_at', [$start, $end])
                             ->whereNotNull('staff_id')
                             ->whereNotNull('client_sub_service_id')
+                            ->whereHas('clientSubService', function ($query) {
+                                $query->whereNotNull('client_id');
+                            })
                             ->where('is_break', 0);
 
             if ($clientId && $clientId !== 'All') {
@@ -319,6 +322,7 @@ class ReportController extends Controller
         
         $workTimes = WorkTime::where('staff_id', $staffId)
             ->whereBetween('start_date', [$startDate, $endDate])
+
             ->whereNotNull('client_sub_service_id')
             ->whereHas('clientSubService', function ($query) {
                 $query->whereNotNull('client_id');
