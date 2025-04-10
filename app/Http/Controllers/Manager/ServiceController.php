@@ -414,6 +414,9 @@ class ServiceController extends Controller
 
         $ongoingWorkTime = WorkTime::where('staff_id', $staffId)
             ->whereNull('end_time')
+            ->where('is_break', 0)
+            ->whereNotNull('start_time')
+            ->whereNotNull('client_sub_service_id')
             ->whereBetween('created_at', [$startOfDay, $endOfDay])
             ->exists();
         if ($ongoingWorkTime) {
