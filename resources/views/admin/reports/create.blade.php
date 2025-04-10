@@ -541,7 +541,7 @@
             $('#loader').hide();
         },
         success: function(response) {
-          console.log(response);
+          // console.log(response);
             if (!response.details || response.details.length === 0) {
                 toastr.warning("No details found for this period.");
                 return;
@@ -619,7 +619,7 @@
               $('#loader').hide();
           },
           success: function(response) {
-              console.log(response);
+              // console.log(response);
 
               if (!response.details || response.details.length === 0) {
                   toastr.warning("No details found for this period.");

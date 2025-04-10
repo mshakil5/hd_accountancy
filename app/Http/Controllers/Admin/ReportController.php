@@ -92,7 +92,8 @@ class ReportController extends Controller
 
             $query = WorkTime::whereBetween('created_at', [$start, $end])
                             ->whereNotNull('staff_id')
-                            ->whereNotNull('client_sub_service_id');
+                            ->whereNotNull('client_sub_service_id')
+                            ->where('is_break', 0);
 
             if ($clientId && $clientId !== 'All') {
                 $query->whereHas('clientSubService', function ($q) use ($clientId) {
@@ -218,38 +219,48 @@ class ReportController extends Controller
             ->whereNotNull('staff_id')
             ->whereIn('client_sub_service_id', $clientSubServiceIds)
             ->whereBetween('start_date', [$startDate, $endDate])
-            ->get(['created_at', 'duration', 'client_sub_service_id', 'type']);
+            ->get();
     
         if ($workTimes->isEmpty()) {
             return response()->json(['details' => []]);
         }
     
-        $groupedWorkTimes = $workTimes->groupBy(function ($workTime) {
-            return Carbon::parse($workTime->created_at)->format('d F Y') . '-' . optional($workTime->clientSubService->subService)->id . '-' . $workTime->type;
-        });
+        $groupedByDate = [];
     
-        $responseDetails = $groupedWorkTimes->map(function ($group) {
-            $totalDuration = $group->sum('duration');
-            $firstRecord = $group->first();
-            $date = Carbon::parse($firstRecord->created_at)->format('d F Y');
-            $subServiceName = optional($firstRecord->clientSubService->subService)->name ?? '';
-            $type = $firstRecord->type;
+        foreach ($workTimes as $workTime) {
+            $date = Carbon::parse($workTime->created_at)->format('d F Y');
+            $serviceName = optional($workTime->clientSubService->subService)->name ?? '';
+            $type = $workTime->type;
     
-            return [
-                'date' => $date,
-                'duration' => $totalDuration,
-                'service_name' => $subServiceName,
-                'type' => $type,
+            if (!isset($groupedByDate[$date])) {
+                $groupedByDate[$date] = [
+                    'date' => $date,
+                    'duration' => 0,
+                    'services' => [],
+                    'additional' => [],
+                ];
+            }
+    
+            $groupedByDate[$date]['duration'] += $workTime->duration;
+            $groupedByDate[$date]['services'][] = $serviceName;
+            $groupedByDate[$date]['type'][] = $type;
+        }
+    
+        $responseDetails = [];
+        foreach ($groupedByDate as $item) {
+            $responseDetails[] = [
+                'date' => $item['date'],
+                'duration' => $item['duration'],
+                'service_name' => implode(', ', array_unique($item['services'])),
+                'type' => implode(', ', array_unique($item['type'])),
             ];
-        });
+        }
     
-        $response = [
+        return response()->json([
             'client_id' => $clientId,
             'client_name' => optional($workTimes->first()->clientSubService->client)->name ?? '',
-            'details' => $responseDetails->values()->toArray(),
-        ];
-    
-        return response()->json($response);
+            'details' => $responseDetails,
+        ]);
     }
 
     public function fetchHourlyWorkTimeDetails(Request $request)
