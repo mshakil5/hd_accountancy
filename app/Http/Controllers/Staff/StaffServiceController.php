@@ -30,8 +30,8 @@ class StaffServiceController extends Controller
                     $query->whereIn('sequence_status', [0, 1])
                         ->where('staff_id', Auth::id());
                 })
-                ->where('due_date', '<=', $today)
-                ->orderBy('id', 'desc')
+                ->whereRaw("STR_TO_DATE(due_date, '%d-%m-%Y') <= STR_TO_DATE(?, '%d-%m-%Y')", [$today])
+                ->orderByRaw("STR_TO_DATE(due_date, '%d-%m-%Y') ASC")
                 ->get();
 
             return DataTables::of($data)
@@ -52,6 +52,7 @@ class StaffServiceController extends Controller
                     $managerFirstName = $clientservice->manager ? $clientservice->manager->first_name . ' ' . $clientservice->manager->last_name : 'N/A';
                     return '<button class="btn btn-secondary change-status" data-id="' . $clientservice->id . '" data-manager-firstname="' . $managerFirstName . '">Details</button>';
                 })
+                ->addIndexColumn()
                 ->make(true);
         }
     }
@@ -63,7 +64,7 @@ class StaffServiceController extends Controller
                 ->whereHas('clientSubServices', function ($query) {
                     $query->where('staff_id', Auth::id());
                 })
-                ->orderBy('id', 'desc')
+                ->orderByRaw("STR_TO_DATE(due_date, '%d-%m-%Y') DESC")
                 ->get();
 
             return DataTables::of($data)
@@ -84,6 +85,7 @@ class StaffServiceController extends Controller
                     $managerFirstName = $clientservice->manager ? $clientservice->manager->first_name . ' ' . $clientservice->manager->last_name : 'N/A';
                     return '<button class="btn btn-secondary change-status" data-id="' . $clientservice->id . '" data-manager-firstname="' . $managerFirstName . '">Details</button>';
                 })
+                ->addIndexColumn()
                 ->make(true);
         }
     }
@@ -97,8 +99,7 @@ class StaffServiceController extends Controller
                     $query->where('sequence_status', 2)
                         ->where('staff_id', Auth::id());
                 })
-                ->where('due_date', '<=', $today)
-                ->orderBy('id', 'desc')
+                ->orderByRaw("STR_TO_DATE(due_date, '%d-%m-%Y') DESC")
                 ->get();
 
             return DataTables::of($data)
@@ -119,6 +120,7 @@ class StaffServiceController extends Controller
                     $managerFirstName = $clientservice->manager ? $clientservice->manager->first_name . ' ' . $clientservice->manager->last_name : 'N/A';
                     return '<button class="btn btn-secondary task-details" data-id="' . $clientservice->id . '" data-manager-firstname="' . $managerFirstName . '">Details</button>';
                 })
+                ->addIndexColumn()
                 ->make(true);
         }
     }

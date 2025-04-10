@@ -359,6 +359,7 @@
                         <table id="serviceStaffTable" class="table cell-border table-striped" style="width:100%">
                             <thead>
                                 <tr>
+                                    <th scope="col">#</th>
                                     <th scope="col">Client Name</th>
                                     <th scope="col">Service Name</th>
                                     <th scope="col">Due Date</th>
@@ -477,6 +478,7 @@
                         <table id="completedTasksTable" class="table cell-border table-striped" style="width:100%">
                             <thead>
                                 <tr>
+                                    <th scope="col">#</th>
                                     <th scope="col">Client Name</th>
                                     <th scope="col">Service Name</th>
                                     <th scope="col">Due Date</th>
@@ -768,6 +770,12 @@
                 }
           },
           columns: [
+                {
+                  data: 'DT_RowIndex',
+                  name: 'DT_RowIndex',
+                  orderable: false,
+                  searchable: false
+                },
                 { data: 'clientname', name: 'clientname' },
                 { data: 'servicename', name: 'servicename' },
                 { 
@@ -1354,6 +1362,12 @@
                 }
             },
             columns: [
+                {
+                  data: 'DT_RowIndex',
+                  name: 'DT_RowIndex',
+                  orderable: false,
+                  searchable: false
+                },
                 { data: 'clientname', name: 'clientname' },
                 { data: 'servicename', name: 'servicename' },
                 { 

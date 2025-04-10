@@ -364,6 +364,7 @@
                         <table id="assignedServices" class="table cell-border table-striped" style="width:100%">
                             <thead>
                                 <tr>
+                                    <th scope="col">#</th>
                                     <th scope="col">Client Name</th>
                                     <th scope="col">Service Name</th>
                                     <th scope="col">Due Date</th>
@@ -456,6 +457,7 @@
                         <table id="completedServices" class="table cell-border table-striped" style="width:100%">
                             <thead>
                                 <tr>
+                                    <th>#</th>
                                     <th>Client Name</th>
                                     <th>Service Name</th>
                                     <th>Due Date</th>
@@ -1419,7 +1421,14 @@
                 url: '/admin/get-completed-services',
                 type: 'GET',
             },
-            columns: [{
+            columns: [
+                {
+                  data: 'DT_RowIndex',
+                  name: 'DT_RowIndex',
+                  orderable: false,
+                  searchable: false
+                },
+                {
                     data: 'clientname',
                     name: 'clientname'
                 },
@@ -1615,7 +1624,14 @@
                 url: '/admin/get-assigned-service',
                 type: 'GET',
             },
-            columns: [{
+            columns: [
+                {
+                  data: 'DT_RowIndex',
+                  name: 'DT_RowIndex',
+                  orderable: false,
+                  searchable: false
+                },
+                {
                     data: 'clientname',
                     name: 'clientname'
                 },

@@ -218,7 +218,7 @@ class AdminController extends Controller
 
         if ($request->ajax()) {
             $data = ClientService::where('type', '!=', 2)
-            ->where('due_date', '<=', $today)
+            ->whereRaw("STR_TO_DATE(due_date, '%d-%m-%Y') <= STR_TO_DATE(?, '%d-%m-%Y')", [$today])
             ->with(['clientSubServices' => function ($query) {
                     $query->where('staff_id', Auth::id());
                         //   ->whereIn('sequence_status', [0, 1]);
@@ -232,7 +232,7 @@ class AdminController extends Controller
                 })
                 ->whereIn('status', [0, 1])
                 ->distinct()
-                ->orderBy('id', 'desc')
+                ->orderByRaw("STR_TO_DATE(due_date, '%d-%m-%Y') ASC")
                 ->get();
     
             return DataTables::of($data)
@@ -251,6 +251,7 @@ class AdminController extends Controller
                 ->addColumn('status', function (ClientService $clientservice) {
                     return $clientservice->status;
                 })
+                ->addIndexColumn()
                 ->addColumn('action', function (ClientService $clientservice) {
                     $managerFirstName = $clientservice->manager 
                         ? $clientservice->manager->first_name . ' ' . $clientservice->manager->last_name 
@@ -291,8 +292,7 @@ class AdminController extends Controller
                     $query->where('sequence_status', 2)
                         ->where('staff_id', Auth::id());
                 })
-                ->where('due_date', '<=', $today)
-                ->orderBy('id', 'desc')
+                ->orderByRaw("STR_TO_DATE(due_date, '%d-%m-%Y') DESC")
                 ->get();
 
             return DataTables::of($data)
@@ -312,6 +312,7 @@ class AdminController extends Controller
                 ->addColumn('action', function (ClientService $clientservice) use ($managerName) {
                     return '<button class="btn btn-secondary task-details" data-id="' . $clientservice->id . '" data-manager="' . $managerName . '">Details</button>';
                 })
+                ->addIndexColumn()
                 ->make(true);
         }
     }
@@ -324,8 +325,7 @@ class AdminController extends Controller
             $data = ClientService::where('type', '!=', 2)->with('clientSubServices')
                 ->where('manager_id', Auth::id())
                 ->where('status', 2)
-                ->where('due_date', '<=', $today)
-                ->orderBy('id', 'desc')
+                ->orderByRaw("STR_TO_DATE(due_date, '%d-%m-%Y') DESC")
                 ->get();
 
             return DataTables::of($data)
@@ -345,6 +345,7 @@ class AdminController extends Controller
                 ->addColumn('action', function (ClientService $clientservice) use ($managerName) {
                     return '<button class="btn btn-secondary task-details1" data-id="' . $clientservice->id . '" data-manager="' . $managerName . '">Details</button>';
                 })
+                ->addIndexColumn()
                 ->make(true);
         }
     }

@@ -26,7 +26,7 @@ class ServiceController extends Controller
 
         if ($request->ajax()) {
             $data = ClientService::where('type', '!=', 2)
-            ->where('due_date', '<=', $today)
+            ->whereRaw("STR_TO_DATE(due_date, '%d-%m-%Y') <= STR_TO_DATE(?, '%d-%m-%Y')", [$today])
             ->with(['clientSubServices' => function ($query) {
                     $query->where('staff_id', Auth::id());
                         //   ->whereIn('sequence_status', [0, 1]);
@@ -40,7 +40,7 @@ class ServiceController extends Controller
                 })
                 ->whereIn('status', [0, 1])
                 ->distinct()
-                ->orderBy('id', 'desc')
+                ->orderByRaw("STR_TO_DATE(due_date, '%d-%m-%Y') ASC")
                 ->get();
     
             return DataTables::of($data)
@@ -66,6 +66,7 @@ class ServiceController extends Controller
                     return '<button class="btn btn-secondary change-status" data-id="' 
                         . $clientservice->id . '" data-manager-firstname="' . $managerFirstName . '">Details</button>';
                 })
+                ->addIndexColumn()
                 ->make(true);
         }
     }    
@@ -77,7 +78,7 @@ class ServiceController extends Controller
                 ->whereHas('clientSubServices', function ($query) {
                     $query->where('staff_id', Auth::id());
                 })
-                ->orderBy('id', 'desc')
+                ->orderByRaw("STR_TO_DATE(due_date, '%d-%m-%Y') DESC")
                 ->get();
 
             return DataTables::of($data)
@@ -98,6 +99,7 @@ class ServiceController extends Controller
                     $managerFirstName = $clientservice->manager ? $clientservice->manager->first_name . ' ' . $clientservice->manager->last_name : 'N/A';
                     return '<button class="btn btn-secondary change-status" data-id="' . $clientservice->id . '" data-manager-firstname="' . $managerFirstName . '">Details</button>';
                 })
+                ->addIndexColumn()
                 ->make(true);
         }
     }
@@ -217,8 +219,7 @@ class ServiceController extends Controller
                     $query->where('sequence_status', 2)
                         ->where('staff_id', Auth::id());
                 })
-                ->where('due_date', '<=', $today)
-                ->orderBy('id', 'desc')
+                ->orderByRaw("STR_TO_DATE(due_date, '%d-%m-%Y') DESC")
                 ->get();
 
             return DataTables::of($data)
@@ -238,6 +239,7 @@ class ServiceController extends Controller
                 ->addColumn('action', function (ClientService $clientservice) use ($managerName) {
                     return '<button class="btn btn-secondary task-details" data-id="' . $clientservice->id . '" data-manager="' . $managerName . '">Details</button>';
                 })
+                ->addIndexColumn()
                 ->make(true);
         }
     }
@@ -251,8 +253,7 @@ class ServiceController extends Controller
             $data = ClientService::where('type', '!=', 2)->with('clientSubServices')
                 ->where('manager_id', Auth::id())
                 ->where('status', 2)
-                ->where('due_date', '<=', $today)
-                ->orderBy('id', 'desc')
+                ->orderByRaw("STR_TO_DATE(due_date, '%d-%m-%Y') DESC")
                 ->get();
 
             return DataTables::of($data)
@@ -272,6 +273,7 @@ class ServiceController extends Controller
                 ->addColumn('action', function (ClientService $clientservice) use ($managerName) {
                     return '<button class="btn btn-secondary task-details1" data-id="' . $clientservice->id . '" data-manager="' . $managerName . '">Details</button>';
                 })
+                ->addIndexColumn()
                 ->make(true);
         }
     }

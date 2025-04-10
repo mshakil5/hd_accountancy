@@ -403,8 +403,7 @@ class ServiceController extends Controller
                 // ->where('status', 2)
                 ->where('is_admin_approved', 1)
                 ->where('type', 1)
-                ->where('due_date', '<=', $today)
-                ->orderBy('id', 'desc')
+                ->orderByRaw("STR_TO_DATE(due_date, '%d-%m-%Y') DESC")
                 ->get();
 
             return DataTables::of($data)
@@ -427,6 +426,7 @@ class ServiceController extends Controller
                     $managerFirstName = $clientservice->manager ? $clientservice->manager->first_name . ' ' . $clientservice->manager->last_name : 'N/A';
                     return '<button class="btn btn-secondary task-details" data-id="' . $clientservice->id . '" data-manager-firstname="' . $managerFirstName . '">Details</button>';
                 })
+                ->addIndexColumn()
                 ->make(true);
         }
     }
@@ -873,11 +873,11 @@ class ServiceController extends Controller
                 ->whereNotNull('service_frequency')
                 ->where('is_admin_approved', 0)
                 ->where('type', 1)
-                ->where('due_date', '<=', $today)
+                ->whereRaw("STR_TO_DATE(due_date, '%d-%m-%Y') <= STR_TO_DATE(?, '%d-%m-%Y')", [$today])
                 ->whereHas('clientSubServices', function ($query) {
                     $query->whereNotNull('staff_id');
                 })
-                ->orderBy('id', 'desc')
+                ->orderByRaw("STR_TO_DATE(due_date, '%d-%m-%Y') ASC")
                 ->get();
 
             return DataTables::of($data)
@@ -935,6 +935,7 @@ class ServiceController extends Controller
                     $managerFirstName = $clientservice->manager ? $clientservice->manager->first_name . ' ' . $clientservice->manager->last_name : 'N/A';
                     return '<button class="btn btn-secondary task-detail" data-id="' . $clientservice->id . '" data-manager-firstname="' . $managerFirstName . '">Details</button>';
                 })
+                ->addIndexColumn()
                 ->make(true);
         }
     }
