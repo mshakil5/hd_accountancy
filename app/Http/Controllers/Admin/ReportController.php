@@ -159,6 +159,7 @@ class ReportController extends Controller
                              ->whereNotNull('client_sub_service_id');
     
             if ($staffId && $staffId !== 'All') {
+                $query->where('staff_id', $staffId);
                 $staff = User::find($staffId);
                 $staffName = $staff ? ($staff->first_name . ' ' . $staff->last_name) : 'Unknown Staff';
             } else {
@@ -212,6 +213,7 @@ class ReportController extends Controller
     {
         $clientId = $request->client_id;
         $dateRange = $request->period;
+        $staffId = $request->staff_id;
         $dates = explode(' to ', $dateRange);
         $startDate = Carbon::parse($dates[0])->format('d-m-Y');
         $endDate = Carbon::parse($dates[1])->format('d-m-Y');
@@ -220,6 +222,9 @@ class ReportController extends Controller
     
         $workTimes = WorkTime::whereNotNull('client_sub_service_id')
             ->whereNotNull('staff_id')
+            ->when($staffId !== 'All', function ($query) use ($staffId) {
+                return $query->where('staff_id', $staffId);
+            })
             ->whereIn('client_sub_service_id', $clientSubServiceIds)
             ->whereBetween('start_date', [$startDate, $endDate])
             ->get();
@@ -261,6 +266,7 @@ class ReportController extends Controller
     
         return response()->json([
             'client_id' => $clientId,
+            'staff_id' => $staffId,
             'client_name' => optional($workTimes->first()->clientSubService->client)->name ?? '',
             'details' => $responseDetails,
         ]);
@@ -269,6 +275,7 @@ class ReportController extends Controller
     public function fetchHourlyWorkTimeDetails(Request $request)
     {
         $clientId = $request->client_id;
+        $staffId = $request->staff_id;
         $date = $request->date;
         $date = Carbon::parse($date)->format('d-m-Y');
     
@@ -277,6 +284,9 @@ class ReportController extends Controller
                 $query->where('client_id', $clientId);
             })
             ->whereNotNull('staff_id')
+            ->when($staffId !== 'All', function ($query) use ($staffId) {
+                  return $query->where('staff_id', $staffId);
+              })
             ->where('is_break', 0)
             ->where('start_date', $date)
             ->with('staff', 'clientSubService.subService')
@@ -314,6 +324,7 @@ class ReportController extends Controller
     public function fetchClientWorkTimeDetails(Request $request)
     {
         $staffId = $request->staff_id;
+        $clientId = $request->client_id;
         $dateRange = $request->date;
         $dates = explode(' to ', $dateRange);
         
@@ -324,8 +335,11 @@ class ReportController extends Controller
             ->whereBetween('start_date', [$startDate, $endDate])
 
             ->whereNotNull('client_sub_service_id')
-            ->whereHas('clientSubService', function ($query) {
-                $query->whereNotNull('client_id');
+            ->whereHas('clientSubService', function ($query) use ($clientId) {
+              $query->whereNotNull('client_id');
+              if ($clientId !== 'All') {
+                  $query->where('client_id', $clientId);
+              }
             })
             ->whereNotNull('staff_id')
             ->where('is_break', 0)

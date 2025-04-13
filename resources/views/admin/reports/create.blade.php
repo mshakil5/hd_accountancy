@@ -330,7 +330,8 @@
                     let cursorStyle = parseFloat(hoursWorked) > 0 ? "cursor: pointer;" : "";
 
                     tbody += `<td class="text-center ${clickableClass}" style="${cursorStyle}" 
-                               data-period="${period.period}" data-client="${client.client_id}">
+                               data-period="${period.period}" data-client="${client.client_id}"
+                               data-staff="${base_name}">
                                ${hoursWorked} hr
                              </td>`;
                 });
@@ -409,7 +410,8 @@
                     tbody += `<td class="text-center ${clickableClass}" style="${cursorStyle}" 
                               data-period="${period.period}"
                               data-staff="${staffMember.staff_id}"
-                              data-staff-name="${staffMember.staff_name}">
+                              data-staff-name="${staffMember.staff_name}"
+                              data-client-id="${base_name}">
                               ${hoursWorked} hr
                             </td>`;
                 });
@@ -443,6 +445,7 @@
       let staffId = $(this).data('staff');
       let period = $(this).data('period');
       let staffName = $(this).data('staff-name');
+      let clientId = $(this).data('client-id');
 
       $.ajax({
           url: "{{ route('client.report.details') }}",
@@ -450,6 +453,7 @@
           data: {
               staff_id: staffId,
               date: period,
+              client_id: clientId
           },
           beforeSend: function () {
               $('#loader').show();
@@ -525,6 +529,7 @@
 
   $(document).on('click', '.clickable-hour', function() {
     let clientId = $(this).data('client');
+    let staffId = $(this).data('staff');
     let period = $(this).data('period');
 
     $.ajax({
@@ -533,6 +538,7 @@
         data: {
             client_id: clientId,
             period: period,
+            staff_id: staffId
         },
         beforeSend: function () {
             $('#loader').show();
@@ -577,7 +583,8 @@
 
                 tbody += `<tr>
                             <td>${record.date}</td>
-                            <td class="text-center clickable-hour-detail text-primary" style="cursor: pointer;" data-client-id="${response.client_id}" data-date="${record.date}">
+                            <td class="text-center clickable-hour-detail text-primary" style="cursor: pointer;" data-client-id="${response.client_id}" data-date="${record.date}"
+                            data-staff="${response.staff_id}">
                                 ${hours} hr
                             </td>
                             <td class="text-center">${serviceName}</td>
@@ -603,6 +610,7 @@
 
   $(document).on('click', '.clickable-hour-detail', function() {
       let clientId = $(this).data('client-id');
+      let staffId = $(this).data('staff');
       let date = $(this).data('date');
 
       $.ajax({
@@ -611,6 +619,7 @@
           data: {
               client_id: clientId,
               date: date,
+              staff_id: staffId
           },
           beforeSend: function () {
               $('#loader').show();
