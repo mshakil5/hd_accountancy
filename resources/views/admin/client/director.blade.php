@@ -43,6 +43,13 @@
                             </select>
                         </div>
                         <div class="form-group">
+                            <label for="hmrc_authorisation">HMRC Authorisation</label>
+                            <select class="form-control my-2" id="hmrc_authorisation" name="hmrc_authorisation">
+                                <option value="0">No</option>
+                                <option value="1">Yes</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
                             <label for="utr_number">UTR Number</label>
                             <input type="number" class="form-control my-2" id="utr_number" name="utr_number" placeholder="Enter UTR number">
                         </div>

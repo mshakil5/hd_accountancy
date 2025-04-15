@@ -517,6 +517,7 @@ class ClientController extends Controller
         $director->utr_authorization = $request->utr_authorization;
         $director->nino = $request->nino;
         $director->directors_tax_return = $request->directors_tax_return;
+        $director->hmrc_authorisation = $request->hmrc_authorisation;
         $director->updated_by = Auth::id();
 
         if ($director->save()) {

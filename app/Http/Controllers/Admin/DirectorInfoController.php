@@ -53,6 +53,7 @@ class DirectorInfoController extends Controller
         $data->utr_authorization = $request->utr_authorization;
         $data->nino = $request->nino;
         $data->directors_tax_return = $request->directors_tax_return;
+        $data->hmrc_authorisation = $request->hmrc_authorisation;
         $data->created_by = Auth::id();
 
         if ($data->save()) {

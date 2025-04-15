@@ -295,6 +295,7 @@
             $('#utr_number').val(directorInfo.utr_number);
             $('#utr_authorization').val(directorInfo.utr_authorization);
             $('#directors_tax_return').val(directorInfo.directors_tax_return);
+            $('#hmrc_authorisation').val(directorInfo.hmrc_authorisation);
             $('#nino').val(directorInfo.nino);
 
             $('#directorIdInput').val(directorInfo.id);
