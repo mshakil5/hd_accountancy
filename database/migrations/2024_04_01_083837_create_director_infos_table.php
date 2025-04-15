@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('utr_number')->nullable();
             $table->integer('utr_authorization')->default(1);
             $table->integer('directors_tax_return')->default(1);
+            $table->integer('hmrc_authorisation')->default(1);
             $table->string('nino')->nullable();
             $table->boolean('status')->default(1);
             $table->string('created_by')->nullable();
