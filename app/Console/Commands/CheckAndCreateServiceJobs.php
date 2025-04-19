@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use App\Models\ClientService;
 use Illuminate\Support\Carbon;
 use App\Models\ClientSubService;
+use DateTime;
 
 class CheckAndCreateServiceJobs extends Command
 {
@@ -20,20 +21,24 @@ class CheckAndCreateServiceJobs extends Command
     
         $clientServices = ClientService::where('continuous', 1)
             ->with('clientSubServices')
-            ->whereNotNull('next_service_deadline')
             ->whereNotNull('next_due_date')
-            ->whereNotNull('next_legal_deadline')
             ->whereNotNull('client_id')
+            ->where('type', 1)
             ->where('is_next_date_added', 0)
+            ->whereRaw("STR_TO_DATE(next_due_date, '%d-%m-%Y') <= STR_TO_DATE(?, '%d-%m-%Y')", [date('d-m-Y')])
             ->orderBy('id', 'desc')
             ->get();
-    
+
         foreach ($clientServices as $clientService) {
             $frequency = $clientService->service_frequency;
             $nextDueDate = Carbon::createFromFormat('d-m-Y', $clientService->next_due_date);
-    
-            $isRelevant = false;
 
+            $next = DateTime::createFromFormat('d-m-Y', $clientService->next_due_date);
+            $today = new DateTime();
+              
+            if ($next < $today) {
+                $isRelevant = true;
+            }else {
             if ($frequency == 'Monthly') {
                 $startOfNextMonth = $currentDate->copy()->addMonth()->startOfMonth();
                 $endOfNextMonth = $currentDate->copy()->addMonth()->endOfMonth();
@@ -58,6 +63,7 @@ class CheckAndCreateServiceJobs extends Command
                 $startOfNextYear = $currentDate->copy()->addYear()->startOfYear();
                 $endOfNextYear = $currentDate->copy()->addYear()->endOfYear();
                 $isRelevant = $nextDueDate->between($startOfNextYear, $endOfNextYear);
+            }
             }
 
             $clientService->next_due_date = Carbon::parse($clientService->next_due_date)->format('d-m-Y');

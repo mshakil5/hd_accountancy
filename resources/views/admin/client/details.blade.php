@@ -33,7 +33,7 @@
             <textarea class="form-control my-2" id="address_line1" name="address_line1" placeholder="Enter address line 1">{{ $client->address_line1 }}</textarea>
         </div>
         <div class="col-lg-4">
-            <label for="">Address Line 2</label>
+            <label for="">Registered Address Line 2</label>
             <textarea class="form-control my-2" id="address_line2" name="address_line2" placeholder="Enter address line 2">{{ $client->address_line2 }}</textarea>
         </div>
         <div class="col-lg-4 d-none">

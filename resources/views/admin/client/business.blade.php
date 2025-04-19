@@ -26,7 +26,7 @@
             <input type="number" class="form-control my-2" id="company_utr" name="company_utr" placeholder="Enter UTR number" value="{{ $businessInfo->company_utr ?? '' }}">
         </div>
         <div class="col-lg-4">
-            <label for="ct_authorization">CT Authorization</label>
+            <label for="ct_authorization">HMRC CT Authorization</label>
             <div class="mt-2">
                 <select class="form-control my-2" name="ct_authorization" id="ct_authorization">
                     <option value="0" {{ isset($businessInfo->ct_authorization) && $businessInfo->ct_authorization == 0 ? 'selected' : '' }}>No</option>
@@ -73,7 +73,7 @@
             <input type="date" class="form-control my-2" id="due_date" name="due_date" placeholder="" value="{{ $businessInfo->due_date ?? '' }}">
         </div>
         <div class="col-lg-4">
-            <label for="confirmation_due_date">Confirmation Date</label>
+            <label for="confirmation_due_date">Confirmation Statement Date</label>
             <input type="date" class="form-control my-2" id="confirmation_due_date" name="confirmation_due_date" placeholder="Enter confirmation date" value="{{ $businessInfo->confirmation_due_date ?? '' }}">
         </div>
     </div>
