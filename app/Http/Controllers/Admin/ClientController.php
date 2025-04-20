@@ -209,6 +209,17 @@ class ClientController extends Controller
         $data->town = $request->town;
         $data->postcode = $request->postcode;
         $data->country = $request->country;
+        $data->business_name = $request->business_name;
+        $data->utr_number = $request->utr_number;
+        $data->hmrc_authorization = $request->hmrc_authorization;
+        $data->ni_number = $request->ni_number;
+        $data->dob = $request->dob;
+        $data->property_1_address = $request->property_1_address;
+        $data->property_2_address = $request->property_2_address;
+        $data->property_3_address = $request->property_3_address;
+        $data->property_4_address = $request->property_4_address;
+        $data->property_5_address = $request->property_5_address;
+
         if ($request->filled('password')) {
             $data->password = Hash::make($request->password);
         }
@@ -395,6 +406,17 @@ class ClientController extends Controller
         $client->town = $request->town;
         $client->postcode = $request->postcode;
         $client->country = $request->country;
+        $client->business_name = $request->business_name;
+        $client->utr_number = $request->utr_number;
+        $client->hmrc_authorization = $request->hmrc_authorization;
+        $client->ni_number = $request->ni_number;
+        $client->dob = $request->dob;
+        $client->property_1_address = $request->property_1_address;
+        $client->property_2_address = $request->property_2_address;
+        $client->property_3_address = $request->property_3_address;
+        $client->property_4_address = $request->property_4_address;
+        $client->property_5_address = $request->property_5_address;
+        
         if ($request->filled('password')) {
             $client->password = Hash::make($request->password);
         }
@@ -438,12 +460,12 @@ class ClientController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'nature_of_business' => 'nullable|string',
-            'company_number' => 'required|string',
+            'company_number' => 'nullable|string',
             'year_end_date' => 'nullable|date',
             'due_date' => 'nullable|date',
             'confirmation_due_date' => 'nullable|date',
-            'authorization_code' => 'required|string',
-            'company_utr' => 'required|string',
+            'authorization_code' => 'nullable|string',
+            'company_utr' => 'nullable|string',
             'status' => 'required',
         ]);
     
@@ -508,6 +530,7 @@ class ClientController extends Controller
         $director = DirectorInfo::findOrFail($id);
 
         $director->name = $request->name;
+        $director->last_name = $request->last_name;
         $director->phone = $request->phone;
         $director->email = $request->email;
         $director->address = $request->address;

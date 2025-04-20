@@ -12,8 +12,12 @@
                     <form id="directorForm">
                         <input type="hidden" id="directorIdInput" name="director_id">
                         <div class="form-group">
-                            <label for="name">Name <span class="text-danger">*</span></label>
+                            <label for="name">First Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control my-2" id="dir-name" name="name" placeholder="Enter name">
+                        </div>
+                        <div class="form-group">
+                            <label for="name">Last Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control my-2" id="dir-last-name" name="last_name" placeholder="Enter last name">
                         </div>
                         <div class="form-group">
                             <label for="phone">Phone <span class="text-danger">*</span></label>
@@ -83,7 +87,7 @@
                 <table id="directorTable" class="table">
                     <thead>
                         <tr>
-                            <th>Director Name</th>
+                            <th>Name</th>
                             <th>Phone</th>
                             <th>Email</th>
                             <th>NI Number</th>
@@ -97,7 +101,7 @@
                                 <tr data-director-id="{{ $directorInfo->id }}"
                                     data-client-id="{{ $directorInfo->client_id }}"
                                     data-director-info='@json($directorInfo)'>
-                                    <td>{{ $directorInfo->name }}</td>
+                                    <td>{{ $directorInfo->name }} {{ $directorInfo->last_name }}</td>
                                     <td>{{ $directorInfo->phone }}</td>
                                     <td>{{ $directorInfo->email }}</td>
                                     <td>{{ $directorInfo->ni_number }}</td>

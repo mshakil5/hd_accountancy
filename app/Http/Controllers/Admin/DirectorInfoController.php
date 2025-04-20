@@ -44,6 +44,7 @@ class DirectorInfoController extends Controller
 
         $data->client_id = $request->client_id;
         $data->name = $request->name;
+        $data->last_name = $request->last_name;
         $data->phone = $request->phone;
         $data->email = $request->email;
         $data->address = $request->address;

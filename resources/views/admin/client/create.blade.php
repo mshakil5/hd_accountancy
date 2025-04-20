@@ -13,7 +13,7 @@
             <div class="row my-4 px-3">
                 <div class="col-lg-3">
                     <label for="">Client Name <span class="text-danger">*</span></label>
-                    <input for="name" type="text" value="{{ isset($client->name) ? $client->name : '' }}" class="form-control mt-2" name="name" id="name" required placeholder="Ex: John">
+                    <input for="name" type="text" value="{{ isset($client->name) ? $client->name : '' }}" class="form-control mt-2" name="name" id="name" required placeholder="">
                 </div>
                 <div class="col-lg-3">
                     <label for="">Reference ID <span class="text-danger">*</span></label>
@@ -101,44 +101,44 @@
                                             </div>
                                             <div class="col-lg-4">
                                                 <label for="">Email <span class="text-danger">*</span></label>
-                                                <input type="email" class="form-control my-2" id="email" name="email" value="{{ isset($client) && isset($client->email) ? $client->email : '' }}" placeholder="Ex: john@example.com" required>
+                                                <input type="email" class="form-control my-2" id="email" name="email" value="{{ isset($client) && isset($client->email) ? $client->email : '' }}" placeholder="" required>
                                             </div>
                                             <div class="col-lg-4">
                                                 <label for="">Primary Phone <span class="text-danger">*</span></label>
-                                                <input type="number" class="form-control my-2" id="phone" name="phone" value="{{ isset($client) && isset($client->phone) ? $client->phone : '' }}" placeholder="Ex: 1234567890" required>
+                                                <input type="number" class="form-control my-2" id="phone" name="phone" value="{{ isset($client) && isset($client->phone) ? $client->phone : '' }}" placeholder="" required>
                                             </div>
                                             <div class="col-lg-4">
                                                 <label for="">Secondary Phone </label>
-                                                <input type="number" class="form-control my-2" id="phone2" name="phone2" value="{{ isset($client) && isset($client->phone2) ? $client->phone2 : '' }}" placeholder="Ex: 1234567890">
+                                                <input type="number" class="form-control my-2" id="phone2" name="phone2" value="{{ isset($client) && isset($client->phone2) ? $client->phone2 : '' }}" placeholder="">
                                             </div>
                                             
                                             <div class="col-lg-4">
                                                 <label for="">Trading Address</label>
-                                                <textarea class="form-control my-2" id="trading_address" name="trading_address" placeholder="Ex: 34 WHITE ROSE AVENUE, Moldgreen, Huddersfield, HD59TZ">{{ isset($client) && isset($client->trading_address) ? $client->trading_address : '' }}</textarea>
+                                                <textarea class="form-control my-2" id="trading_address" name="trading_address" placeholder="">{{ isset($client) && isset($client->trading_address) ? $client->trading_address : '' }}</textarea>
                                             </div>
                                             <div class="col-lg-4">
                                                 <label for=""> Registered Address Line 1</label>
-                                                <textarea class="form-control my-2" id="address_line1" name="address_line1" placeholder="Ex: 34 WHITE ROSE AVENUE">{{ isset($client) && isset($client->address_line1) ? $client->address_line1 : '' }}</textarea>
+                                                <textarea class="form-control my-2" id="address_line1" name="address_line1" placeholder="">{{ isset($client) && isset($client->address_line1) ? $client->address_line1 : '' }}</textarea>
                                             </div>
                                             <div class="col-lg-4">
                                                 <label for="">Registered Address line 2</label>
-                                                <textarea class="form-control my-2" id="address_line2" name="address_line2" placeholder="Ex: Moldgreen">{{ isset($client) && isset($client->address_line2) ? $client->address_line2 : '' }}</textarea>
+                                                <textarea class="form-control my-2" id="address_line2" name="address_line2" placeholder="">{{ isset($client) && isset($client->address_line2) ? $client->address_line2 : '' }}</textarea>
                                             </div>
                                             <div class="col-lg-4 d-none">
                                                 <label for="">Address Line 3</label>
-                                                <textarea class="form-control my-2" id="address_line3" name="address_line3" placeholder="Enter address line 3">{{ isset($client) && isset($client->address_line3) ? $client->address_line3 : '' }}</textarea>
+                                                <textarea class="form-control my-2" id="address_line3" name="address_line3" placeholder="">{{ isset($client) && isset($client->address_line3) ? $client->address_line3 : '' }}</textarea>
                                             </div>
                                             <div class="col-lg-4">
                                                 <label for="">City </label>
-                                                <input type="text" class="form-control my-2" id="city" name="city" value="{{ isset($client) && isset($client->city) ? $client->city : '' }}" placeholder="Ex: Huddersfield">
+                                                <input type="text" class="form-control my-2" id="city" name="city" value="{{ isset($client) && isset($client->city) ? $client->city : '' }}" placeholder="">
                                             </div>
                                             <div class="col-lg-4 d-none">
                                                 <label for="">Town </label>
-                                                <input type="text" class="form-control my-2" id="town" name="town" placeholder="Enter town" value="{{ isset($client) && isset($client->town) ? $client->town : '' }}">
+                                                <input type="text" class="form-control my-2" id="town" name="town" placeholder="" value="{{ isset($client) && isset($client->town) ? $client->town : '' }}">
                                             </div>
                                             <div class="col-lg-4">
                                                 <label for="">Postal Code </label>
-                                                <input type="text" class="form-control my-2" id="postcode" name="postcode" placeholder="Ex: HD59TZ" value="{{ isset($client) && isset($client->postcode) ? $client->postcode : '' }}">
+                                                <input type="text" class="form-control my-2" id="postcode" name="postcode" placeholder="" value="{{ isset($client) && isset($client->postcode) ? $client->postcode : '' }}">
                                             </div>
                                             <div class="col-lg-4 d-none">
                                                 <label for="country">Country</label>
@@ -155,7 +155,7 @@
                                                 <label for="" class="mb-2">Upload Photo Id </label>
                                                 <div class="position-relative">
                                                     <input type="file" class="form-control" name="photo_id" id="photo_id"
-                                                        accept="image/*" placeholder="Upload photo id">
+                                                        accept="image/*" placeholder="">
                                                     <i class="bi bi-paperclip position-absolute top-50 translate-middle-y"
                                                         style="right: 8px;"></i>
                                                 </div>
@@ -178,7 +178,42 @@
                                                         <i class="fa fa-eye"></i>
                                                     </button>
                                                 </div>
-                                            </div>                                          
+                                            </div>
+
+                                            <div id="client-type-9-fields" class="row mt-1" style="display: none;">
+                                                <div class="col-lg-4">
+                                                  <label class="mb-2">Business Name</label>
+                                                  <input type="text" name="business_name" class="form-control">
+                                                </div>
+                                                <div class="col-lg-4">
+                                                    <label class="mb-2">UTR Number</label>
+                                                    <input type="text" name="utr_number" class="form-control">
+                                                </div>
+                                                <div class="col-lg-4">
+                                                    <label class="mb-2">HMRC Authorization</label>
+                                                    <select name="hmrc_authorization" class="form-control">
+                                                        <option value="">Select</option>
+                                                        <option value="1">Yes</option>
+                                                        <option value="0">No</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-lg-4">
+                                                    <label class="mb-2">NI Number</label>
+                                                    <input type="text" name="ni_number" class="form-control">
+                                                </div>
+                                                <div class="col-lg-4">
+                                                    <label class="mb-2">Date Of Birth</label>
+                                                    <input type="date" name="dob" class="form-control">
+                                                </div>
+                                            </div>
+                                            <div id="client-type-8-fields" class="row mt-1" style="display: none;">
+                                              @for($i = 1; $i <= 5; $i++)
+                                                  <div class="col-lg-4">
+                                                      <label class="mb-2">Property {{ $i }} Address</label>
+                                                      <textarea name="property_{{ $i }}_address" class="form-control" rows="2"></textarea>
+                                                  </div>
+                                              @endfor       
+                                            </div>                                     
                                         </div>
                                         <div class="row">
                                             <div class="col-lg-4 mx-auto text-center">
@@ -264,7 +299,7 @@
                         var clientId = response.client_id;
                         window.setTimeout(function() {
                             window.location.href = "{{ route('client.update.form', ':id') }}".replace(':id', clientId);
-                        }, 1000);
+                        }, 200);
                     } else {
                         toastr.error(response.message[Object.keys(response.message)[0]], "Error");
                     }
@@ -305,6 +340,23 @@
           icon.removeClass('fa-eye-slash').addClass('fa-eye');
       }
     });
+
+    function toggleClientFields() {
+        var selectedId = $('#client_type_id').val();
+
+        $('#client-type-9-fields, #client-type-8-fields').hide().find('input, select').val('');
+
+        if (selectedId == '9') {
+            $('#client-type-9-fields').show();
+        } else if (selectedId == '8') {
+            $('#client-type-8-fields').show();
+        }
+    }
+
+    toggleClientFields();
+
+    $('#client_type_id').change(toggleClientFields);
+
 </script>
 
 @endsection

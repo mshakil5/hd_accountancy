@@ -14,15 +14,15 @@
             <input type="text" class="form-control my-2" id="nature_of_business" name="nature_of_business" placeholder="Enter nature of business" value="{{ $businessInfo->nature_of_business ?? '' }}">
         </div>
         <div class="col-lg-4">
-            <label for="company_number">Company Number <span class="text-danger">*</span></label>
+            <label for="company_number">Company Number</label>
             <input type="number" class="form-control my-2" id="company_number" name="company_number" placeholder="Enter company number" value="{{ $businessInfo->company_number ?? '' }}">
         </div>
         <div class="col-lg-4">
-            <label for="authorization_code">Company Auth Code <span class="text-danger">*</span></label>
+            <label for="authorization_code">Company Auth Code</label>
             <input type="text" class="form-control my-2" id="authorization_code" name="authorization_code" placeholder="Enter company auth code" value="{{ $businessInfo->authorization_code ?? '' }}">
         </div>
         <div class="col-lg-4">
-            <label for="company_utr">Company UTR <span class="text-danger">*</span></label>
+            <label for="company_utr">Company UTR</label>
             <input type="number" class="form-control my-2" id="company_utr" name="company_utr" placeholder="Enter UTR number" value="{{ $businessInfo->company_utr ?? '' }}">
         </div>
         <div class="col-lg-4">

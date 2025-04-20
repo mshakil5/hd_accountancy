@@ -170,6 +170,34 @@
 <!-- Client details update -->
 <script>
 
+$(document).on('click', '.toggle-password', function () {
+      const target = $(this).data('target');
+      const input = $(target);
+      const icon = $(this).find('i');
+      
+      if (input.attr('type') === 'password') {
+          input.attr('type', 'text');
+          icon.removeClass('fa-eye').addClass('fa-eye-slash');
+      } else {
+          input.attr('type', 'password');
+          icon.removeClass('fa-eye-slash').addClass('fa-eye');
+      }
+    });
+
+    function toggleClientFields() {
+        var selectedId = $('#client_type_id').val();
+
+        $('#client-type-9-fields, #client-type-8-fields').hide().find('input, select').val('');
+
+        if (selectedId == '9') {
+            $('#client-type-9-fields').show();
+        } else if (selectedId == '8') {
+            $('#client-type-8-fields').show();
+        }
+    }
+
+    $('#client_type_id').change(toggleClientFields);
+
     $(document).on('click', '.toggle-password', function () {
       const target = $(this).data('target');
       const input = $(target);
@@ -287,6 +315,7 @@
             var directorInfo = JSON.parse($(this).closest('tr').attr('data-director-info'));
 
             $('#dir-name').val(directorInfo.name);
+            $('#dir-last-name').val(directorInfo.last_name);
             $('#dir-phone').val(directorInfo.phone);
             $('#dir-email').val(directorInfo.email);
             $('#address').val(directorInfo.address);

@@ -91,6 +91,43 @@
             </div>
         </div>
 
+        <div id="client-type-9-fields" class="row mt-1" style="{{ isset($client) && $client->client_type_id == 9 ? '' : 'display: none;' }}">
+            <div class="col-lg-4">
+                <label class="mb-2">Business Name</label>
+                <input type="text" name="business_name" class="form-control" value="{{ $client->business_name ?? '' }}">
+            </div>
+            <div class="col-lg-4">
+                <label class="mb-2">UTR Number</label>
+                <input type="text" name="utr_number" class="form-control" value="{{ $client->utr_number ?? '' }}">
+            </div>
+            <div class="col-lg-4">
+                <label class="mb-2">HMRC Authorization</label>
+                <select name="hmrc_authorization" class="form-control">
+                    <option value="">Select</option>
+                    <option value="1" {{ isset($client->hmrc_authorization) && $client->hmrc_authorization == 1 ? 'selected' : '' }}>Yes</option>
+                    <option value="0" {{ isset($client->hmrc_authorization) && $client->hmrc_authorization == 0 ? 'selected' : '' }}>No</option>
+                </select>
+            </div>
+            <div class="col-lg-4">
+                <label class="mb-2">NI Number</label>
+                <input type="text" name="ni_number" class="form-control" value="{{ $client->ni_number ?? '' }}">
+            </div>
+            <div class="col-lg-4">
+                <label class="mb-2">Date Of Birth</label>
+                <input type="date" name="dob" class="form-control" value="{{ $client->dob ?? '' }}">
+            </div>
+        </div>
+
+        <div id="client-type-8-fields" class="row mt-1" style="{{ isset($client) && $client->client_type_id == 8 ? '' : 'display: none;' }}">
+
+            @for($i = 1; $i <= 5; $i++)
+                <div class="col-lg-4">
+                    <label class="mb-2">Property {{ $i }} Address</label>
+                    <textarea name="property_{{ $i }}_address" class="form-control" rows="2">{{ old("property_{$i}_address", $client["property_{$i}_address"] ?? '') }}</textarea>
+                </div>
+            @endfor
+        </div>   
+
     </div>
     <div class="row">
         <div class="col-lg-4 mx-auto text-center">

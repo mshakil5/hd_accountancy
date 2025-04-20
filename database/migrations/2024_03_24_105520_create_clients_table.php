@@ -24,6 +24,16 @@ return new class extends Migration
             $table->string('password')->nullable();
             $table->string('phone')->nullable();
             $table->string('phone2')->nullable();
+            $table->string('business_name')->nullable();
+            $table->string('utr_number')->nullable();
+            $table->string('hmrc_authorization')->nullable();
+            $table->string('ni_number')->nullable();
+            $table->string('dob')->nullable();
+            $table->longText('property_1_address')->nullable();
+            $table->longText('property_2_address')->nullable();
+            $table->longText('property_3_address')->nullable();
+            $table->longText('property_4_address')->nullable();
+            $table->longText('property_5_address')->nullable();
             $table->string('address_line1')->nullable();
             $table->string('address_line2')->nullable();
             $table->string('address_line3')->nullable();
