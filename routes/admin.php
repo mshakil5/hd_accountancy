@@ -51,6 +51,7 @@ use App\Http\Controllers\Admin\LogoutController;
 use App\Http\Controllers\Admin\ChatController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\TrashBinController;
+use App\Http\Controllers\Admin\ClientCredentialController;
 
 //Fallback route
 Route::fallback(function () {
@@ -126,6 +127,13 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/department/{id}', [DepartmentController::class, 'delete']);
 
     Route::get('/department-activities/{id}', [DepartmentController::class, 'showDepartmentActivities'])->name('department.activities');
+
+    // Client Credentials crud
+    Route::get('/client-credentials', [ClientCredentialController::class, 'index'])->name('client.credentials');
+    Route::post('/client-credentials', [ClientCredentialController::class, 'store']);
+    Route::get('/client-credentials/{id}/edit', [ClientCredentialController::class, 'edit']);
+    Route::post('/client-credentials-update', [ClientCredentialController::class, 'update']);
+    Route::get('/client-credentials/{id}', [ClientCredentialController::class, 'delete']);
 
     //Clients crud
     Route::get('/client', [ClientController::class, 'index'])->name('allClient');

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Client;
+use App\Models\ClientCredential;
 use Illuminate\Support\Facades\Hash;
 
 class PassportAuthController extends Controller
@@ -16,22 +16,36 @@ class PassportAuthController extends Controller
             'password' => 'required',
         ]);
     
-        $client = Client::where('email', $request->email)->first();
+        $client = ClientCredential::where('email', $request->email)->first();
     
-        if ($client && Hash::check($request->password, $client->password)) {
-            $token = $client->createToken('AppName')->accessToken;
-            $userId = $client->id;
-    
+        if (!$client || !Hash::check($request->password, $client->password)) {
             return response()->json([
-                'message' => 'Login successful.',
-                'token' => $token,
-                'userId' => $userId
-            ], 200);
+                'message' => 'Invalid credentials.',
+                'error' => 'Unauthenticated'
+            ], 401);
         }
+
+        if (!$client->status) {
+            return response()->json([
+                'message' => 'Account is inactive.',
+                'error' => 'Unauthorized'
+            ], 403);
+        }
+
+        $token = $client->createToken('ClientApp')->accessToken;
+        $userId = $client->id;
     
         return response()->json([
-            'message' => 'Invalid credentials.',
-            'error' => 'Unauthenticated'
-        ], 401);
+            'message' => 'Login successful.',
+            'token' => $token,
+            'userId' => $userId,
+            'user' => [
+                'id' => $client->id,
+                'first_name' => $client->first_name,
+                'last_name' => $client->last_name,
+                'email' => $client->email,
+                'phone' => $client->phone
+            ]
+        ], 200);
     }
 }

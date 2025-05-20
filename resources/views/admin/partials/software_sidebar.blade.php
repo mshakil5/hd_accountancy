@@ -67,6 +67,13 @@
 
     @if (in_array('7', json_decode(Auth::user()->role->permission)) || in_array('8', json_decode(Auth::user()->role->permission)))
 
+    <li class="nav-item {{ request()->routeIs('client.credentials') ? 'active' : '' }}">
+      <a class="nav-link collapsed" href="{{ route('client.credentials') }}">
+        <i class="bi bi-key"></i>
+        <span>Client Credentials</span>
+      </a>
+    </li>
+
     <li class="nav-item {{ request()->routeIs('allClient', 'createClient', 'client.update.form', 'createNewClient', 'client.activities') ? 'active' : '' }}">
       <a class="nav-link collapsed" href="{{ route('allClient') }}">
         <i class="bi bi-person"></i>
