@@ -132,18 +132,36 @@
 
         <div id="client-type-8-fields" class="row mt-1" style="{{ isset($client) && $client->client_type_id == 8 ? '' : 'display: none;' }}">
 
-            @for($i = 1; $i <= 5; $i++)
-                <div class="col-lg-4">
-                    <label class="mb-2">Property {{ $i }} Address</label>
-                    <textarea name="property_{{ $i }}_address" class="form-control" rows="2">{{ old("property_{$i}_address", $client["property_{$i}_address"] ?? '') }}</textarea>
-                </div>
-            @endfor
+          <hr class="mt-4">
+          <div class="row mb-2 align-items-center">
+              <div class="col-md-6">
+                  <button type="button" class="btn btn-sm btn-primary" id="add-property-btn">+ Add New Property</button>
+              </div>
+              <div class="col-md-6 text-end">
+                  <label><strong>Number of Properties:</strong> <span id="property-count">{{ $client->properties->count() ?? 0 }}</span></label>
+              </div>
+          </div>
+
+          <div class="row" id="property-address-wrapper">
+              @if(isset($client) && $client->properties)
+                  @foreach($client->properties as $index => $property)
+                      <div class="col-md-4 property-group mb-3 position-relative">
+                          <textarea name="properties[{{ $index }}][address]" class="form-control" rows="3" placeholder="Property Address">{{ $property->address }}</textarea>
+                          <input type="hidden" name="properties[{{ $index }}][id]" value="{{ $property->id }}">
+                          <button type="button" class="btn btn-sm btn-danger remove-property position-absolute top-0 end-0 translate-middle" style="width: 24px; height: 24px; padding: 0; border-radius: 50%;">
+                              ×
+                          </button>
+                      </div>
+                  @endforeach
+              @endif
+          </div>
+
         </div>   
 
     </div>
     <div class="row">
         <div class="col-lg-4 mx-auto text-center">
-            <button type="submit" id="details-saveButton" class="btn btn-sm bg-theme text-light btn-outline-dark">Update</button>
+            <button type="button" id="details-saveButton" class="btn btn-sm bg-theme text-light btn-outline-dark">Update</button>
         </div>
     </div>
 </form>

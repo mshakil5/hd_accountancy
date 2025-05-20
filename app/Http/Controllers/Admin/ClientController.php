@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Validator;
 use Spatie\Activitylog\Models\Activity;
 use App\Models\AccountancyFee;
 use Illuminate\Support\Facades\Hash;
+use App\Models\ClientProperty;
 
 class ClientController extends Controller
 {
@@ -263,7 +264,7 @@ class ClientController extends Controller
 
     public function updateForm($id)
     {
-        $client = Client::with(['clientType', 'manager', 'businessInfo', 'directorInfos', 'clientServices', 'contactInfos', 'recentUpdates.user', 'accountancyFee'])->find($id);
+        $client = Client::with(['clientType', 'manager', 'businessInfo', 'directorInfos', 'clientServices', 'contactInfos', 'recentUpdates.user', 'accountancyFee', 'properties'])->find($id);
         $client->recentUpdates = $client->recentUpdates()->orderBy('id', 'desc')->get();
         $clientTypes = ClientType::select('id', 'name')->orderby('id', 'DESC')->get();
         $managers = User::whereIn('type', ['1', '2'])->select('id', 'first_name', 'last_name', 'type')->orderby('id', 'DESC')->get();
@@ -445,6 +446,35 @@ class ClientController extends Controller
         
             $client->photo_id = $photoIdName;
         }
+        $properties = $request->input('properties');
+
+        if (is_string($properties)) {
+            $properties = json_decode($properties, true) ?: [];
+        }
+
+        if (!is_array($properties)) {
+            $properties = [];
+        }
+
+        $existingIds = [];
+
+        foreach ($properties as $propertyData) {
+            if (!empty($propertyData['address'])) {
+                $property = ClientProperty::updateOrCreate(
+                    ['id' => $propertyData['id'] ?? null],
+                    [
+                        'client_id' => $client->id,
+                        'address' => $propertyData['address'],
+                    ]
+                );
+                $existingIds[] = $property->id;
+            }
+        }
+
+        ClientProperty::where('client_id', $client->id)
+        ->whereNotIn('id', $existingIds)
+        ->delete();
+
 
         if ($client->save()) {
             return response()->json(['status' => 200, 'message' => 'Client details updated successfully', 'client_id' => $client->id]);

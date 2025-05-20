@@ -95,4 +95,9 @@ class Client extends Model
     {
         return $this->hasOne(AccountancyFee::class);
     }
+
+    public function properties()
+    {
+        return $this->hasMany(ClientProperty::class);
+    }
 }

@@ -172,10 +172,37 @@
 </script>
 <!-- Image preview end -->
 
+<!-- Property start -->
+<script>
+    let propertyIndex = {{ isset($client) ? $client->properties->count() : 0 }};
+
+    $('#add-property-btn').on('click', function () {
+        const newField = `
+            <div class="col-md-4 property-group mb-3 position-relative">
+                <textarea name="properties[${propertyIndex}][address]" class="form-control" rows="3" placeholder="Property Address"></textarea>
+                <button type="button" class="btn btn-sm btn-danger remove-property position-absolute top-0 end-0 translate-middle" 
+                    style="width: 24px; height: 24px; padding: 0; border-radius: 50%;">×</button>
+            </div>`;
+        $('#property-address-wrapper').append(newField);
+        propertyIndex++;
+        updatePropertyCount();
+    });
+
+    $(document).on('click', '.remove-property', function () {
+        $(this).closest('.property-group').remove();
+        updatePropertyCount();
+    });
+
+    function updatePropertyCount() {
+        $('#property-count').text($('.property-group').length);
+    }
+</script>
+<!-- Property end -->
+
 <!-- Client details update -->
 <script>
 
-$(document).on('click', '.toggle-password', function () {
+    $(document).on('click', '.toggle-password', function () {
       const target = $(this).data('target');
       const input = $(target);
       const icon = $(this).find('i');
@@ -234,9 +261,20 @@ $(document).on('click', '.toggle-password', function () {
             formData.append('manager_id', $('#manager_id').val());
             formData.append('reference_id', $('#reference_id').val());
 
+            var properties = [];
+            $('.property-group').each(function() {
+                properties.push({
+                    id: $(this).find('input[name*="[id]"]').val() || null,
+                    address: $(this).find('textarea').val()
+                });
+            });
+            
+            formData.append('properties', JSON.stringify(properties));
+
             // for (var pair of formData.entries()) {
             //     console.log(pair[0] + ': ' + pair[1]);
             // }
+            // return;
 
             if (clientId) {
                 $.ajax({
