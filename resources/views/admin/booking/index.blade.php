@@ -14,10 +14,12 @@
             </div>
             <!-- /.card-header -->
             <div class="card-body">
+            <div class="table-responsive">
               <table id="example1" class="table cell-border table-striped">
                 <thead>
                 <tr>
                   <th style="text-align: center">Sl</th>
+                  <th style="text-align: center">Date</th>
                   <th style="text-align: center">Name</th>
                   <th style="text-align: center">Contact</th>
                   <th style="text-align: center">Meet</th>
@@ -29,6 +31,7 @@
                   @foreach ($data as $key => $data)
                   <tr>
                     <td style="text-align: center">{{ $key + 1 }}</td>
+                    <td style="text-align: center">{{ date('d-m-Y', strtotime($data->created_at)) }}</td>
                     <td style="text-align: center">{{$data->first_name}} {{$data->last_name}}</td>
                     <td style="text-align: center">{{$data->email}}, {{$data->phone}}</td>
                     <td style="text-align: center">{{$data->meet_type}}</td>
@@ -38,6 +41,7 @@
                   @endforeach
                 </tbody>
               </table>
+            </div>
             </div>
             <!-- /.card-body -->
           </div>

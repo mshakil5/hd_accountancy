@@ -15,10 +15,12 @@
             </div>
             <!-- /.card-header -->
             <div class="card-body">
+            <div class="table-responsive">
               <table id="example1" class="table cell-border table-striped">
                 <thead>
                 <tr>
                   <th style="text-align: center">Sl</th>
+                  <th style="text-align: center">Date</th>
                   <th style="text-align: center">Name</th>
                   <th style="text-align: center">Business Name</th>
                   <th style="text-align: center">Email</th>
@@ -33,6 +35,7 @@
                   @foreach ($data as $key => $data)
                   <tr>
                     <td style="text-align: center">{{ $key + 1 }}</td>
+                    <td style="text-align: center">{{ date('d-m-Y', strtotime($data->created_at)) }}</td>
                     <td style="text-align: center">{{$data->name}}</td>
                     <td style="text-align: center">{{$data->business_name}}</td>
                     <td style="text-align: center">{{$data->email}}</td>
@@ -44,7 +47,18 @@
                         $serviceList = implode(', ', $services);
                         echo $serviceList;
                     @endphp</td>
-                    <td style="text-align: center">{!!$data->message!!}</td>
+                    <td style="text-align: center">
+                        @php
+                            $plainMessage = strip_tags($data->message);
+                        @endphp
+
+                        @if(strlen($plainMessage) > 50)
+                            {{ \Illuminate\Support\Str::limit($plainMessage, 50) }}
+                            <a href="#" class="read-more" data-message="{{ e($data->message) }}">Read More</a>
+                        @else
+                            {!! $data->message !!}
+                        @endif
+                    </td>
                     <td style="text-align: center">
                       <a class="btn btn-link" id="deleteBtn" rid="{{$data->id}}"><i class="fas fa-trash" style="color: red; font-size: 20px;"></i></a>
                     </td>
@@ -52,6 +66,7 @@
                   @endforeach  
                 </tbody>
               </table>
+            </div>
             </div>
             <!-- /.card-body -->
           </div>
@@ -65,11 +80,26 @@
 </section>
 <!-- /.content -->
 
+<!-- Global Modal -->
+<div class="modal fade" id="readMoreModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="modalMessageContent"></div>
+    </div>
+  </div>
+</div>
+
+
 @endsection
 @section('script')
 <script>
     $(function () {
-      $("#example1").DataTable();
+      $("#example1").DataTable({
+        responsive: true
+      });
     });
 </script>
 
@@ -103,5 +133,13 @@
           });
       });
   });
+
+  $(document).on('click', '.read-more', function(e) {
+      e.preventDefault();
+      let msg = $(this).data('message');
+      $('#modalMessageContent').html(msg);
+      $('#readMoreModal').modal('show');
+  });
+
 </script>
 @endsection
