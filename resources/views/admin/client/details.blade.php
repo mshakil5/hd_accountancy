@@ -81,7 +81,7 @@
             <input type="date" class="form-control my-2" id="cessation_date" name="cessation_date" placeholder="" value="{{ $client->cessation_date ?? '' }}">
         </div>
 
-        <div class="col-lg-4">
+        <div class="col-lg-4 d-none">
             <label for="password" class="mb-2">Password</label>
             <div class="input-group">
                 <input type="password" class="form-control" name="password" id="password">
@@ -91,7 +91,7 @@
             </div>
         </div>
     
-        <div class="col-lg-4">
+        <div class="col-lg-4 d-none">
             <label for="confirm_password" class="mb-2">Confirm Password</label>
             <div class="input-group">
                 <input type="password" class="form-control" name="confirm_password" id="confirm_password">
