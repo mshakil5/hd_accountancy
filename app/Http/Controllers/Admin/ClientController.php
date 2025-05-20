@@ -164,6 +164,7 @@ class ClientController extends Controller
     {
          $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
             'client_type_id' => 'required',
             'reference_id' => 'required',
             'manager_id' => 'nullable',
@@ -172,6 +173,8 @@ class ClientController extends Controller
             'phone2' => 'nullable|numeric|digits:11',
             'address_line1' => 'nullable|string|max:255',
             'address_line2' => 'nullable|string|max:255',
+            'agreement_date' => 'nullable|date',
+            'cessation_date' => 'nullable|date',
             'trading_address' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:255',
             'town' => 'nullable|string|max:255',
@@ -195,6 +198,7 @@ class ClientController extends Controller
         $data = new Client;
 
         $data->name = $request->name;
+        $data->last_name = $request->last_name;
         $data->refid = $request->reference_id;
         $data->client_type_id = $request->client_type_id;
         $data->manager_id = $request->manager_id;
@@ -204,21 +208,13 @@ class ClientController extends Controller
         $data->address_line1 = $request->address_line1;
         $data->address_line2 = $request->address_line2;
         $data->address_line3 = $request->address_line3;
+        $data->agreement_date = $request->agreement_date;
+        $data->cessation_date = $request->cessation_date;
         $data->trading_address = $request->trading_address;
         $data->city = $request->city;
         $data->town = $request->town;
         $data->postcode = $request->postcode;
         $data->country = $request->country;
-        $data->business_name = $request->business_name;
-        $data->utr_number = $request->utr_number;
-        $data->hmrc_authorization = $request->hmrc_authorization;
-        $data->ni_number = $request->ni_number;
-        $data->dob = $request->dob;
-        $data->property_1_address = $request->property_1_address;
-        $data->property_2_address = $request->property_2_address;
-        $data->property_3_address = $request->property_3_address;
-        $data->property_4_address = $request->property_4_address;
-        $data->property_5_address = $request->property_5_address;
 
         if ($request->filled('password')) {
             $data->password = Hash::make($request->password);
@@ -357,6 +353,7 @@ class ClientController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
             'client_type_id' => 'required',
             'manager_id' => 'nullable',
             'reference_id' => 'required',
@@ -365,6 +362,8 @@ class ClientController extends Controller
             'phone2' => 'nullable|numeric|digits:11',
             'address_line1' => 'nullable|string|max:255',
             'address_line2' => 'nullable|string|max:255',
+            'agreement_date' => 'nullable|date',
+            'cessation_date' => 'nullable|date',
             'trading_address' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:255',
             'town' => 'nullable|string|max:255',
@@ -392,6 +391,7 @@ class ClientController extends Controller
         }
 
         $client->name = $request->name;
+        $client->last_name = $request->last_name;
         $client->refid = $request->reference_id;
         $client->client_type_id = $request->client_type_id;
         $client->manager_id = $request->manager_id;
@@ -401,6 +401,8 @@ class ClientController extends Controller
         $client->address_line1 = $request->address_line1;
         $client->address_line2 = $request->address_line2;
         $client->address_line3 = $request->address_line3;
+        $client->agreement_date = $request->agreement_date;
+        $client->cessation_date = $request->cessation_date;
         $client->trading_address = $request->trading_address;
         $client->city = $request->city;
         $client->town = $request->town;
@@ -411,11 +413,6 @@ class ClientController extends Controller
         $client->hmrc_authorization = $request->hmrc_authorization;
         $client->ni_number = $request->ni_number;
         $client->dob = $request->dob;
-        $client->property_1_address = $request->property_1_address;
-        $client->property_2_address = $request->property_2_address;
-        $client->property_3_address = $request->property_3_address;
-        $client->property_4_address = $request->property_4_address;
-        $client->property_5_address = $request->property_5_address;
         
         if ($request->filled('password')) {
             $client->password = Hash::make($request->password);
@@ -461,9 +458,9 @@ class ClientController extends Controller
         $validator = Validator::make($request->all(), [
             'nature_of_business' => 'nullable|string',
             'company_number' => 'nullable|string',
-            'year_end_date' => 'nullable|date',
-            'due_date' => 'nullable|date',
-            'confirmation_due_date' => 'nullable|date',
+            'year_end_date' => 'nullable',
+            'due_date' => 'nullable',
+            'confirmation_due_date' => 'nullable',
             'authorization_code' => 'nullable|string',
             'company_utr' => 'nullable|string',
             'status' => 'required',
@@ -704,7 +701,7 @@ class ClientController extends Controller
             'client_id' => 'required',
             'annual_agreed_fees' => 'required|numeric',
             'monthly_standing_order' => 'required|boolean',
-            'monthly_amount' => 'required|numeric',
+            'monthly_amount' => 'nullable|numeric',
             'next_review' => 'nullable|date',
             'comment' => 'nullable|string',
             'fees_discussion' => 'nullable|string',

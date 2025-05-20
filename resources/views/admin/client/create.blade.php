@@ -12,14 +12,18 @@
             <!-- Top 4 -->
             <div class="row my-4 px-3">
                 <div class="col-lg-3">
-                    <label for="">Client Name <span class="text-danger">*</span></label>
+                    <label for="">First Name <span class="text-danger">*</span></label>
                     <input for="name" type="text" value="{{ isset($client->name) ? $client->name : '' }}" class="form-control mt-2" name="name" id="name" required placeholder="">
                 </div>
                 <div class="col-lg-3">
+                    <label for="">Last Name <span class="text-danger">*</span></label>
+                    <input for="last_name" type="text" value="{{ isset($client->last_name) ? $client->last_name : '' }}" class="form-control mt-2" name="last_name" id="last_name" required placeholder="">
+                </div>
+                <div class="col-lg-2">
                     <label for="">Reference ID <span class="text-danger">*</span></label>
                     <input type="text" class="form-control my-2" id="reference_id" name="reference_id" placeholder="Ex: LT-001" value="{{ isset($client) && isset($client->refid) ? $client->refid : '' }}">
                 </div>
-                <div class="col-lg-3">
+                <div class="col-lg-2">
                     <label for="">Client Type <span class="text-danger">*</span></label>
                     <div class="mt-2">
                         <select name="client_type_id" class="form-control mt-2" id="client_type_id">
@@ -30,7 +34,7 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-lg-3">
+                <div class="col-lg-2">
                     <label for="">Client Manager</label>
                     <div class="mt-2">
                         <select class="form-control mt-2" name="manager_id" id="manager_id">
@@ -160,6 +164,17 @@
                                                         style="right: 8px;"></i>
                                                 </div>
                                             </div>
+
+                                            <div class="col-lg-4">
+                                                <label for="">Agreement Date </label>
+                                                <input type="date" class="form-control my-2" id="agreement_date" name="agreement_date" placeholder="" value="">
+                                            </div>
+
+                                            <div class="col-lg-4">
+                                                <label for="">Cessation Date </label>
+                                                <input type="date" class="form-control my-2" id="cessation_date" name="cessation_date" placeholder="" value="">
+                                            </div>
+
                                             <div class="col-lg-4">
                                                 <label for="password" class="mb-2">Password</label>
                                                 <div class="input-group">
@@ -178,42 +193,7 @@
                                                         <i class="fa fa-eye"></i>
                                                     </button>
                                                 </div>
-                                            </div>
-
-                                            <div id="client-type-9-fields" class="row mt-1" style="display: none;">
-                                                <div class="col-lg-4">
-                                                  <label class="mb-2">Business Name</label>
-                                                  <input type="text" name="business_name" class="form-control">
-                                                </div>
-                                                <div class="col-lg-4">
-                                                    <label class="mb-2">UTR Number</label>
-                                                    <input type="text" name="utr_number" class="form-control">
-                                                </div>
-                                                <div class="col-lg-4">
-                                                    <label class="mb-2">HMRC Authorization</label>
-                                                    <select name="hmrc_authorization" class="form-control">
-                                                        <option value="">Select</option>
-                                                        <option value="1">Yes</option>
-                                                        <option value="0">No</option>
-                                                    </select>
-                                                </div>
-                                                <div class="col-lg-4">
-                                                    <label class="mb-2">NI Number</label>
-                                                    <input type="text" name="ni_number" class="form-control">
-                                                </div>
-                                                <div class="col-lg-4">
-                                                    <label class="mb-2">Date Of Birth</label>
-                                                    <input type="date" name="dob" class="form-control">
-                                                </div>
-                                            </div>
-                                            <div id="client-type-8-fields" class="row mt-1" style="display: none;">
-                                              @for($i = 1; $i <= 5; $i++)
-                                                  <div class="col-lg-4">
-                                                      <label class="mb-2">Property {{ $i }} Address</label>
-                                                      <textarea name="property_{{ $i }}_address" class="form-control" rows="2"></textarea>
-                                                  </div>
-                                              @endfor       
-                                            </div>                                     
+                                            </div>                                    
                                         </div>
                                         <div class="row">
                                             <div class="col-lg-4 mx-auto text-center">
@@ -277,6 +257,7 @@
 
             var formData = new FormData($('#detailsForm')[0]);
             formData.append('name', $('#name').val());
+            formData.append('last_name', $('#last_name').val());
             formData.append('client_type_id', $('#client_type_id').val());
             formData.append('manager_id', $('#manager_id').val());
             formData.append('reference_id', $('#reference_id').val());
@@ -340,22 +321,6 @@
           icon.removeClass('fa-eye-slash').addClass('fa-eye');
       }
     });
-
-    function toggleClientFields() {
-        var selectedId = $('#client_type_id').val();
-
-        $('#client-type-9-fields, #client-type-8-fields').hide().find('input, select').val('');
-
-        if (selectedId == '9') {
-            $('#client-type-9-fields').show();
-        } else if (selectedId == '8') {
-            $('#client-type-8-fields').show();
-        }
-    }
-
-    toggleClientFields();
-
-    $('#client_type_id').change(toggleClientFields);
 
 </script>
 

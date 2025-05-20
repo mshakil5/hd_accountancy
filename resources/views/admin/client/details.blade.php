@@ -71,6 +71,16 @@
             </div>
         </div>
 
+         <div class="col-lg-4">
+            <label for="">Agreement Date </label>
+            <input type="date" class="form-control my-2" id="agreement_date" name="agreement_date" placeholder="" value="{{ $client->agreement_date ?? '' }}">
+        </div>
+
+        <div class="col-lg-4">
+            <label for="">Cessation Date </label>
+            <input type="date" class="form-control my-2" id="cessation_date" name="cessation_date" placeholder="" value="{{ $client->cessation_date ?? '' }}">
+        </div>
+
         <div class="col-lg-4">
             <label for="password" class="mb-2">Password</label>
             <div class="input-group">
@@ -92,6 +102,8 @@
         </div>
 
         <div id="client-type-9-fields" class="row mt-1" style="{{ isset($client) && $client->client_type_id == 9 ? '' : 'display: none;' }}">
+
+            <hr class="mt-4">
             <div class="col-lg-4">
                 <label class="mb-2">Business Name</label>
                 <input type="text" name="business_name" class="form-control" value="{{ $client->business_name ?? '' }}">

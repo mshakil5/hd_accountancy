@@ -17,8 +17,8 @@ return new class extends Migration
             $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');
             $table->string('nature_of_business')->nullable();
             $table->string('company_number')->nullable();
-            $table->date('year_end_date')->nullable();
-            $table->date('due_date')->nullable();
+            $table->string('year_end_date')->nullable();
+            $table->string('due_date')->nullable();
             $table->string('confirmation_due_date')->nullable();
             $table->string('authorization_code')->nullable();
             $table->string('company_utr')->nullable();

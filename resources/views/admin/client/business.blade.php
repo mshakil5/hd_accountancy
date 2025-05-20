@@ -66,15 +66,15 @@
         </div>
         <div class="col-lg-4">
             <label for="year_end_date">Year End Date</label>
-            <input type="date" class="form-control my-2" id="year_end_date" name="year_end_date" placeholder="Enter year end date" value="{{ $businessInfo->year_end_date ?? '' }}">
+            <input type="text" class="form-control my-2" id="year_end_date" name="year_end_date" placeholder="" value="{{ $businessInfo->year_end_date ?? '' }}">
         </div>
         <div class="col-lg-4">
             <label for="due_date">Due Date</label>
-            <input type="date" class="form-control my-2" id="due_date" name="due_date" placeholder="" value="{{ $businessInfo->due_date ?? '' }}">
+            <input type="text" class="form-control my-2" id="due_date" name="due_date" placeholder="" value="{{ $businessInfo->due_date ?? '' }}">
         </div>
         <div class="col-lg-4">
             <label for="confirmation_due_date">Confirmation Statement Date</label>
-            <input type="date" class="form-control my-2" id="confirmation_due_date" name="confirmation_due_date" placeholder="Enter confirmation date" value="{{ $businessInfo->confirmation_due_date ?? '' }}">
+            <input type="text" class="form-control my-2" id="confirmation_due_date" name="confirmation_due_date" placeholder="" value="{{ $businessInfo->confirmation_due_date ?? '' }}">
         </div>
     </div>
     <div class="row">

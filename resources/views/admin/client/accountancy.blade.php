@@ -15,7 +15,7 @@
             </div>
         </div>
         <div class="col-lg-4">
-            <label for="monthly_amount">Monthly Amount <span class="text-danger">*</span></label>
+            <label for="monthly_amount">Monthly Amount</label>
             <input type="number" class="form-control my-2" id="monthly_amount" name="monthly_amount" placeholder="Enter company number" value="{{ $client->accountancyFee->monthly_amount ?? '' }}">
         </div>
         <div class="col-lg-4">

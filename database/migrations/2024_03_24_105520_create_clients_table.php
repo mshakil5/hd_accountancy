@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('clients', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('last_name')->nullable();
             $table->string('refid')->nullable();
             $table->unsignedBigInteger('client_type_id')->nullable();
             $table->foreign('client_type_id')->references('id')->on('client_types');
@@ -29,14 +30,11 @@ return new class extends Migration
             $table->string('hmrc_authorization')->nullable();
             $table->string('ni_number')->nullable();
             $table->string('dob')->nullable();
-            $table->longText('property_1_address')->nullable();
-            $table->longText('property_2_address')->nullable();
-            $table->longText('property_3_address')->nullable();
-            $table->longText('property_4_address')->nullable();
-            $table->longText('property_5_address')->nullable();
             $table->string('address_line1')->nullable();
             $table->string('address_line2')->nullable();
             $table->string('address_line3')->nullable();
+            $table->string('agreement_date')->nullable();
+            $table->string('cessation_date')->nullable();
             $table->string('trading_address')->nullable();
             $table->longText('about_business')->nullable();
             $table->string('city')->nullable();
