@@ -15,17 +15,17 @@
                     <input type="text" class="form-control my-2" id="name" value="{{ $client->name }}" name="name">
                 </div>
 
-                <div class="col-lg-3">
+                <div class="col-lg-3 d-none">
                     <label for="">Last Name <span class="text-danger">*</span></label>
                     <input for="last_name" type="text" value="{{ isset($client->last_name) ? $client->last_name : '' }}" class="form-control mt-2" name="last_name" id="client_last_name" required placeholder="">
                 </div>
 
-                <div class="col-lg-2">
+                <div class="col-lg-3">
                     <label for="">Reference ID <span class="text-danger">*</span></label>
                     <input type="text" class="form-control my-2" id="reference_id" name="reference_id" placeholder="Ex: LT-001" value="{{ isset($client) && isset($client->refid) ? $client->refid : '' }}">
                 </div>
 
-                <div class="col-lg-2">
+                <div class="col-lg-3">
                     <label for="country">Client Type <span class="text-danger">*</span> </label>
                     <div class="mt-2">
                         <select class="form-control my-2" id="client_type_id" name="client_type_id">
@@ -37,7 +37,7 @@
                     </div>
                 </div>
 
-                <div class="col-lg-2">
+                <div class="col-lg-3">
                     <label for="">Client Manager</label>
                     <div class="mt-2">
                         <select class="form-control my-2" name="manager_id" id="manager_id">

@@ -12,18 +12,18 @@
             <!-- Top 4 -->
             <div class="row my-4 px-3">
                 <div class="col-lg-3">
-                    <label for="">First Name <span class="text-danger">*</span></label>
+                    <label for="">Client Name <span class="text-danger">*</span></label>
                     <input for="name" type="text" value="{{ isset($client->name) ? $client->name : '' }}" class="form-control mt-2" name="name" id="name" required placeholder="">
                 </div>
-                <div class="col-lg-3">
+                <div class="col-lg-3 d-none">
                     <label for="">Last Name <span class="text-danger">*</span></label>
                     <input for="last_name" type="text" value="{{ isset($client->last_name) ? $client->last_name : '' }}" class="form-control mt-2" name="last_name" id="last_name" required placeholder="">
                 </div>
-                <div class="col-lg-2">
+                <div class="col-lg-3">
                     <label for="">Reference ID <span class="text-danger">*</span></label>
                     <input type="text" class="form-control my-2" id="reference_id" name="reference_id" placeholder="Ex: LT-001" value="{{ isset($client) && isset($client->refid) ? $client->refid : '' }}">
                 </div>
-                <div class="col-lg-2">
+                <div class="col-lg-3">
                     <label for="">Client Type <span class="text-danger">*</span></label>
                     <div class="mt-2">
                         <select name="client_type_id" class="form-control mt-2" id="client_type_id">
@@ -34,7 +34,7 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-lg-2">
+                <div class="col-lg-3">
                     <label for="">Client Manager</label>
                     <div class="mt-2">
                         <select class="form-control mt-2" name="manager_id" id="manager_id">

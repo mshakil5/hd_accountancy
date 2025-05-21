@@ -165,7 +165,7 @@ class ClientController extends Controller
     {
          $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
+            // 'last_name' => 'required|string|max:255',
             'client_type_id' => 'required',
             'reference_id' => 'required',
             'manager_id' => 'nullable',
@@ -354,7 +354,7 @@ class ClientController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
+            // 'last_name' => 'required|string|max:255',
             'client_type_id' => 'required',
             'manager_id' => 'nullable',
             'reference_id' => 'required',
