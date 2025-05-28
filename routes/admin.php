@@ -419,6 +419,14 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
 
     Route::get('/hourly-report/details', [ReportController::class, 'fetchHourlyWorkTimeDetails'])->name('report.hourly.details');
 
+    //Client fee report
+    Route::get('/client-acquisition-report', [ReportController::class, 'clientAcquisitionReport'])->name('client-acquisition-report');
+
+    //Client fee report
+    Route::get('/client-fee-report', [ReportController::class, 'clientFeeReport'])->name('client.fees-report');
+
+    Route::get('/reports/generate-fees', [ReportController::class, 'generateFeesReport'])->name('reports.generate.fees');
+
     // User absent log
     Route::post('/add-comment', [LogController::class, 'addComment'])->name('add.comment');
 

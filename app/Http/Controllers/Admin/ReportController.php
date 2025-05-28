@@ -379,6 +379,100 @@ class ReportController extends Controller
         
         return response()->json(['details' => $responseDetails]);
     }    
-    
+
+    public function clientAcquisitionReport()
+    {
+      return view('admin.reports.client_acquisition');
+    }
+
+    public function clientFeeReport()
+    {
+        $clients = Client::where('status', 1)
+            ->with('accountancyFee')
+            ->select('id', 'name', 'refid')
+            ->latest()
+            ->get();
+            
+        return view('admin.reports.fees', compact('clients'));
+    }
+
+    public function generateFeesReport(Request $request)
+    {
+        $request->validate([
+            'columns' => 'required|array',
+            'columns.*' => 'in:client_name,annual_agreed_fees,monthly_standing_order,monthly_amount,next_review,comment,fees_discussion',
+            'standing_order' => 'nullable|in:all,yes,no'
+        ]);
+
+        $query = Client::where('status', 1)
+            ->with('accountancyFee')
+            ->select('id', 'name', 'refid');
+
+        if ($request->standing_order && $request->standing_order !== 'all') {
+            $hasStandingOrder = $request->standing_order === 'yes';
+            $query->whereHas('accountancyFee', function($q) use ($hasStandingOrder) {
+                $q->where('monthly_standing_order', $hasStandingOrder);
+            });
+        }
+
+        $clients = $query->get();
+
+        $reportData = [];
+        foreach ($clients as $client) {
+            $row = [];
+            $fee = $client->accountancyFee;
+
+            foreach ($request->columns as $column) {
+                switch ($column) {
+                    case 'client_name':
+                        $row['client_name'] = $client->name;
+                        break;
+                    case 'annual_agreed_fees':
+                        $row['annual_agreed_fees'] = $fee ? '£' . number_format($fee->annual_agreed_fees, 2) : 'N/A';
+                        break;
+                    case 'monthly_standing_order':
+                        $row['monthly_standing_order'] = $fee ? ($fee->monthly_standing_order ? 'Yes' : 'No') : 'N/A';
+                        break;
+                    case 'monthly_amount':
+                        $row['monthly_amount'] = $fee ? '£' . number_format($fee->monthly_amount, 2) : 'N/A';
+                        break;
+                    case 'next_review':
+                        if ($fee && $fee->next_review) {
+                            try {
+                                $date = Carbon::createFromFormat('Y-m-d', $fee->next_review);
+                                $row['next_review'] = $date->format('d-m-Y');
+                            } catch (\Exception $e) {
+                                $row['next_review'] = $fee->next_review;
+                            }
+                        } else {
+                            $row['next_review'] = 'N/A';
+                        }
+                        break;
+                    case 'comment':
+                        $row['comment'] = $fee ? $fee->comment : 'N/A';
+                        break;
+                    case 'fees_discussion':
+                        $row['fees_discussion'] = $fee ? $fee->fees_discussion : 'N/A';
+                        break;
+                }
+            }
+            $reportData[] = $row;
+        }
+
+        $totalClients = $clients->count();
+        $withStandingOrder = $clients->filter(fn($c) => $c->accountancyFee && $c->accountancyFee->monthly_standing_order)->count();
+        $withoutStandingOrder = $totalClients - $withStandingOrder;
+
+        return response()->json([
+            'success' => true,
+            'data' => $reportData,
+            'columns' => $request->columns,
+            'stats' => [
+                'total_clients' => $totalClients,
+                'with_standing_order' => $withStandingOrder,
+                'without_standing_order' => $withoutStandingOrder,
+            ]
+        ]);
+    }
     
 }

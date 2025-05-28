@@ -171,11 +171,35 @@
 
     @endif
 
-    <li class="nav-item {{ (request()->is('admin/create-report*')) ? 'active' : '' }}">
-      <a class="nav-link collapsed" href="{{ route('report.create') }}">
-        <i class="fas fa-chart-line"></i>
-        <span>Report</span>
-      </a>
+    <li class="nav-item {{ request()->routeIs('report.create') || request()->routeIs('client-acquisition-report') || request()->routeIs('client.fees-report') ? 'menu-open' : '' }}">
+        <a class="nav-link collapsed {{ request()->routeIs('report.create') || request()->routeIs('client-acquisition-report') || request()->routeIs('client.fees-report') ? 'active' : '' }}"
+          href="#" data-bs-toggle="collapse" data-bs-target="#reportDropdown"
+          aria-expanded="{{ request()->routeIs('report.create') || request()->routeIs('client-acquisition-report') || request()->routeIs('client.fees-report') ? 'true' : 'false' }}">
+            <i class="bi bi-graph-up"></i>
+            <span>Reports</span>
+            <i class="bi bi-chevron-down"></i>
+        </a>
+
+        <ul id="reportDropdown" class="collapse list-unstyled {{ request()->routeIs('report.create') || request()->routeIs('client-acquisition-report') || request()->routeIs('client.fees-report') ? 'show' : '' }}">
+            <li class="nav-item {{ request()->routeIs('report.create') ? 'active' : '' }}">
+                <a class="nav-link" href="{{ route('report.create') }}">
+                    <i class="bi bi-people"></i>
+                    <span>Client Employee Report</span>
+                </a>
+            </li>
+            <li class="nav-item {{ request()->routeIs('client-acquisition-report') ? 'active' : '' }}">
+                <a class="nav-link" href="{{ route('client-acquisition-report') }}">
+                    <i class="bi bi-person-plus"></i>
+                    <span>Client Acquisition Report</span>
+                </a>
+            </li>
+            <li class="nav-item {{ request()->routeIs('client.fees-report') ? 'active' : '' }}">
+                <a class="nav-link" href="{{ route('client.fees-report') }}">
+                    <i class="bi bi-cash"></i>
+                    <span>Fees Report</span>
+                </a>
+            </li>
+        </ul>
     </li>
 
     @if (in_array('17', json_decode(Auth::user()->role->permission)))
