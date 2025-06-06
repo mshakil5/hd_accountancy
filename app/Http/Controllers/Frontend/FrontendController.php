@@ -29,6 +29,8 @@ use App\Mail\ContactFormMail;
 use App\Mail\ScheduleMail;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\CareerFormMail;
+use App\Models\Getway;
+use Twilio\Rest\Client;
 
 class FrontendController extends Controller
 {
@@ -126,9 +128,33 @@ class FrontendController extends Controller
 
         $mail = ContactMail::first();
 
-        Mail::to($mail->email)->send(new ContactFormMail($contactData));
+        $getway = Getway::where('name', 'Twilio')->first();
+        
+        // $receiver_number = "+4407468421495";
+        $receiver_number = "+447533498883";
+        $message = "Name: {$contactData['name']}\n";
+        $message .= "Email: {$contactData['email']}\n";
+        $message .= "Phone: {$contactData['phone']}\n";
+        $message .= "Business Name: {$contactData['business_name']}\n";
+        $message .= "Yearly Turnover: {$contactData['yearly_turnover']}\n";
+        $message .= "Interested Service: " . implode(', ', json_decode($contactData['interested_service'], true)) . "\n";
+        $message .= "Message: {$contactData['message']}";
 
-        Mail::to($request->input('email'))->send(new ContactFormMail($contactData));
+        $sid    = $getway->clientid;
+        $token  = $getway->secretid;
+        
+        $twilio = new Client($sid, $token);
+        $message = $twilio->messages
+        ->create($receiver_number,
+            array(
+            "from" => "+4407468421495",
+            "body" => $message
+            )
+        );
+
+
+        // Mail::to($mail->email)->send(new ContactFormMail($contactData));
+        // Mail::to($request->input('email'))->send(new ContactFormMail($contactData));
 
         return redirect()->back()->with('success', 'Message sent successfully!');
     }
@@ -306,8 +332,32 @@ class FrontendController extends Controller
         $mail = ContactMail::first();
 
         // Mail::to($mail->email)->send(new ScheduleMail($validatedData));
-
         // Mail::to($validatedData['email'])->send(new ScheduleMail($validatedData));
+
+        $getway = Getway::where('name', 'Twilio')->first();
+        
+        $receiver_number = "+447533498883";
+        $message = "Name: {$validatedData['first_name']}\n";
+        $message .= "Last Name: {$validatedData['last_name']}\n";
+        $message .= "Email: {$validatedData['email']}\n";
+        $message .= "Phone: {$validatedData['phone']}\n";
+        $message .= "Date: {$validatedData['date']}\n";
+        $message .= "Time: {$validatedData['time']}\n";
+        $message .= "Time Zone: {$validatedData['time_zone']}\n";
+        $message .= "Meet Type: {$validatedData['meet_type']}\n";
+        $message .= "Discussion: {$validatedData['discussion']}\n";
+
+        $sid    = $getway->clientid;
+        $token  = $getway->secretid;
+        
+        $twilio = new Client($sid, $token);
+        $message = $twilio->messages
+        ->create($receiver_number,
+            array(
+            "from" => "+447468421495",
+            "body" => $message
+            )
+        );
 
         return response()->json(['message' => 'Meeting scheduled successfully!']);
     }
@@ -349,8 +399,35 @@ class FrontendController extends Controller
         $mail = ContactMail::first();
 
         // Mail::to($mail->email)->send(new QuotationMail($quotation));
-
         // Mail::to($request->input('email'))->send(new QuotationMail($quotation));
+
+        $getway = Getway::where('name', 'Twilio')->first();
+        
+        $receiver_number = "+447533498883";
+        $message = "Name: {$quotation->name}\n";
+        $message .= "Email: {$quotation->email}\n";
+        $message .= "Company Name: {$quotation->company_name}\n";
+        $message .= "Phone: {$quotation->phone}\n";
+        $message .= "Business Type: {$quotation->business_type}\n";
+        $message .= "Turnover: {$quotation->turnover}\n";
+        $message .= "VAT Returns: {$quotation->vat_returns}\n";
+        $message .= "Payroll: {$quotation->payroll}\n";
+        $message .= "Bookkeeping: {$quotation->bookkeeping}\n";
+        $message .= "Bookkeeping Software: {$quotation->bookkeeping_software}\n";
+        $message .= "Management Account: {$quotation->management_account}\n";
+        $message .= "Bank Accounts: {$quotation->bank_accounts}\n";
+
+        $sid    = $getway->clientid;
+        $token  = $getway->secretid;
+        
+        $twilio = new Client($sid, $token);
+        $message = $twilio->messages
+        ->create($receiver_number,
+            array(
+            "from" => "+447468421495",
+            "body" => $message
+            )
+        );
 
         return response()->json(['success' => true]);
     }
