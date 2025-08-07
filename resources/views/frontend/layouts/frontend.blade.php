@@ -13,6 +13,7 @@
         <title>@yield('meta_title', 'HD Accountancy')</title>
         <meta property="og:title" content="@yield('meta_title', 'HD Accountancy')" />
         <meta property="og:description" content="@yield('meta_description', 'HD Accountancy')" />
+        <meta name="keywords" content="@yield('meta_keywords', 'HD Accountancy')" />
         <meta property="og:image" content="@yield('meta_image', asset('images/company/' . $companyDetails->company_logo))" />
         <meta property="og:url" content="{{ request()->url() }}" />
         <meta property='og:image:width' content='1200' />
