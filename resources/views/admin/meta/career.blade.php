@@ -52,6 +52,21 @@
                             <img id="meta_image_preview" src="{{ old('meta_image', optional($data)->meta_image ? asset('images/meta_image/' . $data->meta_image) : '') }}" alt="Meta Image Preview" class="pt-3" style="max-width: 250px; height: auto;"/>
                         </div>
                     </div>
+
+                    {{-- meta keywords  --}}
+                    <div class="col-sm-12">
+                        <div class="form-group">
+                            <label for="meta_keywords">Meta Keywords</label>
+
+                            <input type="text" class="form-control @error('meta_keywords') is-invalid @enderror" id="meta_keywords" name="meta_keywords" value="{{ $data->meta_keywords ?? '' }}" placeholder="Enter meta keywords (comma separated)">
+                            <small class="form-text text-muted">Use commas to separate keywords.</small>
+                            
+
+                            @error('meta_keywords')
+                                <span class="invalid-feedback d-block">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
                 </div>
               </form>
           </div>
