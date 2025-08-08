@@ -2,6 +2,7 @@
 
 @section('meta_title', $service->meta_title ?? 'HD Accountancy')
 @section('meta_description', $service->meta_description ?? 'HD Accountancy')
+@section('meta_keywords', $service->meta_keywords ?? 'HD Accountancy, Accountancy, Accountant, Book keeping')
 @section('meta_image', $service->meta_image ? asset('/' . $service->meta_image) : '')
 
 @section('content')

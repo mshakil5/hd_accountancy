@@ -45,60 +45,60 @@ Auth::routes();
 // Homepage
 Route::get('/', [FrontendController::class, 'index'])->name('frontend.index');
 
-// Contact
+// Contact*
 Route::get('/contact', [FrontendController::class, 'contact'])->name('frontend.contact');
 Route::post('/contact', [FrontendController::class, 'contactStore'])->name('frontend.contact.store');
 
-// Pricing
+// Pricing*
 Route::get('/pricing', [FrontendController::class, 'pricing'])->name('frontend.pricing');
 
-// Get Qoutation
+// Get Qoutation*
 Route::get('/get-quotation', [FrontendController::class, 'getQuotation'])->name('frontend.getQuotation');
 Route::post('/quotations/store', [FrontendController::class, 'storeQuotation'])->name('quotations.store');
 
-// Services
+// Services*
 Route::get('/services', [FrontendController::class, 'services'])->name('frontend.services');
 
-// Our Team
+// Our Team*
 Route::get('/our-team', [FrontendController::class, 'ourTeam'])->name('frontend.ourTeam');
 
-// Career
+// Career*
 Route::get('/career', [FrontendController::class, 'career'])->name('frontend.career');
 
-// Booking
+// Booking*
 Route::get('/booking', [FrontendController::class, 'booking'])->name('frontend.booking');
 
-// Case-Study
+// Case-Study*
 Route::get('/case-study', [FrontendController::class, 'caseStudy'])->name('frontend.caseStudy');
 
-// Business Services
+// Business Services*
 route::get('/business-services/{slug}', [FrontendController::class, 'businessServices'])->name('frontend.businessServices');
 
-// Latest Insight Details
+// Latest Insight Details*
 route::get('/latest-insights/{slug}', [FrontendController::class, 'latestInsightDetails'])->name('latest-insights.show');
 
-// Service Details
+// Service Details*
 Route::get('/service/{slug}', [FrontendController::class, 'showServiceDetails'])->name('frontend.service.show');
 
 // Video Testimonial
 Route::get('/video-testimonials', [FrontendController::class, 'videoTestimonial'])->name('frontend.videoTestimonial');
 
-// FAQ
+// FAQ*
 Route::get('/faq', [FrontendController::class, 'faq'])->name('frontend.faq');
 
-// Latest Insights
+// Latest Insights*
 Route::get('/latest-insights', [FrontendController::class, 'latestInsights'])->name('frontend.latestInsights');
 
 // Client Testimonials
 Route::get('/client-testimonials', [FrontendController::class, 'clientTestimonials'])->name('frontend.clientTestimonials');
 
-// Privacy Policy
+// Privacy Policy*
 Route::get('/privacy-policy', [FrontendController::class, 'privacyPolicy'])->name('frontend.privacyPolicy');
 
 // All Google Reviews
 Route::get('/reviews', [FrontendController::class, 'reviews'])->name('frontend.reviews');
 
-// Terms and Conditions
+// Terms and Conditions*
 Route::get('/terms-and-conditions', [FrontendController::class, 'termsConditions'])->name('frontend.termsConditions');
 
 //Meeting Schedule Store

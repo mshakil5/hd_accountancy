@@ -1,5 +1,11 @@
 @extends('frontend.layouts.frontend')
 
+
+@section('meta_title', $businessService->short_title ?? 'HD Accountancy')
+@section('meta_description', $businessService->short_description ?? 'HD Accountancy')
+@section('meta_keywords', $businessService->short_title ?? 'HD Accountancy')
+@section('meta_image', $businessService->image ? asset($businessService->image) : '')
+
 @section('content')
 
 <section class="py-5 bg-primary">

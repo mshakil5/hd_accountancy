@@ -292,7 +292,8 @@ class FrontendController extends Controller
     
     public function booking()
     {
-        return view('frontend.booking.index');
+        $meta = Master::where('name', 'Getquotationpage Meta')->select('meta_title', 'meta_description', 'meta_image','meta_keywords')->first();  
+        return view('frontend.booking.index', compact('meta'));
     }
 
     public function caseStudy()
@@ -304,6 +305,7 @@ class FrontendController extends Controller
             $caseStudy = null;
         }
         $caseStudies = CaseStudy::orderby('id','DESC')->get();
+
         return view('frontend.case-study.index', compact('caseStudy', 'caseStudies'));
     }
 
