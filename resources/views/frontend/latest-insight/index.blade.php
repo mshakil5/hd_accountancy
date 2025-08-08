@@ -1,5 +1,11 @@
 @extends('frontend.layouts.frontend')
 
+@section('meta_title', 'HD Accountancy | Latest Insights')
+@section('meta_description', 'HD Accountancy | Level Up Your Knowledge')
+@section('meta_keywords', 'HD Accountancy, Latest Insights, Knowledge, Accounting, Finance')
+@section('meta_image', $meta->meta_image ? asset('images/meta_image/' . $meta->meta_image) : '')
+
+
 @section('content')
 
 <!-- latest insight-->

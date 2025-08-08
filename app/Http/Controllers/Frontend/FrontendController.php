@@ -473,13 +473,15 @@ class FrontendController extends Controller
     public function latestInsights()
     {
         $data = LatestInsight::orderBy('id', 'DESC')->get();
-        return view('frontend.latest-insight.index', compact('data'));
+        $meta = Master::where('name', 'Homepage Meta')->select('meta_title', 'meta_description', 'meta_image','meta_keywords')->first();
+        return view('frontend.latest-insight.index', compact('data','meta'));
     }
 
     public function latestInsightDetails($slug)
     {
+        $meta = Master::where('name', 'Homepage Meta')->select('meta_title', 'meta_description', 'meta_image','meta_keywords')->first();
         $latestInsight = LatestInsight::where('slug', $slug)->firstOrFail();
-        return view('frontend.latest-insight.details', compact('latestInsight'));
+        return view('frontend.latest-insight.details', compact('latestInsight','meta'));
     }
 
     public function businessServices($slug)
