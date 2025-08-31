@@ -147,7 +147,7 @@ class FrontendController extends Controller
         $message = $twilio->messages
         ->create($receiver_number,
             array(
-            "from" => "+16164396804",
+            "from" => "+447883289124",
             "body" => $message
             )
         );
@@ -338,7 +338,8 @@ class FrontendController extends Controller
 
         $getway = Getway::where('name', 'Twilio')->first();
         
-        $receiver_number = "+447533498883";
+        $receiver_number = "+447468421495";
+        // $receiver_number = "+447533498883";
         $message = "Name: {$validatedData['first_name']}\n";
         $message .= "Last Name: {$validatedData['last_name']}\n";
         $message .= "Email: {$validatedData['email']}\n";
@@ -356,7 +357,7 @@ class FrontendController extends Controller
         $message = $twilio->messages
         ->create($receiver_number,
             array(
-            "from" => "+447468421495",
+            "from" => "+447883289124",
             "body" => $message
             )
         );
@@ -405,7 +406,9 @@ class FrontendController extends Controller
 
         $getway = Getway::where('name', 'Twilio')->first();
         
-        $receiver_number = "+447533498883";
+        $receiver_number = "+447468421495";
+        // $receiver_number = "+447533498883";
+        
         $message = "Name: {$quotation->name}\n";
         $message .= "Email: {$quotation->email}\n";
         $message .= "Company Name: {$quotation->company_name}\n";
@@ -426,7 +429,7 @@ class FrontendController extends Controller
         $message = $twilio->messages
         ->create($receiver_number,
             array(
-            "from" => "+447468421495",
+            "from" => "+447883289124",
             "body" => $message
             )
         );
