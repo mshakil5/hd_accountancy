@@ -135,10 +135,7 @@ class FrontendController extends Controller
         $message = "Name: {$contactData['name']}\n";
         $message .= "Email: {$contactData['email']}\n";
         $message .= "Phone: {$contactData['phone']}\n";
-        $message .= "Business Name: {$contactData['business_name']}\n";
-        $message .= "Yearly Turnover: {$contactData['yearly_turnover']}\n";
-        $message .= "Interested Service: " . implode(', ', json_decode($contactData['interested_service'], true)) . "\n";
-        $message .= "Message: {$contactData['message']}";
+        $message .= "You have received a contact form submission.\n";
 
         $sid    = $getway->clientid;
         $token  = $getway->secretid;
@@ -149,6 +146,21 @@ class FrontendController extends Controller
             array(
             "from" => "+447883289124",
             "body" => $message
+            )
+        );
+
+        $usermessage = "Thank you very much for submitting your queries on our website. We will review your queries and get back to you asap.\n";
+        $usermessage .= "Thank you.\n";
+        $usermessage .= "Kind Regards.\n";
+        $usermessage .= "Hd Accountancy.\n";
+
+        $usernumber = $request->input('phone');
+        $usertwilio = new Client($sid, $token);
+        $usermessage = $usertwilio->messages
+        ->create($usernumber,
+            array(
+            "from" => "+447883289124",
+            "body" => $usermessage
             )
         );
 
@@ -343,12 +355,8 @@ class FrontendController extends Controller
         $message = "Name: {$validatedData['first_name']}\n";
         $message .= "Last Name: {$validatedData['last_name']}\n";
         $message .= "Email: {$validatedData['email']}\n";
-        $message .= "Phone: {$validatedData['phone']}\n";
-        $message .= "Date: {$validatedData['date']}\n";
-        $message .= "Time: {$validatedData['time']}\n";
-        $message .= "Time Zone: {$validatedData['time_zone']}\n";
-        $message .= "Meet Type: {$validatedData['meet_type']}\n";
-        $message .= "Discussion: {$validatedData['discussion']}\n";
+        $message .= "Phone: {$validatedData['phone']}\n";        
+        $message .= "You have received a schedule form submission.\n";
 
         $sid    = $getway->clientid;
         $token  = $getway->secretid;
@@ -361,6 +369,23 @@ class FrontendController extends Controller
             "body" => $message
             )
         );
+
+        $usermessage = "Thank you very much for submitting your queries on our website. We will review your queries and get back to you asap.\n";
+        $usermessage .= "Thank you.\n";
+        $usermessage .= "Kind Regards.\n";
+        $usermessage .= "Hd Accountancy.\n";
+
+        $usernumber = $request->input('phone');
+        $usertwilio = new Client($sid, $token);
+        $usermessage = $usertwilio->messages
+        ->create($usernumber,
+            array(
+            "from" => "+447883289124",
+            "body" => $usermessage
+            )
+        );
+
+
 
         return response()->json(['message' => 'Meeting scheduled successfully!']);
     }
@@ -411,16 +436,8 @@ class FrontendController extends Controller
         
         $message = "Name: {$quotation->name}\n";
         $message .= "Email: {$quotation->email}\n";
-        $message .= "Company Name: {$quotation->company_name}\n";
-        $message .= "Phone: {$quotation->phone}\n";
-        $message .= "Business Type: {$quotation->business_type}\n";
-        $message .= "Turnover: {$quotation->turnover}\n";
-        $message .= "VAT Returns: {$quotation->vat_returns}\n";
-        $message .= "Payroll: {$quotation->payroll}\n";
-        $message .= "Bookkeeping: {$quotation->bookkeeping}\n";
-        $message .= "Bookkeeping Software: {$quotation->bookkeeping_software}\n";
-        $message .= "Management Account: {$quotation->management_account}\n";
-        $message .= "Bank Accounts: {$quotation->bank_accounts}\n";
+        $message .= "Phone: {$quotation->phone}\n";        
+        $message .= "You have received a quotation form submission.\n";
 
         $sid    = $getway->clientid;
         $token  = $getway->secretid;
@@ -433,6 +450,23 @@ class FrontendController extends Controller
             "body" => $message
             )
         );
+
+        $usermessage = "Thank you very much for submitting your queries on our website. We will review your queries and get back to you asap.\n";
+        $usermessage .= "Thank you.\n";
+        $usermessage .= "Kind Regards.\n";
+        $usermessage .= "Hd Accountancy.\n";
+
+        $usernumber = $request->input('phone');
+        $usertwilio = new Client($sid, $token);
+        $usermessage = $usertwilio->messages
+        ->create($usernumber,
+            array(
+            "from" => "+447883289124",
+            "body" => $usermessage
+            )
+        );
+
+
 
         return response()->json(['success' => true]);
     }
