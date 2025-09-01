@@ -156,13 +156,13 @@ class FrontendController extends Controller
 
         $usernumber = $request->input('phone');
         $usertwilio = new Client($sid, $token);
-        $usermessage = $usertwilio->messages
-        ->create($usernumber,
-            array(
-            "from" => "+447883289124",
-            "body" => $usermessage
-            )
-        );
+        // $usermessage = $usertwilio->messages
+        // ->create($usernumber,
+        //     array(
+        //     "from" => "+447883289124",
+        //     "body" => $usermessage
+        //     )
+        // );
 
 
         // Mail::to($mail->email)->send(new ContactFormMail($contactData));
@@ -377,13 +377,13 @@ class FrontendController extends Controller
 
         $usernumber = $request->input('phone');
         $usertwilio = new Client($sid, $token);
-        $usermessage = $usertwilio->messages
-        ->create($usernumber,
-            array(
-            "from" => "+447883289124",
-            "body" => $usermessage
-            )
-        );
+        // $usermessage = $usertwilio->messages
+        // ->create($usernumber,
+        //     array(
+        //     "from" => "+447883289124",
+        //     "body" => $usermessage
+        //     )
+        // );
 
 
 
@@ -458,13 +458,13 @@ class FrontendController extends Controller
 
         $usernumber = $request->input('phone');
         $usertwilio = new Client($sid, $token);
-        $usermessage = $usertwilio->messages
-        ->create($usernumber,
-            array(
-            "from" => "+447883289124",
-            "body" => $usermessage
-            )
-        );
+        // $usermessage = $usertwilio->messages
+        // ->create($usernumber,
+        //     array(
+        //     "from" => "+447883289124",
+        //     "body" => $usermessage
+        //     )
+        // );
 
 
 
