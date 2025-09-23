@@ -10,22 +10,15 @@
         <meta charset="utf-8">
         <meta name="google-site-verification" content="b3JBEB_Tp6NzGBZBo-wCS3L3RNdS1WNSiqZdCdt0gDw" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-        <meta name="description" content="HD Accountancy and Book keeping Services is a firm of Accountants based in Huddersfield, West Yorkshire offering accounts, taxation and business advisory and support any business, limited company self-employeed Tax, payroll, book keeping and all other services">
-      
-        <meta name="keywords" content="accounant firm near me,VAT, Tax planning, Payroll, Tax Returns, accounant in huddersfield,accuntancy,cheap Accountant,Balance-Sheet,book keeping, self-emplyeed, 
-        basic accounting,Best accountant,HD5,HD1,HD3,West yorkshire, batly, dwesbury, dalton, huddersfield university, Certified accountant, england revenue, submit account, VAT submission, Self-employed account submission, Accountancy services, Manchester, shefield, oldham, yorkshire, north yorkshire.">
-
-        {{-- 
+        <title>@yield('meta_title', 'HD Accountancy')</title>
         <meta property="og:title" content="@yield('meta_title', 'HD Accountancy')" />
         <meta property="og:description" content="@yield('meta_description', 'HD Accountancy')" />
-        --}}
+        <meta name="keywords" content="@yield('meta_keywords', 'HD Accountancy')" />
         <meta property="og:image" content="@yield('meta_image', asset('images/company/' . $companyDetails->company_logo))" />
         <meta property="og:url" content="{{ request()->url() }}" />
         <meta property='og:image:width' content='1200' />
         <meta property='og:image:height' content='627' />
         <meta property="og:type" content='website' />
-        <title>{{ $companyDetails->company_name ?? 'HD Accountancy' }}</title>
         <link rel="icon" href="{{ asset('images/company/' . $companyDetails->fav_icon) }}" />
         <!-- css -->
         <link href="{{ asset('assets/frontend/css/bootstrap-5.2.3.min.css') }}" rel="stylesheet">

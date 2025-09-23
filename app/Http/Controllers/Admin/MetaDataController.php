@@ -41,6 +41,7 @@ class MetaDataController extends Controller
 
         $data->meta_title = $request->input('meta_title');
         $data->meta_description = $request->input('meta_description');
+        $data->meta_keywords = $request->input('meta_keywords');
 
         if ($request->hasFile('meta_image')) {
             if ($data->meta_image) {
@@ -93,6 +94,7 @@ class MetaDataController extends Controller
 
         $data->meta_title = $request->input('meta_title');
         $data->meta_description = $request->input('meta_description');
+        $data->meta_keywords = $request->input('meta_keywords');
 
         if ($request->hasFile('meta_image')) {
             if ($data->meta_image) {
@@ -145,6 +147,7 @@ class MetaDataController extends Controller
 
         $data->meta_title = $request->input('meta_title');
         $data->meta_description = $request->input('meta_description');
+        $data->meta_keywords = $request->input('meta_keywords');
 
         if ($request->hasFile('meta_image')) {
             if ($data->meta_image) {
@@ -197,6 +200,7 @@ class MetaDataController extends Controller
 
         $data->meta_title = $request->input('meta_title');
         $data->meta_description = $request->input('meta_description');
+        $data->meta_keywords = $request->input('meta_keywords');
 
         if ($request->hasFile('meta_image')) {
             if ($data->meta_image) {
@@ -249,6 +253,7 @@ class MetaDataController extends Controller
 
         $data->meta_title = $request->input('meta_title');
         $data->meta_description = $request->input('meta_description');
+        $data->meta_keywords = $request->input('meta_keywords');
 
         if ($request->hasFile('meta_image')) {
             if ($data->meta_image) {
@@ -301,6 +306,7 @@ class MetaDataController extends Controller
 
         $data->meta_title = $request->input('meta_title');
         $data->meta_description = $request->input('meta_description');
+        $data->meta_keywords = $request->input('meta_keywords');
 
         if ($request->hasFile('meta_image')) {
             if ($data->meta_image) {
@@ -353,6 +359,7 @@ class MetaDataController extends Controller
 
         $data->meta_title = $request->input('meta_title');
         $data->meta_description = $request->input('meta_description');
+        $data->meta_keywords = $request->input('meta_keywords');
 
         if ($request->hasFile('meta_image')) {
             if ($data->meta_image) {
@@ -405,6 +412,7 @@ class MetaDataController extends Controller
 
         $data->meta_title = $request->input('meta_title');
         $data->meta_description = $request->input('meta_description');
+        $data->meta_keywords = $request->input('meta_keywords');
 
         if ($request->hasFile('meta_image')) {
             if ($data->meta_image) {
@@ -457,6 +465,7 @@ class MetaDataController extends Controller
 
         $data->meta_title = $request->input('meta_title');
         $data->meta_description = $request->input('meta_description');
+        $data->meta_keywords = $request->input('meta_keywords');
 
         if ($request->hasFile('meta_image')) {
             if ($data->meta_image) {
@@ -509,6 +518,7 @@ class MetaDataController extends Controller
 
         $data->meta_title = $request->input('meta_title');
         $data->meta_description = $request->input('meta_description');
+        $data->meta_keywords = $request->input('meta_keywords');
 
         if ($request->hasFile('meta_image')) {
             if ($data->meta_image) {

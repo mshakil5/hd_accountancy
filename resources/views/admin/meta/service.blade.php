@@ -55,6 +55,22 @@
                             @enderror
                         </div>
                     </div>
+
+                    {{-- meta keywords  --}}
+                    <div class="col-sm-12">
+                        <div class="form-group">
+                            <label for="meta_keywords">Meta Keywords</label>
+
+                            <input type="text" class="form-control @error('meta_keywords') is-invalid @enderror" id="meta_keywords" name="meta_keywords" value="{{ $data->meta_keywords ?? '' }}" placeholder="Enter meta keywords (comma separated)">
+                            <small class="form-text text-muted">Use commas to separate keywords.</small>
+                            
+
+                            @error('meta_keywords')
+                                <span class="invalid-feedback d-block">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+                    
                 </div>
               </form>
           </div>

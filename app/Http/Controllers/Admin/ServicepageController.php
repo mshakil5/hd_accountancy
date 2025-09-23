@@ -40,6 +40,24 @@ class ServicepageController extends Controller
         $accountSolution->short_description = $request->input('short_description');
         $accountSolution->long_description = $request->input('long_description');
 
+        $accountSolution->meta_title = $request->input('meta_title');
+        $accountSolution->meta_description = $request->input('meta_description');
+        $accountSolution->meta_keywords = $request->input('meta_keywords');
+
+        if ($request->hasFile('meta_image')) {
+            if ($accountSolution->meta_image) {
+               $oldImagePath = public_path('images/meta_image/' . $accountSolution->meta_image);
+               if (file_exists($oldImagePath)) {
+                     unlink($oldImagePath);
+               }
+            }
+
+            $image = $request->file('meta_image');
+            $imageName = rand(10000000, 99999999) . '.' . $image->getClientOriginalExtension();
+            $image->move(public_path('images/meta_image'), $imageName);
+            $accountSolution->meta_image = $imageName;
+        }
+
         $accountSolution->save();
 
         return redirect()->back()->with('success', 'Updated successfully.');

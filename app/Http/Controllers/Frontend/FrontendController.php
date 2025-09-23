@@ -29,6 +29,8 @@ use App\Mail\ContactFormMail;
 use App\Mail\ScheduleMail;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\CareerFormMail;
+use App\Models\Getway;
+use Twilio\Rest\Client;
 
 class FrontendController extends Controller
 {
@@ -67,7 +69,7 @@ class FrontendController extends Controller
 
         $googleReviews = GoogleReview::orderBy('id', 'asc')->whereNotNull('image')->get();
 
-        $meta = Master::where('name', 'Homepage Meta')->select('meta_title', 'meta_description', 'meta_image')->first();
+        $meta = Master::where('name', 'Homepage Meta')->select('meta_title', 'meta_description', 'meta_image','meta_keywords')->first();
         
         return view('frontend.homepage.index', compact('homePageIntro', 'homeOurValues', 'timeSlots', 'packages', 'businessServices', 'businessValues', 'clientTestimonials', 'caseStudies', 'latestInsights', 'weWorkWithImages', 'googleReviews', 'meta'));
     }
@@ -83,7 +85,7 @@ class FrontendController extends Controller
 
         $turnoverRanges = TurnOver::select('price_range')->distinct()->where('status', 1)->get();
 
-        $meta = Master::where('name', 'Contactpage Meta')->select('meta_title', 'meta_description', 'meta_image')->first();  
+        $meta = Master::where('name', 'Contactpage Meta')->select('meta_title', 'meta_description', 'meta_image','meta_keywords')->first();  
 
         return view('frontend.contact.index', compact('contactHeading', 'turnoverRanges', 'meta'));
     }
@@ -126,9 +128,45 @@ class FrontendController extends Controller
 
         $mail = ContactMail::first();
 
-        Mail::to($mail->email)->send(new ContactFormMail($contactData));
+        $getway = Getway::where('name', 'Twilio')->first();
+        
+        $receiver_number = "+447468421495";
+        // $receiver_number = "+447533498883";
+        $message = "Name: {$contactData['name']}\n";
+        $message .= "Email: {$contactData['email']}\n";
+        $message .= "Phone: {$contactData['phone']}\n";
+        $message .= "You have received a contact form submission.\n";
 
-        Mail::to($request->input('email'))->send(new ContactFormMail($contactData));
+        $sid    = $getway->clientid;
+        $token  = $getway->secretid;
+        
+        $twilio = new Client($sid, $token);
+        $message = $twilio->messages
+        ->create($receiver_number,
+            array(
+            "from" => "+447883289124",
+            "body" => $message
+            )
+        );
+
+        $usermessage = "Thank you very much for submitting your queries on our website. We will review your queries and get back to you asap.\n";
+        $usermessage .= "Thank you.\n";
+        $usermessage .= "Kind Regards.\n";
+        $usermessage .= "Hd Accountancy.\n";
+
+        $usernumber = $request->input('phone');
+        $usertwilio = new Client($sid, $token);
+        // $usermessage = $usertwilio->messages
+        // ->create($usernumber,
+        //     array(
+        //     "from" => "+447883289124",
+        //     "body" => $usermessage
+        //     )
+        // );
+
+
+        // Mail::to($mail->email)->send(new ContactFormMail($contactData));
+        // Mail::to($request->input('email'))->send(new ContactFormMail($contactData));
 
         return redirect()->back()->with('success', 'Message sent successfully!');
     }
@@ -144,7 +182,7 @@ class FrontendController extends Controller
             $pricingHeading = null;
         }
 
-        $meta = Master::where('name', 'Servicepage Meta')->select('meta_title', 'meta_description', 'meta_image')->first();
+        $meta = Master::where('name', 'Servicepage Meta')->select('meta_title', 'meta_description', 'meta_image','meta_keywords')->first();
 
         return view('frontend.pricing.index', compact('pricingHeading', 'packages', 'meta'));
     }
@@ -158,7 +196,7 @@ class FrontendController extends Controller
             $getQuotation = null;
         }
 
-        $meta = Master::where('name', 'Getquotationpage Meta')->select('meta_title', 'meta_description', 'meta_image')->first();  
+        $meta = Master::where('name', 'Getquotationpage Meta')->select('meta_title', 'meta_description', 'meta_image','meta_keywords')->first();  
 
         return view('frontend.get-quotation.index', compact('getQuotation', 'meta'));
     }
@@ -215,7 +253,7 @@ class FrontendController extends Controller
                          ->orderBy('id', 'asc')
                          ->get();
 
-        $meta = Master::where('name', 'Servicepage Meta')->select('meta_title', 'meta_description', 'meta_image')->first();                 
+        $meta = Master::where('name', 'Servicepage Meta')->select('meta_title', 'meta_description', 'meta_image','meta_keywords')->first();                 
 
         return view('frontend.services.index', compact('accountingSolution', 'taxSolution', 'otherSolution', 'businessStartUp', 'companySecretarial', 'bankruptcyLiquidation', 'taxSolutions', 'accountingSolutions', 'meta'));
     }
@@ -230,7 +268,7 @@ class FrontendController extends Controller
         }
         $ourTeam = OurTeam::orderBy('id', 'asc')->get();
 
-        $meta = Master::where('name', 'Ourteampage Meta')->select('meta_title', 'meta_description', 'meta_image')->first();  
+        $meta = Master::where('name', 'Ourteampage Meta')->select('meta_title', 'meta_description', 'meta_image','meta_keywords')->first();  
 
         return view('frontend.our-team.index', compact('ourTeamPage', 'ourTeam', 'meta'));
     }
@@ -244,7 +282,7 @@ class FrontendController extends Controller
             $career = null;
         }
 
-        $meta = Master::where('name', 'Careerpage Meta')->select('meta_title', 'meta_description', 'meta_image')->first();  
+        $meta = Master::where('name', 'Careerpage Meta')->select('meta_title', 'meta_description', 'meta_image','meta_keywords')->first();  
         return view('frontend.career.index', compact('career', 'meta'));
     }
 
@@ -259,14 +297,15 @@ class FrontendController extends Controller
 
         $faqQuestions = FaqQuestion::orderBy('id', 'asc')->get();
 
-        $meta = Master::where('name', 'Faqpage Meta')->select('meta_title', 'meta_description', 'meta_image')->first(); 
+        $meta = Master::where('name', 'Faqpage Meta')->select('meta_title', 'meta_description', 'meta_image','meta_keywords')->first(); 
 
         return view('frontend.faq.index', compact('faq', 'faqQuestions', 'meta'));
     }
     
     public function booking()
     {
-        return view('frontend.booking.index');
+        $meta = Master::where('name', 'Getquotationpage Meta')->select('meta_title', 'meta_description', 'meta_image','meta_keywords')->first();  
+        return view('frontend.booking.index', compact('meta'));
     }
 
     public function caseStudy()
@@ -278,6 +317,7 @@ class FrontendController extends Controller
             $caseStudy = null;
         }
         $caseStudies = CaseStudy::orderby('id','DESC')->get();
+
         return view('frontend.case-study.index', compact('caseStudy', 'caseStudies'));
     }
 
@@ -306,8 +346,46 @@ class FrontendController extends Controller
         $mail = ContactMail::first();
 
         // Mail::to($mail->email)->send(new ScheduleMail($validatedData));
-
         // Mail::to($validatedData['email'])->send(new ScheduleMail($validatedData));
+
+        $getway = Getway::where('name', 'Twilio')->first();
+        
+        $receiver_number = "+447468421495";
+        // $receiver_number = "+447533498883";
+        $message = "Name: {$validatedData['first_name']}\n";
+        $message .= "Last Name: {$validatedData['last_name']}\n";
+        $message .= "Email: {$validatedData['email']}\n";
+        $message .= "Phone: {$validatedData['phone']}\n";        
+        $message .= "You have received a schedule form submission.\n";
+
+        $sid    = $getway->clientid;
+        $token  = $getway->secretid;
+        
+        $twilio = new Client($sid, $token);
+        $message = $twilio->messages
+        ->create($receiver_number,
+            array(
+            "from" => "+447883289124",
+            "body" => $message
+            )
+        );
+
+        $usermessage = "Thank you very much for submitting your queries on our website. We will review your queries and get back to you asap.\n";
+        $usermessage .= "Thank you.\n";
+        $usermessage .= "Kind Regards.\n";
+        $usermessage .= "Hd Accountancy.\n";
+
+        $usernumber = $request->input('phone');
+        $usertwilio = new Client($sid, $token);
+        // $usermessage = $usertwilio->messages
+        // ->create($usernumber,
+        //     array(
+        //     "from" => "+447883289124",
+        //     "body" => $usermessage
+        //     )
+        // );
+
+
 
         return response()->json(['message' => 'Meeting scheduled successfully!']);
     }
@@ -349,8 +427,46 @@ class FrontendController extends Controller
         $mail = ContactMail::first();
 
         // Mail::to($mail->email)->send(new QuotationMail($quotation));
-
         // Mail::to($request->input('email'))->send(new QuotationMail($quotation));
+
+        $getway = Getway::where('name', 'Twilio')->first();
+        
+        $receiver_number = "+447468421495";
+        // $receiver_number = "+447533498883";
+        
+        $message = "Name: {$quotation->name}\n";
+        $message .= "Email: {$quotation->email}\n";
+        $message .= "Phone: {$quotation->phone}\n";        
+        $message .= "You have received a quotation form submission.\n";
+
+        $sid    = $getway->clientid;
+        $token  = $getway->secretid;
+        
+        $twilio = new Client($sid, $token);
+        $message = $twilio->messages
+        ->create($receiver_number,
+            array(
+            "from" => "+447883289124",
+            "body" => $message
+            )
+        );
+
+        $usermessage = "Thank you very much for submitting your queries on our website. We will review your queries and get back to you asap.\n";
+        $usermessage .= "Thank you.\n";
+        $usermessage .= "Kind Regards.\n";
+        $usermessage .= "Hd Accountancy.\n";
+
+        $usernumber = $request->input('phone');
+        $usertwilio = new Client($sid, $token);
+        // $usermessage = $usertwilio->messages
+        // ->create($usernumber,
+        //     array(
+        //     "from" => "+447883289124",
+        //     "body" => $usermessage
+        //     )
+        // );
+
+
 
         return response()->json(['success' => true]);
     }
@@ -396,13 +512,15 @@ class FrontendController extends Controller
     public function latestInsights()
     {
         $data = LatestInsight::orderBy('id', 'DESC')->get();
-        return view('frontend.latest-insight.index', compact('data'));
+        $meta = Master::where('name', 'Homepage Meta')->select('meta_title', 'meta_description', 'meta_image','meta_keywords')->first();
+        return view('frontend.latest-insight.index', compact('data','meta'));
     }
 
     public function latestInsightDetails($slug)
     {
+        $meta = Master::where('name', 'Homepage Meta')->select('meta_title', 'meta_description', 'meta_image','meta_keywords')->first();
         $latestInsight = LatestInsight::where('slug', $slug)->firstOrFail();
-        return view('frontend.latest-insight.details', compact('latestInsight'));
+        return view('frontend.latest-insight.details', compact('latestInsight','meta'));
     }
 
     public function businessServices($slug)
@@ -427,7 +545,7 @@ class FrontendController extends Controller
             $privacyPolicy = null;
         }
 
-        $meta = Master::where('name', 'Privacypage Meta')->select('meta_title', 'meta_description', 'meta_image')->first(); 
+        $meta = Master::where('name', 'Privacypage Meta')->select('meta_title', 'meta_description', 'meta_image','meta_keywords')->first(); 
 
         return view('frontend.privacy-policy.index', compact('privacyPolicy', 'meta'));
     }
@@ -441,7 +559,7 @@ class FrontendController extends Controller
             $termsConditions = null;
         }
 
-        $meta = Master::where('name', 'Termspage Meta')->select('meta_title', 'meta_description', 'meta_image')->first();
+        $meta = Master::where('name', 'Termspage Meta')->select('meta_title', 'meta_description', 'meta_image','meta_keywords')->first();
         return view('frontend.terms-conditions.index', compact('termsConditions', 'meta'));
     }
 
