@@ -152,8 +152,18 @@
                   toastr.error('An error occurred. Please try again.');
                }
             },
-            error: function(xhr, status, error) {
-               console.error(xhr.responseText);
+            error: function(xhr) {
+                document.getElementById('loader2').style.display = 'none';
+                document.getElementById('submitForm').disabled = false;
+
+                if (xhr.status === 422) {
+                    let errors = xhr.responseJSON.errors;
+                    let firstField = Object.keys(errors)[0];
+                    toastr.error(errors[firstField][0]);
+                } else {
+                    toastr.error('An unexpected error occurred.');
+                    console.error(xhr.responseText);
+                }
             }
          });
       });

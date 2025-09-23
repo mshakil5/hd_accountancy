@@ -93,7 +93,7 @@ class FrontendController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255',
-            'phone' => 'required|string',
+            'phone' => ['required', 'digits:11'],
             'business_name' => 'nullable|string|max:255',
             'yearly_turnover' => 'required',
             'interested_service' => 'required|array',
@@ -318,7 +318,7 @@ class FrontendController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'company_name' => 'required|string|max:255',
-            'phone' => 'required',
+            'phone' => ['required', 'digits:11'],
             'business_type' => 'required|string|max:255',
             'turnover' => 'required|numeric',
             'vat_returns' => 'required|string|max:255',

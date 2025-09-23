@@ -195,6 +195,13 @@
             return;
         }
 
+        if (phone.length !== 11) {
+            toastr.error('Phone number must be exactly 11 digits.');
+            btn.prop('disabled', false);
+            $('#loader1').hide();
+            return;
+        }
+
         if (date < today) {
             toastr.error('The selected date must be today or a future date.');
             return;
@@ -227,11 +234,10 @@
                 'X-CSRF-TOKEN': csrfToken
             },
             beforeSend: function() {
-                document.getElementById('loader1').style.display = 'block';
-                document.getElementById('submitBtn').disabled = true;
+                $('#loader1').show();
+                $('#submitBtn').prop('disabled', true);
             },
             success: function(response) {
-                document.getElementById('loader1').style.display = 'none';
                 document.getElementById('submitBtn').disabled = false;
                 toastr.success('Meeting scheduled successfully!');
 
@@ -246,8 +252,11 @@
                 $('#phone').val('');
                 $('#discussion').val('');
             },
+            complete: function() {
+                $('#loader1').hide();
+                $('#submitBtn').prop('disabled', false);
+            },
             error: function(xhr, status, error) {
-                document.getElementById('loader1').style.display = 'none';
                 document.getElementById('submitBtn').disabled = false;
 
                 // console.log(xhr.responseText);
