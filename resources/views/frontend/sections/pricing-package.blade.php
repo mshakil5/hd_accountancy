@@ -115,7 +115,7 @@
                     </div>
                     <div class="col-12 col-md-6">
                         <div class="border p-3 d-flex align-items-center justify-content-center gap-3 hover-card">
-                            <div class="poppins-bold display-3 txt-primary mb-0">13</div>
+                            <div class="poppins-bold display-3 txt-primary mb-0">10</div>
                             <div class="poppins-medium txt-primary fw-bold">Full time <br> Employee</div>
                         </div>
                     </div>
