@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Spatie\Activitylog\Models\Activity;
 use App\Models\AccountancyFee;
+use App\Models\ClientCredential;
 use Illuminate\Support\Facades\Hash;
 use App\Models\ClientProperty;
 
@@ -158,13 +159,14 @@ class ClientController extends Controller
         $managers = User::whereIn('type', ['1', '2'])->select('id', 'first_name', 'last_name', 'type')->orderby('id', 'DESC')->get();
         $clientTypes = ClientType::select('id', 'name')->orderby('id', 'DESC')->get();
         $client = "";
-        return view('admin.client.create', compact('clientTypes', 'managers', 'client'));
+        $clientCridentials = ClientCredential::where('status',1)->get();
+        return view('admin.client.create', compact('clientTypes', 'managers', 'client','clientCridentials'));
     }
 
     public function store(Request $request)
     {
          $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
+            'client_credential_id' => 'required|string|max:255',
             // 'last_name' => 'required|string|max:255',
             'client_type_id' => 'required',
             'reference_id' => 'required',
@@ -185,12 +187,7 @@ class ClientController extends Controller
             'photo_id' => 'nullable|mimes:jpeg,png,jpg,gif,svg,pdf|max:8048'
         ]);
 
-        if ($request->filled('password')) {
-            $validator->addRules([
-                'password' => 'required|min:6',
-                'confirm_password' => 'required|same:password'
-            ]);
-        }
+        
 
         if ($validator->fails()) {
             return response()->json(['status' => 422, 'errors' => $validator->errors()], 422);
@@ -199,6 +196,7 @@ class ClientController extends Controller
         $data = new Client;
 
         $data->name = $request->name;
+        $data->client_credential_id = $request->client_credential_id;
         $data->last_name = $request->last_name;
         $data->refid = $request->reference_id;
         $data->client_type_id = $request->client_type_id;
@@ -763,6 +761,23 @@ class ClientController extends Controller
 
         return response()->json(['message' => 'Accountancy fee updated successfully']);
     }
+
+    public function getClientInfo($id)
+    {
+        $client = ClientCredential::find($id);
+
+        if (!$client) {
+            return response()->json(['error' => 'Client not found'], 404);
+        }
+
+        return response()->json([
+            'first_name' => $client->first_name,
+            'last_name'  => $client->last_name,
+            'email'      => $client->email,
+            'phone'      => $client->phone,
+        ]);
+    }
+
 
 
 }

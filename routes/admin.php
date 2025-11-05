@@ -140,6 +140,8 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/client-list', [ClientController::class, 'getClients'])->name('get.Clients');
     Route::get('/create-client', [ClientController::class, 'create'])->name('createClient');
     Route::post('/client', [ClientController::class, 'store']);
+    Route::get('/get-client-info/{id}', [ClientController::class, 'getClientInfo'])->name('get.client.info');
+
 
     Route::get('/client-activities/{id}', [ClientController::class, 'showClientActivities'])->name('client.activities');
 

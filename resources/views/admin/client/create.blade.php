@@ -13,6 +13,17 @@
             <div class="row my-4 px-3">
                 <div class="col-lg-3">
                     <label for="">Client Name <span class="text-danger">*</span></label>
+                    <select name="client_credential_id" id="client_credential_id" class="form-control mt-2">
+                        <option value="">Please Select</option>
+                        @foreach ($clientCridentials as $clientCridential)
+                            <option value="{{ $clientCridential->id }}">
+                                {{$clientCridential->first_name}} {{$clientCridential->last_name}}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-lg-3 d-none">
+                    <label for="">Client Name <span class="text-danger">*</span></label>
                     <input for="name" type="text" value="{{ isset($client->name) ? $client->name : '' }}" class="form-control mt-2" name="name" id="name" required placeholder="">
                 </div>
                 <div class="col-lg-3 d-none">
@@ -256,6 +267,7 @@
             saveButton.prop('disabled', true);
 
             var formData = new FormData($('#detailsForm')[0]);
+            formData.append('client_credential_id', $('#client_credential_id').val());
             formData.append('name', $('#name').val());
             formData.append('last_name', $('#last_name').val());
             formData.append('client_type_id', $('#client_type_id').val());
@@ -323,5 +335,37 @@
     });
 
 </script>
+
+<script>
+$(document).ready(function () {
+    $('#client_credential_id').on('change', function () {
+        var clientId = $(this).val();
+
+        console.log(clientId);
+
+        if (clientId) {
+            $.ajax({
+                url: '/admin/get-client-info/' + clientId,
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    $('#name').val(data.first_name);
+                    $('#last_name').val(data.last_name);
+                    $('#email').val(data.email);
+                    $('#phone').val(data.phone);
+                },
+                error: function () {
+                    alert('Client info not found or error occurred.');
+                    $('#name, #last_name, #email, #phone').val('');
+                }
+            });
+        } else {
+            // Clear fields if "Please Select" is chosen
+            $('#name, #last_name, #email, #phone').val('');
+        }
+    });
+});
+</script>
+
 
 @endsection
