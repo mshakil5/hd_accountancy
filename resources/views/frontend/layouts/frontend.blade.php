@@ -11,7 +11,8 @@
         <meta name="google-site-verification" content="b3JBEB_Tp6NzGBZBo-wCS3L3RNdS1WNSiqZdCdt0gDw" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>@yield('meta_title', 'HD Accountancy')</title>
-        <meta property="og:title" content="@yield('meta_title', 'HD Accountancy')" />
+
+        {{-- <meta property="og:title" content="@yield('meta_title', 'HD Accountancy')" /> --}}
         <meta property="og:description" content="@yield('meta_description', 'HD Accountancy')" />
         <meta name="keywords" content="@yield('meta_keywords', 'HD Accountancy')" />
         <meta property="og:image" content="@yield('meta_image', asset('images/company/' . $companyDetails->company_logo))" />

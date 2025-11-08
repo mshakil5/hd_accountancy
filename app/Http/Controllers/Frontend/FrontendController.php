@@ -182,7 +182,7 @@ class FrontendController extends Controller
             $pricingHeading = null;
         }
 
-        $meta = Master::where('name', 'Servicepage Meta')->select('meta_title', 'meta_description', 'meta_image','meta_keywords')->first();
+        $meta = Master::where('name', 'Packagepage Meta')->select('meta_title', 'meta_description', 'meta_image','meta_keywords')->first();
 
         return view('frontend.pricing.index', compact('pricingHeading', 'packages', 'meta'));
     }
