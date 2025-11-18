@@ -727,7 +727,7 @@ class ClientController extends Controller
     {
         $request->validate([
             'client_id' => 'required',
-            'annual_agreed_fees' => 'required|numeric',
+            'annual_agreed_fees' => 'nullable|numeric',
             'monthly_standing_order' => 'required|boolean',
             'monthly_amount' => 'nullable|numeric',
             'next_review' => 'nullable|date',

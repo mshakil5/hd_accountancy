@@ -126,7 +126,7 @@
         </div>
 
         <div class="mt-5 py-2 text-light border-top border-bottom text-center">
-            <small>2024 | HD Accountancy Services LTD | Registered in England and Wales | Company No-05600401 | VAT No-437899234</small>
+            <small>{{ date('Y') }} | HD Accountancy Services LTD | Registered in England and Wales | Company No-05600401 | VAT No-437899234</small>
         </div>
 
     </div>

@@ -2,7 +2,7 @@
     <div class="row my-4">
       <input type="hidden" name="client_id" value="{{ $client->id ?? '' }}">
         <div class="col-lg-4">
-            <label for="annual_agreed_fees">Annually Agreed Fees <span class="text-danger">*</span></label>
+            <label for="annual_agreed_fees">Annually Agreed Fees</label>
             <input type="number" class="form-control my-2" id="annual_agreed_fees" name="annual_agreed_fees" placeholder="Enter anually agreed fees" value="{{ $client->accountancyFee->annual_agreed_fees ?? '' }}">
         </div>
         <div class="col-lg-4">
