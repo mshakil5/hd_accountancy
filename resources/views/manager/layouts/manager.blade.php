@@ -55,7 +55,7 @@
   <main id="main" class="main mt-3">
 
       @yield('content')
-
+      @include('manager.modals.time_modal')
       @php
 
         $staffs = App\Models\User::select('id', 'first_name', 'last_name', 'type')
@@ -180,6 +180,8 @@
     </script>
 
   @yield('script')
+
+  @include('manager.modals.time_modal_script')
 
   <script>
     $(document).ready(function () {

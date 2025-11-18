@@ -70,6 +70,29 @@ class OneTimeJobController extends Controller
         return response()->json(['status' => 200, 'message' => 'Data saved successfully']);
     }
 
+    public function edit($id)
+    {
+        $clientService = ClientService::with('service:id,name')
+            ->select('id','service_id','manager_id','legal_deadline')
+            ->find($id);
+
+        return response()->json($clientService);
+    }
+
+    public function update(Request $request)
+    {
+        $clientService = ClientService::find($request->id);
+
+        $clientService->manager_id = $request->manager_id;
+        $clientService->legal_deadline = $request->legal_deadline;
+        $clientService->save();
+
+        Service::where('id', $clientService->service_id)
+            ->update(['name' => $request->task]);
+
+        return response()->json(['status' => 200, 'message' => 'Updated successfully']);
+    }
+
     public function getData(Request $request)
     {
         $authUserId = (string) auth()->id();
@@ -113,6 +136,14 @@ class OneTimeJobController extends Controller
             ->addColumn('has_new_message', function ($clientService) {
                 return $clientService->has_new_message ? 'Yes' : 'No';
             })
+            ->addColumn('action', function ($clientService) {
+                return '
+                    <a class="btn btn-link editBtn" data-id="'.$clientService->id.'">
+                        <i class="fa fa-edit" style="font-size: 20px;"></i>
+                    </a>
+                ';
+            })
+            ->rawColumns(['action'])
             ->make(true);
     }
 }

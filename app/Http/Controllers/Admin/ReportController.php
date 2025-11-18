@@ -328,22 +328,21 @@ class ReportController extends Controller
         $dateRange = $request->date;
         $dates = explode(' to ', $dateRange);
         
-        $startDate = Carbon::parse($dates[0])->format('d-m-Y');
-        $endDate = Carbon::parse($dates[1])->format('d-m-Y');
+        $startDate = Carbon::parse(trim($dates[0]))->format('d-m-Y');
+        $endDate = Carbon::parse(trim($dates[1]))->format('d-m-Y');
         
         $workTimes = WorkTime::where('staff_id', $staffId)
-            ->whereBetween('start_date', [$startDate, $endDate])
-
+            ->whereBetween('start_date', [$startDate, $endDate]) // This should now match your database format
             ->whereNotNull('client_sub_service_id')
             ->whereHas('clientSubService', function ($query) use ($clientId) {
-              $query->whereNotNull('client_id');
-              if ($clientId !== 'All') {
-                  $query->where('client_id', $clientId);
-              }
+                $query->whereNotNull('client_id');
+                if ($clientId !== 'All') {
+                    $query->where('client_id', $clientId);
+                }
             })
             ->whereNotNull('staff_id')
             ->where('is_break', 0)
-            ->with('staff', 'clientSubService.subService')
+            ->with('staff', 'clientSubService.subService', 'clientSubService.client')
             ->get(['id', 'staff_id', 'client_sub_service_id', 'start_date', 'start_time', 'end_time', 'duration', 'is_break', 'type']);
         
         if ($workTimes->isEmpty()) {
@@ -351,34 +350,38 @@ class ReportController extends Controller
         }
         
         $responseDetails = [];
-    
+
         foreach ($workTimes as $workTime) {
             $hours = number_format($workTime->duration / 3600, 2);
             
             $staff = $workTime->staff;
-            $clientName = optional($workTime->clientSubService)->client->name;
+            $clientName = optional($workTime->clientSubService->client)->name ?? 'Unknown Client';
             $serviceName = optional($workTime->clientSubService->subService)->name ?? '';
             
+            $serviceNameOutput = '';
             $additionalWork = '';
+
             if ($workTime->type == 2) {
                 $additionalWork = $serviceName;
                 if ($workTime->clientSubService && $workTime->clientSubService->note) {
                     $additionalWork .= ' (' . $workTime->clientSubService->note . ')';
                 }
+            } else {
+                $serviceNameOutput = $serviceName;
             }
-    
+
             $responseDetails[] = [
                 'start_date' => Carbon::parse($workTime->start_date)->format('j F Y'),
                 'ref_id' => $workTime->staff_id,
                 'client_name' => $clientName,
-                'duration' => $hours . ' hr',
-                'service_name' => $serviceName,
+                'duration' => $hours,
+                'service_name' => $serviceNameOutput,
                 'additionalWork' => $additionalWork,
             ];
         }
         
         return response()->json(['details' => $responseDetails]);
-    }    
+    }
 
     public function clientAcquisitionReport()
     {

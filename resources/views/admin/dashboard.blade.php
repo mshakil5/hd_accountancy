@@ -367,6 +367,7 @@
                                     <th scope="col">#</th>
                                     <th scope="col">Client Name</th>
                                     <th scope="col">Service Name</th>
+                                    <th scope="col">Frequency</th>
                                     <th scope="col">Due Date</th>
                                     <th scope="col">Target Deadline</th>
                                     <th scope="col">Deadline</th>
@@ -460,6 +461,7 @@
                                     <th>#</th>
                                     <th>Client Name</th>
                                     <th>Service Name</th>
+                                    <th>Frequency</th>
                                     <th>Due Date</th>
                                     <th>Target Deadline</th>
                                     <th>Deadline</th>
@@ -560,7 +562,7 @@
                 </div>
 
                 <!-- Completed One Time Work List -->
-                <div class="col-lg-6">
+                <div class="col-lg-6 d-none">
                     <div class="col-lg-12 px-0 border shadow-sm mb-3">
 
                         <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
@@ -582,10 +584,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="row">
-                <div class="col-lg-6 mb-3">
+                                <div class="col-lg-6 mb-3">
                     <div class="col-lg-12 px-0 border shadow-sm mb-3">
                             <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
                                 <i class="bx bxs-user-plus fs-4 me-2"></i>Your Notes
@@ -1437,6 +1436,10 @@
                     name: 'servicename'
                 },
                 {
+                    data: 'service_frequency',
+                    name: 'service_frequency'
+                },
+                {
                     data: 'due_date',
                     name: 'due_date'
                 },
@@ -1651,6 +1654,10 @@
                         }
                         return `${data} <br>${badge}`;
                     }
+                },
+                {
+                    data: 'service_frequency',
+                    name: 'service_frequency'
                 },
                 {
                     data: 'due_date',

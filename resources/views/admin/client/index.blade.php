@@ -66,6 +66,11 @@
                 d.filter = $('#clientFilter').val();
             }
         },
+        dom: 'Bfrtip', // 'B' enables the buttons, and specifies their position
+        buttons: [
+            'excelHtml5', // Button for Excel export
+            'pdfHtml5'    // Button for PDF export
+        ],
         columns: [
             {data: 'DT_RowIndex', name: 'DT_RowIndex'},
             {data: 'refid', name: 'refid'},

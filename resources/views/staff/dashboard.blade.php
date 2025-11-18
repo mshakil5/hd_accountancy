@@ -172,45 +172,6 @@
         </div>
         <!-- Service message modal end -->
 
-        <div class="modal fade" id="timeModal1" tabindex="-1" aria-labelledby="timeModalLabel1" aria-hidden="true">
-            <div class="modal-dialog modal-sm">
-                <div class="modal-content">
-                    <div class="modal-header bg-theme-light border-theme">
-                        <h5 class="modal-title txt-theme fw-bold" id="timeModal1Label">Your Time</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="report-box border-theme sales-card p-4 rounded-4 border-3">
-                            <div class="card-body p-0">
-                                <div class="d-flex gap-3 my-5">
-                                    <div class="text-center flex-fill">
-                                        <div class="fs-6 txt-theme fw-bold">Active Time</div>
-                                        <div class="container">
-                                            <div class="text-center fs-2 txt-theme fw-bold" id="activeTime">
-                                                {{ $activeTimeFormatted ?? 'N/A' }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="row mt-3 align-items-center justify-content-center">
-                                    <div class="col-lg-12">
-                                        <a id="takeBreakBtn" class="p-2 border-theme bg-theme text-center fs-6 d-block rounded-3 border-3 text-light fw-bold" style="cursor: pointer;">Take Break</a>
-                                    </div>
-                                </div>
-                                <div class="row mt-3">
-                                    <div class="col-lg-12">
-                                        <a href="#" onclick="checkWorkTimeStatus();" class="p-2 border-theme bg-theme text-center fs-6 d-block rounded-3 border-3 text-light fw-bold">Clock out</a>
-                                        <form id="logout-form" class="d-none">
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Note modal start -->
         <div class="modal fade" id="noteModal" tabindex="-1" aria-labelledby="noteModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-xl mt-2">
@@ -328,24 +289,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Whats happening start -->
-        <div class="col-lg-8 mb-3 d-none">
-            <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
-                <div class="card-body px-0">
-                    <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                        What's Happening at HD Accountancy
-                    </div>
-                    <div class="position-absolute bottom-0 mb-4" style="width:90%;">
-                        <div class="d-flex align-items-center gap-3 w-full">
-                            <i class="bi bi-person-circle fs-3 txt-theme"></i>
-                            <input type="text" class="rounded-3 border-2 border-theme form-control" placeholder="Leave a comment">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Whats happening end -->
 
         <!-- assigned tasks table start-->
         <div class="col-lg-8 mb-3">
@@ -564,26 +507,6 @@
     </div>
 
 </section>
-
-
-<div class="col-lg-4 mb-3" id="breakOutSection" style="display: none;">
-    <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100">
-        <div class="card-body p-0">
-            <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold" style="margin-bottom: 35px;">
-            Clock Out to Start Work 
-        </div>
-
-        <div style="margin-bottom: 10px;"></div>
-            <div class="row mt-10">
-                <div class="col-lg-12">
-                    <a id="breakOutBtn" class="p-2 border-theme bg-theme text-center fs-6 d-block rounded-3 border-3 text-light fw-bold" style="display: none; cursor: pointer;">Break Out</a>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<input type="hidden" id="workTimeId" value="">
 
 @endsection
 
@@ -1542,94 +1465,6 @@
 </script>
 <!-- Completed Work List -->
 
-<!-- Take Break Start -->
-<script>
-    $(document).ready(function() {
-        checkBreakStatus($('#workTimeId').val());
-
-        $('#takeBreakBtn').click(function(event) {
-            event.preventDefault();
-
-            $.ajax({
-                url: '/staff/take-break',
-                type: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                data: {},
-                success: function(response) {
-                    $('#workTimeId').val(response.workTimeId);
-                    localStorage.setItem('workTimeId', response.workTimeId);
-                    checkBreakStatus(response.workTimeId);
-                },
-                error: function(xhr, status, error) {
-                    console.error(xhr.responseText);
-                }
-            });
-        });
-
-        $('#breakOutBtn').click(function(event) {
-            event.preventDefault();
-
-            var workTimeId = localStorage.getItem('workTimeId');
-            if (workTimeId) {
-                $.ajax({
-                    url: '/staff/break-out',
-                    type: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    data: { workTimeId: workTimeId },
-                    success: function(response) {
-                        localStorage.setItem('isBreak', false);
-                        $('#breakOutSection').hide();
-                        $('#breakSection').show();
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Error:', xhr.responseText);
-                    }
-                });
-            }
-        });
-    });
-
-    function checkBreakStatus(workTimeId) {
-        if (workTimeId) {
-            $.ajax({
-                url: '/staff/check-break-status',
-                type: 'GET',
-                data: { workTimeId: workTimeId },
-                success: function(response) {
-                    if (response.isBreak) {
-                        localStorage.setItem('isBreak', true);
-                        $('#breakSection').hide();
-                        $('#breakOutSection').show();
-                    } else {
-                        localStorage.setItem('isBreak', false);
-                        $('#breakSection').show();
-                        $('#breakOutSection').hide();
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error(xhr.responseText);
-                }
-            });
-        }
-    }
-
-    $(window).on('load', function() {
-        var isBreak = localStorage.getItem('isBreak');
-        if (isBreak === 'true') {
-            $('#breakSection').hide();
-            $('#breakOutSection').show();
-        } else {
-            $('#breakSection').show();
-            $('#breakOutSection').hide();
-        }
-    });
-</script>
-<!-- Take Break End -->
-
 <!-- Data showing in modal start  -->
 <script>
     function fetchClientSubServices() {
@@ -1812,85 +1647,5 @@
     });
 </script>
 <!-- Note and additional work end -->
-
-<!-- Idle time count start -->
-<!-- <script>
-    let idleTimer;
-    let idleStartTime;
-    let totalIdleTime = 0;
-
-    function startIdleTimer() {
-        idleStartTime = Date.now();
-        idleTimer = setTimeout(checkIdleStatus, 10 * 1000); 
-    }
-
-    function checkIdleStatus() {
-        const idleDuration = Date.now() - idleStartTime;
-        totalIdleTime += idleDuration;
-
-        logIdleTime(totalIdleTime);
-        startIdleTimer();
-    }
-
-    function resetIdleTimer() {
-        clearTimeout(idleTimer);
-        idleStartTime = Date.now();
-        totalIdleTime = 0;
-        startIdleTimer();
-    }
-
-    function logIdleTime(idleTime) {
-        $.ajax({
-            url: '{{ route('staff.idle.time') }}',
-            type: 'POST',
-            data: {
-                idle_time: idleTime
-            },
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            },
-            success: function(response) {
-                // console.log('Idle time logged successfully.');
-            },
-            error: function(xhr, status, error) {
-                console.error('Error logging idle time:', error);
-            }
-        });
-    }
-
-    document.addEventListener('mousemove', resetIdleTimer);
-    document.addEventListener('keypress', resetIdleTimer);
-
-    startIdleTimer();
-</script> -->
-<!-- Idle time count end -->
-
-<!-- Active Time start -->
-<script>
-    function updateActiveTime() {
-        var activeTimeElement = document.getElementById('activeTime');
-        var currentTime = activeTimeElement.textContent;
-        
-        var timeArray = currentTime.split(':');
-        var hours = parseInt(timeArray[0], 10);
-        var minutes = parseInt(timeArray[1], 10);
-        var seconds = parseInt(timeArray[2], 10);
-
-        seconds++;
-        if (seconds >= 60) {
-            seconds = 0;
-            minutes++;
-        }
-        if (minutes >= 60) {
-            minutes = 0;
-            hours++;
-        }
-        var formattedTime = ('0' + hours).slice(-2) + ':' + ('0' + minutes).slice(-2) + ':' + ('0' + seconds).slice(-2);
-        activeTimeElement.textContent = formattedTime;
-    }
-
-    setInterval(updateActiveTime, 1000);
-</script>
-<!-- Active Time end -->
 
 @endsection

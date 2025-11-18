@@ -31,7 +31,7 @@
     function checkWorkTimeStatus() {
         fetchClientSubServices();
         $.ajax({
-            url: '/admin/check-work-time-status',
+            url: '/staff/check-work-time-status',
             type: 'GET',
             success: function(response) {
                 if (response.status === 'ongoing') {
@@ -54,7 +54,7 @@
         var csrfToken = "{{ csrf_token() }}";
 
         $.ajax({
-            url: '/admin/get-completed-services-modal',
+            url: '/staff/get-completed-services-modal',
             method: 'GET',
             headers: {
                 'X-CSRF-TOKEN': csrfToken
@@ -116,7 +116,7 @@
     // Take Break Function
     function takeBreak() {
         $.ajax({
-            url: '/admin/take-break',
+            url: '/staff/take-break',
             type: 'POST',
             headers: {
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
@@ -148,7 +148,7 @@
         var workTimeId = localStorage.getItem('workTimeId');
         if (workTimeId) {
             $.ajax({
-                url: '/admin/break-out',
+                url: '/staff/break-out',
                 type: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
@@ -182,7 +182,7 @@
         var workTimeId = localStorage.getItem('workTimeId');
         if (workTimeId) {
             $.ajax({
-                url: '/admin/check-break-status',
+                url: '/staff/check-break-status',
                 type: 'GET',
                 data: {
                     workTimeId: workTimeId
@@ -378,7 +378,7 @@
             formData.noteInput = noteValue;
 
             $.ajax({
-                url: '/admin/save-notes',
+                url: '/staff/save-notes',
                 type: 'POST',
                 data: formData,
                 success: function(response) {

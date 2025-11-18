@@ -32,6 +32,7 @@
                         <div class="ermsg">
                         </div>
                         <form id="createThisForm">
+                           <input type="hidden" id="codeid">
                             <div class="row">
                                 <div class="col-sm-12">
                                     <div class="form-group">
@@ -99,6 +100,7 @@
                                     <th>Status</th>
                                     <th>Log</th>
                                     <th>Comment</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                         </table>
@@ -241,6 +243,10 @@
                         </button>
                     `;
                 }
+            },
+            {
+                data: 'action',
+                name: 'action'
             }
         ]
     });
@@ -308,12 +314,42 @@
                     }
                 });
             }
+            if ($("#addBtn").val() === "Update") {
+                var form_data = new FormData();
+                form_data.append("id", $("#codeid").val());
+                form_data.append("task", $("#task").val());
+                form_data.append("manager_id", $("#manager_id").val());
+                form_data.append("legal_deadline", $("#legal_deadline").val());
+
+                $.ajax({
+                    url: "/admin/one-time-job/update",
+                    type: "POST",
+                    contentType: false,
+                    processData: false,
+                    data: form_data,
+                    success: function (d) {
+                        toastr.success("Updated successfully");
+                        setTimeout(() => location.reload(), 1500);
+                    }
+                });
+            }
+
         });
 
         function clearform() {
             $('#createThisForm')[0].reset();
+            $("#manager_id").val(null).trigger('change');
             $("#addBtn").val('Create');
         }
+
+        $(document).on('click', '.editBtn', function () {
+            let id = $(this).data('id');
+            let url = "/admin/one-time-job/" + id + "/edit";
+
+            $.get(url, function (data) {
+                populateForm(data);
+            });
+        });
 
         $(document).on('click', '.open-modal', function() {
             var clientServiceId = $(this).data('client-service-id');
@@ -321,6 +357,19 @@
             populateMessage(clientServiceId);
             $('#messageModal').modal('show');
         });
+
+        function populateForm(data) {
+          // console.log(data);
+            $("#task").val(data.service.name);
+            $("#manager_id").val(data.manager_id).trigger('change');
+            $("#legal_deadline").val(data.legal_deadline);
+
+            $("#codeid").val(data.id);
+
+            $("#addBtn").val("Update").text("Update");
+            $("#newBtn").hide();
+            $("#addThisFormContainer").show(300);
+        }
 
         function populateMessage(clientServiceId) {
             $.ajax({

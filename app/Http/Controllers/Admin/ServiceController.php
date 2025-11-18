@@ -963,7 +963,7 @@ class ServiceController extends Controller
         if ($request->ajax()) {
 
             $data = ClientService::with(['clientSubServices', 'manager'])
-                ->whereIn('status', [0, 1])
+                // Select all records where type is 2 (One-Time Services)
                 ->where('type', 2)
                 ->orderBy('id', 'desc')
                 ->get();
@@ -971,16 +971,40 @@ class ServiceController extends Controller
             return DataTables::of($data)
 
                 ->addColumn('servicename', function (ClientService $clientservice) {
-                    return $clientservice->service ? $clientservice->service->name : '';
+                    // Get service name
+                    $serviceName = $clientservice->service ? $clientservice->service->name : '';
+
+                    // Add Status Badge based on status column value
+                    $status = $clientservice->status;
+                    $badge = '';
+
+                    if ($status == 1) {
+                        $badge = '<span class="badge bg-primary text-white">Not Started</span>';
+                    } elseif ($status == 2) {
+                        $badge = '<span class="badge bg-success text-white">Completed</span>';
+                    } elseif ($status == 0) {
+                        $badge = '<span class="badge bg-warning text-dark">Processing</span>';
+                    } else {
+                        $badge = '<span class="badge bg-secondary text-white">Unknown</span>';
+                    }
+
+                    // Return service name and the status badge on a new line
+                    return "{$serviceName} <br>{$badge}";
                 })
+                
                 ->editColumn('legal_deadline', function ($clientService) {
-                    return Carbon::parse($clientService->legal_deadline)->format('d-m-Y');
+                    // Safely format the legal_deadline
+                    return $clientService->legal_deadline ? Carbon::parse($clientService->legal_deadline)->format('d-m-Y') : 'N/A';
                 })
 
                 ->addColumn('action', function (ClientService $clientservice) {
-                    $managerFirstName = $clientservice->manager ? $clientservice->manager->first_name . ' ' . $clientservice->manager->last_name : 'N/A';
-                    return '<button class="btn btn-secondary assigned-task-detail" data-id="' . $clientservice->id . '" data-manager-firstname="' . $managerFirstName . '">Details</button>';
+                    // Add the action button logic
+                    $managerName = $clientservice->manager ? $clientservice->manager->first_name . ' ' . $clientservice->manager->last_name : 'N/A';
+                    return '<button class="btn btn-secondary assigned-task-detail" data-id="' . $clientservice->id . '" data-manager-name="' . $managerName . '">Details</button>';
                 })
+                
+                ->rawColumns(['servicename', 'action']) 
+                
                 ->make(true);
         }
     }

@@ -16,7 +16,6 @@
     </div>
 
     <div class="menuBar p-1 ps-4">
-
       <div class="row mx-0">
         <div class="col-lg-6 d-flex justify-content-between align-items-center">
           <i class="bi bi-list toggle-sidebar-btn curp text-black fs-4" onclick="toggleSidebar();"></i>
@@ -28,7 +27,7 @@
           </div>
         </div>
         <div class="col-lg-6 justify-content-end d-flex align-items-center pe-3">
-          <i class="bi bi-clock fs-4 txt-theme mx-2" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#timeModal" title="Clock Out"></i> <span class="fw-bold txt-theme fs-6">Clock Out</span>
+          <i class="bi bi-clock fs-4 txt-theme mx-2" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#timeModal2" title="Clock Out"></i> <span class="fw-bold txt-theme fs-6">Clock Out</span>
           <i id="chatIcon" class="bi bi-chat-dots fs-4 txt-theme mx-2" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#chatModal" title="Messaging"></i> <span class="fw-bold txt-theme fs-6">Messaging</span>
           <a href="{{ route('manager.profile.edit') }}"> 
             <i class="bi bi-person fs-4 txt-theme mx-2"></i>

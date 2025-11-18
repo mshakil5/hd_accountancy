@@ -52,6 +52,7 @@ use App\Http\Controllers\Admin\ChatController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\TrashBinController;
 use App\Http\Controllers\Admin\ClientCredentialController;
+use App\Http\Controllers\Admin\BreakController;
 
 //Fallback route
 Route::fallback(function () {
@@ -624,7 +625,8 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/one-time-job', [OneTimeJobController::class, 'create'])->name('oneTimeJob.create');
     Route::get('/one-time-job/data', [OneTimeJobController::class, 'getData'])->name('client-services.data');
     Route::post('/one-time-job', [OneTimeJobController::class, 'store']);
-
+    Route::get('/one-time-job/{id}/edit', [OneTimeJobController::class, 'edit']);
+    Route::post('/one-time-job/update', [OneTimeJobController::class, 'update']);
     Route::get('/one-time-job-activity/{id}', [OneTimeJobController::class, 'showOneTimeJobActivity'])->name('client-service.activity');
 
     //My tasks
@@ -677,5 +679,10 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/trash-bin', [TrashBinController::class, 'index'])->name('trash-bin');
     Route::get('/trash-bin/restore', [TrashBinController::class, 'restore'])->name('restore.record');
     Route::get('/trash-bin/delete', [TrashBinController::class, 'forceDelete'])->name('forceDelete.record');
+
+    // Break routes for admin
+    Route::post('/take-break', [BreakController::class, 'takeBreak'])->name('admin.take-break');
+    Route::post('/break-out', [BreakController::class, 'breakOut'])->name('admin.break-out');
+    Route::get('/check-break-status', [BreakController::class, 'checkBreakStatus'])->name('admin.check-break-status');
 
 });
