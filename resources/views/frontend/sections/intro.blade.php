@@ -3,7 +3,7 @@
         <div class="row  ">
             <div class="col-lg-6 d-flex align-items-center">
                 <div class="py-5">
-                    <h1 class="text-center text-md-start fw-bold txt-primary poppins-bold" style="font-size: 44px;">
+                    <h1 class="text-center fw-bold txt-primary poppins-bold" style="font-size: 44px;">
                         {{ $homePageIntro->short_title }}
                         <br>
                         {{ $homePageIntro->long_title }}

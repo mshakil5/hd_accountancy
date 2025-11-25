@@ -107,6 +107,10 @@ Route::post('/schedule-meeting', [FrontendController::class, 'storeSchedule'])->
 // Store career
 route::post('/career', [FrontendController::class, 'storeCareer'])->name('career.store');
 
+route::get('/ltd-offer', [FrontendController::class, 'ltdOffer']);
+
+route::get('/property-offer', [FrontendController::class, 'propertyOffer']);
+
 //Base login
 Route::get('/dashboard', [HomeController::class, 'index'])->name('home');
 

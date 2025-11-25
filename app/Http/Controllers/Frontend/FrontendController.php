@@ -575,4 +575,14 @@ class FrontendController extends Controller
         return view('frontend.google_reviews.index', compact('googleReviews'));
     }
 
+    public function ltdOffer()
+    {
+        return view('frontend.offer.ltd');
+    }
+
+    public function propertyOffer()
+    {
+        return view('frontend.offer.property');
+    }
+
 }
