@@ -315,7 +315,9 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
 
     //Contact message
     Route::get('/contact-messages', [ContactMessageController::class, 'index'])->name('allContactMessage');
+    Route::get('/offer-contact-messages', [ContactMessageController::class, 'offerIndex'])->name('offerContactMessage');
     Route::get('/contact-messages/{id}', [ContactMessageController::class, 'delete']);
+    Route::get('/offer-contact-messages/{id}', [ContactMessageController::class, 'deleteOffer']);
 
     //web contact page
     Route::get('/web-contact', [ContactMessageController::class, 'webContact'])->name('webContact');

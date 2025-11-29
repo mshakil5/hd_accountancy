@@ -111,6 +111,8 @@ route::get('/ltd-offer', [FrontendController::class, 'ltdOffer']);
 
 route::get('/property-offer', [FrontendController::class, 'propertyOffer']);
 
+Route::post('/offerContact', [FrontendController::class, 'offerContact'])->name('offer.contact');
+
 //Base login
 Route::get('/dashboard', [HomeController::class, 'index'])->name('home');
 

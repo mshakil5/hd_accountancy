@@ -450,7 +450,7 @@
         /* Contact Section */
         .contact-section {
             background: white;
-            padding: 20px 0 80px 0;
+            padding: 60px 0 60px 0;
         }
 
         .contact-title {
@@ -608,34 +608,94 @@
             <p class="discount-description">Fill this form and we will get back to you straight away</p>
 
             <div class="contact-form mt-5">
-                <form>
-                <div class="row text-start">
-                    <div class="col-md-6 mb-2">
-                        <div class="row">
-                            <div class="col-md-12">
-                                <label class="form-label">Name</label>
-                                <input type="name" class="form-control" placeholder="" name="name" required>
-                            </div>
-                            <div class="col-md-12">
-                                <label class="form-label">Email</label>
-                                <input type="email" class="form-control" placeholder="" name="email" required>
-                            </div>
-                            <div class="col-md-12">
-                                <label class="form-label">Phone</label>
-                                <input type="tel" class="form-control" placeholder="" name="phone" required>
+
+                @if (session('success'))
+                    <div class="alert alert-success mt-3 text-center">
+                        {{ session('success') }}
+                    </div>
+                @endif
+
+                @if ($errors->any())
+                    <div class="alert alert-danger mt-3">
+                        <ul class="mb-0">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                <form id="contactForm" action="{{ route('offer.contact') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="submission_type" value="property">
+                    
+                    <div class="row text-start">
+                        <div class="col-md-6 mb-2">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <label class="form-label">Name</label>
+                                    <input type="text" class="form-control" name="name" required>
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-control" name="email" required>
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label">Phone</label>
+                                    <input type="tel" class="form-control" name="phone" required>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="d-flex align-items-center gap-2 mt-3">
+                                        <label class="form-label mb-0" id="captchaQuestion"></label>
+                                        <input type="number" class="form-control" id="captchaAnswer" 
+                                            style="width: 120px;" placeholder="Answer" required>
+                                        <span id="captchaError" class="text-warning d-none">Incorrect answer</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label">Message</label>
+                            <textarea class="form-control" rows="9" name="message" required></textarea>
+                        </div>
                     </div>
-                    <div class="col-md-6 mb-2">
-                        <label class="form-label">Message</label>
-                        <textarea class="form-control" placeholder="" rows="9" name="message" required></textarea>
+                    
+                    <button type="submit" class="btn btn-submit mt-3" id="submitBtn">Submit</button>
+                    
+                    <div id="loadingText" class="alert alert-info d-none mt-3 text-center">
+                        Sending your message...
                     </div>
-                </div>
-                <button class="btn btn-submit mt-3">Submit</button>
                 </form>
             </div>
         </div>
     </section>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Generate simple math captcha
+            let num1 = Math.floor(Math.random() * 10) + 1;
+            let num2 = Math.floor(Math.random() * 10) + 1;
+            let correctAnswer = num1 + num2;
+            
+            document.getElementById('captchaQuestion').textContent = `What is ${num1} + ${num2}? *`;
+            
+            // Form submission handler
+            document.getElementById('contactForm').addEventListener('submit', function(e) {
+                let userAnswer = parseInt(document.getElementById('captchaAnswer').value);
+                
+                if (userAnswer !== correctAnswer) {
+                    e.preventDefault();
+                    document.getElementById('captchaError').classList.remove('d-none');
+                } else {
+                    document.getElementById('captchaError').classList.add('d-none');
+                    // Show loading and disable button
+                    document.getElementById('loadingText').classList.remove('d-none');
+                    document.getElementById('submitBtn').disabled = true;
+                    document.getElementById('submitBtn').textContent = 'Sending...';
+                }
+            });
+        });
+    </script>
 
     <!-- Stats Section -->
     <section class="stats-section-1">

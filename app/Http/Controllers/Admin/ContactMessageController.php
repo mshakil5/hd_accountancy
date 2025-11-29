@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Softcode;
 use App\Models\Master;
+use App\Models\ContactSubmission;
 
 class ContactMessageController extends Controller
 {
@@ -15,6 +16,12 @@ class ContactMessageController extends Controller
     $data = Contact::orderby('id','DESC')->get();
     return view('admin.contact_message.index', compact('data'));
    }
+
+    public function offerIndex()
+    {
+        $data = ContactSubmission::latest('id')->get();
+        return view('admin.contact_message.offer_index', compact('data'));
+    }
 
     public function webContact()
     {
@@ -76,6 +83,32 @@ class ContactMessageController extends Controller
             return response()->json(['status' => 300, 'message' => 'Deleted successfully.']);
         } else {
             return response()->json(['status' => 303, 'message' => 'Server Error!!']);
+        }
+    }
+
+    public function deleteOffer($id)
+    {
+        try {
+            $contact = ContactSubmission::find($id);
+            if (!$contact) {
+                return response()->json([
+                    'status' => 404,
+                    'message' => 'Contact message not found.'
+                ]);
+            }
+
+            $contact->delete();
+
+            return response()->json([
+                'status' => 200,
+                'message' => 'Contact message deleted successfully.'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 500,
+                'message' => 'Error deleting contact message.'
+            ]);
         }
     }
 }

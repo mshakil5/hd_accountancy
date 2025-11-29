@@ -31,6 +31,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\CareerFormMail;
 use App\Models\Getway;
 use Twilio\Rest\Client;
+use App\Models\ContactSubmission;
 
 class FrontendController extends Controller
 {
@@ -583,6 +584,42 @@ class FrontendController extends Controller
     public function propertyOffer()
     {
         return view('frontend.offer.property');
+    }
+
+    public function offerContact(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'phone' => 'required|string|max:50',
+            'message' => 'required|string|max:1000',
+            'submission_type' => 'required|in:ltd_offer,property'
+        ]);
+
+        $contact = ContactSubmission::create($validated);
+
+        $getway = Getway::where('name', 'Twilio')->first();
+        $sid    = $getway->clientid;
+        $token  = $getway->secretid;
+
+        $adminNumber = "+447468421495";
+        $fromNumber  = "+447883289124";
+
+        $sms = "NEW OFFER CONTACT\n";
+        $sms .= "Name: {$contact->name}\n";
+        $sms .= "Email: {$contact->email}\n";
+        $sms .= "Phone: {$contact->phone}\n";
+        $sms .= "Message: {$contact->message}\n";
+
+        $twilio = new Client($sid, $token);
+        $twilio->messages->create($adminNumber, [
+            "from" => $fromNumber,
+            "body" => $sms
+        ]);
+
+        return back()
+            ->with('success', 'Thank you! Your message has been sent successfully.')
+            ->withFragment('discount');
     }
 
 }
