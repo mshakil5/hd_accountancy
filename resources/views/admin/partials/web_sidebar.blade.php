@@ -170,21 +170,24 @@
             </ul>
         </li>
 
-        <li class="nav-item 
-            {{ request()->routeIs('allContactMessage*') || request()->routeIs('offerContactMessage') || request()->routeIs('webContact') ? 'menu-open' : '' }}">
+        @php
+            $contactRoutes = ['allContactMessage*', 'offerContactMessage', 'webContact'];
+            $isActive = request()->routeIs(...$contactRoutes);
+        @endphp
+
+        <li class="nav-item {{ $isActive ? 'menu-open' : '' }}">
+            <a class="nav-link {{ $isActive ? '' : 'collapsed' }}" 
+            href="#" 
+            data-bs-toggle="collapse" 
+            data-bs-target="#contactMessageDropdown"
+            aria-expanded="{{ $isActive ? 'true' : 'false' }}">
             
-            <a class="nav-link 
-                {{ request()->routeIs('allContactMessage*') || request()->routeIs('offerContactMessage') || request()->routeIs('webContact') ? 'active' : '' }}" 
-                href="#" data-bs-toggle="collapse" data-bs-target="#contactMessageDropdown">
-                
                 <i class="bi bi-envelope"></i>
                 <span>Contact</span>
                 <i class="bi bi-chevron-down"></i>
             </a>
 
-            <ul id="contactMessageDropdown" class="collapse list-unstyled 
-                {{ request()->routeIs('allContactMessage*') || request()->routeIs('offerContactMessage') || request()->routeIs('webContact') ? 'show' : '' }}">
-                
+            <ul id="contactMessageDropdown" class="collapse list-unstyled {{ $isActive ? 'show' : '' }}">
                 <li class="nav-item {{ request()->routeIs('webContact') ? 'active' : '' }}">
                     <a class="nav-link" href="{{ route('webContact') }}">
                         <i class="bi bi-pencil"></i>
@@ -201,8 +204,8 @@
 
                 <li class="nav-item {{ request()->routeIs('offerContactMessage') ? 'active' : '' }}">
                     <a class="nav-link" href="{{ route('offerContactMessage') }}">
-                        <i class="bi bi-file-text"></i>
-                        <span>Offer Contact Messages</span>
+                        <i class="bi bi-briefcase"></i>
+                        <span>Offer Messages</span>
                     </a>
                 </li>
             </ul>

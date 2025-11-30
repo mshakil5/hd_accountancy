@@ -588,13 +588,27 @@ class FrontendController extends Controller
 
     public function offerContact(Request $request)
     {
-        $validated = $request->validate([
+        $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
-            'phone' => 'required|string|max:50',
+            'phone' => ['required', 'digits:11'],
+            'company' => 'nullable|string|max:255',
             'message' => 'required|string|max:1000',
-            'submission_type' => 'required|in:ltd_offer,property'
+            'submission_type' => 'required|in:ltd_offer,property',
+        ], [
+            'email.email' => 'Please enter a valid email address.',
+            'name.required' => 'Name is required.',
+            'message.required' => 'Message cannot be empty.',
         ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput()
+                ->withFragment('discount');
+        }
+
+        $validated = $validator->validated();
 
         $contact = ContactSubmission::create($validated);
 
@@ -607,6 +621,9 @@ class FrontendController extends Controller
 
         $sms = "NEW OFFER CONTACT\n";
         $sms .= "Name: {$contact->name}\n";
+        if(!empty($contact->company)) {
+            $sms .= "Company Name: {$contact->company}\n";
+        }
         $sms .= "Email: {$contact->email}\n";
         $sms .= "Phone: {$contact->phone}\n";
         $sms .= "Message: {$contact->message}\n";

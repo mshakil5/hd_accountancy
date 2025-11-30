@@ -19,9 +19,9 @@
               <table id="example1" class="table cell-border table-striped">
                 <thead>
                 <tr>
-                  <th style="text-align: center">Sl</th>
                   <th style="text-align: center">Date</th>
                   <th style="text-align: center">Name</th>
+                  <th style="text-align: center">Company</th>
                   <th style="text-align: center">Email</th>
                   <th style="text-align: center">Phone</th>
                   <th style="text-align: center">Submission Type</th>
@@ -32,9 +32,9 @@
                 <tbody>
                   @foreach ($data as $key => $item)
                   <tr>
-                    <td style="text-align: center">{{ $key + 1 }}</td>
                     <td style="text-align: center">{{ date('d-m-Y', strtotime($item->created_at)) }}</td>
                     <td style="text-align: center">{{$item->name}}</td>
+                    <td style="text-align: center">{{$item->company ?? ''}}</td>
                     <td style="text-align: center">{{$item->email}}</td>
                     <td style="text-align: center">{{$item->phone}}</td>
                     <td style="text-align: center">
@@ -101,7 +101,7 @@
     $(function () {
       $("#example1").DataTable({
         responsive: true,
-        order: [[1, 'desc']]
+        order: [[0, 'desc']]
       });
     });
 </script>

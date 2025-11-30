@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HD Accountancy - Grow More...Keep More, Save Tax...Save Time</title>
+    <title>HD Accountancy - Grow More, Keep More. Save Tax, Save Time</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
@@ -33,6 +33,7 @@
         }
 
         .nav-link {
+            font-size: 20px;
             color: #1a1a1a;
             font-weight: 500;
             padding: 10px 15px;
@@ -45,6 +46,11 @@
             border-radius: 5px;
             font-weight: 600;
             color: #1a1a1a;
+        }
+
+        .btn-phone:hover {
+            background: var(--accent-yellow) !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
 
         /* Hero Section */
@@ -138,7 +144,7 @@
         .form-control {
             background: white;
             border: none;
-            padding: 12px 15px;
+            padding: 10px 15px;
             margin-bottom: 20px;
             border-radius: 5px;
         }
@@ -160,6 +166,12 @@
             font-weight: 600;
             color: #1a1a1a;
             font-size: 1.1rem;
+        }
+
+        .btn-submit:hover {
+            background: var(--accent-yellow);
+            color: #1a1a1a;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
 
         /* Stats Section */
@@ -539,6 +551,12 @@
             font-weight: 600;
         }
 
+        .btn-learn:hover {
+            background: var(--primary-navy);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
         @media (max-width: 768px) {
             .hero-title {
                 font-size: 2rem;
@@ -583,7 +601,7 @@
     <!-- Hero Section -->
     <section class="hero-section" id="home">
         <div class="container">
-            <h1 class="hero-title">Grow More...Keep More<br>Save Tax...Save Time</h1>
+            <h1 class="hero-title">Grow More, Keep More<br>Save Tax, Save Time</h1>
             <p class="hero-subtitle">We handle your accounting and tax affairs so you can focus on what matters
                 most—running your business. Our strategic approach ensures maximum savings and minimum stress.</p>
 
@@ -615,16 +633,6 @@
                         {{ session('success') }}
                     </div>
                 @endif
-
-                @if ($errors->any())
-                    <div class="alert alert-danger mt-3">
-                        <ul class="mb-0">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
                 <form id="contactForm" action="{{ route('offer.contact') }}" method="POST">
                     @csrf
                     <input type="hidden" name="submission_type" value="ltd_offer">
@@ -633,30 +641,54 @@
                         <div class="col-md-6 mb-2">
                             <div class="row">
                                 <div class="col-md-12">
-                                    <label class="form-label">Name</label>
-                                    <input type="text" class="form-control" name="name" required>
+                                    <label class="form-label">Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control @error('name') is-invalid @enderror" name="name" required value="{{ old('name') }}">
+                                    @error('name')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
-                                <div class="col-md-12">
-                                    <label class="form-label">Email</label>
-                                    <input type="email" class="form-control" name="email" required>
+
+                                <div class="col-md-12 mt-2">
+                                    <label class="form-label">Email <span class="text-danger">*</span></label>
+                                    <input type="email" class="form-control @error('email') is-invalid @enderror" name="email" required value="{{ old('email') }}">
+                                    @error('email')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
-                                <div class="col-md-12">
-                                    <label class="form-label">Phone</label>
-                                    <input type="tel" class="form-control" name="phone" required>
+
+                                <div class="col-md-12 mt-2">
+                                    <label class="form-label">Phone <span class="text-danger">*</span></label>
+                                    <input type="tel" class="form-control @error('phone') is-invalid @enderror" name="phone" required value="{{ old('phone') }}">
+                                    @error('phone')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
-                                <div class="col-md-12">
-                                    <div class="d-flex align-items-center gap-2 mt-3">
-                                        <label class="form-label mb-0" id="captchaQuestion"></label>
-                                        <input type="number" class="form-control" id="captchaAnswer" 
-                                            style="width: 120px;" placeholder="Answer" required>
-                                        <span id="captchaError" class="text-warning d-none">Incorrect answer</span>
-                                    </div>
+
+                                <div class="col-md-12 mt-2">
+                                    <label class="form-label">Company Name</label>
+                                    <input type="text" class="form-control @error('company') is-invalid @enderror" name="company" value="{{ old('company') }}">
+                                    @error('company')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-6 mb-2">
-                            <label class="form-label">Message</label>
-                            <textarea class="form-control" rows="9" name="message" required></textarea>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <label class="form-label">Message <span class="text-danger">*</span></label>
+                                    <textarea class="form-control @error('message') is-invalid @enderror" rows="10" name="message" required>{{ old('message') }}</textarea>
+                                    @error('message')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-md-12">
+                                <label class="form-label" id="captchaQuestion"></label>
+                                <input type="number" class="form-control"
+                                    id="captchaAnswer" style="width: 120px;" placeholder="Answer" required>
+                                    <span id="captchaError" class="text-warning d-none">Incorrect</span>
+                                    </div>
+                            </div>
                         </div>
                     </div>
                     
@@ -856,8 +888,8 @@
                             </div>
                             <div>
                                 <h5>Phone</h5>
-                                <p>+44(0) 148 [Huddersfield]</p>
-                                <p>+44(0) 161 [Manchester]</p>
+                                    <p><a href="tel:01484508951" style="text-decoration: none; color: inherit;">01484 508951 (Huddersfield)</a></p>
+                                    <p><a href="tel:01612416746" style="text-decoration: none; color: inherit;">01612 416746 (Manchester)</a></p>
                             </div>
                         </div>
                         <div class="contact-item">
@@ -866,7 +898,7 @@
                             </div>
                             <div>
                                 <h5>Email</h5>
-                                <p>info@hd-accountancy.co.uk</p>
+                                    <p><a href="mailto:info@hd-accountancy.co.uk" style="text-decoration: none; color: inherit;">info@hd-accountancy.co.uk</a></p>
                             </div>
                         </div>
                         <div class="contact-item">
@@ -875,7 +907,14 @@
                             </div>
                             <div>
                                 <h5>Huddersfield Address</h5>
-                                <p>St. Peter's House, Barry 2, paritha street<br>Huddersfield, HD2GZ</p>
+                                    <p>
+                                        <a href="https://www.google.com/maps/place/Hd+Accountancy+Services+Ltd/@53.6486275,-1.7825057,17z/data=!3m1!4b1!4m6!3m5!1s0x487bdc05ae205df9:0x769caa7d7cdbcd0d!8m2!3d53.6486275!4d-1.7799308!16s%2Fg%2F11j8lm4sd5!17m2!4m1!1e3!18m1!1e1?entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D" 
+                                        target="_blank" 
+                                        style="text-decoration: none; color: inherit;">
+                                            St. Peters Chambers, 2-4 Primitive Street<br>
+                                            Huddersfield, HD1 1AG
+                                        </a>
+                                    </p>
                             </div>
                         </div>
                         <div class="contact-item">
@@ -901,7 +940,7 @@
     <!-- Footer -->
     <footer>
         <div class="container">
-            <p>HDR Ltd Accountancy Member 101 Registered in England and Wales Company's Reg:4838881270</p>
+            <p>2025 | HD Accountancy Services LTD | Registered in England and Wales | Company No-05600401 | VAT No-437899234</p>
             <a href="{{ route('frontend.index') }}" class="btn btn-learn">Learn more</a>
         </div>
     </footer>

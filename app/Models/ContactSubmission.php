@@ -15,6 +15,7 @@ class ContactSubmission extends Model
         'email',
         'phone',
         'message',
-        'submission_type'
+        'submission_type',
+        'company'
     ];
 }
