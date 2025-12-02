@@ -593,7 +593,7 @@ class FrontendController extends Controller
             'email' => 'required|email|max:255',
             'phone' => ['required', 'digits:11'],
             'company' => 'nullable|string|max:255',
-            'message' => 'required|string|max:1000',
+            'message' => 'nullable|string|max:1000',
             'submission_type' => 'required|in:ltd_offer,property',
         ], [
             'email.email' => 'Please enter a valid email address.',

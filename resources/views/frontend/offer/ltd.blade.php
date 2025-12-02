@@ -310,7 +310,7 @@
 
         .pricing-badge-featured {
             background: white;
-            max-width: 50%;
+            max-width: 70%;
             padding: 10px 20px;
             font-size: 1rem;
             font-weight: 700;
@@ -676,8 +676,8 @@
                         <div class="col-md-6 mb-2">
                             <div class="row">
                                 <div class="col-md-12">
-                                    <label class="form-label">Message <span class="text-danger">*</span></label>
-                                    <textarea class="form-control @error('message') is-invalid @enderror" rows="10" name="message" required>{{ old('message') }}</textarea>
+                                    <label class="form-label">Message </label>
+                                    <textarea class="form-control @error('message') is-invalid @enderror" rows="10" name="message">{{ old('message') }}</textarea>
                                     @error('message')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
