@@ -495,17 +495,17 @@ class ServiceController extends Controller
             $nextLegalDeadline = '';
 
             if ($frequency === 'Monthly') {
-                $nextServiceDeadline = Carbon::parse($serviceData['service_deadline'])->addMonth()->format('d-m-Y');
-                $nextDueDate = Carbon::parse($serviceData['due_date'])->addMonth()->format('d-m-Y');
-                $nextLegalDeadline = Carbon::parse($serviceData['legal_deadline'])->addMonth()->format('d-m-Y');
+                $nextServiceDeadline = Carbon::parse($serviceData['service_deadline'])->addMonthNoOverflow()->format('d-m-Y');
+                $nextDueDate = Carbon::parse($serviceData['due_date'])->addMonthNoOverflow()->format('d-m-Y');
+                $nextLegalDeadline = Carbon::parse($serviceData['legal_deadline'])->addMonthNoOverflow()->format('d-m-Y');
             } elseif ($frequency === 'Quarterly') {
-                $nextServiceDeadline = Carbon::parse($serviceData['service_deadline'])->addMonths(3)->format('d-m-Y');
-                $nextDueDate = Carbon::parse($serviceData['due_date'])->addMonths(3)->format('d-m-Y');
-                $nextLegalDeadline = Carbon::parse($serviceData['legal_deadline'])->addMonths(3)->format('d-m-Y');
+                $nextServiceDeadline = Carbon::parse($serviceData['service_deadline'])->addMonthsNoOverflow(3)->format('d-m-Y');
+                $nextDueDate = Carbon::parse($serviceData['due_date'])->addMonthsNoOverflow(3)->format('d-m-Y');
+                $nextLegalDeadline = Carbon::parse($serviceData['legal_deadline'])->addMonthsNoOverflow(3)->format('d-m-Y');
             } elseif ($frequency === 'Annually') {
-                $nextServiceDeadline = Carbon::parse($serviceData['service_deadline'])->addYear()->format('d-m-Y');
-                $nextDueDate = Carbon::parse($serviceData['due_date'])->addYear()->format('d-m-Y');
-                $nextLegalDeadline = Carbon::parse($serviceData['legal_deadline'])->addYear()->format('d-m-Y');
+                $nextServiceDeadline = Carbon::parse($serviceData['service_deadline'])->addYearsNoOverflow()->format('d-m-Y');
+                $nextDueDate = Carbon::parse($serviceData['due_date'])->addYearsNoOverflow()->format('d-m-Y');
+                $nextLegalDeadline = Carbon::parse($serviceData['legal_deadline'])->addYearsNoOverflow()->format('d-m-Y');
             } elseif ($frequency === 'Weekly') {
                 $nextServiceDeadline = Carbon::parse($serviceData['service_deadline'])->addWeek()->format('d-m-Y');
                 $nextDueDate = Carbon::parse($serviceData['due_date'])->addWeek()->format('d-m-Y');
@@ -595,17 +595,17 @@ class ServiceController extends Controller
             $frequency = $serviceData['service_frequency'];
 
             if ($frequency === 'Monthly') {
-                $nextServiceDeadline = Carbon::parse($serviceData['service_deadline'])->addMonth()->format('d-m-Y');
-                $nextDueDate = Carbon::parse($serviceData['due_date'])->addMonth()->format('d-m-Y');
-                $nextLegalDeadline = Carbon::parse($serviceData['legal_deadline'])->addMonth()->format('d-m-Y');
+                $nextServiceDeadline = Carbon::parse($serviceData['service_deadline'])->addMonthNoOverflow()->format('d-m-Y');
+                $nextDueDate = Carbon::parse($serviceData['due_date'])->addMonthNoOverflow()->format('d-m-Y');
+                $nextLegalDeadline = Carbon::parse($serviceData['legal_deadline'])->addMonthNoOverflow()->format('d-m-Y');
             } elseif ($frequency === 'Quarterly') {
-                $nextServiceDeadline = Carbon::parse($serviceData['service_deadline'])->addMonths(3)->format('d-m-Y');
-                $nextDueDate = Carbon::parse($serviceData['due_date'])->addMonths(3)->format('d-m-Y');
-                $nextLegalDeadline = Carbon::parse($serviceData['legal_deadline'])->addMonths(3)->format('d-m-Y');
+                $nextServiceDeadline = Carbon::parse($serviceData['service_deadline'])->addMonthsNoOverflow(3)->format('d-m-Y');
+                $nextDueDate = Carbon::parse($serviceData['due_date'])->addMonthsNoOverflow(3)->format('d-m-Y');
+                $nextLegalDeadline = Carbon::parse($serviceData['legal_deadline'])->addMonthsNoOverflow(3)->format('d-m-Y');
             } elseif ($frequency === 'Annually') {
-                $nextServiceDeadline = Carbon::parse($serviceData['service_deadline'])->addYear()->format('d-m-Y');
-                $nextDueDate = Carbon::parse($serviceData['due_date'])->addYear()->format('d-m-Y');
-                $nextLegalDeadline = Carbon::parse($serviceData['legal_deadline'])->addYear()->format('d-m-Y');
+                $nextServiceDeadline = Carbon::parse($serviceData['service_deadline'])->addYearsNoOverflow()->format('d-m-Y');
+                $nextDueDate = Carbon::parse($serviceData['due_date'])->addYearsNoOverflow()->format('d-m-Y');
+                $nextLegalDeadline = Carbon::parse($serviceData['legal_deadline'])->addYearsNoOverflow()->format('d-m-Y');
             } elseif ($frequency === 'Weekly') {
                 $nextServiceDeadline = Carbon::parse($serviceData['service_deadline'])->addWeek()->format('d-m-Y');
                 $nextDueDate = Carbon::parse($serviceData['due_date'])->addWeek()->format('d-m-Y');
@@ -727,17 +727,17 @@ class ServiceController extends Controller
             $nextLegalDeadline = '';
 
             if ($frequency === 'Monthly') {
-                $nextServiceDeadline = Carbon::parse($request->service_deadline)->addMonth()->format('d-m-Y');
-                $nextDueDate = Carbon::parse($request->dueDate)->addMonth()->format('d-m-Y');
-                $nextLegalDeadline = Carbon::parse($request->legalDeadline)->addMonth()->format('d-m-Y');
+                $nextServiceDeadline = Carbon::parse($request->service_deadline)->addMonthNoOverflow()->format('d-m-Y');
+                $nextDueDate = Carbon::parse($request->dueDate)->addMonthNoOverflow()->format('d-m-Y');
+                $nextLegalDeadline = Carbon::parse($request->legalDeadline)->addMonthNoOverflow()->format('d-m-Y');
             } elseif ($frequency === 'Quarterly') {
-                $nextServiceDeadline = Carbon::parse($request->service_deadline)->addMonths(3)->format('d-m-Y');
-                $nextDueDate = Carbon::parse($request->dueDate)->addMonths(3)->format('d-m-Y');
-                $nextLegalDeadline = Carbon::parse($request->legalDeadline)->addMonths(3)->format('d-m-Y');
+                $nextServiceDeadline = Carbon::parse($request->service_deadline)->addMonthsNoOverflow(3)->format('d-m-Y');
+                $nextDueDate = Carbon::parse($request->dueDate)->addMonthsNoOverflow(3)->format('d-m-Y');
+                $nextLegalDeadline = Carbon::parse($request->legalDeadline)->addMonthsNoOverflow(3)->format('d-m-Y');
             } elseif ($frequency === 'Annually') {
-                $nextServiceDeadline = Carbon::parse($request->service_deadline)->addYear()->format('d-m-Y');
-                $nextDueDate = Carbon::parse($request->dueDate)->addYear()->format('d-m-Y');
-                $nextLegalDeadline = Carbon::parse($request->legalDeadline)->addYear()->format('d-m-Y');
+                $nextServiceDeadline = Carbon::parse($request->service_deadline)->addYearsNoOverflow()->format('d-m-Y');
+                $nextDueDate = Carbon::parse($request->dueDate)->addYearsNoOverflow()->format('d-m-Y');
+                $nextLegalDeadline = Carbon::parse($request->legalDeadline)->addYearsNoOverflow()->format('d-m-Y');
             } elseif ($frequency === 'Weekly') {
                 $nextServiceDeadline = Carbon::parse($request->service_deadline)->addWeek()->format('d-m-Y');
                 $nextDueDate = Carbon::parse($request->dueDate)->addWeek()->format('d-m-Y');
