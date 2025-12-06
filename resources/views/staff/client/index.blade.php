@@ -54,11 +54,14 @@
                 { data: 'DT_RowIndex', name: 'DT_RowIndex' },
                 { data: 'refid', name: 'refid' },
                 { data: 'name', name: 'name' },
-                { 
-                    data: 'manager.first_name', 
-                    name: 'manager.first_name', 
-                    defaultContent: ''
-                },
+{
+    data: null,
+    name: 'manager.first_name',
+    render: function (data) {
+        return `${data.manager.first_name ?? ''} ${data.manager.last_name ?? ''}`.trim();
+    }
+}
+
                 { data: 'phone', name: 'phone', defaultContent: '' },
                 { data: 'email', name: 'email', defaultContent: '' },
                 { data: 'client_type_name', name: 'client_type_name', defaultContent: '' },

@@ -732,7 +732,22 @@
                 },
                 {
                     data: 'legal_deadline',
-                    name: 'legal_deadline'
+                    name: 'legal_deadline',
+                    render: function(data, type, row) {
+                        if (!data.original) {
+                            return 'N/A';
+                        }
+
+                        var formattedDate = data.formatted;
+                        var today = moment().startOf('day');
+                        var deadline = moment(data.original, 'DD-MM-YYYY').startOf('day');
+
+                        if (row.status != 2 && deadline.isBefore(today)) {
+                            return '<span class="bg-warning">' + formattedDate + '</span>';
+                        }
+
+                        return formattedDate;
+                    }
                 },
                 {
                     data: 'status',
@@ -1481,8 +1496,8 @@
                     name: 'due_date'
                 },
                 {
-                    data: 'service_deadline',
-                    name: 'service_deadline',
+                    data: 'legal_deadline',
+                    name: 'legal_deadline',
                 },
                 {
                     data: 'status',

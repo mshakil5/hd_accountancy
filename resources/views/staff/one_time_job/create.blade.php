@@ -188,8 +188,9 @@
                 name: 'service.name'
             },
             {
-                data: 'manager.first_name',
-                name: 'manager.first_name'
+                data: 'manager',
+                name: 'manager.first_name',
+                render: d => `${d.first_name} ${d.last_name}`
             },
             {
                 data: 'legal_deadline',

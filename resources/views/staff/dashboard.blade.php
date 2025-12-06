@@ -705,9 +705,24 @@
                     data: 'due_date', 
                     name: 'due_date'
                 },
-                { 
-                    data: 'legal_deadline', 
-                    name: 'legal_deadline'
+                {
+                    data: 'legal_deadline',
+                    name: 'legal_deadline',
+                    render: function(data, type, row) {
+                        if (!data.original) {
+                            return 'N/A';
+                        }
+
+                        var formattedDate = data.formatted;
+                        var today = moment().startOf('day');
+                        var deadline = moment(data.original, 'DD-MM-YYYY').startOf('day');
+
+                        if (row.status != 2 && deadline.isBefore(today)) {
+                            return '<span class="bg-warning">' + formattedDate + '</span>';
+                        }
+
+                        return formattedDate;
+                    }
                 },
                 { 
                     data: 'service_deadline', 
@@ -1509,143 +1524,5 @@
     }
 </script>
 <!-- Data showing in modal end  -->
-
-<!-- Note and additional work start -->
-<script>
-    $(document).ready(function() {
-        $('#addNoteRowBtn').click(function() {
-            var newRowHtml = `
-                <div class="mt-3">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div class="d-flex flex-column">
-                            <label>Client:</label>
-                            <select class="form-control px-3 py-2 client-name" style="width: 115px;">
-                                @foreach($clients as $client)
-                                    <option value="{{ $client->id }}">{{ $client->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="d-flex flex-column">
-                            <label>Sub Service:</label>
-                            <select class="form-control px-3 py-2 sub-service-name" style="width: 115px;">
-                                @foreach($subServices as $subService)
-                                    <option value="{{ $subService->id }}">{{ $subService->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="d-flex flex-column">
-                            <label>Note:</label>
-                            <textarea class="form-control px-3 py-2 note" rows="1" style="width: 115px;" id="subServiceNote" placeholder="Note"></textarea>
-                        </div>
-                        <div class="d-flex flex-column">
-                            <label>Start Time:</label>
-                            <input type="time" class="form-control px-3 py-2 start-time" style="width: 130px;">
-                        </div>
-                        <div class="d-flex flex-column">
-                            <label>End Time:</label>
-                            <input type="time" class="form-control px-3 py-2 end-time" style="width: 130px;">
-                        </div>
-                        <div class="d-flex flex-column">
-                          <label class="label label-primary" style="visibility:hidden;">Action</label>
-                          <button type="button" class="btn btn-danger btn-remove-note-row">-</button>
-                        </div>
-                    </div>
-                </div>`;
-                
-            $('#additionalWorkRows').append(newRowHtml);
-        });
-
-        $(document).on('click', '.btn-remove-note-row', function() {
-            $(this).closest('.mt-3').remove();
-        });
-
-        $('#saveNoteBtn').click(function(e) {
-            e.preventDefault();
-
-            var isValid = true;
-
-            $('#additionalWorkRows').each(function() {
-                var clientSelected = $(this).find('.client-name').val();
-                var startTime = $(this).find('.start-time').val();
-                var endTime = $(this).find('.end-time').val();
-
-                if (clientSelected) {
-                    if (!startTime) {
-                        isValid = false;
-                        $(this).find('.start-time').addClass('is-invalid');
-                    } else {
-                        $(this).find('.start-time').removeClass('is-invalid');
-                    }
-
-                    if (!endTime) {
-                        isValid = false;
-                        $(this).find('.end-time').addClass('is-invalid');
-                    } else {
-                        $(this).find('.end-time').removeClass('is-invalid');
-                    }
-                } else {
-                    $(this).find('.start-time').removeClass('is-invalid');
-                    $(this).find('.end-time').removeClass('is-invalid');
-                }
-            });
-
-            if (!isValid) {
-                alert('Please fill all required fields!');
-                return;
-            }
-
-            var formData = {
-                _token: '{{ csrf_token() }}',
-                client_ids: [],
-                sub_service_ids: [],
-                notes: [],
-                noteInput: '', 
-                start_times: [],
-                end_times: []
-            };
-
-            $('#additionalWorkRows .client-name').each(function() {
-                formData.client_ids.push($(this).val());
-            });
-
-            $('#additionalWorkRows .sub-service-name').each(function() {
-                formData.sub_service_ids.push($(this).val());
-            });
-
-            $('#additionalWorkRows .note').each(function() {
-                formData.notes.push($(this).val());
-            });
-
-            $('#additionalWorkRows .start-time').each(function() {
-                formData.start_times.push($(this).val());
-            });
-
-            $('#additionalWorkRows .end-time').each(function() {
-                formData.end_times.push($(this).val());
-            });
-
-            var noteValue = $('#noteInput').val();
-            formData.noteInput = noteValue;
-
-            $.ajax({
-                url: '/staff/save-notes',
-                type: 'POST',
-                data: formData,
-                success: function(response) {
-                
-                    toastr.success("Record saved and you will be logged out now!", "Success");
-
-                    setTimeout(function() {
-                        location.reload();
-                    }, 1000);
-                },
-                error: function(xhr, status, error) {
-                    console.error(xhr.responseText);
-                }
-            });
-        });
-    });
-</script>
-<!-- Note and additional work end -->
 
 @endsection

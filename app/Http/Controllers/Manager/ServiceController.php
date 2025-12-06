@@ -53,6 +53,28 @@ class ServiceController extends Controller
                     }
                     return $clientservice->client->name;
                 })
+                ->addColumn('legal_deadline', function (ClientService $clientservice) {
+                    $legalDeadline = $clientservice->legal_deadline;
+                    if ($legalDeadline) {
+                        return [
+                            'formatted' => \Carbon\Carbon::parse($legalDeadline)->format('d-m-Y'),
+                            'original' => $legalDeadline
+                        ];
+                    }
+
+                    return [
+                        'formatted' => 'N/A',
+                        'original' => null
+                    ];
+                })
+
+                ->addColumn('due_date', function (ClientService $clientservice) {
+                    $dueDate = $clientservice->due_date;
+                    if ($dueDate) {
+                        return \Carbon\Carbon::parse($dueDate)->format('d-m-Y');
+                    }
+                    return 'N/A';
+                })
                 ->addColumn('servicename', function (ClientService $clientservice) {
                     return $clientservice->service ? $clientservice->service->name : '';
                 })

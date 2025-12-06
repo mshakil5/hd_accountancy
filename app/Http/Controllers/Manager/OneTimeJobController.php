@@ -66,7 +66,7 @@ class OneTimeJobController extends Controller
         ])
             ->with([
                 'service:id,name',
-                'manager:id,first_name',
+                'manager:id,first_name,last_name',
                 'messages:id,client_service_id,viewed_by'
             ])
             ->where('type', 2)
@@ -149,7 +149,7 @@ class OneTimeJobController extends Controller
         ])
             ->with([
                 'service:id,name',
-                'manager:id,first_name',
+                'manager:id,first_name,last_name',
                 'messages:id,client_service_id,viewed_by'
             ])
             ->where('type', 2)

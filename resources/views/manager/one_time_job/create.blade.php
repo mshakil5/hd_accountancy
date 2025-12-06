@@ -188,8 +188,11 @@
                 name: 'service.name'
             },
             {
-                data: 'manager.first_name',
-                name: 'manager.first_name'
+                data: null,
+                name: 'manager.first_name',
+                render: function (data) {
+                    return `${data.manager.first_name ?? ''} ${data.manager.last_name ?? ''}`.trim();
+                }
             },
             {
                 data: 'legal_deadline',

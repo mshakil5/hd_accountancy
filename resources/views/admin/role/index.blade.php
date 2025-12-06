@@ -187,10 +187,6 @@
                       </td>
                     </tr>
                     @endif
-                  </table>
-                </div>
-                <div class="col-md-6">
-                  <table class="table table-hover">
                     @if(in_array(11, $permissions))
                     <tr>
                       <td><label class="control-label">Manage One Time Tasks</label></td>
@@ -199,6 +195,10 @@
                       </td>
                     </tr>
                     @endif
+                  </table>
+                </div>
+                <div class="col-md-6">
+                  <table class="table table-hover">
                     @if(in_array(12, $permissions))
                     <tr>
                       <td><label class="control-label">Manage Services</label></td>
@@ -236,6 +236,14 @@
                       <td><label class="control-label">Prorota</label></td>
                       <td>
                         <label style="margin-top: -9px" class="switch"><input name="permission[]" type="checkbox" value="16"><span class="slider round"></span></label>
+                      </td>
+                    </tr>
+                    @endif
+                    @if(in_array(20, $permissions))
+                    <tr>
+                      <td><label class="control-label">Reports</label></td>
+                      <td>
+                        <label style="margin-top: -9px" class="switch"><input name="permission[]" type="checkbox" value="20"><span class="slider round"></span></label>
                       </td>
                     </tr>
                     @endif

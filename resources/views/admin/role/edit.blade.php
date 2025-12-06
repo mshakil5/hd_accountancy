@@ -220,6 +220,14 @@
                       </td>
                     </tr>
                     @endif
+                    @if(in_array(20, $permissions))
+                    <tr>
+                      <td><label class="control-label">Reports</label></td>
+                      <td>
+                        <label style="margin-top: -9px" class="switch"><input name="permission[]" type="checkbox" value="20" @foreach (json_decode($data->permission) as $permission) @if ($permission == 20) checked @endif @endforeach><span class="slider round"></span></label>
+                      </td>
+                    </tr>
+                    @endif
                     @if(in_array(17, $permissions))
                     <tr>
                       <td><label class="control-label">Manage Role & Permission</label></td>

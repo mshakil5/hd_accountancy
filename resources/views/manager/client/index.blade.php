@@ -55,10 +55,10 @@
             {data: 'refid', name: 'refid'},
             {data: 'name', name: 'name'},
             {
-                data: 'manager.first_name', 
+                data: null,
                 name: 'manager.first_name',
-                render: function(data, type, row) {
-                    return data ? data : '';
+                render: function (data) {
+                    return `${data.manager.first_name ?? ''} ${data.manager.last_name ?? ''}`.trim();
                 }
             },
             {data: 'phone', name: 'phone'},
