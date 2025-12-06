@@ -12,7 +12,7 @@
             <div class="row">
 
                 <!-- Top 4 start -->
-                <div class="col-lg-3">
+                <div class="col-lg-3 d-none">
                     <div class="report-box py-1 sales-card">
                         <div class="card-body d-flex flex-column align-items-center">
                             <div class="card-icon  bg-transparent d-flex align-items-center justify-content-center">
@@ -27,7 +27,7 @@
                     </div>
                 </div>
 
-                <div class="col-lg-3">
+                <div class="col-lg-3 d-none">
                     <div class="report-box py-1 sales-card">
                         <div class="card-body d-flex flex-column align-items-center">
                             <div class="card-icon  bg-transparent d-flex align-items-center justify-content-center">
@@ -46,7 +46,7 @@
                     </div>
                 </div>
 
-                <div class="col-lg-3">
+                <div class="col-lg-3 d-none">
                     <div class="report-box py-1 sales-card">
                         <div class="card-body d-flex flex-column align-items-center">
                             <div class="card-icon  bg-transparent d-flex align-items-center justify-content-center">
@@ -61,7 +61,7 @@
                     </div>
                 </div>
 
-                <div class="col-lg-3">
+                <div class="col-lg-3 d-none">
                     <div class="report-box py-1 sales-card">
                         <div class="card-body d-flex flex-column align-items-center">
                             <div class="card-icon  bg-transparent d-flex align-items-center justify-content-center">
@@ -242,21 +242,27 @@
                     <!-- Today's Deadline Start -->
                     <div class="col-lg-5">
                         <div class="col-lg-12 px-0 border shadow-sm mb-3">
-
-                            <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
-                                <i class="bx bxs-user-plus fs-4 me-2"></i>Todays Deadline
+                            <p class="p-2 bg-theme text-white px-3 mb-0 d-flex align-items-center justify-content-between fs-5">
+                                <span>
+                                    <i class="bx bxs-user-plus fs-4 me-2"></i>Todays Deadline
+                                </span>
+                                <button class="btn btn-light btn-sm p-1" type="button" data-bs-toggle="collapse" data-bs-target="#todaysDeadlineCollapse" aria-expanded="true" aria-controls="todaysDeadlineCollapse">
+                                    <i class="bx bx-chevron-down fs-5"></i>
+                                </button>
                             </p>
 
-                            <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                                <table table id="todaysDeadlineTable" class="table cell-border table-striped" style="width:100%">
-                                    <thead>
-                                        <tr>
-                                            <th scope="col">Client Name</th>
-                                            <th scope="col">Service Name</th>
-                                            <th scope="col">Action</th>
-                                        </tr>
-                                    </thead>
-                                </table>
+                            <div class="collapse show" id="todaysDeadlineCollapse">
+                                <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
+                                    <table id="todaysDeadlineTable" class="table cell-border table-striped" style="width:100%">
+                                        <thead>
+                                            <tr>
+                                                <th>Client Name</th>
+                                                <th>Service Name</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -265,22 +271,30 @@
                     <!-- Task to be asssigned -->
                     <div class="col-lg-7">
                         <div class="col-lg-12 px-0 border shadow-sm mb-3">
-                            <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
-                                <i class="bx bxs-user-plus fs-4 me-2"></i>Task Need To Be Assigned
+                            <p class="p-2 bg-theme text-white px-3 mb-0 d-flex align-items-center justify-content-between fs-5">
+                                <span>
+                                    <i class="bx bxs-user-plus fs-4 me-2"></i>Task Need To Be Assigned
+                                </span>
+                                <button class="btn btn-light btn-sm p-1" type="button" data-bs-toggle="collapse" data-bs-target="#servicesCollapse" aria-expanded="true" aria-controls="servicesCollapse">
+                                    <i class="bx bx-chevron-down fs-5"></i>
+                                </button>
                             </p>
-                            <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                                <table id="servicesTable" class="table cell-border table-striped" style="width:100%">
-                                    <thead>
-                                        <tr>
-                                            <th>Client Name</th>
-                                            <th>Service Name</th>
-                                            <th>Manager Name</th>
-                                            <th>Deadline</th>
-                                            <th>Frequency</th>
-                                            <th>Action</th>
-                                        </tr>
-                                    </thead>
-                                </table>
+
+                            <div class="collapse show" id="servicesCollapse">
+                                <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
+                                    <table id="servicesTable" class="table cell-border table-striped" style="width:100%">
+                                        <thead>
+                                            <tr>
+                                                <th>Client Name</th>
+                                                <th>Service Name</th>
+                                                <th>Manager Name</th>
+                                                <th>Deadline</th>
+                                                <th>Frequency</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -355,29 +369,32 @@
             <!-- Assigned Work List -->
             <div class="col-lg-12">
                 <div class="col-lg-12 px-0 border shadow-sm mb-3">
-
-                    <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
-                        <i class="bx bxs-user-plus fs-4 me-2"></i>Assigned Work List
+                    <p class="p-2 bg-theme text-white px-3 mb-0 d-flex align-items-center justify-content-between fs-5">
+                        <span><i class="bx bxs-user-plus fs-4 me-2"></i>Assigned Work List</span>
+                        <button class="btn btn-light btn-sm p-1" type="button" data-bs-toggle="collapse" data-bs-target="#assignedWorkCollapse" aria-expanded="true" aria-controls="assignedWorkCollapse">
+                            <i class="bx bx-chevron-down fs-5"></i>
+                        </button>
                     </p>
-                    <!-- Works assigned to a user and staff -->
-                    <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                        <table id="assignedServices" class="table cell-border table-striped" style="width:100%">
-                            <thead>
-                                <tr>
-                                    <th scope="col">#</th>
-                                    <th scope="col">Client Name</th>
-                                    <th scope="col">Service Name</th>
-                                    <th scope="col">Frequency</th>
-                                    <th scope="col">Due Date</th>
-                                    <th scope="col">Target Deadline</th>
-                                    <th scope="col">Deadline</th>
-                                    <th scope="col">Status</th>
-                                    <th scope="col">Action</th>
-                                </tr>
-                            </thead>
-                        </table>
+
+                    <div class="collapse show" id="assignedWorkCollapse">
+                        <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
+                            <table id="assignedServices" class="table cell-border table-striped" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Client Name</th>
+                                        <th>Service Name</th>
+                                        <th>Frequency</th>
+                                        <th>Due Date</th>
+                                        <th>Target Deadline</th>
+                                        <th>Deadline</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
                     </div>
-                    <!-- Works assigned to a user and staff -->
                 </div>
             </div>
             <!-- Assigned Work List -->
@@ -450,36 +467,43 @@
             <div class="col-lg-12">
                 <div class="col-lg-12 px-0 border shadow-sm mb-3">
 
-                    <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
-                        <i class="bx bxs-user-plus fs-4 me-2"></i>Completed Work List
+                    <p class="p-2 bg-theme text-white px-3 mb-0 d-flex align-items-center justify-content-between fs-5">
+                        <span>
+                            <i class="bx bxs-user-plus fs-4 me-2"></i>Completed Work List
+                        </span>
+                        <button class="btn btn-light btn-sm p-1" type="button" data-bs-toggle="collapse" data-bs-target="#completedServicesCollapse" aria-expanded="true" aria-controls="completedServicesCollapse">
+                            <i class="bx bx-chevron-down fs-5"></i>
+                        </button>
                     </p>
-                    <!-- Works assigned to a user and staff -->
-                    <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                        <table id="completedServices" class="table cell-border table-striped" style="width:100%">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Client Name</th>
-                                    <th>Service Name</th>
-                                    <th>Frequency</th>
-                                    <th>Due Date</th>
-                                    <th>Target Deadline</th>
-                                    <th>Deadline</th>
-                                    <th>Status</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <th scope="row">1</th>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-                            </tbody>
-                        </table>
+
+                    <div class="collapse show" id="completedServicesCollapse">
+                        <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
+                            <table id="completedServices" class="table cell-border table-striped" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Client Name</th>
+                                        <th>Service Name</th>
+                                        <th>Frequency</th>
+                                        <th>Due Date</th>
+                                        <th>Target Deadline</th>
+                                        <th>Deadline</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <th scope="row">1</th>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    <!-- Works assigned to a user and staff -->
+
                 </div>
             </div>
             <!-- Completed Work List -->
@@ -1723,37 +1747,35 @@
             ]
         });
 
+        $(document).on('focus', '.approval-status-change', function() {
+            $(this).data('old', $(this).val());
+        });
+
         $(document).on('change', '.approval-status-change', function() {
+            if (!confirm("Are you sure you want to change the status?")) {
+                $(this).val($(this).data('old')); // revert if cancelled
+                return;
+            }
+
             const serviceId = $(this).data('id');
             const newStatus = $(this).val();
-            $.ajax({
-                url: '/admin/client-service-change-status',
-                method: 'POST',
-                data: {
-                    _token: '{{ csrf_token() }}',
-                    id: serviceId,
-                    status: newStatus
-                },
-                success: function(response) {
-                    if (response.success) {
-                        toastr.success("Status changed successfully!", "Success!");
 
-                        if ($.fn.DataTable.isDataTable('#assignedServices')) {
-                            $('#assignedServices').DataTable().ajax.reload(null, false);
-                        }
-
-                        if ($.fn.DataTable.isDataTable('#completedServices')) {
-                            $('#completedServices').DataTable().ajax.reload(null, false);
-                        }
-
-                    } else {
-                        toastr.error("An error occurred!", "Error!");
-                    }
-                },
-                error: function(xhr, status, error) {
-                    // console.log(xhr.responseText);
-                    toastr.error("An error occurred!", "Error!");
+            $.post('/admin/client-service-change-status', {
+                _token: '{{ csrf_token() }}',
+                id: serviceId,
+                status: newStatus
+            }, function(response) {
+                if (response.success) {
+                    toastr.success("Status changed successfully!");
+                    if ($.fn.DataTable.isDataTable('#assignedServices')) 
+                        $('#assignedServices').DataTable().ajax.reload(null, false);
+                    if ($.fn.DataTable.isDataTable('#completedServices')) 
+                        $('#completedServices').DataTable().ajax.reload(null, false);
+                } else {
+                    toastr.error("An error occurred!");
                 }
+            }).fail(function() {
+                toastr.error("An error occurred!");
             });
         });
 

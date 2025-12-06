@@ -35,9 +35,9 @@ class ClientController extends Controller
     {
         $authUserId = auth()->id();
         $filter = $request->input('filter', 'all');
-    
+
         if ($request->ajax()) {
-            $query = Client::with(['clientType', 'manager', 'clientSubServices']);
+            $query = Client::with(['clientType', 'manager', 'clientSubServices', 'directorInfos']);
         
             if ($filter == 'assigned') {
                 $query->whereHas('clientSubServices', function ($subQuery) use ($authUserId) {
@@ -48,8 +48,88 @@ class ClientController extends Controller
                 })
                 ->orWhere('manager_id', $authUserId);
             }
+
+            // Handle global search
+            if ($request->has('search') && !empty($request->search['value'])) {
+                $searchValue = $request->search['value'];
+                
+                $query->where(function($q) use ($searchValue) {
+                    $q->where('name', 'like', "%{$searchValue}%")
+                    ->orWhere('email', 'like', "%{$searchValue}%")
+                    ->orWhere('phone', 'like', "%{$searchValue}%")
+                    ->orWhere('refid', 'like', "%{$searchValue}%")
+                    ->orWhereHas('directorInfos', function($subQuery) use ($searchValue) {
+                        $subQuery->where('name', 'like', "%{$searchValue}%")
+                                ->orWhere('last_name', 'like', "%{$searchValue}%");
+                    })
+                    ->orWhereHas('manager', function($subQuery) use ($searchValue) {
+                        $subQuery->where('first_name', 'like', "%{$searchValue}%");
+                    })
+                    ->orWhereHas('clientType', function($subQuery) use ($searchValue) {
+                        $subQuery->where('name', 'like', "%{$searchValue}%");
+                    });
+                });
+            }
+
+            // Handle column-specific searches if needed
+            if ($request->has('columns')) {
+                foreach ($request->columns as $column) {
+                    if ($column['searchable'] == 'true' && !empty($column['search']['value'])) {
+                        $searchValue = $column['search']['value'];
+                        
+                        switch ($column['data']) {
+                            case 'directors':
+                                $query->whereHas('directorInfos', function($subQuery) use ($searchValue) {
+                                    $subQuery->where('name', 'like', "%{$searchValue}%")
+                                            ->orWhere('last_name', 'like', "%{$searchValue}%");
+                                });
+                                break;
+                            // Add other column-specific searches as needed
+                        }
+                    }
+                }
+            }
         
-            $data = $query->distinct()->orderBy('id', 'desc')->get();
+            // Get total count before pagination
+            $totalRecords = $query->count();
+            
+            // Apply pagination
+            $start = $request->input('start', 0);
+            $length = $request->input('length', 10);
+            $query->skip($start)->take($length);
+            
+            // Apply ordering
+            if ($request->has('order')) {
+                $orderColumnIndex = $request->input('order.0.column');
+                $orderDirection = $request->input('order.0.dir');
+                
+                // Map column index to column name
+                $columns = ['id', 'refid', 'name', 'manager_first_name', 'phone', 'email', 'client_type_name', 'directors', 'status'];
+                
+                if (isset($columns[$orderColumnIndex])) {
+                    $orderColumn = $columns[$orderColumnIndex];
+                    
+                    // Handle special ordering for relations
+                    if ($orderColumn == 'manager_first_name') {
+                        $query->leftJoin('users', 'clients.manager_id', '=', 'users.id')
+                            ->orderBy('users.first_name', $orderDirection);
+                    } elseif ($orderColumn == 'client_type_name') {
+                        $query->leftJoin('client_types', 'clients.client_type_id', '=', 'client_types.id')
+                            ->orderBy('client_types.name', $orderDirection);
+                    } elseif ($orderColumn == 'directors') {
+                        // For directors, order by first director's name
+                        $query->leftJoin('director_infos', 'clients.id', '=', 'director_infos.client_id')
+                            ->orderBy('director_infos.name', $orderDirection)
+                            ->groupBy('clients.id');
+                    } else {
+                        $query->orderBy('clients.' . $orderColumn, $orderDirection);
+                    }
+                }
+            } else {
+                $query->orderBy('id', 'desc');
+            }
+            
+            $data = $query->get();
 
             return Datatables::of($data)
                 ->addIndexColumn()
@@ -59,7 +139,24 @@ class ClientController extends Controller
                 ->addColumn('client_type_name', function ($row) {
                     return $row->clientType->name ?? '';
                 })
-                ->rawColumns(['manager_first_name', 'client_type_name'])
+                ->addColumn('directors', function ($row) {
+                    $directors = $row->directorInfos;
+                    if ($directors->isEmpty()) {
+                        return '<span class="text-muted">No directors</span>';
+                    }
+                    
+                    $directorNames = $directors->map(function($director) {
+                        return $director->name . ' ' . $director->last_name;
+                    })->implode(', ');
+                    
+                    return '<span class="director-names">' . $directorNames . '</span>';
+                })
+                ->with([
+                    'draw' => $request->input('draw'),
+                    'recordsTotal' => Client::count(),
+                    'recordsFiltered' => $totalRecords,
+                ])
+                ->rawColumns(['manager_first_name', 'client_type_name', 'directors'])
                 ->make(true);
         }
     }

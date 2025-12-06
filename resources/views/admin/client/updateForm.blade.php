@@ -12,7 +12,7 @@
             <div class="row my-4 px-3">
                 <div class="col-lg-3">
                     <label for="">Client Name <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control my-2" id="name" value="{{ $client->name }}" name="name">
+                    <input type="text" class="form-control my-2" id="name" value="{{ $client->name }} {{ $client->last_name }}" name="name">
                 </div>
 
                 <div class="col-lg-3 d-none">
@@ -780,6 +780,10 @@
     $(document).ready(function() {
         $(document).on('click', '#service-updateButton', function(e) {
             e.preventDefault();
+
+            if (!confirm("Are you sure you want to update this service?")) {
+                return;
+            }
 
             var clientId = "{{ $client->id ?? '' }}";
             var services = [];

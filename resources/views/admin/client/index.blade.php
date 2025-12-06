@@ -34,6 +34,7 @@
                             <th scope="col">Phone</th>
                             <th scope="col">Email</th>
                             <th scope="col">Client Type</th>
+                            <th scope="col">Directors</th>
                             <th scope="col">Status</th>
                             <th scope="col">Action</th>
                         </tr>
@@ -82,6 +83,7 @@
                 data: 'client_type_name',
                 name: 'client_type_name'
             },
+            {data: 'directors', name: 'directors'},
             {
                 data: 'status',
                 name: 'status',

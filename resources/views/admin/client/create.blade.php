@@ -13,14 +13,16 @@
             <div class="row my-4 px-3">
                 <div class="col-lg-3">
                     <label for="">Client Name <span class="text-danger">*</span></label>
-                    <select name="client_credential_id" id="client_credential_id" class="form-control mt-2">
-                        <option value="">Please Select</option>
-                        @foreach ($clientCridentials as $clientCridential)
-                            <option value="{{ $clientCridential->id }}">
-                                {{$clientCridential->first_name}} {{$clientCridential->last_name}}
-                            </option>
-                        @endforeach
-                    </select>
+                    <div class="mt-2">
+                        <select name="client_credential_id" id="client_credential_id" class="form-control mt-2 select2">
+                            <option value="">Please Select</option>
+                            @foreach ($clientCridentials as $clientCridential)
+                                <option value="{{ $clientCridential->id }}">
+                                    {{$clientCridential->first_name}} {{$clientCridential->last_name}}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
                 <div class="col-lg-3 d-none">
                     <label for="">Client Name <span class="text-danger">*</span></label>
@@ -48,10 +50,10 @@
                 <div class="col-lg-3">
                     <label for="">Client Manager</label>
                     <div class="mt-2">
-                        <select class="form-control mt-2" name="manager_id" id="manager_id">
+                        <select class="form-control mt-2 select2" name="manager_id" id="manager_id">
                             <option value="" selected>Select manager</option>
                             @foreach($managers as $manager)
-                            <option value="{{ $manager->id }}" {{ isset($client->manager) && $client->manager->id == $manager->id ? 'selected' : '' }}>{{ $manager->first_name }} {{ $manager->first_name }} ({{ $manager->type }})</option>
+                            <option value="{{ $manager->id }}" {{ isset($client->manager) && $client->manager->id == $manager->id ? 'selected' : '' }}>{{ $manager->first_name }} {{ $manager->last_name }} ({{ $manager->type }})</option>
                             @endforeach
                         </select>
                     </div>

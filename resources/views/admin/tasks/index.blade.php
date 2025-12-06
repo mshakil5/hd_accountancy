@@ -1532,6 +1532,7 @@
                         return acc + parseInt(workTime.duration);
                     }, 0);
 
+                var duration = '';
                 if (totalDurationInSeconds > 0) {
                     var hours = Math.floor(totalDurationInSeconds / 3600);
                     var minutes = Math.floor((totalDurationInSeconds % 3600) / 60);
@@ -1554,14 +1555,14 @@
                         <td>${subService.sub_service.name}</td>
                         <td>${subService.deadline}</td>
                         <td>${staffName}</td>
-                         <td>${subService.note ? subService.note : ''}</td>
+                        <td>${subService.note ? subService.note : ''}</td>
                         <td>${statusDropdown}</td>
                         <td>
                             <button type="button" class="btn btn-secondary open-modal" data-toggle="modal" data-target="#messageModal" data-staff-id="${subService.staff_id}" data-client-sub-service-id="${subService.id}">
                                 <i class="fas fa-plus-circle"></i> ${newMessageIcon}
                             </button>
                         </td>
-                         <td>
+                        <td>
                             <span class="badge bg-success">${duration}</span>
                         </td>
                     </tr>
