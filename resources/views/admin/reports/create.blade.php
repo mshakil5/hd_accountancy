@@ -462,7 +462,8 @@
               $('#loader').hide();
           },
           success: function(response) {
-              // console.log(response);
+              console.log(response);
+            //   return;
               if (!response.details || response.details.length === 0) {
                   toastr.warning("No details found for this period.");
                   return;

@@ -220,13 +220,18 @@ class ReportController extends Controller
     
         $clientSubServiceIds = ClientSubService::where('client_id', $clientId)->pluck('id');
     
-        $workTimes = WorkTime::whereNotNull('client_sub_service_id')
+        $dates = explode(' to ', $dateRange);
+        $startDate = Carbon::createFromFormat('d F Y', trim($dates[0]))->startOfDay();
+        $endDate = Carbon::createFromFormat('d F Y', trim($dates[1]))->endOfDay();
+
+        $workTimes = WorkTime::whereBetween('created_at', [$startDate, $endDate])
+            ->whereNotNull('client_sub_service_id')
             ->whereNotNull('staff_id')
             ->when($staffId !== 'All', function ($query) use ($staffId) {
                 return $query->where('staff_id', $staffId);
             })
             ->whereIn('client_sub_service_id', $clientSubServiceIds)
-            ->whereBetween('start_date', [$startDate, $endDate])
+            ->where('is_break', 0)
             ->get();
     
         if ($workTimes->isEmpty()) {
@@ -328,11 +333,11 @@ class ReportController extends Controller
         $dateRange = $request->date;
         $dates = explode(' to ', $dateRange);
         
-        $startDate = Carbon::parse(trim($dates[0]))->format('d-m-Y');
-        $endDate = Carbon::parse(trim($dates[1]))->format('d-m-Y');
+        $startDate = Carbon::createFromFormat('d F Y', trim($dates[0]))->startOfDay();
+        $endDate = Carbon::createFromFormat('d F Y', trim($dates[1]))->endOfDay();
         
-        $workTimes = WorkTime::where('staff_id', $staffId)
-            ->whereBetween('start_date', [$startDate, $endDate]) // This should now match your database format
+        $workTimes = WorkTime::whereBetween('created_at', [$startDate, $endDate])
+            ->where('staff_id', $staffId)
             ->whereNotNull('client_sub_service_id')
             ->whereHas('clientSubService', function ($query) use ($clientId) {
                 $query->whereNotNull('client_id');
