@@ -37,7 +37,7 @@ class ClientController extends Controller
         $filter = $request->input('filter', 'all');
 
         if ($request->ajax()) {
-            $query = Client::with(['clientType', 'manager', 'clientSubServices', 'directorInfos']);
+            $query = Client::with(['clientType', 'manager', 'clientSubServices', 'directorInfos'])->latest();
         
             if ($filter == 'assigned') {
                 $query->whereHas('clientSubServices', function ($subQuery) use ($authUserId) {
@@ -264,7 +264,7 @@ class ClientController extends Controller
     {
          $validator = Validator::make($request->all(), [
             'client_credential_id' => 'required|string|max:255',
-            // 'last_name' => 'required|string|max:255',
+             'name' => 'required|string|max:255',
             'client_type_id' => 'required',
             'reference_id' => 'required',
             'manager_id' => 'nullable',
@@ -448,7 +448,7 @@ class ClientController extends Controller
     public function updateClientDetails(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|unique:clients,name,' . $id,
             // 'last_name' => 'required|string|max:255',
             'client_type_id' => 'required',
             'manager_id' => 'nullable',

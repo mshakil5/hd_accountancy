@@ -13,6 +13,10 @@
             <input type="file" id="pic" name="photo" class="invisible">
         </div>
         <div class="col-lg-4">
+            <label for="">Company Name <span class="text-danger">*</span></label>
+            <input for="name" type="text" value="{{ isset($client->name) ? $client->name : '' }}" class="form-control mt-2" name="name" id="name" required placeholder="">
+        </div>
+        <div class="col-lg-4">
             <label for="">Email <span class="text-danger">*</span></label>
             <input type="email" class="form-control my-2" id="email" name="email" placeholder="Enter email" value="{{ $client->email }}">
         </div>

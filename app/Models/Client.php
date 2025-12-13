@@ -100,4 +100,9 @@ class Client extends Model
     {
         return $this->hasMany(ClientProperty::class);
     }
+
+    public function clientCredential()
+    {
+        return $this->belongsTo(ClientCredential::class);
+    }
 }

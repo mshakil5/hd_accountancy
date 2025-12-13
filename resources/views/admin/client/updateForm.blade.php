@@ -12,7 +12,7 @@
             <div class="row my-4 px-3">
                 <div class="col-lg-3">
                     <label for="">Client Name <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control my-2" id="name" value="{{ $client->name }} {{ $client->last_name }}" name="name">
+                    <input type="text" class="form-control my-2" value="{{ $client->clientCredential->first_name ?? '' }} {{ $client->clientCredential->last_name ?? '' }}" readonly>
                 </div>
 
                 <div class="col-lg-3 d-none">
@@ -256,6 +256,7 @@
             var clientId = "{{ $client->id ?? '' }}";
 
             formData.append('name', $('#name').val());
+
             formData.append('last_name', $('#client_last_name').val());
             formData.append('client_type_id', $('#client_type_id').val());
             formData.append('manager_id', $('#manager_id').val());

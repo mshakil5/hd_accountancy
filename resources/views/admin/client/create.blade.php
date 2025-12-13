@@ -24,14 +24,6 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-lg-3 d-none">
-                    <label for="">Client Name <span class="text-danger">*</span></label>
-                    <input for="name" type="text" value="{{ isset($client->name) ? $client->name : '' }}" class="form-control mt-2" name="name" id="name" required placeholder="">
-                </div>
-                <div class="col-lg-3 d-none">
-                    <label for="">Last Name <span class="text-danger">*</span></label>
-                    <input for="last_name" type="text" value="{{ isset($client->last_name) ? $client->last_name : '' }}" class="form-control mt-2" name="last_name" id="last_name" required placeholder="">
-                </div>
                 <div class="col-lg-3">
                     <label for="">Reference ID <span class="text-danger">*</span></label>
                     <input type="text" class="form-control my-2" id="reference_id" name="reference_id" placeholder="Ex: LT-001" value="{{ isset($client) && isset($client->refid) ? $client->refid : '' }}">
@@ -115,6 +107,15 @@
                                                     <small>Upload Image</small>
                                                 </label>
                                                 <input type="file" id="pic" name="photo" class="invisible">
+                                            </div>
+
+                                            <div class="col-lg-4">
+                                                <label for="">Company Name <span class="text-danger">*</span></label>
+                                                <input for="name" type="text" value="{{ isset($client->name) ? $client->name : '' }}" class="form-control mt-2" name="name" id="name" required placeholder="">
+                                            </div>
+                                            <div class="col-lg-3 d-none">
+                                                <label for=""> <span class="text-danger">*</span></label>
+                                                <input for="last_name" type="text" value="" class="form-control mt-2" name="last_name" id="last_name" required placeholder="">
                                             </div>
                                             <div class="col-lg-4">
                                                 <label for="">Email <span class="text-danger">*</span></label>
@@ -351,8 +352,8 @@ $(document).ready(function () {
                 type: 'GET',
                 dataType: 'json',
                 success: function (data) {
-                    $('#name').val(data.first_name);
-                    $('#last_name').val(data.last_name);
+                    //$('#name').val(data.first_name);
+                    //$('#last_name').val(data.last_name);
                     $('#email').val(data.email);
                     $('#phone').val(data.phone);
                 },
