@@ -65,33 +65,97 @@
 
     @endif
 
-    @if (in_array('7', json_decode(Auth::user()->role->permission)) || in_array('8', json_decode(Auth::user()->role->permission)))
+    @if (
+        in_array('7', json_decode(Auth::user()->role->permission)) ||
+        in_array('8', json_decode(Auth::user()->role->permission)) ||
+        in_array('9', json_decode(Auth::user()->role->permission))
+    )
+        <li class="nav-item
+            {{ request()->routeIs(
+                'allClient',
+                'createClient',
+                'client.update.form',
+                'createNewClient',
+                'client.activities',
+                'client.credentials',
+                'allClientType'
+            ) ? 'menu-open' : '' }}">
 
-    <li class="nav-item {{ request()->routeIs('client.credentials') ? 'active' : '' }}">
-      <a class="nav-link collapsed" href="{{ route('client.credentials') }}">
-        <i class="bi bi-key"></i>
-        <span>Client Credentials</span>
-      </a>
-    </li>
+            <a class="nav-link collapsed
+                {{ request()->routeIs(
+                    'allClient',
+                    'createClient',
+                    'client.update.form',
+                    'createNewClient',
+                    'client.activities',
+                    'client.credentials',
+                    'allClientType'
+                ) ? 'active' : '' }}"
+                href="#"
+                data-bs-toggle="collapse"
+                data-bs-target="#clientModule"
+                aria-expanded="{{ request()->routeIs(
+                    'allClient',
+                    'createClient',
+                    'client.update.form',
+                    'createNewClient',
+                    'client.activities',
+                    'client.credentials',
+                    'allClientType'
+                ) ? 'true' : 'false' }}">
 
-    <li class="nav-item {{ request()->routeIs('allClient', 'createClient', 'client.update.form', 'createNewClient', 'client.activities') ? 'active' : '' }}">
-      <a class="nav-link collapsed" href="{{ route('allClient') }}">
-        <i class="bi bi-person"></i>
-        <span>Client</span>
-      </a>
-    </li>
+                <i class="bi bi-briefcase"></i>
+                <span>Client</span>
+                <i class="bi bi-chevron-down"></i>
+            </a>
 
-    @endif
+            <ul id="clientModule" class="collapse list-unstyled
+                {{ request()->routeIs(
+                    'allClient',
+                    'createClient',
+                    'client.update.form',
+                    'createNewClient',
+                    'client.activities',
+                    'client.credentials',
+                    'allClientType'
+                ) ? 'show' : '' }}">
 
-    @if (in_array('9', json_decode(Auth::user()->role->permission)))
+                {{-- Client Business --}}
+                @if (in_array('7', json_decode(Auth::user()->role->permission)) || in_array('8', json_decode(Auth::user()->role->permission)))
+                <li class="nav-item {{ request()->routeIs(
+                    'allClient',
+                    'createClient',
+                    'client.update.form',
+                    'createNewClient',
+                    'client.activities'
+                ) ? 'active' : '' }}">
+                    <a class="nav-link" href="{{ route('allClient') }}">
+                        <i class="bi bi-building"></i>
+                        <span>Client Business</span>
+                    </a>
+                </li>
 
-    <li class="nav-item {{ request()->routeIs('allClientType') ? 'active' : '' }}">
-      <a class="nav-link collapsed" href="{{ route('allClientType') }}">
-        <i class="bi bi-people"></i>
-        <span>Client Type</span>
-      </a>
-    </li>
+                {{-- Client Credentials --}}
+                <li class="nav-item {{ request()->routeIs('client.credentials') ? 'active' : '' }}">
+                    <a class="nav-link" href="{{ route('client.credentials') }}">
+                        <i class="bi bi-key"></i>
+                        <span>Client Credential</span>
+                    </a>
+                </li>
+                @endif
 
+                {{-- Client Type --}}
+                @if (in_array('9', json_decode(Auth::user()->role->permission)))
+                <li class="nav-item {{ request()->routeIs('allClientType') ? 'active' : '' }}">
+                    <a class="nav-link" href="{{ route('allClientType') }}">
+                        <i class="bi bi-people"></i>
+                        <span>Client Type</span>
+                    </a>
+                </li>
+                @endif
+
+            </ul>
+        </li>
     @endif
 
     @if (in_array('10', json_decode(Auth::user()->role->permission)))

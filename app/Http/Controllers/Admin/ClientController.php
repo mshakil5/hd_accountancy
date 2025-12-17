@@ -264,11 +264,11 @@ class ClientController extends Controller
     {
          $validator = Validator::make($request->all(), [
             'client_credential_id' => 'required|string|max:255',
-             'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'client_type_id' => 'required',
             'reference_id' => 'required',
             'manager_id' => 'nullable',
-            'email' => 'required|email|unique:clients',
+            'email' => 'required|email',
             'phone' => 'required|numeric|digits:11',
             'phone2' => 'nullable|numeric|digits:11',
             'address_line1' => 'nullable|string|max:255',
