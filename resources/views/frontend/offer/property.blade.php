@@ -793,7 +793,7 @@
 
                         <div class="pricing-from">Starting From</div>
                         <div class="pricing-price">£180</div>
-                        <div class="pricing-period">Per Anum</div>
+                        <div class="pricing-period">Per Property Annually</div>
 
                         <hr class="pricing-divider-growth">
 
