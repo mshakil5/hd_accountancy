@@ -267,7 +267,7 @@ class ClientController extends Controller
             'client_type_id' => 'required',
             'reference_id' => 'required',
             'manager_id' => 'nullable',
-            'client_reference' => 'required|string|max:255',
+            // 'client_reference' => 'required|string|max:255',
             'email' => 'required|email',
             'secondary_email' => 'nullable|email',
             'phone' => 'required|numeric',

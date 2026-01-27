@@ -50,7 +50,7 @@
                             <div class="tab-content pt-2">
                                 <form id="detailsForm">
                                     <div class="row my-4">
-                                        <div class="col-lg-4">
+                                        <div class="col-lg-4 d-none">
                                             <label for="">Client Reference <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control my-2" id="client_reference" name="client_reference" required>
                                         </div>
