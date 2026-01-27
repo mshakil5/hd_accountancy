@@ -176,7 +176,6 @@
     function showFieldsByType(type) {
         hideAllFields();
         const typeLower = type.toLowerCase().trim();
-        console.log('Showing fields for type:', typeLower);
 
         if (typeLower === 'sole trader') {
             $('.field-sole-trader, .field-group:not([class*="field-"])').show();
@@ -193,14 +192,12 @@
 
     $('#client_type_id').on('change', function() {
         const type = $(this).find('option:selected').data('type');
-        console.log('Selected type data attribute:', type);
         showFieldsByType(type);
     });
 
     $(document).ready(function() {
         hideAllFields();
         const initialType = $('#client_type_id').find('option:selected').data('type');
-        console.log('Page loaded. Initial type:', initialType);
         if (initialType) {
             showFieldsByType(initialType);
         }
@@ -266,6 +263,11 @@
                     success: function(response) {
                         if (response.status === 200) {
                             toastr.success("Client details updated successfully", "Success!");
+
+                       setTimeout(function () {
+                            location.reload();
+                        }, 2000);
+
                         } else {
                             toastr.error(response.message, "Error");
                         }
@@ -889,14 +891,12 @@
                 clientId: clientId,
                 services: services
             };
-            // console.log(data);
 
             $.ajax({
                 url: '/admin/store-service',
                 type: 'POST',
                 data: data,
                 success: function(response) {
-                    // console.log(response);
                     toastr.success("Task assigned successfully", "Success!");
 
                     setTimeout(function() {
@@ -904,7 +904,6 @@
                     }, 2000);
                 },
                 error: function(xhr, status, error) {
-                    console.log(xhr.responseText);
                     var errorMessage = "An error occurred. Please try again later.";
                     if (xhr.responseJSON && xhr.responseJSON.errors) {
                         errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
@@ -978,8 +977,6 @@
                 services: services
             };
 
-            // console.log(data);
-
             $.ajax({
                 url: '/admin/update-service',
                 type: 'POST',
@@ -993,7 +990,6 @@
                     }, 2000);
                 },
                 error: function(xhr, status, error) {
-                    console.log(xhr.responseText);
                     var errorMessage = "An error occurred. Please try again later.";
                     if (xhr.responseJSON && xhr.responseJSON.errors) {
                         errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
