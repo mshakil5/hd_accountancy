@@ -21,32 +21,28 @@
                 </div>
 
                 <div class="col-lg-3">
-                    <label for="">Reference ID <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control my-2" id="reference_id" name="reference_id" placeholder="Ex: LT-001" value="{{ isset($client) && isset($client->refid) ? $client->refid : '' }}">
+                    <label for="">Reference ID</label>
+                    <input type="text" class="form-control my-2" id="reference_id" name="reference_id" value="{{ $client->refid }}" readonly>
                 </div>
 
                 <div class="col-lg-3">
-                    <label for="country">Client Type <span class="text-danger">*</span> </label>
-                    <div class="mt-2">
-                        <select class="form-control my-2" id="client_type_id" name="client_type_id">
-                            <option value="">Please select</option>
-                            @foreach($clientTypes as $clientType)
-                            <option value="{{ $clientType->id }}" {{ $client->client_type_id == $clientType->id ? 'selected' : '' }}>{{ $clientType->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+                    <label for="">Client Type</label>
+                    <select name="client_type_id" class="form-control mt-2" id="client_type_id">
+                        <option value="">Select client type</option>
+                        @foreach($clientTypes as $clientType)
+                            <option value="{{ $clientType->id }}" data-type="{{ strtolower($clientType->name) }}" {{ $client->client_type_id == $clientType->id ? 'selected' : '' }}>{{ $clientType->name }}</option>
+                        @endforeach
+                    </select>
                 </div>
 
                 <div class="col-lg-3">
                     <label for="">Client Manager</label>
-                    <div class="mt-2">
-                        <select class="form-control my-2" name="manager_id" id="manager_id">
-                            <option value="">Please select</option>
-                            @foreach($managers as $manager)
-                            <option value="{{ $manager->id }}" data-id-number="{{ $manager->id_number }}" {{ $client->manager_id == $manager->id ? 'selected' : '' }}>{{ $manager->first_name }} {{ $manager->last_name }} ({{ $manager->type }})</option>
-                            @endforeach
-                        </select>
-                    </div>
+                    <select class="form-control mt-2 select2" name="manager_id" id="manager_id">
+                        <option value="">Select manager</option>
+                        @foreach($managers as $manager)
+                            <option value="{{ $manager->id }}" {{ $client->manager_id == $manager->id ? 'selected' : '' }}>{{ $manager->first_name }} {{ $manager->last_name }}</option>
+                        @endforeach
+                    </select>
                 </div>
             </div>
 
@@ -55,28 +51,43 @@
                     <div class="card">
                         <div class="card-body border-theme border-2">
 
+                            @php
+                                $clientType = strtolower($client->clientType->name ?? '');
+                            @endphp
+
                             <!-- Default Tabs -->
                             <ul class="nav nav-tabs mt-4 d-flex border-theme" id="myTabjustified" role="tablist">
                                 <li class="nav-item flex-fill" role="presentation">
                                     <button class="nav-link w-100 active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">Client Details</button>
                                 </li>
+                                @if($clientType === 'limited company' || $clientType === 'partnership')
                                 <li class="nav-item flex-fill" role="presentation">
                                     <button class="nav-link w-100" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">Business Info</button>
                                 </li>
+                                @endif
+                                @if($clientType === 'limited company' || $clientType === 'partnership')
                                 <li class="nav-item flex-fill" role="presentation">
-                                    <button class="nav-link w-100" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab" aria-controls="contact" aria-selected="false">Director Info</button>
+                                    <button class="nav-link w-100" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab" aria-controls="contact" aria-selected="false">            
+                                        @if($clientType === 'partnership')
+                                            Partner Info
+                                        @else
+                                            Director Info
+                                        @endif</button>
                                 </li>
+                                @endif
                                 <li class="nav-item flex-fill" role="presentation">
                                     <button class="nav-link w-100" id="service-tab" data-bs-toggle="tab" data-bs-target="#service" type="button" role="tab" aria-controls="service" aria-selected="false">Service list</button>
                                 </li>
+                                @if($clientType === 'limited company' || $clientType === 'partnership')
                                 <li class="nav-item flex-fill" role="presentation">
                                     <button class="nav-link w-100" id="contact-info-tab" data-bs-toggle="tab" data-bs-target="#contact-info" type="button" role="tab" aria-controls="contact-info" aria-selected="false">Contact-info</button>
                                 </li>
+                                @endif
                                 <li class="nav-item flex-fill" role="presentation">
                                     <button class="nav-link w-100" id="recent-update-tab" data-bs-toggle="tab" data-bs-target="#recent-update" type="button" role="tab" aria-controls="recent-update" aria-selected="false">Recent-update</button>
                                 </li>
                                 <li class="nav-item flex-fill" role="presentation">
-                                    <button class="nav-link w-100" id="about-business-tab" data-bs-toggle="tab" data-bs-target="#about-business" type="button" role="tab" aria-controls="about-business" aria-selected="false">About Business</button>
+                                    <button class="nav-link w-100" id="about-business-tab" data-bs-toggle="tab" data-bs-target="#about-business" type="button" role="tab" aria-controls="about-business" aria-selected="false">About Client</button>
                                 </li>
                                 <li class="nav-item flex-fill" role="presentation">
                                     <button class="nav-link w-100" id="accountancy-tab" data-bs-toggle="tab" data-bs-target="#accountancy" type="button" role="tab" aria-controls="accountancy" aria-selected="false">Accountancy Fees</button>
@@ -155,6 +166,131 @@
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
         }
     });
+
+    let propertyIndexValue = {{ isset($client) ? $client->properties->count() : 0 }};
+
+    function hideAllFields() {
+        $('.field-sole-trader, .field-self-assessment, .field-landlord, .field-limited-company, .field-partnership').hide();
+    }
+
+    function showFieldsByType(type) {
+        hideAllFields();
+        const typeLower = type.toLowerCase().trim();
+        console.log('Showing fields for type:', typeLower);
+
+        if (typeLower === 'sole trader') {
+            $('.field-sole-trader, .field-group:not([class*="field-"])').show();
+        } else if (typeLower === 'self assesment') {
+            $('.field-self-assessment, .field-group:not([class*="field-"])').show();
+        } else if (typeLower === 'landlord') {
+            $('.field-landlord, .field-group:not([class*="field-"])').show();
+        } else if (typeLower === 'limited company' || typeLower === 'vat registered company') {
+            $('.field-limited-company, .field-group:not([class*="field-"])').show();
+        } else if (typeLower === 'partnership') {
+            $('.field-partnership, .field-group:not([class*="field-"])').show();
+        }
+    }
+
+    $('#client_type_id').on('change', function() {
+        const type = $(this).find('option:selected').data('type');
+        console.log('Selected type data attribute:', type);
+        showFieldsByType(type);
+    });
+
+    $(document).ready(function() {
+        hideAllFields();
+        const initialType = $('#client_type_id').find('option:selected').data('type');
+        console.log('Page loaded. Initial type:', initialType);
+        if (initialType) {
+            showFieldsByType(initialType);
+        }
+
+        $('#pic').on('change', function(event) {
+            var file = event.target.files[0];
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    $('#imagePreview').attr('src', e.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        $('#add-property-btn').on('click', function () {
+            const newField = `
+                <div class="col-md-4 property-group mb-3 position-relative">
+                    <textarea name="properties[${propertyIndexValue}][address]" class="form-control" rows="3" placeholder="Property Address"></textarea>
+                    <button type="button" class="btn btn-sm btn-danger remove-property position-absolute top-0 end-0 translate-middle" 
+                        style="width: 24px; height: 24px; padding: 0; border-radius: 50%;">×</button>
+                </div>`;
+            $('#property-address-wrapper').append(newField);
+            propertyIndexValue++;
+            updatePropertyCount();
+        });
+
+        $(document).on('click', '.remove-property', function () {
+            $(this).closest('.property-group').remove();
+            updatePropertyCount();
+        });
+
+        function updatePropertyCount() {
+            $('#property-count').text($('.property-group').length);
+        }
+
+        $('#details-saveButton').click(function(event) {
+            event.preventDefault();
+            var formData = new FormData($('#detailsForm')[0]);
+            var clientId = "{{ $client->id ?? '' }}";
+
+            formData.append('client_type_id', $('#client_type_id').val());
+            formData.append('manager_id', $('#manager_id').val());
+            formData.append('reference_id', $('#reference_id').val());
+
+            var properties = [];
+            $('.property-group').each(function() {
+                properties.push({
+                    id: $(this).find('input[name*="[id]"]').val() || null,
+                    address: $(this).find('textarea').val()
+                });
+            });
+            
+            formData.append('properties', JSON.stringify(properties));
+
+            if (clientId) {
+                $.ajax({
+                    url: "/admin/client-details-update/" + clientId,
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function(response) {
+                        if (response.status === 200) {
+                            toastr.success("Client details updated successfully", "Success!");
+                        } else {
+                            toastr.error(response.message, "Error");
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error(xhr.responseText);
+                        var errorMessage = "An error occurred. Please try again later.";
+                        if (xhr.responseJSON && xhr.responseJSON.errors) {
+                            errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
+                        }
+                        toastr.error(errorMessage, "Error");
+                    }
+                });
+            }
+            return false;
+        });
+    });
+</script>
+
+<script>
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
 </script>
 
 <!-- Image preview start -->
@@ -173,7 +309,7 @@
 <!-- Image preview end -->
 
 <!-- Property start -->
-<script>
+{{-- <script>
     let propertyIndex = {{ isset($client) ? $client->properties->count() : 0 }};
 
     $('#add-property-btn').on('click', function () {
@@ -196,7 +332,7 @@
     function updatePropertyCount() {
         $('#property-count').text($('.property-group').length);
     }
-</script>
+</script> --}}
 <!-- Property end -->
 
 <!-- Client details update -->
@@ -244,65 +380,65 @@
       }
     });
 
-    $(document).ready(function() {
-        $('#details-saveButton').click(function(event) {
-            event.preventDefault();
+    // $(document).ready(function() {
+    //     $('#details-saveButton').click(function(event) {
+    //         event.preventDefault();
 
-            var name = $('#name').val();
-            var clientTypeId = $('#client_type_id').val();
-            var managerId = $('#manager_id').val();
+    //         var name = $('#name').val();
+    //         var clientTypeId = $('#client_type_id').val();
+    //         var managerId = $('#manager_id').val();
 
-            var formData = new FormData($('#detailsForm')[0]);
-            var clientId = "{{ $client->id ?? '' }}";
+    //         var formData = new FormData($('#detailsForm')[0]);
+    //         var clientId = "{{ $client->id ?? '' }}";
 
-            formData.append('name', $('#name').val());
+    //         formData.append('name', $('#name').val());
 
-            formData.append('last_name', $('#client_last_name').val());
-            formData.append('client_type_id', $('#client_type_id').val());
-            formData.append('manager_id', $('#manager_id').val());
-            formData.append('reference_id', $('#reference_id').val());
+    //         formData.append('last_name', $('#client_last_name').val());
+    //         formData.append('client_type_id', $('#client_type_id').val());
+    //         formData.append('manager_id', $('#manager_id').val());
+    //         formData.append('reference_id', $('#reference_id').val());
 
-            var properties = [];
-            $('.property-group').each(function() {
-                properties.push({
-                    id: $(this).find('input[name*="[id]"]').val() || null,
-                    address: $(this).find('textarea').val()
-                });
-            });
+    //         var properties = [];
+    //         $('.property-group').each(function() {
+    //             properties.push({
+    //                 id: $(this).find('input[name*="[id]"]').val() || null,
+    //                 address: $(this).find('textarea').val()
+    //             });
+    //         });
             
-            formData.append('properties', JSON.stringify(properties));
+    //         formData.append('properties', JSON.stringify(properties));
 
-            // for (var pair of formData.entries()) {
-            //     console.log(pair[0] + ': ' + pair[1]);
-            // }
-            // return;
+    //         // for (var pair of formData.entries()) {
+    //         //     console.log(pair[0] + ': ' + pair[1]);
+    //         // }
+    //         // return;
 
-            if (clientId) {
-                $.ajax({
-                    url: "/admin/client-details-update/" + clientId,
-                    type: 'POST',
-                    data: formData,
-                    async: false,
-                    success: function(response) {
-                        toastr.success("Client details updated successfully", "Success!");
+    //         if (clientId) {
+    //             $.ajax({
+    //                 url: "/admin/client-details-update/" + clientId,
+    //                 type: 'POST',
+    //                 data: formData,
+    //                 async: false,
+    //                 success: function(response) {
+    //                     toastr.success("Client details updated successfully", "Success!");
 
-                    },
-                    error: function(xhr, status, error) {
-                        console.error(xhr.responseText);
-                        var errorMessage = "An error occurred. Please try again later.";
-                        if (xhr.responseJSON && xhr.responseJSON.errors) {
-                            errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
-                        }
-                        toastr.error(errorMessage, "Error");
-                    },
-                    cache: false,
-                    contentType: false,
-                    processData: false
-                });
-            }
-            return false;
-        });
-    });
+    //                 },
+    //                 error: function(xhr, status, error) {
+    //                     console.error(xhr.responseText);
+    //                     var errorMessage = "An error occurred. Please try again later.";
+    //                     if (xhr.responseJSON && xhr.responseJSON.errors) {
+    //                         errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
+    //                     }
+    //                     toastr.error(errorMessage, "Error");
+    //                 },
+    //                 cache: false,
+    //                 contentType: false,
+    //                 processData: false
+    //             });
+    //         }
+    //         return false;
+    //     });
+    // });
 </script>
 <!-- Client Details update End-->
 
@@ -364,12 +500,18 @@
             $('#dir-phone').val(directorInfo.phone);
             $('#dir-email').val(directorInfo.email);
             $('#address').val(directorInfo.address);
+            $('#address_line_2').val(directorInfo.address_line_2);
+            $('#city').val(directorInfo.city);
+            $('#country').val(directorInfo.country);
+            $('#post_code').val(directorInfo.post_code);
+            $('#photo_id_saved').val(directorInfo.photo_id_saved);
             $('#dob').val(directorInfo.dob);
             $('#ni_number').val(directorInfo.ni_number);
+            $('#directors_tax_return').val(directorInfo.directors_tax_return);
+            $('#dir_verification_code').val(directorInfo.dir_verification_code);
+            $('#hmrc_authorisation').val(directorInfo.hmrc_authorisation);
             $('#utr_number').val(directorInfo.utr_number);
             $('#utr_authorization').val(directorInfo.utr_authorization);
-            $('#directors_tax_return').val(directorInfo.directors_tax_return);
-            $('#hmrc_authorisation').val(directorInfo.hmrc_authorisation);
             $('#nino').val(directorInfo.nino);
 
             $('#directorIdInput').val(directorInfo.id);

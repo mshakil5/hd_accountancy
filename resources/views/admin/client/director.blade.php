@@ -28,12 +28,36 @@
                             <input type="email" class="form-control my-2" id="dir-email" name="email" placeholder="Enter email">
                         </div>
                         <div class="form-group">
-                            <label for="address">Address Line <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control my-2" id="address" name="address" placeholder="Enter address">
-                        </div>
-                        <div class="form-group">
                             <label for="dob">Date Of Birth <span class="text-danger">*</span></label>
                             <input type="date" class="form-control my-2" id="dob" name="dob" placeholder="Enter date of birth">
+                        </div>
+                        <div class="form-group">
+                            <label for="address">Address Line 1 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control my-2" id="address" name="address" placeholder="Enter address line 1">
+                        </div>
+                        <div class="form-group">
+                            <label for="address_line_2">Address Line 2</label>
+                            <input type="text" class="form-control my-2" id="address_line_2" name="address_line_2" placeholder="Enter address line 2">
+                        </div>
+                        <div class="form-group">
+                            <label for="city">City</label>
+                            <input type="text" class="form-control my-2" id="city" name="city" placeholder="Enter city">
+                        </div>
+                        <div class="form-group">
+                            <label for="country">Country</label>
+                            <input type="text" class="form-control my-2" id="country" name="country" placeholder="Enter country">
+                        </div>
+                        <div class="form-group">
+                            <label for="post_code">Post Code</label>
+                            <input type="text" class="form-control my-2" id="post_code" name="post_code" placeholder="Enter post code">
+                        </div>
+                        <div class="form-group">
+                            <label for="photo_id_saved">Photo ID Saved</label>
+                            <select class="form-control my-2" id="photo_id_saved" name="photo_id_saved">
+                                <option value="">Select</option>
+                                <option value="1">Yes</option>
+                                <option value="0">No</option>
+                            </select>
                         </div>
                         <div class="form-group">
                             <label for="ni_number">NI Number <span class="text-danger">*</span></label>
@@ -47,6 +71,10 @@
                             </select>
                         </div>
                         <div class="form-group">
+                            <label for="dir_verification_code">DIR Verification Code</label>
+                            <input type="text" class="form-control my-2" id="dir_verification_code" name="dir_verification_code" placeholder="Enter DIR verification code">
+                        </div>
+                        <div class="form-group">
                             <label for="hmrc_authorisation">HMRC Authorisation</label>
                             <select class="form-control my-2" id="hmrc_authorisation" name="hmrc_authorisation">
                                 <option value="0">No</option>
@@ -54,7 +82,7 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="utr_number">UTR Number</label>
+                            <label for="utr_number">DIR UTR Number</label>
                             <input type="number" class="form-control my-2" id="utr_number" name="utr_number" placeholder="Enter UTR number">
                         </div>
                         <div class="form-group">
@@ -78,10 +106,18 @@
                 </div>
             </div>
         </div>
+
+        @php
+            $clientType = strtolower($client->clientType->name ?? '');
+        @endphp
         
         <div id="rightContainer" class="col-lg-9">
             <p class="p-2 mt-3 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center">
-                Director Info List
+                @if($clientType === 'partnership')
+                    Partner Info List 
+                @else
+                    Director Info List
+                @endif
             </p>
             <div class="border-theme p-3 border-1">
                 <table id="directorTable" class="table">

@@ -20,18 +20,26 @@ class DirectorInfoController extends Controller
 
     public function store(Request $request)
     {
-        // dd($request->all());
         $validator = Validator::make($request->all(), [
             'client_id' => 'required',
             'name' => 'required|string',
+            'last_name' => 'required|string',
             'phone' => 'required',
             'email' => 'required',
             'address' => 'required',
             'dob' => 'required',
+            'address_line_2' => 'nullable',
+            'city' => 'nullable',
+            'country' => 'nullable',
+            'post_code' => 'nullable',
+            'photo_id_saved' => 'nullable',
             'ni_number' => 'required', 
-            // 'utr_number' => 'required', 
-            // 'utr_authorization' => 'required', 
-            // 'nino' => 'required', 
+            'directors_tax_return' => 'nullable',
+            'dir_verification_code' => 'nullable',
+            'hmrc_authorisation' => 'nullable',
+            'utr_number' => 'nullable', 
+            'utr_authorization' => 'nullable', 
+            'nino' => 'nullable', 
         ],[
             'client_id.required' => 'The client reference id field is required.',
         ]);
@@ -48,13 +56,19 @@ class DirectorInfoController extends Controller
         $data->phone = $request->phone;
         $data->email = $request->email;
         $data->address = $request->address;
+        $data->address_line_2 = $request->address_line_2;
+        $data->city = $request->city;
+        $data->country = $request->country;
+        $data->post_code = $request->post_code;
+        $data->photo_id_saved = $request->photo_id_saved ?? null;
         $data->dob = $request->dob;
         $data->ni_number = $request->ni_number;
+        $data->directors_tax_return = $request->directors_tax_return ?: 0;
+        $data->dir_verification_code = $request->dir_verification_code;
+        $data->hmrc_authorisation = $request->hmrc_authorisation ?: 0;
         $data->utr_number = $request->utr_number;
-        $data->utr_authorization = $request->utr_authorization;
+        $data->utr_authorization = $request->utr_authorization ?: 0;
         $data->nino = $request->nino;
-        $data->directors_tax_return = $request->directors_tax_return;
-        $data->hmrc_authorisation = $request->hmrc_authorisation;
         $data->created_by = Auth::id();
 
         if ($data->save()) {
@@ -62,7 +76,6 @@ class DirectorInfoController extends Controller
         } else {
             return response()->json(['status' => 500, 'message' => 'Server Error']);
         }
-
     }
 
     public function edit($id)

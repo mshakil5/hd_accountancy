@@ -20,6 +20,12 @@ return new class extends Migration
             $table->string('phone')->nullable();
             $table->string('email')->nullable();
             $table->string('address')->nullable();
+            $table->string('address_line_2')->nullable();
+            $table->string('city')->nullable();
+            $table->string('country')->nullable();
+            $table->string('post_code')->nullable();
+            $table->boolean('photo_id_saved')->nullable(); // stores 0 or 1
+            $table->string('dir_verification_code')->nullable();
             $table->string('dob')->nullable();
             $table->string('ni_number')->nullable();
             $table->string('utr_number')->nullable();

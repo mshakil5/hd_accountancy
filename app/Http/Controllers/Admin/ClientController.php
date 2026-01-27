@@ -262,75 +262,113 @@ class ClientController extends Controller
 
     public function store(Request $request)
     {
-         $validator = Validator::make($request->all(), [
+        $validator = Validator::make($request->all(), [
             'client_credential_id' => 'required|string|max:255',
-            'name' => 'required|string|max:255',
             'client_type_id' => 'required',
             'reference_id' => 'required',
             'manager_id' => 'nullable',
+            'client_reference' => 'required|string|max:255',
             'email' => 'required|email',
-            'phone' => 'required|numeric|digits:11',
-            'phone2' => 'nullable|numeric|digits:11',
-            'address_line1' => 'nullable|string|max:255',
-            'address_line2' => 'nullable|string|max:255',
+            'secondary_email' => 'nullable|email',
+            'phone' => 'required|numeric',
+            'phone2' => 'nullable|numeric',
+            'city' => 'nullable|string|max:255',
+            'country' => 'nullable|string|max:255',
+            'postcode' => 'nullable|string',
             'agreement_date' => 'nullable|date',
             'cessation_date' => 'nullable|date',
-            'trading_address' => 'nullable|string|max:255',
-            'city' => 'nullable|string|max:255',
-            'town' => 'nullable|string|max:255',
-            'postcode' => 'nullable|string',
-            'country' => 'nullable|string|max:255',
-            'photo' => 'nullable|mimes:jpeg,png,jpg,gif,svg,pdf|max:8048',
-            'photo_id' => 'nullable|mimes:jpeg,png,jpg,gif,svg,pdf|max:8048'
+            'name' => 'nullable|string|max:255',
+            'dob' => 'nullable|date',
+            'address_line1' => 'nullable|string|max:255',
+            'address_line2' => 'nullable|string|max:255',
+            'photo_id_saved' => 'nullable|string|in:Y,N',
+            'hmrc_authorization' => 'nullable|string|in:Y,N',
+            'utr_number' => 'nullable|string|max:255',
+            'ni_number' => 'nullable|string|max:255',
+            'business_name' => 'nullable|string|max:255',
+            'type_of_business' => 'nullable|string|max:255',
+            'number_of_property' => 'nullable|numeric',
+            'property_address' => 'nullable|string|max:500',
+            'company_name' => 'nullable|string|max:255',
+            'company_number' => 'nullable|string|max:255',
+            'registered_address_line1' => 'nullable|string|max:255',
+            'registered_address_line2' => 'nullable|string|max:255',
+            'trading_address_line1' => 'nullable|string|max:255',
+            'trading_address_line2' => 'nullable|string|max:255',
+            'partnership_business_name' => 'nullable|string|max:255',
+            'partnership_trading_address_line1' => 'nullable|string|max:255',
+            'partnership_trading_address_line2' => 'nullable|string|max:255'
         ]);
-
-        
 
         if ($validator->fails()) {
             return response()->json(['status' => 422, 'errors' => $validator->errors()], 422);
         }
-        
-        $data = new Client;
 
-        $data->name = $request->name;
+        $clientType = ClientType::find($request->client_type_id);
+        $clientTypeNameLower = strtolower($clientType->name ?? '');
+
+        $data = new Client;
         $data->client_credential_id = $request->client_credential_id;
-        $data->last_name = $request->last_name;
         $data->refid = $request->reference_id;
         $data->client_type_id = $request->client_type_id;
         $data->manager_id = $request->manager_id;
         $data->email = $request->email;
+        $data->secondary_email = $request->secondary_email;
         $data->phone = $request->phone;
         $data->phone2 = $request->phone2;
-        $data->address_line1 = $request->address_line1;
-        $data->address_line2 = $request->address_line2;
-        $data->address_line3 = $request->address_line3;
+        $data->city = $request->city;
+        $data->country = $request->country;
+        $data->postcode = $request->postcode;
         $data->agreement_date = $request->agreement_date;
         $data->cessation_date = $request->cessation_date;
-        $data->trading_address = $request->trading_address;
-        $data->city = $request->city;
-        $data->town = $request->town;
-        $data->postcode = $request->postcode;
-        $data->country = $request->country;
-
-        if ($request->filled('password')) {
-            $data->password = Hash::make($request->password);
-        }
         $data->created_by = Auth::id();
 
-        if ($request->hasFile('photo')) {
-            $imageName = time() . '_' . $request->photo->getClientOriginalName();
-            $request->photo->move(public_path('images/client'), $imageName);
-            $data->photo = $imageName;
-        }
-
-        if ($request->hasFile('photo_id')) {
-            $photoIdName = time() . '_' . $request->photo_id->getClientOriginalName();
-            $request->photo_id->move(public_path('images/client_photo_id'), $photoIdName);
-            $data->photo_id = $photoIdName;
+        if ($clientTypeNameLower === 'sole trader') {
+            $data->name = $request->name;
+            $data->dob = $request->dob;
+            $data->address_line1 = $request->address_line1;
+            $data->address_line2 = $request->address_line2;
+            $data->business_name = $request->business_name;
+            $data->photo_id_saved = $request->photo_id_saved;
+            $data->hmrc_authorization = $request->hmrc_authorization;
+            $data->utr_number = $request->utr_number;
+            $data->ni_number = $request->ni_number;
+        } else if ($clientTypeNameLower === 'self assesment') {
+            $data->name = $request->name;
+            $data->dob = $request->dob;
+            $data->address_line1 = $request->address_line1;
+            $data->address_line2 = $request->address_line2;
+            $data->type_of_business = $request->type_of_business;
+            $data->photo_id_saved = $request->photo_id_saved;
+            $data->hmrc_authorization = $request->hmrc_authorization;
+            $data->utr_number = $request->utr_number;
+            $data->ni_number = $request->ni_number;
+        } else if ($clientTypeNameLower === 'landlord') {
+            $data->name = $request->name;
+            $data->dob = $request->dob;
+            $data->address_line1 = $request->address_line1;
+            $data->address_line2 = $request->address_line2;
+            $data->number_of_property = $request->number_of_property;
+            $data->property_address = $request->property_address;
+            $data->photo_id_saved = $request->photo_id_saved;
+            $data->hmrc_authorization = $request->hmrc_authorization;
+            $data->utr_number = $request->utr_number;
+            $data->ni_number = $request->ni_number;
+        } else if ($clientTypeNameLower === 'limited company') {
+            $data->company_name = $request->company_name;
+            $data->company_number = $request->company_number;
+            $data->registered_address_line1 = $request->registered_address_line1;
+            $data->registered_address_line2 = $request->registered_address_line2;
+            $data->trading_address_line1 = $request->trading_address_line1;
+            $data->trading_address_line2 = $request->trading_address_line2;
+        } else if ($clientTypeNameLower === 'partnership') {
+            $data->partnership_business_name = $request->partnership_business_name;
+            $data->partnership_trading_address_line1 = $request->partnership_trading_address_line1;
+            $data->partnership_trading_address_line2 = $request->partnership_trading_address_line2;
         }
 
         if ($data->save()) {
-             return response()->json(['status' => 200, 'message' => 'Client created successfully', 'client_id' => $data->id]);
+            return response()->json(['status' => 200, 'message' => 'Client created successfully', 'client_id' => $data->id]);
         } else {
             return response()->json(['status' => 500, 'message' => 'Server Error']);
         }
@@ -448,33 +486,11 @@ class ClientController extends Controller
     public function updateClientDetails(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255|unique:clients,name,' . $id,
-            // 'last_name' => 'required|string|max:255',
             'client_type_id' => 'required',
             'manager_id' => 'nullable',
             'reference_id' => 'required',
-            'email' => 'required|email',
-            'phone' => 'required|numeric|digits:11',
-            'phone2' => 'nullable|numeric|digits:11',
-            'address_line1' => 'nullable|string|max:255',
-            'address_line2' => 'nullable|string|max:255',
-            'agreement_date' => 'nullable|date',
-            'cessation_date' => 'nullable|date',
-            'trading_address' => 'nullable|string|max:255',
-            'city' => 'nullable|string|max:255',
-            'town' => 'nullable|string|max:255',
-            'postcode' => 'nullable|string',
-            'country' => 'nullable|string|max:255',
-            'photo' => 'nullable|mimes:jpeg,png,jpg,gif,svg,pdf|max:8048',
-            'photo_id' => 'nullable|mimes:jpeg,png,jpg,gif,svg,pdf|max:8048'
+            'photo' => 'nullable|mimes:jpeg,png,jpg,gif,svg|max:8048'
         ]);
-
-        if ($request->filled('password')) {
-            $validator->addRules([
-                'password' => 'required|min:6',
-                'confirm_password' => 'required|same:password'
-            ]);
-        }
 
         if ($validator->fails()) {
             return response()->json(['status' => 422, 'errors' => $validator->errors()], 422);
@@ -486,34 +502,103 @@ class ClientController extends Controller
             return response()->json(['status' => 404, 'message' => 'Client not found'], 404);
         }
 
-        $client->name = $request->name;
-        $client->last_name = $request->last_name;
         $client->refid = $request->reference_id;
         $client->client_type_id = $request->client_type_id;
         $client->manager_id = $request->manager_id;
-        $client->email = $request->email;
-        $client->phone = $request->phone;
-        $client->phone2 = $request->phone2;
-        $client->address_line1 = $request->address_line1;
-        $client->address_line2 = $request->address_line2;
-        $client->address_line3 = $request->address_line3;
-        $client->agreement_date = $request->agreement_date;
-        $client->cessation_date = $request->cessation_date;
-        $client->trading_address = $request->trading_address;
-        $client->city = $request->city;
-        $client->town = $request->town;
-        $client->postcode = $request->postcode;
-        $client->country = $request->country;
-        $client->business_name = $request->business_name;
-        $client->utr_number = $request->utr_number;
-        $client->hmrc_authorization = $request->hmrc_authorization;
-        $client->ni_number = $request->ni_number;
-        $client->dob = $request->dob;
-        
-        if ($request->filled('password')) {
-            $client->password = Hash::make($request->password);
-        }
         $client->updated_by = Auth::id();
+
+        $clientType = strtolower($client->clientType->name ?? '');
+
+        if ($clientType === 'sole trader') {
+            if ($request->st_name) $client->name = $request->st_name;
+            if ($request->st_dob) $client->dob = $request->st_dob;
+            if ($request->st_email) $client->email = $request->st_email;
+            if ($request->st_secondary_email) $client->secondary_email = $request->st_secondary_email;
+            if ($request->st_phone) $client->phone = $request->st_phone;
+            if ($request->st_phone2) $client->phone2 = $request->st_phone2;
+            if ($request->st_address_line1) $client->address_line1 = $request->st_address_line1;
+            if ($request->st_address_line2) $client->address_line2 = $request->st_address_line2;
+            if ($request->city) $client->city = $request->city;
+            if ($request->country) $client->country = $request->country;
+            if ($request->postcode) $client->postcode = $request->postcode;
+            if ($request->st_business_name) $client->business_name = $request->st_business_name;
+            if ($request->st_photo_id_saved) $client->photo_id_saved = $request->st_photo_id_saved;
+            if ($request->st_hmrc_authorization) $client->hmrc_authorization = $request->st_hmrc_authorization;
+            if ($request->st_utr_number) $client->utr_number = $request->st_utr_number;
+            if ($request->st_ni_number) $client->ni_number = $request->st_ni_number;
+            if ($request->st_agreement_date) $client->agreement_date = $request->st_agreement_date;
+            if ($request->st_cessation_date) $client->cessation_date = $request->st_cessation_date;
+        } 
+        elseif ($clientType === 'self assesment') {
+            if ($request->sa_name) $client->name = $request->sa_name;
+            if ($request->sa_dob) $client->dob = $request->sa_dob;
+            if ($request->sa_email) $client->email = $request->sa_email;
+            if ($request->sa_secondary_email) $client->secondary_email = $request->sa_secondary_email;
+            if ($request->sa_phone) $client->phone = $request->sa_phone;
+            if ($request->sa_phone2) $client->phone2 = $request->sa_phone2;
+            if ($request->sa_address_line1) $client->address_line1 = $request->sa_address_line1;
+            if ($request->sa_address_line2) $client->address_line2 = $request->sa_address_line2;
+            if ($request->city) $client->city = $request->city;
+            if ($request->country) $client->country = $request->country;
+            if ($request->postcode) $client->postcode = $request->postcode;
+            if ($request->sa_type_of_business) $client->type_of_business = $request->sa_type_of_business;
+            if ($request->sa_photo_id_saved) $client->photo_id_saved = $request->sa_photo_id_saved;
+            if ($request->sa_hmrc_authorization) $client->hmrc_authorization = $request->sa_hmrc_authorization;
+            if ($request->sa_utr_number) $client->utr_number = $request->sa_utr_number;
+            if ($request->sa_ni_number) $client->ni_number = $request->sa_ni_number;
+            if ($request->sa_agreement_date) $client->agreement_date = $request->sa_agreement_date;
+            if ($request->sa_cessation_date) $client->cessation_date = $request->sa_cessation_date;
+        } 
+        elseif ($clientType === 'landlord') {
+            if ($request->ll_name) $client->name = $request->ll_name;
+            if ($request->ll_dob) $client->dob = $request->ll_dob;
+            if ($request->ll_email) $client->email = $request->ll_email;
+            if ($request->ll_secondary_email) $client->secondary_email = $request->ll_secondary_email;
+            if ($request->ll_phone) $client->phone = $request->ll_phone;
+            if ($request->ll_phone2) $client->phone2 = $request->ll_phone2;
+            if ($request->ll_address_line1) $client->address_line1 = $request->ll_address_line1;
+            if ($request->ll_address_line2) $client->address_line2 = $request->ll_address_line2;
+            if ($request->city) $client->city = $request->city;
+            if ($request->country) $client->country = $request->country;
+            if ($request->postcode) $client->postcode = $request->postcode;
+            if ($request->ll_photo_id_saved) $client->photo_id_saved = $request->ll_photo_id_saved;
+            if ($request->ll_hmrc_authorization) $client->hmrc_authorization = $request->ll_hmrc_authorization;
+            if ($request->ll_utr_number) $client->utr_number = $request->ll_utr_number;
+            if ($request->ll_ni_number) $client->ni_number = $request->ll_ni_number;
+            if ($request->ll_agreement_date) $client->agreement_date = $request->ll_agreement_date;
+            if ($request->ll_cessation_date) $client->cessation_date = $request->ll_cessation_date;
+        } 
+        elseif ($clientType === 'limited company' || $clientType === 'vat registered company') {
+            if ($request->lc_company_name) $client->company_name = $request->lc_company_name;
+            if ($request->lc_company_number) $client->company_number = $request->lc_company_number;
+            if ($request->lc_registered_address_line1) $client->registered_address_line1 = $request->lc_registered_address_line1;
+            if ($request->lc_registered_address_line2) $client->registered_address_line2 = $request->lc_registered_address_line2;
+            if ($request->lc_trading_address_line1) $client->trading_address_line1 = $request->lc_trading_address_line1;
+            if ($request->lc_trading_address_line2) $client->trading_address_line2 = $request->lc_trading_address_line2;
+            if ($request->lc_email) $client->email = $request->lc_email;
+            if ($request->lc_secondary_email) $client->secondary_email = $request->lc_secondary_email;
+            if ($request->lc_phone) $client->phone = $request->lc_phone;
+            if ($request->lc_phone2) $client->phone2 = $request->lc_phone2;
+            if ($request->city) $client->city = $request->city;
+            if ($request->country) $client->country = $request->country;
+            if ($request->postcode) $client->postcode = $request->postcode;
+            if ($request->lc_agreement_date) $client->agreement_date = $request->lc_agreement_date;
+            if ($request->lc_cessation_date) $client->cessation_date = $request->lc_cessation_date;
+        } 
+        elseif ($clientType === 'partnership') {
+            if ($request->p_business_name) $client->partnership_business_name = $request->p_business_name;
+            if ($request->p_email) $client->email = $request->p_email;
+            if ($request->p_secondary_email) $client->secondary_email = $request->p_secondary_email;
+            if ($request->p_phone) $client->phone = $request->p_phone;
+            if ($request->p_phone2) $client->phone2 = $request->p_phone2;
+            if ($request->p_trading_address_line1) $client->partnership_trading_address_line1 = $request->p_trading_address_line1;
+            if ($request->p_trading_address_line2) $client->partnership_trading_address_line2 = $request->p_trading_address_line2;
+            if ($request->city) $client->city = $request->city;
+            if ($request->country) $client->country = $request->country;
+            if ($request->postcode) $client->postcode = $request->postcode;
+            if ($request->p_agreement_date) $client->agreement_date = $request->p_agreement_date;
+            if ($request->p_cessation_date) $client->cessation_date = $request->p_cessation_date;
+        }
 
         if ($request->hasFile('photo')) {
             if (!empty($client->photo)) {
@@ -528,19 +613,6 @@ class ClientController extends Controller
             $client->photo = $imageName;
         }
 
-        if ($request->hasFile('photo_id')) {
-            $photoIdName = time() . '_' . $request->photo_id->getClientOriginalName();
-            $request->photo_id->move(public_path('images/client_photo_id'), $photoIdName);
-        
-            if (!empty($client->photo_id)) {
-                $oldPhotoIdPath = public_path('images/client_photo_id') . '/' . $client->photo_id;
-                if (file_exists($oldPhotoIdPath)) {
-                    unlink($oldPhotoIdPath);
-                }
-            }
-        
-            $client->photo_id = $photoIdName;
-        }
         $properties = $request->input('properties');
 
         if (is_string($properties)) {
@@ -567,9 +639,8 @@ class ClientController extends Controller
         }
 
         ClientProperty::where('client_id', $client->id)
-        ->whereNotIn('id', $existingIds)
-        ->delete();
-
+            ->whereNotIn('id', $existingIds)
+            ->delete();
 
         if ($client->save()) {
             return response()->json(['status' => 200, 'message' => 'Client details updated successfully', 'client_id' => $client->id]);
@@ -633,16 +704,23 @@ class ClientController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
+            'last_name' => 'required|string',
             'phone' => 'required',
             'email' => 'required',
-            'address' => 'nullable',
-            'dob' => 'nullable',
-            'ni_number' => 'nullable', 
+            'address' => 'required',
+            'dob' => 'required',
+            'address_line_2' => 'nullable',
+            'city' => 'nullable',
+            'country' => 'nullable',
+            'post_code' => 'nullable',
+            'photo_id_saved' => 'nullable',
+            'ni_number' => 'required', 
+            'directors_tax_return' => 'nullable', 
+            'dir_verification_code' => 'nullable',
+            'hmrc_authorisation' => 'nullable',
             'utr_number' => 'nullable', 
             'utr_authorization' => 'nullable', 
             'nino' => 'nullable', 
-        ], [
-            'client_id.required' => 'The client reference id field is required.',
         ]);
 
         if ($validator->fails()) {
@@ -656,13 +734,19 @@ class ClientController extends Controller
         $director->phone = $request->phone;
         $director->email = $request->email;
         $director->address = $request->address;
+        $director->address_line_2 = $request->address_line_2;
+        $director->city = $request->city;
+        $director->country = $request->country;
+        $director->post_code = $request->post_code;
+        $data->photo_id_saved = $request->photo_id_saved ?? null;
         $director->dob = $request->dob;
         $director->ni_number = $request->ni_number;
+        $director->directors_tax_return = $request->directors_tax_return ?: 0;
+        $director->dir_verification_code = $request->dir_verification_code;
+        $director->hmrc_authorisation = $request->hmrc_authorisation ?: 0;
         $director->utr_number = $request->utr_number;
-        $director->utr_authorization = $request->utr_authorization;
+        $director->utr_authorization = $request->utr_authorization ?: 0;
         $director->nino = $request->nino;
-        $director->directors_tax_return = $request->directors_tax_return;
-        $director->hmrc_authorisation = $request->hmrc_authorisation;
         $director->updated_by = Auth::id();
 
         if ($director->save()) {
