@@ -1,6 +1,6 @@
 <form id="detailsForm">
     <div class="row my-4">
-        <div class="col-lg-3 text-center">
+        <div class="col-lg-3 text-center d-none">
             <div class="img mb-2">
                 <img src="{{ $client->photo ? asset('images/client/' . $client->photo) : asset('assets/img/human-placeholder.jpg') }}" id="imagePreview" width="150" class="border-theme border-2 rounded-3">
             </div>
@@ -11,39 +11,9 @@
             <input type="file" id="pic" name="photo" class="invisible">
         </div>
 
-        <!-- SOLE TRADER FIELDS -->
-        <div class="col-lg-4 field-group field-sole-trader">
-            <label for="">Client Name <span class="text-danger">*</span></label>
-            <input type="text" class="form-control my-2" name="st_name" value="{{ $client->name ?? '' }}" required>
-        </div>
-
-        <!-- SELF ASSESSMENT FIELDS -->
-        <div class="col-lg-4 field-group field-self-assessment">
-            <label for="">Client Name <span class="text-danger">*</span></label>
-            <input type="text" class="form-control my-2" name="sa_name" value="{{ $client->name ?? '' }}" required>
-        </div>
-
-        <!-- LANDLORD FIELDS -->
-        <div class="col-lg-4 field-group field-landlord">
-            <label for="">Client Name <span class="text-danger">*</span></label>
-            <input type="text" class="form-control my-2" name="ll_name" value="{{ $client->name ?? '' }}" required>
-        </div>
-
-        <!-- LIMITED COMPANY FIELDS -->
-        <div class="col-lg-4 field-group field-limited-company">
-            <label for="">Company Name <span class="text-danger">*</span></label>
-            <input type="text" class="form-control my-2" name="lc_company_name" value="{{ $client->company_name ?? '' }}" required>
-        </div>
-
-        <!-- PARTNERSHIP FIELDS -->
-        <div class="col-lg-4 field-group field-partnership">
-            <label for="">Business Name <span class="text-danger">*</span></label>
-            <input type="text" class="form-control my-2" name="p_business_name" value="{{ $client->partnership_business_name ?? '' }}" required>
-        </div>
-
-        <div class="col-lg-4 field-group field-limited-company">
-            <label for="">Company Number</label>
-            <input type="text" class="form-control my-2" name="lc_company_number" value="{{ $client->company_number ?? '' }}">
+        <div class="col-lg-4 field-group field-sole-trader field-self-assessment field-landlord field-limited-company field-partnership">
+            <label for="" class="client-label">Client Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control my-2" name="name" value="{{ $client->name ?? '' }}" required>
         </div>
 
         <div class="col-lg-4 field-group field-sole-trader">
@@ -79,11 +49,6 @@
         <div class="col-lg-4 field-group">
             <label for="">Secondary Phone</label>
             <input type="number" class="form-control my-2" name="phone2" value="{{ $client->phone2 ?? '' }}">
-        </div>
-
-        <div class="col-lg-4 field-group field-sole-trader">
-            <label for="">Business Name</label>
-            <input type="text" class="form-control my-2" name="st_business_name" value="{{ $client->business_name ?? '' }}">
         </div>
 
         <div class="col-lg-4 field-group field-self-assessment">

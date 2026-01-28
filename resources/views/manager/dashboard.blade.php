@@ -398,6 +398,7 @@
                                     <th scope="col">Service Name</th>
                                     <th scope="col">Due Date</th>
                                     <th scope="col">Target Deadline</th>
+                                    <th scope="col">Deadline</th>
                                     <th scope="col">Action</th>
                                 </tr>
                             </thead>
@@ -424,6 +425,7 @@
                                     <th scope="col">Service Name</th>
                                     <th scope="col">Due Date</th>
                                     <th scope="col">Target Deadline</th>
+                                    <th scope="col">Deadline</th>
                                     <th scope="col">Status</th>
                                     <th scope="col">Action</th>
                                 </tr>
@@ -1457,6 +1459,10 @@
                     name: 'legal_deadline',
                 },
                 {
+                    data: 'service_deadline',
+                    name: 'service_deadline',
+                },
+                {
                     data: 'action',
                     name: 'action',
                     orderable: false,
@@ -1498,6 +1504,10 @@
                 {
                     data: 'legal_deadline',
                     name: 'legal_deadline',
+                },
+                {
+                    data: 'service_deadline',
+                    name: 'service_deadline',
                 },
                 {
                     data: 'status',

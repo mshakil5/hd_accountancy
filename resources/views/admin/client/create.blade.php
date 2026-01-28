@@ -55,29 +55,19 @@
                                             <input type="text" class="form-control my-2" id="client_reference" name="client_reference" required>
                                         </div>
 
-
-
-                                        <!-- Sole Trader, Self Assessment, Landlord -->
-                                        <div class="col-lg-4 field-group field-personal">
-                                            <label for="">Client Name <span class="text-danger">*</span></label>
+                                        <div class="col-lg-4 field-group field-personal field-self-assessment field-landlord field-sole-trader field-limited-company field-partnership">
+                                            <label for="" class="client-label">Client Name <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control my-2" id="name" name="name">
                                         </div>
 
-                                        <!-- Limited Company -->
-                                        <div class="col-lg-4 field-group field-limited-company">
-                                            <label for="">Company Name <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control my-2" id="company_name" name="company_name">
+                                        <div class="col-lg-4 field-group field-self-assessment">
+                                            <label for="">Type of Business</label>
+                                            <input type="text" class="form-control my-2" id="type_of_business" name="type_of_business">
                                         </div>
 
                                         <div class="col-lg-4 field-group field-limited-company">
                                             <label for="">Company Number</label>
                                             <input type="text" class="form-control my-2" id="company_number" name="company_number">
-                                        </div>
-
-                                        <!-- Partnership -->
-                                        <div class="col-lg-4 field-group field-partnership">
-                                            <label for="">Business Name <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control my-2" id="partnership_business_name" name="partnership_business_name">
                                         </div>
 
                                         <!-- Sole Trader, Self Assessment, Landlord -->
@@ -163,18 +153,6 @@
                                         <div class="col-lg-4 field-group">
                                             <label for="">Post Code</label>
                                             <input type="text" class="form-control my-2" id="postcode" name="postcode">
-                                        </div>
-
-                                        <!-- Sole Trader -->
-                                        <div class="col-lg-4 field-group field-sole-trader">
-                                            <label for="">Business Name</label>
-                                            <input type="text" class="form-control my-2" id="business_name" name="business_name">
-                                        </div>
-
-                                        <!-- Self Assessment -->
-                                        <div class="col-lg-4 field-group field-self-assessment">
-                                            <label for="">Type of Business</label>
-                                            <input type="text" class="form-control my-2" id="type_of_business" name="type_of_business">
                                         </div>
 
                                         <!-- Landlord -->
@@ -274,11 +252,27 @@
         } else if (typeLower === 'partnership') {
             $('.field-partnership').show();
         }
+        
+        $('#name').closest('.field-group').show();
+    }
+
+    function updateClientLabel(type) {
+        const typeLower = type.toLowerCase();
+        const label = $('.client-label');
+        
+        if (typeLower === 'limited company') {
+            label.html('Company Name <span class="text-danger">*</span>');
+        } else if (typeLower === 'partnership') {
+            label.html('Business Name <span class="text-danger">*</span>');
+        } else {
+            label.html('Client Name <span class="text-danger">*</span>');
+        }
     }
 
     $('#client_type_id').on('change', function() {
         const type = $(this).find('option:selected').data('type');
         showFieldsByType(type);
+        updateClientLabel(type);
     });
 
     $(document).ready(function() {
@@ -286,6 +280,7 @@
         const initialType = $('#client_type_id').find('option:selected').data('type');
         if (initialType) {
             showFieldsByType(initialType);
+            updateClientLabel(initialType);
         }
     });
 
@@ -328,8 +323,6 @@
             e.preventDefault();
             $('#detailsForm')[0].reset();
         });
-
-
     });
 </script>
 

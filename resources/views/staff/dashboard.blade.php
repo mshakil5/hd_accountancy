@@ -724,9 +724,23 @@
                         return formattedDate;
                     }
                 },
-                { 
+                {
                     data: 'service_deadline', 
-                    name: 'service_deadline'
+                    name: 'service_deadline',
+                    render: function(data, type, row) {
+                        if (!data) {
+                            return 'N/A';
+                        }
+
+                        var today = moment().startOf('day');
+                        var deadline = moment(data, 'DD-MM-YYYY').startOf('day');
+
+                        if (row.status != 2 && deadline.isBefore(today)) {
+                            return '<span class="bg-warning">' + data + '</span>';
+                        }
+
+                        return data;
+                    }
                 },
                 { data: 'action', name: 'action', orderable: false, searchable: false }
             ]

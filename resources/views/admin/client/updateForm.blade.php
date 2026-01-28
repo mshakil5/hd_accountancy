@@ -188,11 +188,27 @@
         } else if (typeLower === 'partnership') {
             $('.field-partnership, .field-group:not([class*="field-"])').show();
         }
+        
+        $('.field-sole-trader.field-self-assessment, .field-sole-trader.field-landlord, .field-self-assessment.field-landlord, .field-sole-trader.field-self-assessment.field-landlord, .field-sole-trader.field-limited-company.field-self-assessment.field-landlord.field-partnership').show();
+    }
+
+    function updateClientLabel(type) {
+        const typeLower = type.toLowerCase().trim();
+        const label = $('.client-label');
+        
+        if (typeLower === 'limited company' || typeLower === 'vat registered company') {
+            label.html('Company Name <span class="text-danger">*</span>');
+        } else if (typeLower === 'partnership') {
+            label.html('Business Name <span class="text-danger">*</span>');
+        } else {
+            label.html('Client Name <span class="text-danger">*</span>');
+        }
     }
 
     $('#client_type_id').on('change', function() {
         const type = $(this).find('option:selected').data('type');
         showFieldsByType(type);
+        updateClientLabel(type);
     });
 
     $(document).ready(function() {
@@ -200,6 +216,7 @@
         const initialType = $('#client_type_id').find('option:selected').data('type');
         if (initialType) {
             showFieldsByType(initialType);
+            updateClientLabel(initialType);
         }
 
         $('#pic').on('change', function(event) {
@@ -692,7 +709,7 @@
                                         <select class="form-select ms-auto directorDropdown" name="director_id" style="max-width: 200px;">
                                             <option value="">Select Director</option>
                                              @foreach($directorInfos as $director)
-                                             <option value="{{ $director->id }}">{{ $director->name }}</option>
+                                             <option value="{{ $director->id }}">{{ $director->name }} {{ $director->last_name }}</option>
                                              @endforeach
                                         </select>
                                         <input type="hidden" name="service_data_id" value="${serviceDataId}">

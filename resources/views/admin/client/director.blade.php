@@ -71,7 +71,7 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="dir_verification_code">DIR Verification Code</label>
+                            <label for="dir_verification_code">Director Verification code</label>
                             <input type="text" class="form-control my-2" id="dir_verification_code" name="dir_verification_code" placeholder="Enter DIR verification code">
                         </div>
                         <div class="form-group">

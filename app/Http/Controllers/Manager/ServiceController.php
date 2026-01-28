@@ -49,9 +49,9 @@ class ServiceController extends Controller
                 // })
                 ->addColumn('clientname', function (ClientService $clientservice) {
                     if ($clientservice->director_info_id) {
-                        return $clientservice->directorInfo->name;
+                        return $clientservice->directorInfo->name ?? '';
                     }
-                    return $clientservice->client->name;
+                    return $clientservice->client->name ?? '';
                 })
                 ->addColumn('legal_deadline', function (ClientService $clientservice) {
                     $legalDeadline = $clientservice->legal_deadline;
@@ -73,6 +73,14 @@ class ServiceController extends Controller
                     if ($dueDate) {
                         return \Carbon\Carbon::parse($dueDate)->format('d-m-Y');
                     }
+                    return 'N/A';
+                })
+                ->addColumn('service_deadline', function (ClientService $clientservice) {
+                    $serviceDeadline = $clientservice->service_deadline;
+                    if ($serviceDeadline) {
+                        return \Carbon\Carbon::parse($serviceDeadline)->format('d-m-Y');
+                    }
+
                     return 'N/A';
                 })
                 ->addColumn('servicename', function (ClientService $clientservice) {

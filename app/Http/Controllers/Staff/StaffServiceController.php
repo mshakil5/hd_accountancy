@@ -59,6 +59,14 @@ class StaffServiceController extends Controller
                         'original' => null
                     ];
                 })
+                ->addColumn('service_deadline', function (ClientService $clientservice) {
+                    $serviceDeadline = $clientservice->service_deadline;
+                    if ($serviceDeadline) {
+                        return \Carbon\Carbon::parse($serviceDeadline)->format('d-m-Y');
+                    }
+
+                    return 'N/A';
+                })
 
                 ->addColumn('due_date', function (ClientService $clientservice) {
                     $dueDate = $clientservice->due_date;

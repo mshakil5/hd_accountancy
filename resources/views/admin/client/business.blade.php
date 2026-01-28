@@ -36,7 +36,7 @@
         </div>
         <div class="col-lg-4">
             <label for="paye_ref_number">PAYE Ref Number</label>
-            <input type="number" class="form-control my-2" id="paye_ref_number" name="paye_ref_number" placeholder="Enter UTR number" value="{{ $businessInfo->paye_ref_number ?? '' }}">
+            <input type="text" class="form-control my-2" id="paye_ref_number" name="paye_ref_number" placeholder="Enter UTR number" value="{{ $businessInfo->paye_ref_number ?? '' }}">
         </div>
         <div class="col-lg-4">
             <label for="paye_authorization">PAYE Authorization</label>
@@ -73,7 +73,7 @@
             <input type="text" class="form-control my-2" id="due_date" name="due_date" placeholder="" value="{{ $businessInfo->due_date ?? '' }}">
         </div>
         <div class="col-lg-4">
-            <label for="confirmation_due_date">Confirmation Statement Date</label>
+            <label for="confirmation_due_date">Confirmation Statement Due Date</label>
             <input type="text" class="form-control my-2" id="confirmation_due_date" name="confirmation_due_date" placeholder="" value="{{ $businessInfo->confirmation_due_date ?? '' }}">
         </div>
     </div>
