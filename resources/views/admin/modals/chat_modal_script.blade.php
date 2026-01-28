@@ -97,7 +97,7 @@
 
     loadUnreadMessages();
 
-    setInterval(loadUnreadMessages, 5000);
+    setInterval(loadUnreadMessages, 20000);
 
   });
 </script>

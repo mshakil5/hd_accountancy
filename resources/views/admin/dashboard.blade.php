@@ -188,7 +188,7 @@
                 <div class="col-lg-12">
                     <div class="report-box border-theme sales-card p-4 mb-3 rounded-4 border-3" id="todaysdeadlineSection" style="display: none;">
                         <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                            Today's Deadline Work Details
+                            Work Details
                         </div>
 
                         <div class="container-fluid">
@@ -256,6 +256,7 @@
                                     <table id="todaysDeadlineTable" class="table cell-border table-striped" style="width:100%">
                                         <thead>
                                             <tr>
+                                                <th>#</th>
                                                 <th>Client Name</th>
                                                 <th>Service Name</th>
                                                 <th>Action</th>
@@ -285,6 +286,7 @@
                                     <table id="servicesTable" class="table cell-border table-striped" style="width:100%">
                                         <thead>
                                             <tr>
+                                                <th>#</th>
                                                 <th>Client Name</th>
                                                 <th>Service Name</th>
                                                 <th>Manager Name</th>
@@ -493,12 +495,6 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <th scope="row">1</th>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -572,6 +568,7 @@
                             <table id="assignedOneTimeServices" class="table cell-border table-striped" style="width:100%">
                                 <thead>
                                     <tr>
+                                        <th scope="col">#</th>
                                         <th scope="col">Assign Date</th>
                                         <th scope="col">Task</th>
                                         <th scope="col">Deadline</th>
@@ -596,6 +593,7 @@
                             <table id="completedOneTimeServices" class="table cell-border table-striped" style="width:100%">
                                 <thead>
                                     <tr>
+                                        <th scope="col">#</th>
                                         <th scope="col">Assign Date</th>
                                         <th scope="col">Task</th>
                                         <th scope="col">Deadline</th>
@@ -939,14 +937,11 @@
 
     $('#notesTable').DataTable({
         processing: true,
-        serverSide: true,
+        serverSide: true, // This is key!
         ajax: {
             url: '/admin/get-note',
             type: 'GET',
-            dataSrc: 'data',
-            error: function(xhr, error, thrown) {
-                console.error(xhr.responseText);
-            }
+            // dataSrc: 'data' is default for Yajra, you can usually omit it
         },
         columns: [
             {
@@ -954,25 +949,27 @@
                 render: function(data, type, row, meta) {
                     return meta.row + meta.settings._iDisplayStart + 1;
                 },
-                name: 'sl',
+                name: 'id', // Better to map to id for internal sorting
                 orderable: false,
                 searchable: false
             },
             {
                 data: 'content',
-                name: 'content'
+                name: 'content',
+                searchable: true // Now this works efficiently
             },
             {
                 data: 'status',
+                name: 'status',
                 render: function(data, type, row) {
                     if (data == 1) {
                         return '<span class="badge bg-warning text-dark">Not Assigned</span>';
                     } else if (data == 2) {
                         return '<span class="badge bg-success text-white">Assigned</span>';
                     }
+                    return '';
                 }
             },
-
             {
                 data: 'action',
                 name: 'action',
@@ -1102,28 +1099,32 @@
         $('#assignedOneTimeServices').DataTable({
             processing: true,
             serverSide: true,
+            autoWidth: false, // This is key to stopping the 'style' error
             ajax: {
                 url: '/admin/get-one-time-assigned-service',
-                type: 'GET',
-                error: function(xhr, status, error) {
-                    console.error('Error occurred:', xhr.responseText);
-                }
+                type: 'GET'
             },
-            columns: [{
-                    data: 'created_at',
-                    name: 'created_at',
-                    render: function(data, type, row) {
-                        return moment(data).format('DD.MM.YYYY');
-                    }
+            columns: [
+                { 
+                    data: 'id', 
+                    name: 'id' 
                 },
                 {
-                    data: 'servicename',
-                    name: 'servicename'
+                    data: 'created_at',
+                    name: 'created_at',
+                    render: function(data) {
+                        return data ? moment(data).format('DD.MM.YYYY') : '';
+                    }
+                },
+                { 
+                    data: 'servicename', 
+                    name: 'servicename' 
                 },
                 {
                     data: 'legal_deadline',
                     name: 'legal_deadline',
-                    render: function(data, type, row) {
+                    render: function(data) {
+                        if (!data || data === 'N/A') return 'N/A';
                         var legalDeadlineDate = moment(data, 'DD-MM-YYYY');
                         if (legalDeadlineDate.isBefore(moment(), 'day')) {
                             return '<span style="color: red;">' + data + '</span>';
@@ -1133,9 +1134,9 @@
                 },
                 {
                     data: 'manager',
-                    name: 'manager',
-                    render: function(data, type, row) {
-                        return data ? (data.first_name + ' ' + data.last_name) : 'N/A';
+                    name: 'manager.first_name', 
+                    render: function(data) {
+                        return data ? (data.first_name + ' ' + (data.last_name || '')) : 'N/A';
                     }
                 }
             ]
@@ -1143,26 +1144,39 @@
 
         $('#completedOneTimeServices').DataTable({
             processing: true,
-            serverSide: true,
+            serverSide: true, // Server handles search and speed
             ajax: {
                 url: '/admin/get-one-time-completed-service',
                 type: 'GET',
             },
-            columns: [{
+            columns: [
+                {
+                    // The "#" ID Column
+                    data: null,
+                    name: 'sl',
+                    render: function(data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    },
+                    orderable: false,
+                    searchable: false
+                },
+                {
                     data: 'created_at',
                     name: 'created_at',
-                    render: function(data, type, row) {
-                        return moment(data).format('DD.MM.YYYY');
+                    render: function(data) {
+                        return data ? moment(data).format('DD.MM.YYYY') : '';
                     }
                 },
                 {
                     data: 'servicename',
-                    name: 'servicename'
+                    name: 'servicename', // Handled by filterColumn in PHP
+                    searchable: true
                 },
                 {
                     data: 'legal_deadline',
                     name: 'legal_deadline',
-                    render: function(data, type, row) {
+                    render: function(data) {
+                        if (!data || data === 'N/A') return 'N/A';
                         var legalDeadlineDate = moment(data, 'DD-MM-YYYY');
                         if (legalDeadlineDate.isBefore(moment(), 'day')) {
                             return '<span style="color: red;">' + data + '</span>';
@@ -1171,9 +1185,10 @@
                     }
                 },
                 {
+                    // SEARCH FIX: Link to relationship data
                     data: 'manager',
-                    name: 'manager',
-                    render: function(data, type, row) {
+                    name: 'manager.first_name', 
+                    render: function(data) {
                         return data ? (data.first_name + ' ' + data.last_name) : 'N/A';
                     }
                 }
@@ -1358,55 +1373,6 @@
 <!-- Processing + cancelled Work List + change status -->
 <script>
     $(document).ready(function() {
-        $('#serviceStaffTable').DataTable({
-            processing: true,
-            serverSide: true,
-            ajax: {
-                url: '/admin/get-services-client-staff',
-                type: 'GET',
-            },
-            columns: [{
-                    data: null,
-                    name: 'id',
-                    render: function(data, type, row, meta) {
-                        return meta.row + 1;
-                    }
-                },
-                {
-                    data: 'deadline',
-                    name: 'deadline',
-                    render: function(data, type, row) {
-                        return moment(data).format('DD.MM.YY');
-                    }
-                },
-                {
-                    data: 'client_name',
-                    name: 'client_name'
-                },
-                {
-                    data: 'tasks',
-                    name: 'tasks'
-                },
-                {
-                    data: 'staff_name',
-                    name: 'staff_name'
-                },
-                {
-                    data: 'status',
-                    name: 'status',
-                    orderable: false,
-                    searchable: false,
-                    render: function(data, type, row) {
-                        var options = '<select class="form-select btn btn-outline-secondary status-select" data-id="' + row.id + '">';
-                        options += '<option value="1"' + (data === 1 ? ' selected' : '') + '>Processing</option>';
-                        options += '<option value="2"' + (data === 2 ? ' selected' : '') + '>Completed</option>';
-                        options += '<option value="3"' + (data === 3 ? ' selected' : '') + '>Cancelled</option>';
-                        options += '</select>';
-                        return options;
-                    }
-                }
-            ]
-        });
 
         $(document).on('change', '.status-select', function() {
             var serviceStaffId = $(this).data('id');
@@ -1446,18 +1412,20 @@
             },
             columns: [
                 {
-                  data: 'DT_RowIndex',
-                  name: 'DT_RowIndex',
-                  orderable: false,
-                  searchable: false
+                    data: 'id',
+                    name: 'id',
+                    searchable: true,
+                    orderable: true
                 },
                 {
                     data: 'clientname',
-                    name: 'clientname'
+                    name: 'clientname',
+                    searchable: true
                 },
                 {
                     data: 'servicename',
-                    name: 'servicename'
+                    name: 'servicename',
+                    searchable: true
                 },
                 {
                     data: 'service_frequency',
@@ -1653,18 +1621,17 @@
             },
             columns: [
                 {
-                  data: 'DT_RowIndex',
-                  name: 'DT_RowIndex',
-                  orderable: false,
-                  searchable: false
+                    data: 'id',
+                    name: 'id'
                 },
                 {
                     data: 'clientname',
-                    name: 'clientname'
+                    name: 'clientname', // Matches filterColumn in PHP
+                    searchable: true
                 },
                 {
                     data: 'servicename',
-                    name: 'servicename',
+                    name: 'servicename', // Matches filterColumn in PHP
                     render: function(data, type, row) {
                         let badge = '';
                         if (row.status == 1) {
@@ -1691,39 +1658,26 @@
                     data: 'legal_deadline',
                     name: 'legal_deadline',
                     render: function(data, type, row) {
-                        if (!data.original) {
-                            return 'N/A';
-                        }
-
-                        var formattedDate = data.formatted;
+                        if (!data || !data.original) return 'N/A';
                         var today = moment().startOf('day');
-                        var deadline = moment(data.original, 'DD-MM-YYYY').startOf('day');
-
+                        var deadline = moment(data.original, 'DD-MM-YYYY');
                         if (row.status != 2 && deadline.isBefore(today)) {
-                            return '<span class="bg-warning">' + formattedDate + '</span>';
+                            return '<span class="badge bg-warning text-dark">' + data.formatted + '</span>';
                         }
-
-                        return formattedDate;
+                        return data.formatted;
                     }
                 },
                 {
                     data: 'service_deadline',
                     name: 'service_deadline',
                     render: function(data, type, row) {
-                        if (!data.original) {
-                            return 'N/A';
-                        }
-
-                        var formattedDate = data.formatted;
-
+                        if (!data || !data.original) return 'N/A';
                         var today = moment().startOf('day');
-                        var deadline = moment(data.original, 'DD-MM-YYYY').startOf('day');
-
+                        var deadline = moment(data.original, 'DD-MM-YYYY');
                         if (row.status != 2 && deadline.isBefore(today)) {
-                            return '<span class="bg-danger">' + formattedDate + '</span>';
+                            return '<span class="badge bg-danger">' + data.formatted + '</span>';
                         }
-
-                        return formattedDate;
+                        return data.formatted;
                     }
                 },
                 {
@@ -1734,8 +1688,7 @@
                             <select class="form-control approval-status-change" data-id="${row.id}">
                                 <option value="1" ${data == 1 ? 'selected' : ''}>Completed</option>
                                 <option value="0" ${data == 0 ? 'selected' : ''}>Processing</option>
-                            </select>
-                        `;
+                            </select>`;
                     }
                 },
                 {
@@ -1925,12 +1878,22 @@
             },
             columns: [
                 {
+                    data: 'id',
+                    name: 'id',
+                    orderable: true,
+                    searchable: true
+                },
+                {
                     data: 'clientname',
-                    name: 'clientname'
+                    name: 'clientname',
+                    orderable: false,
+                    searchable: true 
                 },
                 {
                     data: 'servicename',
-                    name: 'servicename'
+                    name: 'servicename',
+                    orderable: false,
+                    searchable: true
                 },
                 {
                     data: 'action',
@@ -1944,7 +1907,7 @@
         $(document).on('click', '.task', function() {
             var clientserviceId = $(this).data('id');
             var managerFirstName = $(this).data('manager-firstname');
-            var rowData = $('#todaysDeadlineTable').DataTable().row($(this).closest('tr')).data();
+            var rowData = $('#assignedServices').DataTable().row($(this).closest('tr')).data();
 
             if (rowData) {
                 var serviceName = rowData.servicename;
@@ -1965,7 +1928,9 @@
                     dataType: "json",
                     success: function(data) {
                         populateCompletedForm(data);
-                        //   console.log(data);
+                        $('html, body').animate({
+                            scrollTop: $('#todaysdeadlineSection').offset().top - 100
+                        }, 500);
                     },
                     error: function(xhr, error, thrown) {
                         console.error('Error fetching sub-services:', error, thrown);
@@ -2024,58 +1989,74 @@
             processing: true,
             serverSide: true,
             ajax: {
-                url: '/admin/get-all-services',
+                url: '/admin/get-all-services', // Ensure this route points to getAllAssignedServices
                 type: 'GET',
-                dataSrc: 'data',
-                error: function(xhr, error, thrown) {
-                    console.error('DataTables error:', error, thrown);
-                }
+                // dataSrc: 'data' // Usually not needed for DataTables + Laravel
             },
-            columns: [{
+            columns: [
+                {
+                    data: 'id',
+                    name: 'id',
+                    orderable: true,
+                    searchable: true
+                },
+                {
                     data: 'clientname',
-                    name: 'clientname'
+                    name: 'clientname',
+                    searchable: true
                 },
                 {
                     data: 'service.name',
-                    name: 'service.name'
+                    name: 'service.name',
+                    defaultContent: 'N/A', // Fixes errors if service is null
+                    searchable: true 
                 },
                 {
-                    data: null,
-                    name: 'manager',
+                    data: 'manager',
+                    name: 'manager.first_name', // Targeted name for server-side search
                     render: function(data, type, row) {
-                        return data.manager.first_name + ' ' + data.manager.last_name;
+                        if (data && data.first_name) {
+                            return data.first_name + ' ' + (data.last_name || '');
+                        }
+                        return 'Unassigned';
                     }
                 },
                 {
                     data: 'service_deadline',
                     name: 'service_deadline',
-                    render: function(data, type, row) {
-                        return data ? moment(data).format('DD-MM-YYYY') : '';
+                    render: function(data) {
+                        return data ? moment(data).format('DD-MM-YYYY') : 'N/A';
                     }
                 },
                 {
                     data: 'service_frequency',
-                    name: 'service_frequency'
+                    name: 'service_frequency',
+                    defaultContent: 'N/A'
                 },
                 {
                     data: null,
                     name: 'action',
+                    orderable: false,
+                    searchable: false,
                     render: function(data, type, row) {
-                        return '<button class="btn btn-secondary btn-sm assign-btn" ' +
-                            'data-clientservice-id="' + data.id + '" ' +
-                            'data-service-id="' + data.service.id + '" ' +
-                            'data-client-service-id="' + data.client_service_id + '" ' +
-                            'data-client-id="' + data.client.id + '" ' +
-                            'data-client-name="' + data.client.name + '" ' +
-                            'data-service-id="' + data.service.id + '" ' +
-                            'data-service-name="' + data.service.name + '" ' +
-                            'data-manager-id="' + data.manager.id + '" ' +
-                            'data-manager-name="' + (data.manager.first_name + ' ' + data.manager.last_name) + '" ' +
-                            'data-service-deadline="' + data.service_deadline + '"' +
-                            'data-due_date="' + data.due_date + '"' +
-                            'data-legal_deadline="' + data.legal_deadline + '"' +
-                            'data-service-frequency="' + data.service_frequency + '">' +
-                            'Assign</button>';
+                        // Safely handle null relations to prevent JS errors
+                        const clientName = row.client ? row.client.name : 'N/A';
+                        const serviceName = row.service ? row.service.name : 'N/A';
+                        const managerName = row.manager ? (row.manager.first_name + ' ' + row.manager.last_name) : 'N/A';
+
+                        return `<button class="btn btn-secondary btn-sm assign-btn" 
+                                    data-clientservice-id="${row.id}" 
+                                    data-service-id="${row.service ? row.service.id : ''}" 
+                                    data-client-id="${row.client ? row.client.id : ''}" 
+                                    data-client-name="${clientName}" 
+                                    data-service-name="${serviceName}" 
+                                    data-manager-name="${managerName}"
+                                    data-service-deadline="${row.service_deadline || ''}"
+                                    data-due_date="${row.due_date || ''}"
+                                    data-legal_deadline="${row.legal_deadline || ''}"
+                                    data-service-frequency="${row.service_frequency || ''}">
+                                    Assign
+                                </button>`;
                     }
                 }
             ]

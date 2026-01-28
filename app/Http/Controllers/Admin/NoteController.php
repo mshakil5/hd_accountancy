@@ -16,17 +16,19 @@ class NoteController extends Controller
 {
     public function getNotes(Request $request)
     {
-        $notes = Note::where('user_id', Auth::id())->latest()->get();
+        // FIX 1: Remove ->get(). Pass the query builder so DataTables handles pagination (LIMIT/OFFSET).
+        // FIX 2: Use select() to only get the columns you need.
+        $notes = Note::where('user_id', Auth::id())
+            ->select(['id', 'content', 'status']) 
+            ->latest();
 
         return DataTables::of($notes)
-            ->addColumn('sl', function ($note) {
-                return '';
-            })
-            ->addColumn('content', function ($note) {
-                return $note->content;
-            })
+            // We skip 'sl' here because you are calculating it in JS (faster)
+            // We skip 'content' because it is automatically handled from the DB
+            
             ->addColumn('action', function ($note) {
-                return '<button class="btn btn-primary action-btn" data-note="' . $note->content . '" data-id="' . $note->id . '">Assign</button>';
+                // Note: Use e() or htmlspecialchars to prevent JS breakage if content has quotes
+                return '<button class="btn btn-primary action-btn" data-note="' . e($note->content) . '" data-id="' . $note->id . '">Assign</button>';
             })
             ->rawColumns(['action'])
             ->make(true);

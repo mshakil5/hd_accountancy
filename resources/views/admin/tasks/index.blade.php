@@ -211,6 +211,7 @@
                     <table id="OneTimeJobsTable" class="table cell-border table-striped" style="width:100%">
                         <thead>
                             <tr>
+                                <th scope="col">#</th>
                                 <th scope="col">Service Name</th>
                                 <th scope="col">Deadline</th>
                                 <th scope="col">Action</th>
@@ -635,17 +636,15 @@
             ajax: {
                 url: '/admin/get-assigned-services',
                 type: 'GET',
-                dataSrc: 'data',
                 error: function(xhr, error, thrown) {
                     console.error('DataTables error:', error, thrown);
                 }
             },
             columns: [
                 {
-                  data: 'DT_RowIndex',
-                  name: 'DT_RowIndex',
-                  orderable: false,
-                  searchable: false
+                    data: 'id',
+                    name: 'id',
+                    orderable: false
                 },
                 {
                     data: 'clientname',
@@ -668,7 +667,6 @@
                     name: 'status',
                     render: function(data, type, row) {
                         const currentUserId = {{ Auth::id() }};
-
                         if (row.manager_id == currentUserId) {
                             return `
                                 <select class="form-control status-change" data-id="${row.id}">
@@ -678,13 +676,11 @@
                                 </select>
                             `;
                         }
-
                         const statusMap = {
                             1: 'Not Started',
                             0: 'Processing',
                             2: 'Completed'
                         };
-
                         return statusMap[data] ?? 'Unknown Status';
                     }
                 },
@@ -703,13 +699,16 @@
             ajax: {
                 url: '/admin/get-one-time-jobs',
                 type: 'GET',
-                dataSrc: 'data',
                 error: function(xhr, error, thrown) {
                     console.error('DataTables error:', error, thrown);
                 }
             },
-            columns: 
-            [
+            columns: [
+                {
+                    data: 'id',
+                    name: 'id',
+                    orderable: false
+                },
                 {
                     data: 'servicename',
                     name: 'servicename'
@@ -730,7 +729,6 @@
                     name: 'status',
                     render: function(data, type, row) {
                         const currentUserId = {{ Auth::id() }};
-
                         if (row.manager_id == currentUserId) {
                             return `
                                 <select class="form-control one-time-job-status" data-id="${row.id}">
@@ -740,24 +738,22 @@
                                 </select>
                             `;
                         }
-
                         const statusMap = {
                             1: 'Not Started',
                             0: 'Processing',
                             2: 'Completed'
                         };
-
                         return statusMap[data] ?? 'Unknown Status';
                     }
                 },
                 {
                     data: 'has_new_message',
                     name: 'has_new_message',
+                    orderable: false,
                     render: function(data, type, row) {
                         const newMessageIcon = data === 'Yes' 
                             ? '<span class="new-message-icon" style="color: red; margin-left: 5px;"><i class="fas fa-circle"></i></span>' 
                             : '';
-
                         return `
                             <button type="button" class="btn btn-secondary open-modal1" data-toggle="modal" data-target="#messageModal1" data-client-service-id="${row.id}">
                                 <i class="fas fa-plus-circle"></i>${newMessageIcon}
@@ -1340,17 +1336,15 @@
             ajax: {
                 url: '/admin/get-completed-service',
                 type: 'GET',
-                dataSrc: 'data',
                 error: function(xhr, error, thrown) {
                     console.error('DataTables error:', error, thrown);
                 }
             },
             columns: [
                 {
-                  data: 'DT_RowIndex',
-                  name: 'DT_RowIndex',
-                  orderable: false,
-                  searchable: false
+                    data: 'id',
+                    name: 'id',
+                    orderable: false
                 },
                 {
                     data: 'clientname',
@@ -1366,7 +1360,7 @@
                 },
                 {
                     data: 'legal_deadline',
-                    name: 'legal_deadline',
+                    name: 'legal_deadline'
                 },
                 {
                     data: 'action',
@@ -1383,17 +1377,15 @@
             ajax: {
                 url: '/admin/get-completed-services-as-manager',
                 type: 'GET',
-                dataSrc: 'data',
                 error: function(xhr, error, thrown) {
                     console.error('DataTables error:', error, thrown);
                 }
             },
             columns: [
                 {
-                  data: 'DT_RowIndex',
-                  name: 'DT_RowIndex',
-                  orderable: false,
-                  searchable: false
+                    data: 'id',
+                    name: 'id',
+                    orderable: false
                 },
                 {
                     data: 'clientname',
@@ -1409,14 +1401,13 @@
                 },
                 {
                     data: 'service_deadline',
-                    name: 'service_deadline',
+                    name: 'service_deadline'
                 },
                 {
                     data: 'status',
                     name: 'status',
                     render: function(data, type, row) {
                         const currentUserId = {{ Auth::id() }};
-
                         if (row.manager_id == currentUserId) {
                             return `
                                 <select class="form-control status-change" data-id="${row.id}">
@@ -1426,13 +1417,11 @@
                                 </select>
                             `;
                         }
-
                         const statusMap = {
                             1: 'Not Started',
                             0: 'Processing',
                             2: 'Completed'
                         };
-
                         return statusMap[data] ?? 'Unknown Status';
                     }
                 },

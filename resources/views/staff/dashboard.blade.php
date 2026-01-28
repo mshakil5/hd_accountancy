@@ -682,22 +682,20 @@
 <script>
     $(document).ready(function() {
         $('#serviceStaffTable').DataTable({
-          processing: true,
-          serverSide: true,
-          ajax: {
-              url: '/staff/get-assigned-services',
-              type: 'GET',
-              dataSrc: 'data',
-              error: function(xhr, error, thrown) {
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: '/staff/get-assigned-services',
+                type: 'GET',
+                error: function(xhr, error, thrown) {
                     console.error('DataTables error:', error, thrown);
                 }
-          },
-          columns: [
+            },
+            columns: [
                 {
-                  data: 'DT_RowIndex',
-                  name: 'DT_RowIndex',
-                  orderable: false,
-                  searchable: false
+                    data: 'id',
+                    name: 'id',
+                    orderable: false
                 },
                 { data: 'clientname', name: 'clientname' },
                 { data: 'servicename', name: 'servicename' },
@@ -712,15 +710,12 @@
                         if (!data.original) {
                             return 'N/A';
                         }
-
                         var formattedDate = data.formatted;
                         var today = moment().startOf('day');
                         var deadline = moment(data.original, 'DD-MM-YYYY').startOf('day');
-
                         if (row.status != 2 && deadline.isBefore(today)) {
                             return '<span class="bg-warning">' + formattedDate + '</span>';
                         }
-
                         return formattedDate;
                     }
                 },
@@ -731,14 +726,11 @@
                         if (!data) {
                             return 'N/A';
                         }
-
                         var today = moment().startOf('day');
                         var deadline = moment(data, 'DD-MM-YYYY').startOf('day');
-
                         if (row.status != 2 && deadline.isBefore(today)) {
                             return '<span class="bg-warning">' + data + '</span>';
                         }
-
                         return data;
                     }
                 },
@@ -1308,38 +1300,22 @@
             ajax: {
                 url: '/staff/get-completed-services',
                 type: 'GET',
-                dataSrc: 'data',
                 error: function(xhr, error, thrown) {
                     console.error('DataTables error:', error, thrown);
                 }
             },
             columns: [
                 {
-                  data: 'DT_RowIndex',
-                  name: 'DT_RowIndex',
-                  orderable: false,
-                  searchable: false
+                    data: 'id',
+                    name: 'id',
+                    orderable: false
                 },
                 { data: 'clientname', name: 'clientname' },
                 { data: 'servicename', name: 'servicename' },
-                { 
-                    data: 'due_date', 
-                    name: 'due_date'
-                },
-                { 
-                    data: 'legal_deadline', 
-                    name: 'legal_deadline'
-                },
-                { 
-                    data: 'service_deadline', 
-                    name: 'service_deadline'
-                },
-                { 
-                    data: 'action', 
-                    name: 'action',
-                    orderable: false, 
-                    searchable: false 
-                }
+                { data: 'due_date', name: 'due_date' },
+                { data: 'legal_deadline', name: 'legal_deadline' },
+                { data: 'service_deadline', name: 'service_deadline' },
+                { data: 'action', name: 'action', orderable: false, searchable: false }
             ]
         });
 

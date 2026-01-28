@@ -708,17 +708,15 @@
             ajax: {
                 url: '/manager/get-assigned-services',
                 type: 'GET',
-                dataSrc: 'data',
                 error: function(xhr, error, thrown) {
                     console.error('DataTables error:', error, thrown);
                 }
             },
             columns: [
                 {
-                  data: 'DT_RowIndex',
-                  name: 'DT_RowIndex',
-                  orderable: false,
-                  searchable: false
+                    data: 'id',
+                    name: 'id',
+                    orderable: false
                 },
                 {
                     data: 'clientname',
@@ -739,15 +737,12 @@
                         if (!data.original) {
                             return 'N/A';
                         }
-
                         var formattedDate = data.formatted;
                         var today = moment().startOf('day');
                         var deadline = moment(data.original, 'DD-MM-YYYY').startOf('day');
-
                         if (row.status != 2 && deadline.isBefore(today)) {
                             return '<span class="bg-warning">' + formattedDate + '</span>';
                         }
-
                         return formattedDate;
                     }
                 },
@@ -756,7 +751,6 @@
                     name: 'status',
                     render: function(data, type, row) {
                         const currentUserId = {{ Auth::id() }};
-
                         if (row.manager_id == currentUserId) {
                             return `
                                 <select class="form-control status-change" data-id="${row.id}">
@@ -766,13 +760,11 @@
                                 </select>
                             `;
                         }
-
                         const statusMap = {
                             1: 'Not Started',
                             0: 'Processing',
                             2: 'Completed'
                         };
-
                         return statusMap[data] ?? 'Unknown Status';
                     }
                 },
@@ -1430,17 +1422,15 @@
             ajax: {
                 url: '/manager/get-completed-services',
                 type: 'GET',
-                dataSrc: 'data',
                 error: function(xhr, error, thrown) {
                     console.error('DataTables error:', error, thrown);
                 }
             },
             columns: [
                 {
-                  data: 'DT_RowIndex',
-                  name: 'DT_RowIndex',
-                  orderable: false,
-                  searchable: false
+                    data: 'id',
+                    name: 'id',
+                    orderable: false
                 },
                 {
                     data: 'clientname',
@@ -1456,11 +1446,11 @@
                 },
                 {
                     data: 'legal_deadline',
-                    name: 'legal_deadline',
+                    name: 'legal_deadline'
                 },
                 {
                     data: 'service_deadline',
-                    name: 'service_deadline',
+                    name: 'service_deadline'
                 },
                 {
                     data: 'action',
@@ -1477,17 +1467,15 @@
             ajax: {
                 url: '/manager/get-completed-services-as-manager',
                 type: 'GET',
-                dataSrc: 'data',
                 error: function(xhr, error, thrown) {
                     console.error('DataTables error:', error, thrown);
                 }
             },
             columns: [
                 {
-                  data: 'DT_RowIndex',
-                  name: 'DT_RowIndex',
-                  orderable: false,
-                  searchable: false
+                    data: 'id',
+                    name: 'id',
+                    orderable: false
                 },
                 {
                     data: 'clientname',
@@ -1503,18 +1491,17 @@
                 },
                 {
                     data: 'legal_deadline',
-                    name: 'legal_deadline',
+                    name: 'legal_deadline'
                 },
                 {
                     data: 'service_deadline',
-                    name: 'service_deadline',
+                    name: 'service_deadline'
                 },
                 {
                     data: 'status',
                     name: 'status',
                     render: function(data, type, row) {
                         const currentUserId = {{ Auth::id() }};
-
                         if (row.manager_id == currentUserId) {
                             return `
                                 <select class="form-control status-change" data-id="${row.id}">
@@ -1524,13 +1511,11 @@
                                 </select>
                             `;
                         }
-
                         const statusMap = {
                             1: 'Not Started',
                             0: 'Processing',
                             2: 'Completed'
                         };
-
                         return statusMap[data] ?? 'Unknown Status';
                     }
                 },

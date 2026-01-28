@@ -170,32 +170,22 @@
 <script>
     $(document).ready(function() {
         $('#serviceStaffTable').DataTable({
-          processing: true,
-          serverSide: true,
-          ajax: {
-              url: '/manager/get-all-services',
-              type: 'GET',
-              dataSrc: 'data',
-              error: function(xhr, error, thrown) {
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: '/manager/get-all-services',
+                type: 'GET',
+                error: function(xhr, error, thrown) {
                     console.error('DataTables error:', error, thrown);
                 }
-          },
-          columns: [
-                { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+            },
+            columns: [
+                { data: 'id', name: 'id', orderable: false },
                 { data: 'clientname', name: 'clientname' },
                 { data: 'servicename', name: 'servicename' },
-                { 
-                    data: 'due_date', 
-                    name: 'due_date',
-                },
-                { 
-                    data: 'legal_deadline', 
-                    name: 'legal_deadline',
-                },
-                { 
-                    data: 'service_deadline', 
-                    name: 'service_deadline',
-                },
+                { data: 'due_date', name: 'due_date' },
+                { data: 'legal_deadline', name: 'legal_deadline' },
+                { data: 'service_deadline', name: 'service_deadline' },
                 { data: 'action', name: 'action', orderable: false, searchable: false }
             ]
         });
