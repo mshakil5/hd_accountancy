@@ -1907,13 +1907,20 @@
         $(document).on('click', '.task', function() {
             var clientserviceId = $(this).data('id');
             var managerFirstName = $(this).data('manager-firstname');
-            var rowData = $('#assignedServices').DataTable().row($(this).closest('tr')).data();
+            var table = $(this).closest('table').attr('id');
+            var rowData = $('#' + table).DataTable().row($(this).closest('tr')).data();
 
             if (rowData) {
                 var serviceName = rowData.servicename;
                 var frequency = rowData.service_frequency;
                 let deadline = rowData.service_deadline;
-                deadline = deadline ? moment(deadline).format('YYYY-MM-DD') : '';
+                
+                if (typeof deadline === 'object' && deadline.formatted) {
+                    deadline = moment(deadline.formatted, 'DD-MM-YYYY').format('YYYY-MM-DD');
+                } else {
+                    deadline = deadline ? moment(deadline).format('YYYY-MM-DD') : '';
+                }
+                
                 clientName = rowData.clientname;
                 var decodedServiceName = $('<div>').html(serviceName).text();
 

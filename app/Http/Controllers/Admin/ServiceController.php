@@ -1080,54 +1080,65 @@ class ServiceController extends Controller
     {
         if ($request->ajax()) {
             $today = Carbon::today()->format('d-m-Y');
-            
-            // Eager Loading (Fixes N+1): Loading all relations in ONE query
             $data = ClientService::where('type', 1)
                 ->where('service_deadline', $today)
-                // This filters the results...
                 ->whereHas('clientSubServices', function ($query) {
                     $query->whereNotNull('staff_id');
                 })
-                // ...and this loads the data for the display to avoid N+1 queries
-                ->with(['directorInfo', 'client', 'service', 'manager']);
+                ->with(['client', 'directorInfo', 'service', 'manager']);
 
             return DataTables::of($data)
-                // No addColumn('id') - this fixes the search issue by using the DB ID
-                
+                ->addColumn('id', function (ClientService $clientservice) {
+                    return $clientservice->id;
+                })
                 ->addColumn('clientname', function (ClientService $clientservice) {
-                    // Using null-safe operators (?->) is fast and prevents crashes
-                    return $clientservice->director_info_id 
-                        ? $clientservice->directorInfo?->name 
-                        : $clientservice->client?->name;
+                    return $clientservice->director_info_id ? $clientservice->directorInfo?->name : $clientservice->client?->name;
                 })
                 ->filterColumn('clientname', function($query, $keyword) {
-                    $query->where(function($q) use ($keyword) {
-                        $q->whereHas('client', function($sub) use ($keyword) {
-                            $sub->where('name', 'like', "%{$keyword}%");
-                        })->orWhereHas('directorInfo', function($sub) use ($keyword) {
-                            $sub->where('name', 'like', "%{$keyword}%");
-                        });
+                    $query->whereHas('client', function($q) use ($keyword) {
+                        $q->where('name', 'like', "%{$keyword}%");
+                    })->orWhereHas('directorInfo', function($q) use ($keyword) {
+                        $q->where('name', 'like', "%{$keyword}%");
                     });
                 })
-
                 ->addColumn('servicename', function (ClientService $clientservice) {
-                    return $clientservice->service?->name ?? 'N/A';
+                    return $clientservice->service?->name ?? '';
                 })
                 ->filterColumn('servicename', function($query, $keyword) {
                     $query->whereHas('service', function($q) use ($keyword) {
                         $q->where('name', 'like', "%{$keyword}%");
                     });
                 })
-
+                ->addColumn('service_frequency', function (ClientService $clientservice) {
+                    return $clientservice->service_frequency ?? '';
+                })
+                ->addColumn('due_date', function (ClientService $clientservice) {
+                    return $clientservice->due_date ?? '';
+                })
+                ->addColumn('legal_deadline', function (ClientService $clientservice) {
+                    return [
+                        'formatted' => $clientservice->legal_deadline ? Carbon::parse($clientservice->legal_deadline)->format('d-m-Y') : 'N/A',
+                        'original' => $clientservice->legal_deadline
+                    ];
+                })
+                ->addColumn('service_deadline', function (ClientService $clientservice) {
+                    return [
+                        'formatted' => $clientservice->service_deadline ? Carbon::parse($clientservice->service_deadline)->format('d-m-Y') : 'N/A',
+                        'original' => $clientservice->service_deadline
+                    ];
+                })
                 ->addColumn('action', function (ClientService $clientservice) {
-                    // Pre-calculating strings to avoid logic inside the HTML string
-                    $firstName = $clientservice->manager?->first_name ?? 'N/A';
-                    $lastName = $clientservice->manager?->last_name ?? '';
-                    $fullName = trim($firstName . ' ' . $lastName);
-                    
-                    return '<button class="btn btn-secondary task" data-id="' . $clientservice->id . '" data-manager-firstname="' . $fullName . '">Details</button>';
+                    $managerFirstName = $clientservice->manager?->first_name . ' ' . $clientservice->manager?->last_name ?? 'N/A';
+                    return '<button class="btn btn-secondary task" data-id="' . $clientservice->id . '" data-manager-firstname="' . $managerFirstName . '">Details</button>';
+                })
+                ->filterColumn('id', function($query, $keyword) {
+                    $query->where('id', 'like', "%{$keyword}%");
+                })
+                ->order(function ($query) {
+                    $query->orderBy('id', 'desc');
                 })
                 ->rawColumns(['action'])
+                ->addIndexColumn()
                 ->make(true);
         }
     }
