@@ -11,7 +11,7 @@
 
             <div class="row my-4 px-3">
                 <div class="col-lg-3">
-                    <label for="">Client Name <span class="text-danger">*</span></label>
+                    <label for="">Client <span class="text-danger">*</span></label>
                     <input type="text" class="form-control my-2" value="{{ $client->clientCredential->first_name ?? '' }} {{ $client->clientCredential->last_name ?? '' }}" readonly>
                 </div>
 
@@ -170,33 +170,31 @@
     let propertyIndexValue = {{ isset($client) ? $client->properties->count() : 0 }};
 
     function hideAllFields() {
-        $('.field-sole-trader, .field-self-assessment, .field-landlord, .field-limited-company, .field-partnership').hide();
+        $('.field-group').hide();
     }
 
     function showFieldsByType(type) {
         hideAllFields();
         const typeLower = type.toLowerCase().trim();
 
-        if (typeLower === 'sole trader') {
-            $('.field-sole-trader, .field-group:not([class*="field-"])').show();
-        } else if (typeLower === 'self assesment') {
-            $('.field-self-assessment, .field-group:not([class*="field-"])').show();
+        if (typeLower === 'sole trade') {
+            $('.field-sole-trade').show();
+        } else if (typeLower === 'self assessment' || typeLower === 'self assesment') {
+            $('.field-self-assessment').show();
         } else if (typeLower === 'landlord') {
-            $('.field-landlord, .field-group:not([class*="field-"])').show();
-        } else if (typeLower === 'limited company' || typeLower === 'vat registered company') {
-            $('.field-limited-company, .field-group:not([class*="field-"])').show();
+            $('.field-landlord').show();
+        } else if (typeLower === 'limited company') {
+            $('.field-limited-company').show();
         } else if (typeLower === 'partnership') {
-            $('.field-partnership, .field-group:not([class*="field-"])').show();
+            $('.field-partnership').show();
         }
-        
-        $('.field-sole-trader.field-self-assessment, .field-sole-trader.field-landlord, .field-self-assessment.field-landlord, .field-sole-trader.field-self-assessment.field-landlord, .field-sole-trader.field-limited-company.field-self-assessment.field-landlord.field-partnership').show();
     }
 
     function updateClientLabel(type) {
-        const typeLower = type.toLowerCase().trim();
+        const typeLower = type.toLowerCase();
         const label = $('.client-label');
         
-        if (typeLower === 'limited company' || typeLower === 'vat registered company') {
+        if (typeLower === 'limited company') {
             label.html('Company Name <span class="text-danger">*</span>');
         } else if (typeLower === 'partnership') {
             label.html('Business Name <span class="text-danger">*</span>');

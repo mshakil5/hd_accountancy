@@ -63,6 +63,7 @@
                             <label for="ni_number">NI Number <span class="text-danger">*</span></label>
                             <input type="text" class="form-control my-2" id="ni_number" name="ni_number" placeholder="Enter NI number">
                         </div>
+                        @if(strtolower($client->clientType->name ?? '') === 'limited company')
                         <div class="form-group">
                             <label for="directors_tax_return">Director's Tax Return</label>
                             <select class="form-control my-2" id="directors_tax_return" name="directors_tax_return">
@@ -74,6 +75,7 @@
                             <label for="dir_verification_code">Director Verification code</label>
                             <input type="text" class="form-control my-2" id="dir_verification_code" name="dir_verification_code" placeholder="Enter DIR verification code">
                         </div>
+                        @endif
                         <div class="form-group">
                             <label for="hmrc_authorisation">HMRC Authorisation</label>
                             <select class="form-control my-2" id="hmrc_authorisation" name="hmrc_authorisation">

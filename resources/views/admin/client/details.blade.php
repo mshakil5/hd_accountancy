@@ -11,127 +11,110 @@
             <input type="file" id="pic" name="photo" class="invisible">
         </div>
 
-        <div class="col-lg-4 field-group field-sole-trader field-self-assessment field-landlord field-limited-company field-partnership">
+        <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord field-limited-company field-partnership">
             <label for="" class="client-label">Client Name <span class="text-danger">*</span></label>
             <input type="text" class="form-control my-2" name="name" value="{{ $client->name ?? '' }}" required>
         </div>
 
-        <div class="col-lg-4 field-group field-sole-trader">
+        <div class="col-lg-4 field-group field-limited-company">
+            <label for="">Company Number</label>
+            <input type="text" class="form-control my-2" id="company_number" name="company_number" value="{{ $client->company_number ?? '' }}">
+        </div>
+
+        <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord">
             <label for="">Date of Birth</label>
             <input type="date" class="form-control my-2" name="st_dob" value="{{ $client->dob ?? '' }}">
         </div>
 
-        <div class="col-lg-4 field-group field-self-assessment">
-            <label for="">Date of Birth</label>
-            <input type="date" class="form-control my-2" name="sa_dob" value="{{ $client->dob ?? '' }}">
-        </div>
-
-        <div class="col-lg-4 field-group field-landlord">
-            <label for="">Date of Birth</label>
-            <input type="date" class="form-control my-2" name="ll_dob" value="{{ $client->dob ?? '' }}">
-        </div>
-
-        <div class="col-lg-4 field-group">
+        <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord field-limited-company field-partnership">
             <label for="">Primary Email <span class="text-danger">*</span></label>
-            <input type="email" class="form-control my-2" name="email" value="{{ $client->email }}" required>
+            <input type="email" class="form-control my-2" id="email" name="email" required value="{{ $client->email ?? '' }}">
         </div>
 
-        <div class="col-lg-4 field-group">
+         <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord field-limited-company field-partnership">
             <label for="">Secondary Email</label>
             <input type="email" class="form-control my-2" name="secondary_email" value="{{ $client->secondary_email ?? '' }}">
         </div>
 
-        <div class="col-lg-4 field-group">
+        <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord field-limited-company field-partnership">
             <label for="">Primary Phone <span class="text-danger">*</span></label>
             <input type="number" class="form-control my-2" name="phone" value="{{ $client->phone }}" required>
         </div>
 
-        <div class="col-lg-4 field-group">
+        <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord field-limited-company field-partnership">
             <label for="">Secondary Phone</label>
             <input type="number" class="form-control my-2" name="phone2" value="{{ $client->phone2 ?? '' }}">
         </div>
 
-        <div class="col-lg-4 field-group field-self-assessment">
-            <label for="">Type of Business</label>
-            <input type="text" class="form-control my-2" name="sa_type_of_business" value="{{ $client->type_of_business ?? '' }}">
-        </div>
-
-        <div class="col-lg-4 field-group field-sole-trader">
+        <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord">
             <label for="">Address Line 1</label>
             <textarea class="form-control my-2" name="st_address_line1">{{ $client->address_line1 ?? '' }}</textarea>
         </div>
 
-        <div class="col-lg-4 field-group field-sole-trader">
+        <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord">
             <label for="">Address Line 2</label>
             <textarea class="form-control my-2" name="st_address_line2">{{ $client->address_line2 ?? '' }}</textarea>
         </div>
 
-        <div class="col-lg-4 field-group field-self-assessment">
-            <label for="">Address Line 1</label>
-            <textarea class="form-control my-2" name="sa_address_line1">{{ $client->address_line1 ?? '' }}</textarea>
-        </div>
-
-        <div class="col-lg-4 field-group field-self-assessment">
-            <label for="">Address Line 2</label>
-            <textarea class="form-control my-2" name="sa_address_line2">{{ $client->address_line2 ?? '' }}</textarea>
-        </div>
-
-        <div class="col-lg-4 field-group field-landlord">
-            <label for="">Address Line 1</label>
-            <textarea class="form-control my-2" name="ll_address_line1">{{ $client->address_line1 ?? '' }}</textarea>
-        </div>
-
-        <div class="col-lg-4 field-group field-landlord">
-            <label for="">Address Line 2</label>
-            <textarea class="form-control my-2" name="ll_address_line2">{{ $client->address_line2 ?? '' }}</textarea>
-        </div>
-
         <div class="col-lg-4 field-group field-limited-company">
             <label for="">Registered Address Line 1</label>
-            <textarea class="form-control my-2" name="lc_registered_address_line1">{{ $client->registered_address_line1 ?? '' }}</textarea>
+            <textarea class="form-control my-2" id="registered_address_line1" name="registered_address_line1">
+                {{ $client->registered_address_line1 ?? '' }}
+            </textarea>
         </div>
 
         <div class="col-lg-4 field-group field-limited-company">
             <label for="">Registered Address Line 2</label>
-            <textarea class="form-control my-2" name="lc_registered_address_line2">{{ $client->registered_address_line2 ?? '' }}</textarea>
+            <textarea class="form-control my-2" id="registered_address_line2" name="registered_address_line2">
+                {{ $client->registered_address_line2 ?? '' }}
+            </textarea>
         </div>
 
-        <div class="col-lg-4 field-group field-limited-company">
-            <label for="">Trading Address Line 1</label>
-            <textarea class="form-control my-2" name="lc_trading_address_line1">{{ $client->trading_address_line1 ?? '' }}</textarea>
-        </div>
-
-        <div class="col-lg-4 field-group field-limited-company">
-            <label for="">Trading Address Line 2</label>
-            <textarea class="form-control my-2" name="lc_trading_address_line2">{{ $client->trading_address_line2 ?? '' }}</textarea>
-        </div>
-
-        <div class="col-lg-4 field-group field-partnership">
-            <label for="">Trading Address Line 1</label>
-            <textarea class="form-control my-2" name="p_trading_address_line1">{{ $client->partnership_trading_address_line1 ?? '' }}</textarea>
-        </div>
-
-        <div class="col-lg-4 field-group field-partnership">
-            <label for="">Trading Address Line 2</label>
-            <textarea class="form-control my-2" name="p_trading_address_line2">{{ $client->partnership_trading_address_line2 ?? '' }}</textarea>
-        </div>
-
-        <div class="col-lg-4 field-group">
+        <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord field-limited-company">
             <label for="">City</label>
-            <input type="text" class="form-control my-2" name="city" value="{{ $client->city ?? '' }}">
+            <input type="text" class="form-control my-2" id="city" name="city" value="{{ $client->city ?? '' }}">
         </div>
 
-        <div class="col-lg-4 field-group">
+        <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord field-limited-company">
             <label for="">Country</label>
-            <input type="text" class="form-control my-2" name="country" value="{{ $client->country ?? '' }}">
+            <input type="text" class="form-control my-2" id="country" name="country" value="{{ $client->country ?? '' }}">
         </div>
 
-        <div class="col-lg-4 field-group">
+        <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord field-limited-company">
             <label for="">Post Code</label>
-            <input type="text" class="form-control my-2" name="postcode" value="{{ $client->postcode ?? '' }}">
+            <input type="text" class="form-control my-2" id="postcode" name="postcode" value="{{ $client->postcode ?? '' }}">
         </div>
 
-        <div class="col-lg-4 field-group field-sole-trader">
+        <div class="col-lg-4 field-group field-limited-company field-partnership">
+            <label for="">Trading Address Line 1</label>
+            <textarea class="form-control my-2" id="trading_address_line1" name="trading_address_line1"> 
+                {{ $client->trading_address_line1 ?? '' }}
+            </textarea>
+        </div>
+
+        <div class="col-lg-4 field-group field-limited-company field-partnership">
+            <label for="">Trading Address Line 2</label>
+            <textarea class="form-control my-2" id="trading_address_line2" name="trading_address_line2">
+                {{ $client->trading_address_line2 ?? '' }}
+            </textarea>
+        </div>
+
+        <div class="col-lg-4 field-group field-limited-company field-partnership">
+            <label for="">Trading City</label>
+            <input type="text" class="form-control my-2" id="trading_city" name="trading_city" value="{{ $client->trading_city ?? '' }}">
+        </div>
+
+        <div class="col-lg-4 field-group field-limited-company field-partnership">
+            <label for="">Trading Country</label>
+            <input type="text" class="form-control my-2" id="trading_country" name="trading_country" value="{{ $client->trading_country ?? '' }}">
+        </div>
+
+        <div class="col-lg-4 field-group field-limited-company field-partnership">
+            <label for="">Trading Post Code</label>
+            <input type="text" class="form-control my-2" id="trading_postcode" name="trading_postcode" value="{{ $client->trading_postcode ?? '' }}">
+        </div>
+
+        <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord">
             <label for="">Photo ID Saved</label>
             <select class="form-control my-2" name="st_photo_id_saved">
                 <option value="">Select</option>
@@ -140,7 +123,7 @@
             </select>
         </div>
 
-        <div class="col-lg-4 field-group field-sole-trader">
+        <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord">
             <label for="">HMRC Authorization</label>
             <select class="form-control my-2" name="st_hmrc_authorization">
                 <option value="">Select</option>
@@ -149,42 +132,34 @@
             </select>
         </div>
 
-        <div class="col-lg-4 field-group field-sole-trader">
+        <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord">
             <label for="">UTR Number</label>
             <input type="text" class="form-control my-2" name="st_utr_number" value="{{ $client->utr_number ?? '' }}">
         </div>
 
-        <div class="col-lg-4 field-group field-sole-trader">
+       <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord">
             <label for="">NI Number</label>
             <input type="text" class="form-control my-2" name="st_ni_number" value="{{ $client->ni_number ?? '' }}">
         </div>
 
-        <div class="col-lg-4 field-group field-self-assessment">
-            <label for="">Photo ID Saved</label>
-            <select class="form-control my-2" name="sa_photo_id_saved">
-                <option value="">Select</option>
-                <option value="Y" {{ $client->photo_id_saved == 'Y' ? 'selected' : '' }}>Yes</option>
-                <option value="N" {{ $client->photo_id_saved == 'N' ? 'selected' : '' }}>No</option>
-            </select>
+        <div class="col-lg-4 field-group field-sole-trade">
+            <label for="">Business Name</label>
+            <input type="text" class="form-control my-2" id="business_name" name="business_name" value="{{ $client->business_name ?? '' }}">
         </div>
 
         <div class="col-lg-4 field-group field-self-assessment">
-            <label for="">HMRC Authorization</label>
-            <select class="form-control my-2" name="sa_hmrc_authorization">
-                <option value="">Select</option>
-                <option value="Y" {{ $client->hmrc_authorization == 'Y' ? 'selected' : '' }}>Yes</option>
-                <option value="N" {{ $client->hmrc_authorization == 'N' ? 'selected' : '' }}>No</option>
-            </select>
+            <label for="">Type of Business</label>
+            <input type="text" class="form-control my-2" id="type_of_business" name="type_of_business" value="{{ $client->type_of_business ?? '' }}">
         </div>
 
-        <div class="col-lg-4 field-group field-self-assessment">
-            <label for="">UTR Number</label>
-            <input type="text" class="form-control my-2" name="sa_utr_number" value="{{ $client->utr_number ?? '' }}">
+        <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord field-limited-company field-partnership">
+            <label for="">Agreement Date</label>
+            <input type="date" class="form-control my-2" id="agreement_date" name="agreement_date" value="{{ $client->agreement_date ?? '' }}">
         </div>
 
-        <div class="col-lg-4 field-group field-self-assessment">
-            <label for="">NI Number</label>
-            <input type="text" class="form-control my-2" name="sa_ni_number" value="{{ $client->ni_number ?? '' }}">
+        <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord field-limited-company field-partnership">
+            <label for="">Cessation Date</label>
+            <input type="date" class="form-control my-2" id="cessation_date" name="cessation_date" value="{{ $client->cessation_date ?? '' }}">
         </div>
 
         <div class="col-lg-12 field-group field-landlord">
@@ -208,94 +183,6 @@
                     @endforeach
                 @endif
             </div>
-        </div>
-
-        <div class="col-lg-4 field-group field-landlord">
-            <label for="">Photo ID Saved</label>
-            <select class="form-control my-2" name="ll_photo_id_saved">
-                <option value="">Select</option>
-                <option value="Y" {{ $client->photo_id_saved == 'Y' ? 'selected' : '' }}>Yes</option>
-                <option value="N" {{ $client->photo_id_saved == 'N' ? 'selected' : '' }}>No</option>
-            </select>
-        </div>
-
-        <div class="col-lg-4 field-group field-landlord">
-            <label for="">HMRC Authorization</label>
-            <select class="form-control my-2" name="ll_hmrc_authorization">
-                <option value="">Select</option>
-                <option value="Y" {{ $client->hmrc_authorization == 'Y' ? 'selected' : '' }}>Yes</option>
-                <option value="N" {{ $client->hmrc_authorization == 'N' ? 'selected' : '' }}>No</option>
-            </select>
-        </div>
-
-        <div class="col-lg-4 field-group field-landlord">
-            <label for="">UTR Number</label>
-            <input type="text" class="form-control my-2" name="ll_utr_number" value="{{ $client->utr_number ?? '' }}">
-        </div>
-
-        <div class="col-lg-4 field-group field-landlord">
-            <label for="">NI Number</label>
-            <input type="text" class="form-control my-2" name="ll_ni_number" value="{{ $client->ni_number ?? '' }}">
-        </div>
-
-        <div class="col-lg-4 field-group">
-            <label for="">Agreement Date</label>
-            <input type="date" class="form-control my-2" name="agreement_date" value="{{ $client->agreement_date ?? '' }}">
-        </div>
-
-        <div class="col-lg-4 field-group">
-            <label for="">Cessation Date</label>
-            <input type="date" class="form-control my-2" name="cessation_date" value="{{ $client->cessation_date ?? '' }}">
-        </div>
-
-        <div class="col-lg-4 field-group field-sole-trader">
-            <label for="">Agreement Date</label>
-            <input type="date" class="form-control my-2" name="st_agreement_date" value="{{ $client->agreement_date ?? '' }}">
-        </div>
-
-        <div class="col-lg-4 field-group field-sole-trader">
-            <label for="">Cessation Date</label>
-            <input type="date" class="form-control my-2" name="st_cessation_date" value="{{ $client->cessation_date ?? '' }}">
-        </div>
-
-        <div class="col-lg-4 field-group field-self-assessment">
-            <label for="">Agreement Date</label>
-            <input type="date" class="form-control my-2" name="sa_agreement_date" value="{{ $client->agreement_date ?? '' }}">
-        </div>
-
-        <div class="col-lg-4 field-group field-self-assessment">
-            <label for="">Cessation Date</label>
-            <input type="date" class="form-control my-2" name="sa_cessation_date" value="{{ $client->cessation_date ?? '' }}">
-        </div>
-
-        <div class="col-lg-4 field-group field-landlord">
-            <label for="">Agreement Date</label>
-            <input type="date" class="form-control my-2" name="ll_agreement_date" value="{{ $client->agreement_date ?? '' }}">
-        </div>
-
-        <div class="col-lg-4 field-group field-landlord">
-            <label for="">Cessation Date</label>
-            <input type="date" class="form-control my-2" name="ll_cessation_date" value="{{ $client->cessation_date ?? '' }}">
-        </div>
-
-        <div class="col-lg-4 field-group field-limited-company">
-            <label for="">Agreement Date</label>
-            <input type="date" class="form-control my-2" name="lc_agreement_date" value="{{ $client->agreement_date ?? '' }}">
-        </div>
-
-        <div class="col-lg-4 field-group field-limited-company">
-            <label for="">Cessation Date</label>
-            <input type="date" class="form-control my-2" name="lc_cessation_date" value="{{ $client->cessation_date ?? '' }}">
-        </div>
-
-        <div class="col-lg-4 field-group field-partnership">
-            <label for="">Agreement Date</label>
-            <input type="date" class="form-control my-2" name="p_agreement_date" value="{{ $client->agreement_date ?? '' }}">
-        </div>
-
-        <div class="col-lg-4 field-group field-partnership">
-            <label for="">Cessation Date</label>
-            <input type="date" class="form-control my-2" name="p_cessation_date" value="{{ $client->cessation_date ?? '' }}">
         </div>
     </div>
 

@@ -274,6 +274,9 @@ class ClientController extends Controller
             'city' => 'nullable|string|max:255',
             'country' => 'nullable|string|max:255',
             'postcode' => 'nullable|string',
+            'trading_city' => 'nullable|string|max:255',
+            'trading_country' => 'nullable|string|max:255',
+            'trading_postcode' => 'nullable|string',
             'agreement_date' => 'nullable|date',
             'cessation_date' => 'nullable|date',
             'name' => 'nullable|string|max:255',
@@ -291,8 +294,8 @@ class ClientController extends Controller
             'registered_address_line2' => 'nullable|string|max:255',
             'trading_address_line1' => 'nullable|string|max:255',
             'trading_address_line2' => 'nullable|string|max:255',
-            'partnership_trading_address_line1' => 'nullable|string|max:255',
-            'partnership_trading_address_line2' => 'nullable|string|max:255'
+            'business_name' => 'nullable|string|max:255',
+            'type_of_business' => 'nullable|string|max:255'
         ]);
 
         if ($validator->fails()) {
@@ -311,28 +314,32 @@ class ClientController extends Controller
         $data->secondary_email = $request->secondary_email;
         $data->phone = $request->phone;
         $data->phone2 = $request->phone2;
-        $data->city = $request->city;
-        $data->country = $request->country;
-        $data->postcode = $request->postcode;
         $data->agreement_date = $request->agreement_date;
         $data->cessation_date = $request->cessation_date;
         $data->created_by = Auth::id();
 
-        if ($clientTypeNameLower === 'sole trader') {
+        if ($clientTypeNameLower === 'sole trade') {
+            $data->name = $request->name;
+            $data->business_name = $request->business_name;
+            $data->dob = $request->dob;
+            $data->address_line1 = $request->address_line1;
+            $data->address_line2 = $request->address_line2;
+            $data->city = $request->city;
+            $data->country = $request->country;
+            $data->postcode = $request->postcode;
+            $data->photo_id_saved = $request->photo_id_saved;
+            $data->hmrc_authorization = $request->hmrc_authorization;
+            $data->utr_number = $request->utr_number;
+            $data->ni_number = $request->ni_number;
+        } else if ($clientTypeNameLower === 'self assessment' || $clientTypeNameLower === 'self assesment') {
             $data->name = $request->name;
             $data->type_of_business = $request->type_of_business;
             $data->dob = $request->dob;
             $data->address_line1 = $request->address_line1;
             $data->address_line2 = $request->address_line2;
-            $data->photo_id_saved = $request->photo_id_saved;
-            $data->hmrc_authorization = $request->hmrc_authorization;
-            $data->utr_number = $request->utr_number;
-            $data->ni_number = $request->ni_number;
-        } else if ($clientTypeNameLower === 'self assesment') {
-            $data->name = $request->name;
-            $data->dob = $request->dob;
-            $data->address_line1 = $request->address_line1;
-            $data->address_line2 = $request->address_line2;
+            $data->city = $request->city;
+            $data->country = $request->country;
+            $data->postcode = $request->postcode;
             $data->photo_id_saved = $request->photo_id_saved;
             $data->hmrc_authorization = $request->hmrc_authorization;
             $data->utr_number = $request->utr_number;
@@ -342,8 +349,9 @@ class ClientController extends Controller
             $data->dob = $request->dob;
             $data->address_line1 = $request->address_line1;
             $data->address_line2 = $request->address_line2;
-            $data->number_of_property = $request->number_of_property;
-            $data->property_address = $request->property_address;
+            $data->city = $request->city;
+            $data->country = $request->country;
+            $data->postcode = $request->postcode;
             $data->photo_id_saved = $request->photo_id_saved;
             $data->hmrc_authorization = $request->hmrc_authorization;
             $data->utr_number = $request->utr_number;
@@ -353,12 +361,21 @@ class ClientController extends Controller
             $data->company_number = $request->company_number;
             $data->registered_address_line1 = $request->registered_address_line1;
             $data->registered_address_line2 = $request->registered_address_line2;
+            $data->city = $request->city;
+            $data->country = $request->country;
+            $data->postcode = $request->postcode;
             $data->trading_address_line1 = $request->trading_address_line1;
             $data->trading_address_line2 = $request->trading_address_line2;
+            $data->trading_city = $request->trading_city;
+            $data->trading_country = $request->trading_country;
+            $data->trading_postcode = $request->trading_postcode;
         } else if ($clientTypeNameLower === 'partnership') {
             $data->name = $request->name;
-            $data->partnership_trading_address_line1 = $request->partnership_trading_address_line1;
-            $data->partnership_trading_address_line2 = $request->partnership_trading_address_line2;
+            $data->trading_address_line1 = $request->trading_address_line1;
+            $data->trading_address_line2 = $request->trading_address_line2;
+            $data->trading_city = $request->trading_city;
+            $data->trading_country = $request->trading_country;
+            $data->trading_postcode = $request->trading_postcode;
         }
 
         if ($data->save()) {
@@ -509,57 +526,71 @@ class ClientController extends Controller
         if ($request->secondary_email) $client->secondary_email = $request->secondary_email;
         if ($request->phone) $client->phone = $request->phone;
         if ($request->phone2) $client->phone2 = $request->phone2;
-        if ($request->city) $client->city = $request->city;
-        if ($request->country) $client->country = $request->country;
-        if ($request->postcode) $client->postcode = $request->postcode;
+        if ($request->agreement_date) $client->agreement_date = $request->agreement_date;
+        if ($request->cessation_date) $client->cessation_date = $request->cessation_date;
 
-        if ($clientType === 'sole trader') {
+        if ($clientType === 'sole trade') {
+            if ($request->name) $client->name = $request->name;
+            if ($request->business_name) $client->business_name = $request->business_name;
             if ($request->st_dob) $client->dob = $request->st_dob;
             if ($request->st_address_line1) $client->address_line1 = $request->st_address_line1;
             if ($request->st_address_line2) $client->address_line2 = $request->st_address_line2;
+            if ($request->city) $client->city = $request->city;
+            if ($request->country) $client->country = $request->country;
+            if ($request->postcode) $client->postcode = $request->postcode;
             if ($request->st_photo_id_saved) $client->photo_id_saved = $request->st_photo_id_saved;
             if ($request->st_hmrc_authorization) $client->hmrc_authorization = $request->st_hmrc_authorization;
             if ($request->st_utr_number) $client->utr_number = $request->st_utr_number;
             if ($request->st_ni_number) $client->ni_number = $request->st_ni_number;
-            if ($request->st_agreement_date) $client->agreement_date = $request->st_agreement_date;
-            if ($request->st_cessation_date) $client->cessation_date = $request->st_cessation_date;
         } 
-        elseif ($clientType === 'self assesment') {
-            if ($request->sa_dob) $client->dob = $request->sa_dob;
-            if ($request->sa_address_line1) $client->address_line1 = $request->sa_address_line1;
-            if ($request->sa_address_line2) $client->address_line2 = $request->sa_address_line2;
-            if ($request->sa_type_of_business) $client->type_of_business = $request->sa_type_of_business;
-            if ($request->sa_photo_id_saved) $client->photo_id_saved = $request->sa_photo_id_saved;
-            if ($request->sa_hmrc_authorization) $client->hmrc_authorization = $request->sa_hmrc_authorization;
-            if ($request->sa_utr_number) $client->utr_number = $request->sa_utr_number;
-            if ($request->sa_ni_number) $client->ni_number = $request->sa_ni_number;
-            if ($request->sa_agreement_date) $client->agreement_date = $request->sa_agreement_date;
-            if ($request->sa_cessation_date) $client->cessation_date = $request->sa_cessation_date;
+        elseif ($clientType === 'self assessment') {
+            if ($request->name) $client->name = $request->name;
+            if ($request->type_of_business) $client->type_of_business = $request->type_of_business;
+            if ($request->st_dob) $client->dob = $request->st_dob;
+            if ($request->st_address_line1) $client->address_line1 = $request->st_address_line1;
+            if ($request->st_address_line2) $client->address_line2 = $request->st_address_line2;
+            if ($request->city) $client->city = $request->city;
+            if ($request->country) $client->country = $request->country;
+            if ($request->postcode) $client->postcode = $request->postcode;
+            if ($request->st_photo_id_saved) $client->photo_id_saved = $request->st_photo_id_saved;
+            if ($request->st_hmrc_authorization) $client->hmrc_authorization = $request->st_hmrc_authorization;
+            if ($request->st_utr_number) $client->utr_number = $request->st_utr_number;
+            if ($request->st_ni_number) $client->ni_number = $request->st_ni_number;
         } 
         elseif ($clientType === 'landlord') {
-            if ($request->ll_dob) $client->dob = $request->ll_dob;
-            if ($request->ll_address_line1) $client->address_line1 = $request->ll_address_line1;
-            if ($request->ll_address_line2) $client->address_line2 = $request->ll_address_line2;
-            if ($request->ll_photo_id_saved) $client->photo_id_saved = $request->ll_photo_id_saved;
-            if ($request->ll_hmrc_authorization) $client->hmrc_authorization = $request->ll_hmrc_authorization;
-            if ($request->ll_utr_number) $client->utr_number = $request->ll_utr_number;
-            if ($request->ll_ni_number) $client->ni_number = $request->ll_ni_number;
-            if ($request->ll_agreement_date) $client->agreement_date = $request->ll_agreement_date;
-            if ($request->ll_cessation_date) $client->cessation_date = $request->ll_cessation_date;
+            if ($request->name) $client->name = $request->name;
+            if ($request->st_dob) $client->dob = $request->st_dob;
+            if ($request->st_address_line1) $client->address_line1 = $request->st_address_line1;
+            if ($request->st_address_line2) $client->address_line2 = $request->st_address_line2;
+            if ($request->city) $client->city = $request->city;
+            if ($request->country) $client->country = $request->country;
+            if ($request->postcode) $client->postcode = $request->postcode;
+            if ($request->st_photo_id_saved) $client->photo_id_saved = $request->st_photo_id_saved;
+            if ($request->st_hmrc_authorization) $client->hmrc_authorization = $request->st_hmrc_authorization;
+            if ($request->st_utr_number) $client->utr_number = $request->st_utr_number;
+            if ($request->st_ni_number) $client->ni_number = $request->st_ni_number;
         } 
-        elseif ($clientType === 'limited company' || $clientType === 'vat registered company') {
-            if ($request->lc_registered_address_line1) $client->registered_address_line1 = $request->lc_registered_address_line1;
-            if ($request->lc_registered_address_line2) $client->registered_address_line2 = $request->lc_registered_address_line2;
-            if ($request->lc_trading_address_line1) $client->trading_address_line1 = $request->lc_trading_address_line1;
-            if ($request->lc_trading_address_line2) $client->trading_address_line2 = $request->lc_trading_address_line2;
-            if ($request->lc_agreement_date) $client->agreement_date = $request->lc_agreement_date;
-            if ($request->lc_cessation_date) $client->cessation_date = $request->lc_cessation_date;
+        elseif ($clientType === 'limited company') {
+            if ($request->name) $client->name = $request->name;
+            if ($request->company_number) $client->company_number = $request->company_number;
+            if ($request->registered_address_line1) $client->registered_address_line1 = $request->registered_address_line1;
+            if ($request->registered_address_line2) $client->registered_address_line2 = $request->registered_address_line2;
+            if ($request->trading_address_line1) $client->trading_address_line1 = $request->trading_address_line1;
+            if ($request->trading_address_line2) $client->trading_address_line2 = $request->trading_address_line2;
+            if ($request->city) $client->city = $request->city;
+            if ($request->country) $client->country = $request->country;
+            if ($request->postcode) $client->postcode = $request->postcode;
+            if ($request->trading_city) $client->trading_city = $request->trading_city;
+            if ($request->trading_country) $client->trading_country = $request->trading_country;
+            if ($request->trading_postcode) $client->trading_postcode = $request->trading_postcode;
         } 
         elseif ($clientType === 'partnership') {
-            if ($request->p_trading_address_line1) $client->partnership_trading_address_line1 = $request->p_trading_address_line1;
-            if ($request->p_trading_address_line2) $client->partnership_trading_address_line2 = $request->p_trading_address_line2;
-            if ($request->p_agreement_date) $client->agreement_date = $request->p_agreement_date;
-            if ($request->p_cessation_date) $client->cessation_date = $request->p_cessation_date;
+            if ($request->name) $client->name = $request->name;
+            if ($request->trading_address_line1) $client->trading_address_line1 = $request->trading_address_line1;
+            if ($request->trading_address_line2) $client->trading_address_line2 = $request->trading_address_line2;
+            if ($request->trading_city) $client->trading_city = $request->trading_city;
+            if ($request->trading_country) $client->trading_country = $request->trading_country;
+            if ($request->trading_postcode) $client->trading_postcode = $request->trading_postcode;
         }
 
         if ($request->hasFile('photo')) {
@@ -603,6 +634,8 @@ class ClientController extends Controller
         ClientProperty::where('client_id', $client->id)
             ->whereNotIn('id', $existingIds)
             ->delete();
+
+        $client->number_of_property = count($existingIds);
 
         if ($client->save()) {
             return response()->json(['status' => 200, 'message' => 'Client details updated successfully', 'client_id' => $client->id]);

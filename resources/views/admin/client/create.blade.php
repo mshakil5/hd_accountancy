@@ -11,17 +11,13 @@
 
             <div class="row my-4 px-3">
                 <div class="col-lg-3">
-                    <label for="">Client Name <span class="text-danger">*</span></label>
+                    <label for="">Select Client <span class="text-danger">*</span></label>
                     <select name="client_credential_id" id="client_credential_id" class="form-control mt-2 select2">
                         <option value="">Please Select</option>
                         @foreach ($clientCridentials as $clientCridential)
                             <option value="{{ $clientCridential->id }}">{{$clientCridential->first_name}} {{$clientCridential->last_name}}</option>
                         @endforeach
                     </select>
-                </div>
-                <div class="col-lg-3">
-                    <label for="">Reference ID <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control my-2" id="reference_id" name="reference_id" placeholder="Ex: LT-001">
                 </div>
                 <div class="col-lg-3">
                     <label for="">Client Type <span class="text-danger">*</span></label>
@@ -31,6 +27,10 @@
                             <option value="{{ $clientType->id }}" data-type="{{ strtolower($clientType->name) }}">{{ $clientType->name }}</option>
                         @endforeach
                     </select>
+                </div>
+                <div class="col-lg-3">
+                    <label for="">Client Reference <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control my-2" id="reference_id" name="reference_id" placeholder="Ex: LT-001">
                 </div>
                 <div class="col-lg-3">
                     <label for="">Client Manager</label>
@@ -55,14 +55,9 @@
                                             <input type="text" class="form-control my-2" id="client_reference" name="client_reference" required>
                                         </div>
 
-                                        <div class="col-lg-4 field-group field-personal field-self-assessment field-landlord field-sole-trader field-limited-company field-partnership">
+                                        <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord field-limited-company field-partnership">
                                             <label for="" class="client-label">Client Name <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control my-2" id="name" name="name">
-                                        </div>
-
-                                        <div class="col-lg-4 field-group field-self-assessment">
-                                            <label for="">Type of Business</label>
-                                            <input type="text" class="form-control my-2" id="type_of_business" name="type_of_business">
                                         </div>
 
                                         <div class="col-lg-4 field-group field-limited-company">
@@ -70,44 +65,41 @@
                                             <input type="text" class="form-control my-2" id="company_number" name="company_number">
                                         </div>
 
-                                        <!-- Sole Trader, Self Assessment, Landlord -->
-                                        <div class="col-lg-4 field-group field-personal">
+                                        <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord">
                                             <label for="">Date of Birth</label>
                                             <input type="date" class="form-control my-2" id="dob" name="dob">
                                         </div>
 
-                                        <div class="col-lg-4 field-group">
+                                        <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord field-limited-company field-partnership">
                                             <label for="">Primary Email <span class="text-danger">*</span></label>
                                             <input type="email" class="form-control my-2" id="email" name="email" required>
                                         </div>
 
-                                        <div class="col-lg-4 field-group">
+                                        <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord field-limited-company field-partnership">
                                             <label for="">Secondary Email</label>
                                             <input type="email" class="form-control my-2" id="secondary_email" name="secondary_email">
                                         </div>
 
-                                        <div class="col-lg-4 field-group">
+                                        <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord field-limited-company field-partnership">
                                             <label for="">Primary Phone <span class="text-danger">*</span></label>
                                             <input type="number" class="form-control my-2" id="phone" name="phone" required>
                                         </div>
 
-                                        <div class="col-lg-4 field-group">
+                                        <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord field-limited-company field-partnership">
                                             <label for="">Secondary Phone</label>
                                             <input type="number" class="form-control my-2" id="phone2" name="phone2">
                                         </div>
 
-                                        <!-- Sole Trader, Self Assessment, Landlord -->
-                                        <div class="col-lg-4 field-group field-personal">
+                                        <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord">
                                             <label for="">Address Line 1</label>
                                             <textarea class="form-control my-2" id="address_line1" name="address_line1"></textarea>
                                         </div>
 
-                                        <div class="col-lg-4 field-group field-personal">
+                                        <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord">
                                             <label for="">Address Line 2</label>
                                             <textarea class="form-control my-2" id="address_line2" name="address_line2"></textarea>
                                         </div>
 
-                                        <!-- Limited Company - Registered -->
                                         <div class="col-lg-4 field-group field-limited-company">
                                             <label for="">Registered Address Line 1</label>
                                             <textarea class="form-control my-2" id="registered_address_line1" name="registered_address_line1"></textarea>
@@ -118,56 +110,47 @@
                                             <textarea class="form-control my-2" id="registered_address_line2" name="registered_address_line2"></textarea>
                                         </div>
 
-                                        <!-- Limited Company - Trading -->
-                                        <div class="col-lg-4 field-group field-limited-company">
-                                            <label for="">Trading Address Line 1</label>
-                                            <textarea class="form-control my-2" id="trading_address_line1" name="trading_address_line1"></textarea>
-                                        </div>
-
-                                        <div class="col-lg-4 field-group field-limited-company">
-                                            <label for="">Trading Address Line 2</label>
-                                            <textarea class="form-control my-2" id="trading_address_line2" name="trading_address_line2"></textarea>
-                                        </div>
-
-                                        <!-- Partnership - Trading -->
-                                        <div class="col-lg-4 field-group field-partnership">
-                                            <label for="">Trading Address Line 1</label>
-                                            <textarea class="form-control my-2" id="partnership_trading_address_line1" name="partnership_trading_address_line1"></textarea>
-                                        </div>
-
-                                        <div class="col-lg-4 field-group field-partnership">
-                                            <label for="">Trading Address Line 2</label>
-                                            <textarea class="form-control my-2" id="partnership_trading_address_line2" name="partnership_trading_address_line2"></textarea>
-                                        </div>
-
-                                        <div class="col-lg-4 field-group">
+                                         <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord field-limited-company">
                                             <label for="">City</label>
                                             <input type="text" class="form-control my-2" id="city" name="city">
                                         </div>
 
-                                        <div class="col-lg-4 field-group">
+                                        <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord field-limited-company">
                                             <label for="">Country</label>
                                             <input type="text" class="form-control my-2" id="country" name="country">
                                         </div>
 
-                                        <div class="col-lg-4 field-group">
+                                        <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord field-limited-company">
                                             <label for="">Post Code</label>
                                             <input type="text" class="form-control my-2" id="postcode" name="postcode">
                                         </div>
 
-                                        <!-- Landlord -->
-                                        <div class="col-lg-4 field-group field-landlord">
-                                            <label for="">Number of Property</label>
-                                            <input type="number" class="form-control my-2" id="number_of_property" name="number_of_property">
+                                        <div class="col-lg-4 field-group field-limited-company field-partnership">
+                                            <label for="">Trading Address Line 1</label>
+                                            <textarea class="form-control my-2" id="trading_address_line1" name="trading_address_line1"></textarea>
                                         </div>
 
-                                        <div class="col-lg-4 field-group field-landlord">
-                                            <label for="">Property Address</label>
-                                            <textarea class="form-control my-2" id="property_address" name="property_address"></textarea>
+                                        <div class="col-lg-4 field-group field-limited-company field-partnership">
+                                            <label for="">Trading Address Line 2</label>
+                                            <textarea class="form-control my-2" id="trading_address_line2" name="trading_address_line2"></textarea>
                                         </div>
 
-                                        <!-- Sole Trader, Self Assessment, Landlord -->
-                                        <div class="col-lg-4 field-group field-personal">
+                                        <div class="col-lg-4 field-group field-limited-company field-partnership">
+                                            <label for="">Trading City</label>
+                                            <input type="text" class="form-control my-2" id="trading_city" name="trading_city">
+                                        </div>
+
+                                        <div class="col-lg-4 field-group field-limited-company field-partnership">
+                                            <label for="">Trading Country</label>
+                                            <input type="text" class="form-control my-2" id="trading_country" name="trading_country">
+                                        </div>
+
+                                        <div class="col-lg-4 field-group field-limited-company field-partnership">
+                                            <label for="">Trading Post Code</label>
+                                            <input type="text" class="form-control my-2" id="trading_postcode" name="trading_postcode">
+                                        </div>
+
+                                        <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord">
                                             <label for="">Photo ID Saved</label>
                                             <select class="form-control my-2" id="photo_id_saved" name="photo_id_saved">
                                                 <option value="">Select</option>
@@ -176,7 +159,7 @@
                                             </select>
                                         </div>
 
-                                        <div class="col-lg-4 field-group field-personal">
+                                        <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord">
                                             <label for="">HMRC Authorization</label>
                                             <select class="form-control my-2" id="hmrc_authorization" name="hmrc_authorization">
                                                 <option value="">Select</option>
@@ -185,22 +168,32 @@
                                             </select>
                                         </div>
 
-                                        <div class="col-lg-4 field-group field-personal">
+                                        <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord">
                                             <label for="">UTR Number</label>
                                             <input type="text" class="form-control my-2" id="utr_number" name="utr_number">
                                         </div>
 
-                                        <div class="col-lg-4 field-group field-personal">
+                                        <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord">
                                             <label for="">NI Number</label>
                                             <input type="text" class="form-control my-2" id="ni_number" name="ni_number">
                                         </div>
 
-                                        <div class="col-lg-4 field-group">
+                                        <div class="col-lg-4 field-group field-sole-trade">
+                                            <label for="">Business Name</label>
+                                            <input type="text" class="form-control my-2" id="business_name" name="business_name">
+                                        </div>
+
+                                        <div class="col-lg-4 field-group field-self-assessment">
+                                            <label for="">Type of Business</label>
+                                            <input type="text" class="form-control my-2" id="type_of_business" name="type_of_business">
+                                        </div>
+
+                                        <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord field-limited-company field-partnership">
                                             <label for="">Agreement Date</label>
                                             <input type="date" class="form-control my-2" id="agreement_date" name="agreement_date">
                                         </div>
 
-                                        <div class="col-lg-4 field-group">
+                                        <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord field-limited-company field-partnership">
                                             <label for="">Cessation Date</label>
                                             <input type="date" class="form-control my-2" id="cessation_date" name="cessation_date">
                                         </div>
@@ -234,26 +227,24 @@
     });
 
     function hideAllFields() {
-        $('.field-sole-trader, .field-self-assessment, .field-landlord, .field-limited-company, .field-partnership, .field-personal').hide();
+        $('.field-group').hide();
     }
 
     function showFieldsByType(type) {
         hideAllFields();
-        const typeLower = type.toLowerCase();
+        const typeLower = type.toLowerCase().trim();
 
-        if (typeLower === 'sole trader') {
-            $('.field-sole-trader, .field-personal').show();
-        } else if (typeLower === 'self assesment') {
-            $('.field-self-assessment, .field-personal').show();
+        if (typeLower === 'sole trade') {
+            $('.field-sole-trade').show();
+        } else if (typeLower === 'self assessment' || typeLower === 'self assesment') {
+            $('.field-self-assessment').show();
         } else if (typeLower === 'landlord') {
-            $('.field-landlord, .field-personal').show();
+            $('.field-landlord').show();
         } else if (typeLower === 'limited company') {
             $('.field-limited-company').show();
         } else if (typeLower === 'partnership') {
             $('.field-partnership').show();
         }
-        
-        $('#name').closest('.field-group').show();
     }
 
     function updateClientLabel(type) {
@@ -284,45 +275,43 @@
         }
     });
 
-    $(document).ready(function() {
-        $('#details-saveButton').click(function(event) {
-            event.preventDefault();
-            var formData = new FormData($('#detailsForm')[0]);
-            formData.append('client_credential_id', $('#client_credential_id').val());
-            formData.append('client_type_id', $('#client_type_id').val());
-            formData.append('manager_id', $('#manager_id').val());
-            formData.append('reference_id', $('#reference_id').val());
+    $('#details-saveButton').click(function(event) {
+        event.preventDefault();
+        var formData = new FormData($('#detailsForm')[0]);
+        formData.append('client_credential_id', $('#client_credential_id').val());
+        formData.append('client_type_id', $('#client_type_id').val());
+        formData.append('manager_id', $('#manager_id').val());
+        formData.append('reference_id', $('#reference_id').val());
 
-            $.ajax({
-                url: "{{URL::to('/admin/client')}}",
-                type: 'POST',
-                data: formData,
-                contentType: false,
-                processData: false,
-                success: function(response) {
-                    if (response.status === 200) {
-                        toastr.success("Client created successfully", "Success!");
-                        setTimeout(() => {
-                            window.location.href = "{{ route('client.update.form', ':id') }}".replace(':id', response.client_id);
-                        }, 500);
-                    } else {
-                        toastr.error(response.message, "Error");
-                    }
-                },
-                error: function(xhr) {
-                    var errorMessage = "An error occurred.";
-                    if (xhr.responseJSON && xhr.responseJSON.errors) {
-                        errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
-                    }
-                    toastr.error(errorMessage, "Error");
+        $.ajax({
+            url: "{{URL::to('/admin/client')}}",
+            type: 'POST',
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function(response) {
+                if (response.status === 200) {
+                    toastr.success("Client created successfully", "Success!");
+                    setTimeout(() => {
+                        window.location.href = "{{ route('client.update.form', ':id') }}".replace(':id', response.client_id);
+                    }, 500);
+                } else {
+                    toastr.error(response.message, "Error");
                 }
-            });
+            },
+            error: function(xhr) {
+                var errorMessage = "An error occurred.";
+                if (xhr.responseJSON && xhr.responseJSON.errors) {
+                    errorMessage = Object.values(xhr.responseJSON.errors)[0][0];
+                }
+                toastr.error(errorMessage, "Error");
+            }
         });
+    });
 
-        $('#details-clearButton').click(function(e) {
-            e.preventDefault();
-            $('#detailsForm')[0].reset();
-        });
+    $('#details-clearButton').click(function(e) {
+        e.preventDefault();
+        $('#detailsForm')[0].reset();
     });
 </script>
 
