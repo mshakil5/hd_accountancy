@@ -154,5 +154,19 @@ class ManagerController extends Controller
             return response()->json(['success'=>false,'message'=>'Delete Failed']);
         }
     }
+
+    public function editManagers(User $user)
+    {
+        return response()->json([
+            'managers' => User::where('type', 2)->get(),
+            'selected' => $user->managers()->pluck('manager_id')
+        ]);
+    }
+
+    public function updateManagers(Request $r, User $user)
+    {
+        $user->managers()->sync($r->manager_ids ?? []);
+        return response()->json(['status'=>200]);
+    }
     
 }

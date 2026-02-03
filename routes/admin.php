@@ -78,6 +78,9 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::post('/manager-update', [ManagerController::class, 'update']);
     Route::get('/manager/{id}', [ManagerController::class, 'delete']);
 
+    Route::get('/user-managers/{user}', [ManagerController::class, 'editManagers']);
+    Route::post('/user-managers/{user}', [ManagerController::class, 'updateManagers']);
+
     //Staff crud
     Route::get('/staff', [StaffController::class, 'index'])->name('allStaff');
     Route::get('/staff-list', [StaffController::class, 'getStuffs'])->name('get.Stuffs');

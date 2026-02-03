@@ -80,6 +80,26 @@ class User extends Authenticatable
         return $this->hasOne(HolidayRecord::class, 'staff_id');
     }
 
+    public function managers()
+    {
+        return $this->belongsToMany(
+            User::class,
+            'user_managers',
+            'user_id',
+            'manager_id'
+        );
+    }
+
+    public function staffs()
+    {
+        return $this->belongsToMany(
+            User::class,
+            'user_managers',
+            'manager_id',
+            'user_id'
+        );
+    }
+
     public function role()
     {
         return $this->belongsTo(Role::class, 'role_id');
