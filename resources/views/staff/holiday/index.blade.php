@@ -126,8 +126,8 @@
                     <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
                         Requested Holidays
                     </div>
-                    <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                        <table id="holidayRequestsTable" class="table cell-border table-striped" style="width:100%">
+                    <div class="table-wrapper my-2 table-responsive mx-1">
+                        <table id="holidayRequestsTable" class="table table-striped">
                             <thead>
                                 <tr>
                                     <th>Start Date</th>

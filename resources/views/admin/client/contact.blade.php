@@ -11,28 +11,27 @@
                 <div class="col-12">
                     <form id="contactForm">
                         <input type="hidden" id="contactIdInput" name="contact_id">
-                        <div class="form-group">
-                            <label for="greeting">Greeting <span class="text-danger">*</span></label>
-                            <select class="form-control my-2" name="greeting" id="greeting">
-                                <option value="">Choose greeting</option>
-                                <option value="Mr.">Mr.</option>
+                        <div class="form-group d-none">
+                            <label for="greeting">Greeting</label>
+                            <select name="greeting" id="greeting">
+                                <option value="Mr." selected>Mr.</option>
                                 <option value="Ms.">Ms.</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="first_name">First Name <span class="text-danger">*</span></label>
+                            <label for="first_name">First Name</label>
                             <input type="text" class="form-control my-2" id="first_name" name="first_name" placeholder="Enter first name">
                         </div>
                         <div class="form-group">
-                            <label for="last_name">Last Name <span class="text-danger">*</span></label>
+                            <label for="last_name">Last Name</label>
                             <input type="text" class="form-control my-2" id="last_name" name="last_name" placeholder="Enter last name">
                         </div>
                         <div class="form-group">
-                            <label for="contact-email">Email <span class="text-danger">*</span></label>
+                            <label for="contact-email">Email</label>
                             <input type="email" class="form-control my-2" id="contact-email" name="email" placeholder="Enter email">
                         </div>
                         <div class="form-group">
-                            <label for="contact-phone">Phone <span class="text-danger">*</span></label>
+                            <label for="contact-phone">Phone</label>
                             <input type="number" class="form-control my-2" id="contact-phone" name="phone" placeholder="Enter phone number">
                         </div>
                         <div class="form-group">
@@ -62,7 +61,6 @@
                 <table id="contactTable" class="table">
                     <thead>
                         <tr>
-                            <th>Greeting</th>
                             <th>Name</th>
                             <th>Job Title</th>
                             <th>Phone</th>
@@ -76,7 +74,6 @@
                                 <tr data-contact-id="{{ $contactInfo->id }}"
                                     data-client-id="{{ $contactInfo->client_id }}"
                                     data-contact-info='@json($contactInfo)'>
-                                    <td>{{ $contactInfo->greeting }}</td>
                                     <td>{{ $contactInfo->first_name }} {{ $contactInfo->last_name }}</td>
                                     <td>{{ $contactInfo->job_title }}</td>
                                     <td>{{ $contactInfo->phone }}</td>

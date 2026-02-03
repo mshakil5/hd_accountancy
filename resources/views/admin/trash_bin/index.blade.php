@@ -18,7 +18,7 @@
             @endif
           </div>
           <div class="card-body mt-2">
-            <table id="trashTable" class="table cell-border table-striped">
+            <table id="trashTable" class="table table-striped">
               <thead>
                 <tr>
                   <th>Module</th>

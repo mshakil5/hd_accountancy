@@ -119,7 +119,7 @@
             </div>
             <!-- /.card-header -->
             <div class="card-body">
-              <table id="example1" class="table cell-border table-striped">
+              <table id="example1" class="table table-striped">
                 <thead>
                 <tr>
                   <th style="text-align: center">Sl</th>

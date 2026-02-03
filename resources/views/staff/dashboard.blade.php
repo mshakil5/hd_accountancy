@@ -275,7 +275,7 @@
                         </button>
                     </div>
                     <div class="table-wrapper my-4 mx-auto">
-                        <table id="notesTable" class="table cell-border table-striped">
+                        <table id="notesTable" class="table table-striped">
                             <thead>
                                 <tr>
                                     <th>Sl</th>
@@ -298,8 +298,8 @@
                         Assigned Tasks
                     </div>
                 <!-- Works assigned to a user and specified staff -->
-                    <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                        <table id="serviceStaffTable" class="table cell-border table-striped" style="width:100%">
+                    <div class="table-wrapper my-2 table-responsive mx-1">
+                        <table id="serviceStaffTable" class="table table-striped">
                             <thead>
                                 <tr>
                                     <th scope="col">#</th>
@@ -393,8 +393,8 @@
                     <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
                         One Time Jobs
                     </div>
-                        <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                        <table id="OneTimeJobsTable" class="table cell-border table-striped" style="width:100%">
+                        <div class="table-wrapper my-2 table-responsive mx-1">
+                        <table id="OneTimeJobsTable" class="table table-striped">
                             <thead>
                                 <tr>
                                     <th scope="col">Service Name</th>
@@ -417,8 +417,8 @@
                     <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
                         Completed Tasks
                     </div>
-                        <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                        <table id="completedTasksTable" class="table cell-border table-striped" style="width:100%">
+                        <div class="table-wrapper my-2 table-responsive mx-1">
+                        <table id="completedTasksTable" class="table table-striped">
                             <thead>
                                 <tr>
                                     <th scope="col">#</th>

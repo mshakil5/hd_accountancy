@@ -42,7 +42,7 @@
             </p>
             <div class="row">
                 <div class="col-lg-6">
-                <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
+                <div class="table-wrapper my-2 table-responsive mx-1">
                     <table class="table cell-border table-bordered table-striped" id="staffsTable">
                         <thead>
                             <tr>

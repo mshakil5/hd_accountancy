@@ -252,8 +252,8 @@
                             </p>
 
                             <div class="collapse show" id="todaysDeadlineCollapse">
-                                <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                                    <table id="todaysDeadlineTable" class="table cell-border table-striped" style="width:100%">
+                                <div class="table-wrapper my-2 table-responsive mx-1">
+                                    <table id="todaysDeadlineTable" class="table table-striped">
                                         <thead>
                                             <tr>
                                                 <th>#</th>
@@ -282,8 +282,8 @@
                             </p>
 
                             <div class="collapse show" id="servicesCollapse">
-                                <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                                    <table id="servicesTable" class="table cell-border table-striped" style="width:100%">
+                                <div class="table-wrapper my-2 table-responsive mx-1">
+                                    <table id="servicesTable" class="table table-striped">
                                         <thead>
                                             <tr>
                                                 <th>#</th>
@@ -379,8 +379,8 @@
                     </p>
 
                     <div class="collapse show" id="assignedWorkCollapse">
-                        <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                            <table id="assignedServices" class="table cell-border table-striped" style="width:100%">
+                        <div class="table-wrapper my-2 table-responsive mx-1">
+                            <table id="assignedServices" class="table table-striped">
                                 <thead>
                                     <tr>
                                         <th>#</th>
@@ -479,8 +479,8 @@
                     </p>
 
                     <div class="collapse show" id="completedServicesCollapse">
-                        <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                            <table id="completedServices" class="table cell-border table-striped" style="width:100%">
+                        <div class="table-wrapper my-2 table-responsive mx-1">
+                            <table id="completedServices" class="table table-striped">
                                 <thead>
                                     <tr>
                                         <th>#</th>
@@ -564,8 +564,8 @@
                         <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
                             <i class="bx bxs-user-plus fs-4 me-2"></i>Assigned One Time Work List
                         </p>
-                        <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                            <table id="assignedOneTimeServices" class="table cell-border table-striped" style="width:100%">
+                        <div class="table-wrapper my-2 table-responsive mx-1">
+                            <table id="assignedOneTimeServices" class="table table-striped">
                                 <thead>
                                     <tr>
                                         <th scope="col">#</th>
@@ -589,8 +589,8 @@
                         <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
                             <i class="bx bxs-user-plus fs-4 me-2"></i>Completed One Time Work List
                         </p>
-                        <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                            <table id="completedOneTimeServices" class="table cell-border table-striped" style="width:100%">
+                        <div class="table-wrapper my-2 table-responsive mx-1">
+                            <table id="completedOneTimeServices" class="table table-striped">
                                 <thead>
                                     <tr>
                                         <th scope="col">#</th>
@@ -616,8 +616,8 @@
                                     Add New Note
                                 </button>
                             </div>
-                            <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                                <table id="notesTable" class="table cell-border table-striped" style="width: 100%;">
+                            <div class="table-wrapper my-2 table-responsive mx-1">
+                                <table id="notesTable" class="table table-striped">
                                     <thead>
                                         <tr>
                                             <th>Sl</th>
@@ -641,8 +641,8 @@
                         <i class="bx bxs-user-plus fs-4 me-2"></i>Currently logged-in staffs
                     </p>
 
-                    <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                        <table class="table cell-border table-striped" id="active-staff">
+                    <div class="table-wrapper my-2 table-responsive mx-1">
+                        <table class="table table-striped" id="active-staff">
                             <thead>
                                 <tr>
                                     <th scope="col" class="text-center">Name</th>
@@ -708,8 +708,8 @@
                     <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
                         <i class="bx bxs-user-plus fs-4 me-2"></i>Late Staffs
                     </p>
-                    <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                        <table class="table cell-border table-striped" id="late-staff-prorota">
+                    <div class="table-wrapper my-2 table-responsive mx-1">
+                        <table class="table table-striped" id="late-staff-prorota">
                             <thead>
                                 <tr>
                                     <th scope="col">Name</th>
@@ -738,8 +738,8 @@
                     <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
                         <i class="bx bxs-user-plus fs-4 me-2"></i>Departure Status
                     </p>
-                    <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                        <table class="table cell-border table-striped" id="shift-deviation-staff">
+                    <div class="table-wrapper my-2 table-responsive mx-1">
+                        <table class="table table-striped" id="shift-deviation-staff">
                             <thead>
                                 <tr>
                                     <th scope="col">Name</th>
@@ -771,8 +771,8 @@
                     <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
                         <i class="bx bxs-user-plus fs-4 me-2"></i>Today's Absent Staffs
                     </p>
-                    <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                        <table class="table cell-border table-striped" id="absent-staff">
+                    <div class="table-wrapper my-2 table-responsive mx-1">
+                        <table class="table table-striped" id="absent-staff">
                             <thead>
                                 <tr>
                                     <th scope="col">Name</th>
@@ -937,7 +937,8 @@
 
     $('#notesTable').DataTable({
         processing: true,
-        serverSide: true, // This is key!
+        serverSide: true,
+        info: false,
         ajax: {
             url: '/admin/get-note',
             type: 'GET',
@@ -1099,7 +1100,7 @@
         $('#assignedOneTimeServices').DataTable({
             processing: true,
             serverSide: true,
-            autoWidth: false, // This is key to stopping the 'style' error
+            info: false,
             ajax: {
                 url: '/admin/get-one-time-assigned-service',
                 type: 'GET'
@@ -1872,6 +1873,7 @@
         $('#todaysDeadlineTable').DataTable({
             processing: true,
             serverSide: true,
+            info: false,
             ajax: {
                 url: '/admin/get-todays-deadline-service',
                 type: 'GET',
@@ -1995,6 +1997,7 @@
         $('#servicesTable').DataTable({
             processing: true,
             serverSide: true,
+            info: false,
             ajax: {
                 url: '/admin/get-all-services', // Ensure this route points to getAllAssignedServices
                 type: 'GET',

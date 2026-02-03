@@ -84,11 +84,11 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="utr_number">DIR UTR Number</label>
+                            <label for="utr_number">UTR Number</label>
                             <input type="number" class="form-control my-2" id="utr_number" name="utr_number" placeholder="Enter UTR number">
                         </div>
                         <div class="form-group">
-                            <label for="utr_authorization">DIR UTR Authorization</label>
+                            <label for="utr_authorization">UTR Authorization</label>
                             <select class="form-control my-2" id="utr_authorization" name="utr_authorization">
                                 <option value="0">No</option>
                                 <option value="1">Yes</option>

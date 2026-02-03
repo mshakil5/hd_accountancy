@@ -274,7 +274,7 @@
                         </button>
                     </div>
                     <div class="table-wrapper my-4 mx-auto">
-                        <table id="notesTable" class="table cell-border table-striped">
+                        <table id="notesTable" class="table table-striped">
                             <thead>
                                 <tr>
                                     <th>Sl</th>
@@ -296,8 +296,8 @@
                     <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
                         Assigned Tasks
                     </div>
-                    <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                        <table id="serviceManagerTable" class="table cell-border table-striped" style="width:100%">
+                    <div class="table-wrapper my-2 table-responsive mx-1">
+                        <table id="serviceManagerTable" class="table table-striped">
                             <thead>
                                 <tr>
                                     <th scope="col">#</th>
@@ -389,8 +389,8 @@
                     <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
                         Completed Tasks As Staff
                     </div>
-                    <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                        <table id="completedTasksTable" class="table cell-border table-striped" style="width:100%">
+                    <div class="table-wrapper my-2 table-responsive mx-1">
+                        <table id="completedTasksTable" class="table table-striped">
                             <thead>
                                 <tr>
                                     <th scope="col">#</th>
@@ -416,8 +416,8 @@
                     <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
                         Completed Tasks As Manager
                     </div>
-                    <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                        <table id="completedTasksAsManagergTable" class="table cell-border table-striped" style="width:100%">
+                    <div class="table-wrapper my-2 table-responsive mx-1">
+                        <table id="completedTasksAsManagergTable" class="table table-striped">
                             <thead>
                                 <tr>
                                     <th scope="col">#</th>
@@ -444,8 +444,8 @@
                     <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
                         One Time Jobs
                     </div>
-                        <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                        <table id="OneTimeJobsTable" class="table cell-border table-striped" style="width:100%">
+                        <div class="table-wrapper my-2 table-responsive mx-1">
+                        <table id="OneTimeJobsTable" class="table table-striped">
                             <thead>
                                 <tr>
                                     <th scope="col">Service Name</th>

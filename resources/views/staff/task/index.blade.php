@@ -136,8 +136,8 @@
                     Task List
                 </div>
             <!-- Works assigned to a user and specified staff -->
-                    <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                    <table id="serviceStaffTable" class="table cell-border table-striped" style="width:100%">
+                    <div class="table-wrapper my-2 table-responsive mx-1">
+                    <table id="serviceStaffTable" class="table table-striped">
                         <thead>
                             <tr>
                                 <th scope="col">#</th>

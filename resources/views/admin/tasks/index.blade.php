@@ -184,7 +184,7 @@
                     </button>
                 </div>
                 <div class="table-wrapper my-4 mx-auto">
-                    <table id="notesTable" class="table cell-border table-striped">
+                    <table id="notesTable" class="table table-striped">
                         <thead>
                             <tr>
                                 <th>Sl</th>
@@ -207,8 +207,8 @@
                 <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
                         <i class="bx bxs-user-plus fs-4 me-2"></i>One Time Jobs
                     </p>
-                    <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                    <table id="OneTimeJobsTable" class="table cell-border table-striped" style="width:100%">
+                    <div class="table-wrapper my-2 table-responsive mx-1">
+                    <table id="OneTimeJobsTable" class="table table-striped">
                         <thead>
                             <tr>
                                 <th scope="col">#</th>
@@ -232,8 +232,8 @@
             <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
                 <i class="bx bxs-user-plus fs-4 me-2"></i>Your Assigned Tasks
             </p>
-            <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                    <table id="serviceManagerTable" class="table cell-border table-striped" style="width:100%">
+            <div class="table-wrapper my-2 table-responsive mx-1">
+                    <table id="serviceManagerTable" class="table table-striped">
                         <thead>
                             <tr>
                                 <th scope="col">#</th>
@@ -325,8 +325,8 @@
             <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
                     <i class="bx bxs-user-plus fs-4 me-2"></i>Completed Tasks As Staff
             </p>
-            <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                <table id="completedTasksTable" class="table cell-border table-striped" style="width:100%">
+            <div class="table-wrapper my-2 table-responsive mx-1">
+                <table id="completedTasksTable" >
                     <thead>
                         <tr>
                             <th scope="col">#</th>
@@ -351,8 +351,8 @@
             <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
                     <i class="bx bxs-user-plus fs-4 me-2"></i>Completed Tasks As Manager
                 </p>
-            <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
-                <table id="completedTasksAsManagergTable" class="table cell-border table-striped" style="width:100%">
+            <div class="table-wrapper my-2 table-responsive mx-1">
+                <table id="completedTasksAsManagergTable" class="table table-striped">
                     <thead>
                         <tr>
                             <th scope="col">#</th>
@@ -471,6 +471,7 @@
     $('#notesTable').DataTable({
         processing: true,
         serverSide: true,
+        info: false,
         ajax: {
             url: '/admin/get-note',
             type: 'GET',
@@ -633,6 +634,7 @@
         $('#serviceManagerTable').DataTable({
             processing: true,
             serverSide: true,
+            info: false,
             ajax: {
                 url: '/admin/get-assigned-services',
                 type: 'GET',
@@ -696,6 +698,7 @@
         $('#OneTimeJobsTable').DataTable({
             processing: true,
             serverSide: true,
+            info: false,
             ajax: {
                 url: '/admin/get-one-time-jobs',
                 type: 'GET',
@@ -1333,6 +1336,7 @@
         $('#completedTasksTable').DataTable({
             processing: true,
             serverSide: true,
+            info: false,
             ajax: {
                 url: '/admin/get-completed-service',
                 type: 'GET',
@@ -1374,6 +1378,7 @@
         $('#completedTasksAsManagergTable').DataTable({
             processing: true,
             serverSide: true,
+            info: false,
             ajax: {
                 url: '/admin/get-completed-services-as-manager',
                 type: 'GET',

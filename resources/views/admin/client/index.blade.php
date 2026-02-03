@@ -23,8 +23,8 @@
 
                 </div>
             </div>
-            <div class="table-wrapper my-2 mx-auto" style="width: 95%;">
-                <table class="table cell-border table-bordered table-striped" id="clientsTable">
+            <div class="table-wrapper my-2 table-responsive mx-1">
+                <table class="table table-striped" id="clientsTable">
                     <thead>
                         <tr>
                             <th scope="col">sl</th>
@@ -59,19 +59,31 @@
     var canEditDelete = @json(in_array('8', json_decode(Auth::user()->role->permission)));
 
     var table = $('#clientsTable').DataTable({
-        serverSide: true,
         processing: true,
+        serverSide: true,
+        info: true,
+
+        dom: 'lBfrtip',
+
+        buttons: [
+            {
+                extend: 'excelHtml5',
+                text: 'Excel'
+            },
+            {
+                extend: 'pdfHtml5',
+                text: 'PDF'
+            }
+        ],
+
+        lengthMenu: [10, 25, 50, 100],
+
         ajax: {
             url: "{{ route('get.Clients') }}",
             data: function(d) {
                 d.filter = $('#clientFilter').val();
             }
         },
-        dom: 'Bfrtip', // 'B' enables the buttons, and specifies their position
-        buttons: [
-            'excelHtml5', // Button for Excel export
-            'pdfHtml5'    // Button for PDF export
-        ],
         columns: [
             {data: 'DT_RowIndex', name: 'DT_RowIndex'},
             {data: 'refid', name: 'refid'},

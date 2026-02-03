@@ -12,7 +12,7 @@
                     <option value="assigned">Assigned Clients</option>
                 </select>
             </p>
-            <div class="table-wrapper my-4 mx-auto" style="width: 95%;">
+            <div class="table-wrapper my-2 table-responsive mx-1">
                 <table class="table cell-border table-bordered table-striped" id="clientsTable">
                     <thead>
                         <tr>
