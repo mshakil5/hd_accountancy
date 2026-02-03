@@ -405,7 +405,7 @@
             <div class="col-lg-12">
                 <div class="report-box border-theme sales-card p-4 mb-3 rounded-4 border-3" id="completedTaskSection" style="display: none;">
                     <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                        Completed Work Details
+                         Work Details
                     </div>
 
                     <div class="container-fluid">
@@ -1468,7 +1468,10 @@
         $(document).on('click', '.task-details', function() {
             var clientserviceId = $(this).data('id');
             var managerFirstName = $(this).data('manager-firstname');
-            var rowData = $('#completedServices').DataTable().row($(this).closest('tr')).data();
+            // var rowData = $('#completedServices').DataTable().row($(this).closest('tr')).data();
+            var table = $(this).closest('table').attr('id');
+            var rowData = $('#' + table).DataTable().row($(this).closest('tr')).data();
+            // console.log(rowData);
             var serviceName = rowData.servicename;
             var decodedServiceName = $('<div>').html(serviceName).text();
             var frequency = rowData.service_frequency;
@@ -1490,7 +1493,11 @@
                 dataType: "json",
                 success: function(data) {
                     populateCompletedForm(data);
-                    // console.log(data);
+                    setTimeout(function () {
+                        $('html, body').animate({
+                            scrollTop: $('#completedServiceDetailsTable').offset().top - 20
+                        }, 600);
+                    }, 200);
                 },
                 error: function(xhr, error, thrown) {
                     console.error('Error fetching sub-services:', error, thrown);
