@@ -240,7 +240,7 @@
             $('.field-self-assessment').show();
         } else if (typeLower === 'landlord') {
             $('.field-landlord').show();
-        } else if (typeLower === 'limited company') {
+        } else if (typeLower === 'limited company' || typeLower === 'vat registered company') {
             $('.field-limited-company').show();
         } else if (typeLower === 'partnership') {
             $('.field-partnership').show();
@@ -251,7 +251,7 @@
         const typeLower = type.toLowerCase();
         const label = $('.client-label');
         
-        if (typeLower === 'limited company') {
+        if (typeLower === 'limited company' || typeLower === 'vat registered company') {
             label.html('Company Name <span class="text-danger">*</span>');
         } else if (typeLower === 'partnership') {
             label.html('Business Name <span class="text-danger">*</span>');

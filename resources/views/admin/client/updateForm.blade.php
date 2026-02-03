@@ -60,12 +60,12 @@
                                 <li class="nav-item flex-fill" role="presentation">
                                     <button class="nav-link w-100 active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">Client Details</button>
                                 </li>
-                                @if($clientType === 'limited company' || $clientType === 'partnership')
+                                @if($clientType === 'limited company' || $clientType === 'partnership' || $clientType === 'vat registered company')
                                 <li class="nav-item flex-fill" role="presentation">
                                     <button class="nav-link w-100" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">Business Info</button>
                                 </li>
                                 @endif
-                                @if($clientType === 'limited company' || $clientType === 'partnership')
+                                @if($clientType === 'limited company' || $clientType === 'partnership' || $clientType === 'vat registered company')
                                 <li class="nav-item flex-fill" role="presentation">
                                     <button class="nav-link w-100" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab" aria-controls="contact" aria-selected="false">            
                                         @if($clientType === 'partnership')
@@ -78,7 +78,7 @@
                                 <li class="nav-item flex-fill" role="presentation">
                                     <button class="nav-link w-100" id="service-tab" data-bs-toggle="tab" data-bs-target="#service" type="button" role="tab" aria-controls="service" aria-selected="false">Service list</button>
                                 </li>
-                                @if($clientType === 'limited company' || $clientType === 'partnership')
+                                @if($clientType === 'limited company' || $clientType === 'partnership' || $clientType === 'vat registered company')
                                 <li class="nav-item flex-fill" role="presentation">
                                     <button class="nav-link w-100" id="contact-info-tab" data-bs-toggle="tab" data-bs-target="#contact-info" type="button" role="tab" aria-controls="contact-info" aria-selected="false">Contact-info</button>
                                 </li>
@@ -183,7 +183,7 @@
             $('.field-self-assessment').show();
         } else if (typeLower === 'landlord') {
             $('.field-landlord').show();
-        } else if (typeLower === 'limited company') {
+        } else if (typeLower === 'limited company' || typeLower === 'vat registered company') {
             $('.field-limited-company').show();
         } else if (typeLower === 'partnership') {
             $('.field-partnership').show();
@@ -194,7 +194,7 @@
         const typeLower = type.toLowerCase();
         const label = $('.client-label');
         
-        if (typeLower === 'limited company') {
+        if (typeLower === 'limited company' || typeLower === 'vat registered company') {
             label.html('Company Name <span class="text-danger">*</span>');
         } else if (typeLower === 'partnership') {
             label.html('Business Name <span class="text-danger">*</span>');

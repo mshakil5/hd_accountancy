@@ -413,6 +413,7 @@ class ServiceController extends Controller
 
     public function getCompletedServices(Request $request)
     {
+        
         if ($request->ajax()) {
             // 1. Return the Query Builder (No ->get()) for performance
             // 2. Eager load all relations to fix N+1 issues
@@ -895,6 +896,7 @@ class ServiceController extends Controller
     }
 
     public function getAssignedService(Request $request)
+
     {
         if ($request->ajax()) {
             try {
@@ -954,7 +956,7 @@ class ServiceController extends Controller
 
                     ->addColumn('action', function (ClientService $clientservice) {
                         $managerName = ($clientservice->manager?->first_name ?? 'N/A') . ' ' . ($clientservice->manager?->last_name ?? '');
-                        return '<button class="btn btn-secondary task" data-id="' . $clientservice->id . '" data-manager-firstname="' . trim($managerName) . '">Details</button>';
+                        return '<button class="btn btn-secondary task-details" data-id="' . $clientservice->id . '" data-manager-firstname="' . trim($managerName) . '">Details</button>';
                     })
                     ->rawColumns(['action'])
                     ->addIndexColumn() // This enables the 'DT_RowIndex' for the # column
