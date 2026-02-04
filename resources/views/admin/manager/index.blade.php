@@ -114,11 +114,11 @@
 <!-- Manager Assignment Box -->
 <div id="managerAssignBox" class="card card-secondary mt-3" style="display:none">
     <div class="card-header">
-        <h5 class="mb-0">Assign Managers</h5>
+        <h5 class="mb-0">Assign Staffs</h5>
     </div>
     <div class="card-body">
         <div class="form-group">
-            <label>Select Managers</label>
+            <label>Select Staffs</label>
             <select id="managerSelect" class="form-control" multiple></select>
         </div>
 

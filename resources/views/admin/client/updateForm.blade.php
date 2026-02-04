@@ -844,6 +844,28 @@
             }
         });
 
+        $(document).on('change', '.managerDropdown', function () {
+            let managerId = $(this).val();
+            let staffSelect = $(this)
+                .closest('.subServiceDetails')
+                .find('.staffDropdown');
+
+            staffSelect.empty().append(`<option value="">Select Staff</option>`);
+
+            if (!managerId) return;
+
+            $.get(`/admin/manager/${managerId}/staffs`, function (res) {
+                console.log(res);
+                let opt = '';
+                res.staffs.forEach(m => {
+                    opt += `<option value="${m.id}">
+                        ${m.first_name} ${m.last_name} - ${m.type}
+                    </option>`;
+                });
+                staffSelect.html(opt).trigger('change');
+            });
+        });
+
         $(document).on('click', '.removeSubServiceRow', function() {
             $(this).closest('tr').remove();
         });

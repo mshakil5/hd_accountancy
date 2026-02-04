@@ -16,7 +16,7 @@
         </div>
         <div class="col-lg-4">
             <label for="monthly_amount">Monthly Amount</label>
-            <input type="number" class="form-control my-2" id="monthly_amount" name="monthly_amount" placeholder="Enter company number" value="{{ $client->accountancyFee->monthly_amount ?? '' }}">
+            <input type="number" step="0.01" class="form-control my-2" id="monthly_amount" name="monthly_amount" placeholder="Enter company number" value="{{ $client->accountancyFee->monthly_amount ?? '' }}">
         </div>
         <div class="col-lg-4">
             <label for="next_review">Next Review</label>

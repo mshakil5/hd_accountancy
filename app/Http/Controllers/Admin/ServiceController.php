@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Carbon;
 use Spatie\Activitylog\Models\Activity;
+use App\Models\User;
 
 class ServiceController extends Controller
 {
@@ -491,6 +492,21 @@ class ServiceController extends Controller
         $service = Service::find($serviceId);
         $subServices = SubService::where('service_id', $serviceId)->select('id', 'name')->get();
         return response()->json($subServices);
+    }
+    
+    public function getManagerStaffs($managerId)
+    {
+        $manager = User::find($managerId);
+        
+        if($manager->type == 'admin') {
+            $staffs = User::all();
+        } else {
+            $staffs = $manager->staffs;
+        }
+        
+        return response()->json([
+            'staffs' => $staffs
+        ]);
     }
 
     public function saveService(Request $request)

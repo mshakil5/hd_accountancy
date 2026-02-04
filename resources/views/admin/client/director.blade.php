@@ -89,11 +89,20 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="utr_number">UTR Number</label>
+                            <label for="utr_number">    
+                                @if(in_array($clientType, ['limited company', 'vat registered company']))
+                                    DIR
+                                @endif 
+                                UTR Number
+                            </label>
                             <input type="number" class="form-control my-2" id="utr_number" name="utr_number" placeholder="Enter UTR number">
                         </div>
                         <div class="form-group">
-                            <label for="utr_authorization">UTR Authorization</label>
+                            <label for="utr_authorization">
+                                @if(in_array($clientType, ['limited company', 'vat registered company']))
+                                    DIR
+                                @endif 
+                                UTR Authorization</label>
                             <select class="form-control my-2" id="utr_authorization" name="utr_authorization">
                                 <option value="0">No</option>
                                 <option value="1">Yes</option>

@@ -158,14 +158,14 @@ class ManagerController extends Controller
     public function editManagers(User $user)
     {
         return response()->json([
-            'managers' => User::where('type', 2)->get(),
-            'selected' => $user->managers()->pluck('manager_id')
+            'managers' => User::whereIn('type', [1, 2, 3])->get(),
+            'selected' => $user->staffs()->pluck('user_id')->toArray()
         ]);
     }
 
     public function updateManagers(Request $r, User $user)
     {
-        $user->managers()->sync($r->manager_ids ?? []);
+        $user->staffs()->sync($r->manager_ids ?? []);
         return response()->json(['status'=>200]);
     }
     

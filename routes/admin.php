@@ -252,6 +252,8 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     //  Fetch sub services under one service
     Route::get('/getSubServices/{serviceId}', [ServiceController::class, 'getSubServices'])->name('getSubServices');
 
+    Route::get('/manager/{manager}/staffs', [ServiceController::class, 'getManagerStaffs']);
+
     //Store service + sub service + assign to staff
     Route::post('/store-service', [ServiceController::class,'saveService'])->name('saveService');
 
