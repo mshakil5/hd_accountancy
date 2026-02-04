@@ -98,6 +98,164 @@ class ServiceController extends Controller
         }
     }    
 
+    public function getTeamOverview(Request $request)
+    {
+        $authUserId = Auth::id();
+        $authUser = User::find($authUserId);
+        
+        if ($request->ajax()) {
+            $staffs = [];
+            
+            if ($authUser->type == 'admin') {
+                $staffs = User::where('type', '!=', 'admin')->get();
+            } else if ($authUser->type == 'manager') {
+                $staffs = $authUser->staffs;
+            }
+
+            return DataTables::of($staffs)
+                ->addColumn('name', function (User $user) {
+                    return $user->first_name . ' ' . $user->last_name;
+                })
+                ->addColumn('role', function (User $user) {
+                    $role = $user->type == 'manager' ? 'Manager' : 'Staff';
+                    $badge = $user->type == 'manager' ? 'primary' : 'secondary';
+                    return '<span class="badge bg-' . $badge . '">' . $role . '</span>';
+                })
+                ->addColumn('assigned_tasks', function (User $user) {
+                    $count = ClientSubService::where('staff_id', $user->id)
+                        ->whereHas('clientService', function ($query) {
+                            $query->whereIn('status', [0, 1]);
+                        })
+                        ->where('sequence_status', '!=', 2)
+                        ->count();
+                    return $count;
+                })
+                ->addColumn('in_progress', function (User $user) {
+                    $count = ClientSubService::where('staff_id', $user->id)
+                        ->where('sequence_status', 0)
+                        ->whereHas('clientService', function ($query) {
+                            $query->whereIn('status', [0, 1]);
+                        })
+                        ->count();
+                    return '<span class="badge bg-warning text-dark">' . $count . '</span>';
+                })
+                ->addColumn('completed', function (User $user) {
+                    $count = ClientSubService::where('staff_id', $user->id)
+                        ->where('sequence_status', 2)
+                        ->whereHas('clientService', function ($query) {
+                            $query->whereIn('status', [0, 1]);
+                        })
+                        ->count();
+                    return '<span class="badge bg-success">' . $count . '</span>';
+                })
+                ->addColumn('not_started', function (User $user) {
+                    $count = ClientSubService::where('staff_id', $user->id)
+                        ->where('sequence_status', 1)
+                        ->whereHas('clientService', function ($query) {
+                            $query->whereIn('status', [0, 1]);
+                        })
+                        ->count();
+                    return '<span class="badge bg-secondary">' . $count . '</span>';
+                })
+                ->addColumn('status', function (User $user) {
+                    $hasActiveWorkTime = WorkTime::where('staff_id', $user->id)
+                        ->where('is_break', 0)
+                        ->whereNull('end_time')
+                        ->exists();
+
+                    $lastActivity = WorkTime::where('staff_id', $user->id)
+                        ->latest('created_at')
+                        ->first();
+
+                    if ($hasActiveWorkTime) {
+                        return '<span class="badge bg-success">Active</span>';
+                    } elseif ($lastActivity && $lastActivity->created_at->isToday()) {
+                        return '<span class="badge bg-info">Online</span>';
+                    } else {
+                        return '<span class="badge bg-warning">Idle</span>';
+                    }
+                })
+                ->addColumn('action', function (User $user) {
+                    return '<button class="btn btn-sm btn-info view-staff-details" data-staff-id="' . $user->id . '">
+                        <i class="fas fa-eye"></i> View
+                    </button>';
+                })
+                ->rawColumns(['role', 'in_progress', 'completed', 'not_started', 'status', 'action'])
+                ->make(true);
+        }
+    }
+
+    public function getStaffDetails($staffId)
+    {
+        $staff = User::with(['clientSubServices' => function ($query) {
+            $query->with('clientService', 'subService', 'workTimes')
+                ->whereHas('clientService', function ($q) {
+                    $q->whereIn('status', [0, 1]);
+                });
+        }])->find($staffId);
+
+        if (!$staff) {
+            return response()->json(['error' => 'Staff not found'], 404);
+        }
+
+        $clientSubServices = $staff->clientSubServices->where('sequence_status', '!=', 2);
+
+        $totalTasks = $clientSubServices->count();
+        $inProgress = $clientSubServices->where('sequence_status', 0)->count();
+        $notStarted = $clientSubServices->where('sequence_status', 1)->count();
+        $completed = $staff->clientSubServices->where('sequence_status', 2)->count();
+
+        $currentTasks = $clientSubServices->map(function ($task) {
+            $totalDuration = $task->workTimes
+                ->where('is_break', 0)
+                ->sum('duration');
+
+            $hours = floor($totalDuration / 3600);
+            $minutes = floor(($totalDuration % 3600) / 60);
+            $seconds = $totalDuration % 60;
+
+            return [
+                'client' => $task->clientService && $task->clientService->client ? $task->clientService->client->name : 'N/A',
+                'service' => $task->clientService && $task->clientService->service ? $task->clientService->service->name : 'N/A',
+                'sub_service' => $task->subService ? $task->subService->name : 'N/A',
+                'deadline' => $task->deadline,
+                'status' => $task->sequence_status,
+                'duration' => "{$hours}h {$minutes}m {$seconds}s"
+            ];
+        });
+
+        $hasActiveWorkTime = WorkTime::where('staff_id', $staffId)
+            ->where('is_break', 0)
+            ->whereNull('end_time')
+            ->exists();
+
+        $lastActivity = WorkTime::where('staff_id', $staffId)
+            ->latest('created_at')
+            ->first();
+
+        if ($hasActiveWorkTime) {
+            $onlineStatus = 'Active';
+        } elseif ($lastActivity && $lastActivity->created_at->isToday()) {
+            $onlineStatus = 'Online';
+        } else {
+            $onlineStatus = 'Idle';
+        }
+
+        return response()->json([
+            'staff' => [
+                'name' => $staff->first_name . ' ' . $staff->last_name,
+                'email' => $staff->email,
+                'role' => $staff->type == 'manager' ? 'Manager' : 'Staff',
+                'status' => $onlineStatus,
+                'total_tasks' => $totalTasks,
+                'in_progress' => $inProgress,
+                'not_started' => $notStarted,
+                'completed' => $completed
+            ],
+            'current_tasks' => $currentTasks
+        ]);
+    }
+    
     public function getAllServices(Request $request)
     {
         if ($request->ajax()) {

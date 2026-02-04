@@ -128,6 +128,9 @@ Route::middleware(['auth', 'user-access:manager'])->group(function () {
     // Fetch assigned services by manager
     Route::get('/manager/get-assigned-services', [ServiceController::class, 'getAllAssignedServices']);
 
+    Route::get('/manager/get-team-overview', [ServiceController::class, 'getTeamOverview']);
+    Route::get('/manager/get-staff-details/{staffId}', [ServiceController::class, 'getStaffDetails']);
+
     //  All task list
     Route::get('/manager/get-all-services', [ServiceController::class, 'getAllServices']);
 

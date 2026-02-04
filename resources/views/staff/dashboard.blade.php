@@ -521,6 +521,8 @@
     $('#notesTable').DataTable({
         processing: true,
         serverSide: true,
+        info: false,
+        lengthChange: false,
         ajax: {
             url: '/staff/get-note',
             type: 'GET',
@@ -684,6 +686,7 @@
         $('#serviceStaffTable').DataTable({
             processing: true,
             serverSide: true,
+            info: false,
             ajax: {
                 url: '/staff/get-assigned-services',
                 type: 'GET',
@@ -741,6 +744,8 @@
         $('#OneTimeJobsTable').DataTable({
             processing: true,
             serverSide: true,
+            info: false,
+            lengthChange: false,
             ajax: {
                 url: '/staff/get-one-time-jobs',
                 type: 'GET',

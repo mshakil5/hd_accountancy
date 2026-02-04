@@ -157,7 +157,7 @@ class ManagerController extends Controller
     public function editManagers(User $user)
     {
         return response()->json([
-            'managers' => User::whereIn('type', [1, 2, 3])->where('id', '!=', $user->id)->get(),
+            'managers' => User::whereIn('type', [2, 3])->where('id', '!=', $user->id)->get(),
             'selected' => $user->staffs()->pluck('user_id')->toArray()
         ]);
     }

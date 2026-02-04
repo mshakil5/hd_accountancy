@@ -5,6 +5,117 @@
 <section class="section dashboard" id="breakSection">
     <div class="row">
 
+        <!-- Staff/Manager Overview Section -->
+        <div class="col-lg-12 mb-3">
+            <div class="report-box border-theme sales-card p-4 rounded-4 border-3">
+                <div class="card-body px-0">
+                    <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                        Team Overview
+                    </div>
+
+                    <div class="table-wrapper my-4 mx-1">
+                        <table id="teamOverviewTable" class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Staff/Manager Name</th>
+                                    <th scope="col">Role</th>
+                                    <th scope="col">Assigned Tasks</th>
+                                    <th scope="col">In Progress</th>
+                                    <th scope="col">Not Started</th>
+                                    <th scope="col">Completed</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Action</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Staff Details Modal -->
+        <div class="modal fade" id="staffDetailsModal" tabindex="-1" aria-labelledby="staffDetailsModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="staffDetailsModalLabel">Staff Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="p-3 bg-light rounded">
+                                    <h6 class="fw-bold mb-3">Personal Information</h6>
+                                    <div class="mb-2">
+                                        <strong>Name:</strong>
+                                        <p id="staffName" class="mb-0"></p>
+                                    </div>
+                                    <div class="mb-2">
+                                        <strong>Email:</strong>
+                                        <p id="staffEmail" class="mb-0"></p>
+                                    </div>
+                                    <div class="mb-2">
+                                        <strong>Role:</strong>
+                                        <p id="staffRole" class="mb-0"></p>
+                                    </div>
+                                    <div class="mb-2">
+                                        <strong>Current Status:</strong>
+                                        <p id="staffStatus" class="mb-0"></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 bg-light rounded">
+                                    <h6 class="fw-bold mb-3">Task Statistics</h6>
+                                    <div class="row text-center">
+                                        <div class="col-6 mb-2">
+                                            <p class="mb-0 text-muted">Total Tasks</p>
+                                            <h4 id="staffTotalTasks" class="mb-0">0</h4>
+                                        </div>
+                                        <div class="col-6 mb-2">
+                                            <p class="mb-0 text-muted">In Progress</p>
+                                            <h4 id="staffInProgress" class="mb-0 text-warning">0</h4>
+                                        </div>
+                                        <div class="col-6 mb-2">
+                                            <p class="mb-0 text-muted">Not Started</p>
+                                            <h4 id="staffNotStarted" class="mb-0 text-secondary">0</h4>
+                                        </div>
+                                        <div class="col-6 mb-2">
+                                            <p class="mb-0 text-muted">Completed</p>
+                                            <h4 id="staffCompleted" class="mb-0 text-success">0</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-3">
+
+                        <h6 class="fw-bold mb-3">Current Tasks</h6>
+                        <div class="table-wrapper">
+                            <table class="table table-striped table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Client</th>
+                                        <th>Service</th>
+                                        <th>Sub Service</th>
+                                        <th>Deadline</th>
+                                        <th>Status</th>
+                                        <th>Duration</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="staffTasksTable">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Assigned service details section start -->
         <div class="col-lg-12">
             <div class="report-box border-theme sales-card p-4 mb-3 rounded-4 border-3" id="assignTaskSection" style="display: none;">
@@ -59,7 +170,7 @@
 
                     <div class="row mt-3">
                         <div class="col-md-12">
-                            <table class="table">
+                            <table class="table table-striped">
                                 <thead>
                                     <tr>
                                         <th>Sub Service Name</th>
@@ -101,7 +212,7 @@
                                         </div>
 
                                         <div class="mt-3">
-                                            <table class="table">
+                                            <table class="table table-striped">
                                                 <thead>
                                                     <tr>
                                                         <th>Active Time:</th>
@@ -120,7 +231,7 @@
                                         </div>
 
                                         <div id="completedServices">
-                                            <table id="completedServicesTable" class="table">
+                                            <table id="completedServicesTable" class="table table-striped">
                                                 <thead>
                                                     <tr>
                                                         <th>Client</th>
@@ -355,7 +466,7 @@
 
                     <div class="row mt-3">
                         <div class="col-md-12">
-                            <table class="table">
+                            <table class="table table-striped">
                                 <thead>
                                     <tr>
                                         <th>Sub Service Name</th>
@@ -539,10 +650,135 @@
 <!-- Assigned tasks list start -->
 
 <script>
+    $(document).ready(function() {
+        $('#teamOverviewTable').DataTable({
+            processing: true,
+            serverSide: true,
+            info: false,
+            lengthChange: false,
+            ajax: {
+                url: '/manager/get-team-overview',
+                type: 'GET',
+                error: function(xhr, error, thrown) {
+                    console.error('DataTables error:', error, thrown);
+                }
+            },
+            columns: [
+                {
+                    data: 'name',
+                    name: 'name'
+                },
+                {
+                    data: 'role',
+                    name: 'role',
+                    orderable: false,
+                    searchable: false
+                },
+                {
+                    data: 'assigned_tasks',
+                    name: 'assigned_tasks',
+                    orderable: false,
+                    searchable: false
+                },
+                {
+                    data: 'in_progress',
+                    name: 'in_progress',
+                    orderable: false,
+                    searchable: false
+                },
+                {
+                    data: 'not_started',
+                    name: 'not_started',
+                    orderable: false,
+                    searchable: false
+                },
+                {
+                    data: 'completed',
+                    name: 'completed',
+                    orderable: false,
+                    searchable: false
+                },
+                {
+                    data: 'status',
+                    name: 'status',
+                    orderable: false,
+                    searchable: false
+                },
+                {
+                    data: 'action',
+                    name: 'action',
+                    orderable: false,
+                    searchable: false
+                }
+            ]
+        });
+    });
+
+    $(document).on('click', '.view-staff-details', function() {
+        var staffId = $(this).data('staff-id');
+        
+        $.ajax({
+            url: '/manager/get-staff-details/' + staffId,
+            type: 'GET',
+            success: function(response) {
+                var staff = response.staff;
+                var tasks = response.current_tasks;
+
+                $('#staffName').text(staff.name);
+                $('#staffEmail').text(staff.email);
+                $('#staffRole').html('<span class="badge bg-' + (staff.role === 'Manager' ? 'primary' : 'secondary') + '">' + staff.role + '</span>');
+                $('#staffStatus').html('<span class="badge bg-' + (staff.status === 'Active' ? 'success' : staff.status === 'Online' ? 'info' : 'warning') + '">' + staff.status + '</span>');
+                
+                $('#staffTotalTasks').text(staff.total_tasks);
+                $('#staffInProgress').text(staff.in_progress);
+                $('#staffNotStarted').text(staff.not_started);
+                $('#staffCompleted').text(staff.completed);
+
+                var tasksHtml = '';
+                tasks.forEach(function(task) {
+                    var statusBadge = '';
+                    if (task.status == 0) {
+                        statusBadge = '<span class="badge bg-warning text-dark">Processing</span>';
+                    } else if (task.status == 1) {
+                        statusBadge = '<span class="badge bg-secondary">Not Started</span>';
+                    } else if (task.status == 2) {
+                        statusBadge = '<span class="badge bg-success">Completed</span>';
+                    }
+
+                    tasksHtml += `
+                        <tr>
+                            <td>${task.client}</td>
+                            <td>${task.service}</td>
+                            <td>${task.sub_service}</td>
+                            <td>${task.deadline}</td>
+                            <td>${statusBadge}</td>
+                            <td><span class="badge bg-secondary">${task.duration}</span></td>
+                        </tr>
+                    `;
+                });
+
+                if (tasksHtml === '') {
+                    tasksHtml = '<tr><td colspan="6" class="text-center text-muted">No tasks assigned</td></tr>';
+                }
+
+                $('#staffTasksTable').html(tasksHtml);
+                $('#staffDetailsModal').modal('show');
+            },
+            error: function(xhr) {
+                console.error('Error fetching staff details:', xhr);
+                alert('Error loading staff details');
+            }
+        });
+    });
+</script>
+
+<script>
 
     $('#notesTable').DataTable({
         processing: true,
         serverSide: true,
+        info: false,
+        lengthChange: false,
         ajax: {
             url: '/manager/get-note',
             type: 'GET',
@@ -705,6 +941,7 @@
         $('#serviceManagerTable').DataTable({
             processing: true,
             serverSide: true,
+            info: false,
             ajax: {
                 url: '/manager/get-assigned-services',
                 type: 'GET',
@@ -780,6 +1017,7 @@
         $('#OneTimeJobsTable').DataTable({
             processing: true,
             serverSide: true,
+            info: false,
             ajax: {
                 url: '/manager/get-one-time-jobs',
                 type: 'GET',
@@ -1419,6 +1657,7 @@
         $('#completedTasksTable').DataTable({
             processing: true,
             serverSide: true,
+            info: false,
             ajax: {
                 url: '/manager/get-completed-services',
                 type: 'GET',
@@ -1464,6 +1703,7 @@
         $('#completedTasksAsManagergTable').DataTable({
             processing: true,
             serverSide: true,
+            info: false,
             ajax: {
                 url: '/manager/get-completed-services-as-manager',
                 type: 'GET',

@@ -89,6 +89,16 @@ class User extends Authenticatable
             'user_id'
         );
     }
+
+    public function clientSubServices()
+    {
+        return $this->hasMany(ClientSubService::class, 'staff_id');
+    }
+
+    public function workTimes()
+    {
+        return $this->hasMany(WorkTime::class, 'staff_id');
+    }
     
     public function role()
     {
