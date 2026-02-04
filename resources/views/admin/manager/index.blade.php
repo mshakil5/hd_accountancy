@@ -275,8 +275,10 @@ $(document).ready(function () {
         form_data.append("role_id", $("#role_id").val());
         if($(this).val() == 'Update') form_data.append("codeid", $("#codeid").val());
 
+        let btn = $(this);
+
         $.ajax({
-            url: $(this).val() == 'Create' ? url : upurl,
+            url: btn.val() == 'Create' ? url : upurl,
             type: "POST",
             contentType: false,
             processData: false,
@@ -284,7 +286,7 @@ $(document).ready(function () {
             success: function(d){
                 if (d.status == 303) $(".ermsg").html(d.message);
                 else if(d.status == 300){
-                    toastr.success($(this).val() == 'Create' ? "Manager created successfully" : "Manager updated successfully", "Success!");
+                    toastr.success(btn.val() == 'Create' ? "Manager created successfully" : "Manager updated successfully", "Success!");
                     window.setTimeout(function(){location.reload()},2000)
                 }
             },
@@ -305,6 +307,8 @@ $(document).ready(function () {
         $("#email").val(data.email);
         $("#role_id").val(data.role_id);
         $("#codeid").val(data.id);
+        $("#password").val('');
+        $("#confirm_password").val('');
         $("#addBtn").val('Update').html('Update');
         $("#addThisFormContainer").show(300);
         $("#newBtn").hide(100);
