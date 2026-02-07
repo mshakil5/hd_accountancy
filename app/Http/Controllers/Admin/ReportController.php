@@ -390,7 +390,109 @@ class ReportController extends Controller
 
     public function clientAcquisitionReport()
     {
-      return view('admin.reports.client_acquisition');
+        $clients = Client::where('status', 1)
+            ->with(['accountancyFee', 'clientType'])
+            ->select('id', 'name', 'refid', 'client_type_id', 'agreement_date', 'cessation_date')
+            ->latest()
+            ->get();
+            
+        return view('admin.reports.acquisition', compact('clients'));
+    }
+
+    public function generateAcquisitionReport(Request $request)
+    {
+        $request->validate([
+            'columns' => 'required|array',
+            'columns.*' => 'in:client_name,client_type,annual_agreed_fees,monthly_standing_order,agreement_date,cessation_date',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
+            'cessation_filter' => 'nullable|in:all,active,ceased'
+        ]);
+
+        $query = Client::where('status', 1)
+            ->with(['accountancyFee', 'clientType'])
+            ->select('id', 'name', 'refid', 'client_type_id', 'agreement_date', 'cessation_date');
+
+        if ($request->start_date && $request->end_date) {
+            $query->whereBetween('agreement_date', [$request->start_date, $request->end_date]);
+        } elseif ($request->start_date) {
+            $query->where('agreement_date', '>=', $request->start_date);
+        } elseif ($request->end_date) {
+            $query->where('agreement_date', '<=', $request->end_date);
+        }
+
+        if ($request->cessation_filter && $request->cessation_filter !== 'all') {
+            if ($request->cessation_filter === 'active') {
+                $query->whereNull('cessation_date');
+            } else {
+                $query->whereNotNull('cessation_date');
+            }
+        }
+
+        $clients = $query->get();
+
+        $reportData = [];
+        foreach ($clients as $client) {
+            $row = [];
+            $fee = $client->accountancyFee;
+
+            foreach ($request->columns as $column) {
+                switch ($column) {
+                    case 'client_name':
+                        $row['client_name'] = $client->name;
+                        break;
+                    case 'client_type':
+                        $row['client_type'] = $client->clientType ? $client->clientType->name : 'N/A';
+                        break;
+                    case 'annual_agreed_fees':
+                        $row['annual_agreed_fees'] = $fee ? '£' . number_format($fee->annual_agreed_fees, 2) : 'N/A';
+                        break;
+                    case 'monthly_standing_order':
+                        $row['monthly_standing_order'] = $fee ? ($fee->monthly_standing_order ? 'Yes' : 'No') : 'N/A';
+                        break;
+                    case 'agreement_date':
+                        if ($client->agreement_date) {
+                            try {
+                                $date = \DateTime::createFromFormat('Y-m-d', $client->agreement_date);
+                                $row['agreement_date'] = $date->format('d-m-Y');
+                            } catch (\Exception $e) {
+                                $row['agreement_date'] = $client->agreement_date;
+                            }
+                        } else {
+                            $row['agreement_date'] = 'N/A';
+                        }
+                        break;
+                    case 'cessation_date':
+                        if ($client->cessation_date) {
+                            try {
+                                $date = \DateTime::createFromFormat('Y-m-d', $client->cessation_date);
+                                $row['cessation_date'] = $date->format('d-m-Y');
+                            } catch (\Exception $e) {
+                                $row['cessation_date'] = $client->cessation_date;
+                            }
+                        } else {
+                            $row['cessation_date'] = 'N/A';
+                        }
+                        break;
+                }
+            }
+            $reportData[] = $row;
+        }
+
+        $totalClients = $clients->count();
+        $activeClients = $clients->filter(fn($c) => !$c->cessation_date)->count();
+        $ceasedClients = $totalClients - $activeClients;
+
+        return response()->json([
+            'success' => true,
+            'data' => $reportData,
+            'columns' => $request->columns,
+            'stats' => [
+                'total_clients' => $totalClients,
+                'active_clients' => $activeClients,
+                'ceased_clients' => $ceasedClients,
+            ]
+        ]);
     }
 
     public function clientFeeReport()

@@ -431,6 +431,8 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
 
     //Client fee report
     Route::get('/client-acquisition-report', [ReportController::class, 'clientAcquisitionReport'])->name('client-acquisition-report');
+    
+    Route::get('/reports/generate/acquisition', [ReportController::class, 'generateAcquisitionReport'])->name('reports.generate.acquisition');
 
     //Client fee report
     Route::get('/client-fee-report', [ReportController::class, 'clientFeeReport'])->name('client.fees-report');
