@@ -112,9 +112,11 @@
 </section>
 
 <!-- Manager Assignment Box -->
-<div id="managerAssignBox" class="card card-secondary mt-3" style="display:none">
+<div id="managerAssignBox" class="card card-secondary m-3" style="display:none">
     <div class="card-header">
-        <h5 class="mb-0">Assign Staffs</h5>
+        <h5 class="mb-0">
+            Assign Staffs to: <span id="managerTitleName"></span>
+        </h5>
     </div>
     <div class="card-body">
         <div class="form-group">
@@ -174,7 +176,9 @@
                       <a class="btn btn-link" id="EditBtn" rid="{{$data->id}}">
                         <i class="fa fa-edit" style="font-size: 20px;"></i>
                       </a>
-                      <a class="btn btn-link assignManagerBtn" data-id="{{ $data->id }}">
+                      <a class="btn btn-link assignManagerBtn"
+                        data-id="{{ $data->id }}"
+                        data-name="{{ $data->first_name }} {{ $data->last_name }}">
                         <i class="fa fa-users"></i>
                       </a>
                     </td>
@@ -198,6 +202,9 @@ let currentUser = null;
 // Assign Managers
 $('.assignManagerBtn').click(function () {
     currentUser = $(this).data('id');
+    let managerName = $(this).data('name');
+
+    $('#managerTitleName').text(managerName);
     $('#managerAssignBox').show();
 
     $.get('/admin/user-managers/' + currentUser, function (res) {
@@ -216,7 +223,7 @@ $('#saveManagers').click(function () {
     $.post('/admin/user-managers/' + currentUser, {
         manager_ids: $('#managerSelect').val(),
         _token: '{{ csrf_token() }}'
-    }, () => toastr.success('Updated'));
+    }, () => toastr.success('Staffs Updated Successfully', 'Success!'));
 });
 
 // Close Manager Box

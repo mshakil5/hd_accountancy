@@ -210,7 +210,11 @@ class HomeController extends Controller
     {
         $clients = Client::orderBy('id', 'DESC')->select('id', 'name', 'refid')->get();
         $subServices = SubService::orderby('id','DESC')->select('id', 'name')->get();
-        $staffs = User::whereIn('type', ['3', '2', '1'])->select('id', 'first_name', 'last_name', 'type')->orderby('id','DESC')->get();
+        $user = auth()->user();
+        $staffs = $user->staffs()
+        ->select('users.id', 'users.first_name', 'users.last_name', 'users.type')
+        ->orderBy('users.id', 'DESC')
+        ->get();
         $managers = User::whereIn('type', ['3','2'])->select('id', 'first_name', 'last_name')->orderby('id','DESC')->get();
         $users = User::whereIn('type', ['3','2', '1'])->select('id', 'first_name', 'last_name', 'type')->orderby('id','DESC')->get();
         $userId = auth()->id();

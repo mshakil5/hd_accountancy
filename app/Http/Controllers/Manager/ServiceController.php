@@ -206,13 +206,15 @@ class ServiceController extends Controller
         $completed = $staff->clientSubServices->where('sequence_status', 2)->count();
 
         $currentTasks = $clientSubServices->map(function ($task) {
-            $totalDuration = $task->workTimes
+            $totalDurationInSeconds = $task->workTimes
                 ->where('is_break', 0)
-                ->sum('duration');
+                ->reduce(function($acc, $workTime) {
+                    return $acc + intval($workTime->duration);
+                }, 0);
 
-            $hours = floor($totalDuration / 3600);
-            $minutes = floor(($totalDuration % 3600) / 60);
-            $seconds = $totalDuration % 60;
+            $hours = floor($totalDurationInSeconds / 3600);
+            $minutes = floor(($totalDurationInSeconds % 3600) / 60);
+            $seconds = $totalDurationInSeconds % 60;
 
             return [
                 'client' => $task->clientService && $task->clientService->client ? $task->clientService->client->name : 'N/A',
@@ -252,7 +254,7 @@ class ServiceController extends Controller
                 'not_started' => $notStarted,
                 'completed' => $completed
             ],
-            'current_tasks' => $currentTasks
+            'current_tasks' => $currentTasks->values()->toArray()
         ]);
     }
     
