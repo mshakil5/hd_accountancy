@@ -187,45 +187,55 @@ class ServiceController extends Controller
 
     public function getStaffDetails($staffId)
     {
-        $staff = User::with(['clientSubServices' => function ($query) {
-            $query->with('clientService', 'subService', 'workTimes')
-                ->whereHas('clientService', function ($q) {
-                    $q->whereIn('status', [0, 1]);
-                });
-        }])->find($staffId);
+        $staff = User::find($staffId);
 
         if (!$staff) {
             return response()->json(['error' => 'Staff not found'], 404);
         }
 
-        $clientSubServices = $staff->clientSubServices->where('sequence_status', '!=', 2);
+        // Base query for active tasks
+        $baseQuery = $staff->clientSubServices()
+            ->whereHas('clientService', function ($q) {
+                $q->whereIn('status', [0, 1]);
+            });
 
-        $totalTasks = $clientSubServices->count();
-        $inProgress = $clientSubServices->where('sequence_status', 0)->count();
-        $notStarted = $clientSubServices->where('sequence_status', 1)->count();
-        $completed = $staff->clientSubServices->where('sequence_status', 2)->count();
+        // Counts (fast)
+        $totalTasks = (clone $baseQuery)->where('sequence_status', '!=', 2)->count();
+        $inProgress = (clone $baseQuery)->where('sequence_status', 0)->count();
+        $notStarted = (clone $baseQuery)->where('sequence_status', 1)->count();
+        $completed  = (clone $baseQuery)->where('sequence_status', 2)->count();
+
+        // ✅ Latest 1000 only (IMPORTANT)
+        $clientSubServices = (clone $baseQuery)
+            ->where('sequence_status', '!=', 2)
+            ->with(['clientService.client', 'clientService.service', 'subService', 'workTimes'])
+            ->latest('id') // latest first
+            ->limit(1000)
+            ->get();
 
         $currentTasks = $clientSubServices->map(function ($task) {
+
             $totalDurationInSeconds = $task->workTimes
                 ->where('is_break', 0)
-                ->reduce(function($acc, $workTime) {
-                    return $acc + intval($workTime->duration);
-                }, 0);
+                ->sum(function ($w) {
+                    return (int) $w->duration;
+                });
 
             $hours = floor($totalDurationInSeconds / 3600);
             $minutes = floor(($totalDurationInSeconds % 3600) / 60);
             $seconds = $totalDurationInSeconds % 60;
 
             return [
-                'client' => $task->clientService && $task->clientService->client ? $task->clientService->client->name : 'N/A',
-                'service' => $task->clientService && $task->clientService->service ? $task->clientService->service->name : 'N/A',
-                'sub_service' => $task->subService ? $task->subService->name : 'N/A',
-                'deadline' => $task->deadline,
-                'status' => $task->sequence_status,
-                'duration' => "{$hours}h {$minutes}m {$seconds}s"
+                'client'      => optional(optional($task->clientService)->client)->name ?? 'N/A',
+                'service'     => optional(optional($task->clientService)->service)->name ?? 'N/A',
+                'sub_service' => optional($task->subService)->name ?? 'N/A',
+                'deadline'    => $task->deadline,
+                'status'      => $task->sequence_status,
+                'duration'    => "{$hours}h {$minutes}m {$seconds}s",
             ];
         });
 
+        // Online status
         $hasActiveWorkTime = WorkTime::where('staff_id', $staffId)
             ->where('is_break', 0)
             ->whereNull('end_time')
@@ -252,9 +262,10 @@ class ServiceController extends Controller
                 'total_tasks' => $totalTasks,
                 'in_progress' => $inProgress,
                 'not_started' => $notStarted,
-                'completed' => $completed
+                'completed' => $completed,
             ],
-            'current_tasks' => $currentTasks->values()->toArray()
+            'current_tasks' => $currentTasks->values()->toArray(),
+            'tasks_limit' => 1000
         ]);
     }
     

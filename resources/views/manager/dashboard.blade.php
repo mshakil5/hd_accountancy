@@ -108,6 +108,7 @@
                                 </tbody>
                             </table>
                         </div>
+                        <small id="taskLimitNote" class="text-muted"></small>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -714,29 +715,48 @@
         });
     });
 
-    $(document).on('click', '.view-staff-details', function() {
-        var staffId = $(this).data('staff-id');
-        
+    $(document).on('click', '.view-staff-details', function () {
+        let staffId = $(this).data('staff-id');
+
+        // loader (optional)
+        $('#staffTasksTable').html(`<tr><td colspan="6" class="text-center">Loading...</td></tr>`);
+        $('#taskLimitNote').text('');
+
         $.ajax({
             url: '/manager/get-staff-details/' + staffId,
             type: 'GET',
-            success: function(response) {
-                var staff = response.staff;
-                var tasks = response.current_tasks;
+            success: function (response) {
+                let staff = response.staff;
+                let tasks = response.current_tasks;
 
                 $('#staffName').text(staff.name);
                 $('#staffEmail').text(staff.email);
-                $('#staffRole').html('<span class="badge bg-' + (staff.role === 'Manager' ? 'primary' : 'secondary') + '">' + staff.role + '</span>');
-                $('#staffStatus').html('<span class="badge bg-' + (staff.status === 'Active' ? 'success' : staff.status === 'Online' ? 'info' : 'warning') + '">' + staff.status + '</span>');
-                
+
+                $('#staffRole').html(
+                    `<span class="badge bg-${staff.role === 'Manager' ? 'primary' : 'secondary'}">${staff.role}</span>`
+                );
+
+                $('#staffStatus').html(
+                    `<span class="badge bg-${
+                        staff.status === 'Active' ? 'success' :
+                        staff.status === 'Online' ? 'info' : 'warning'
+                    }">${staff.status}</span>`
+                );
+
                 $('#staffTotalTasks').text(staff.total_tasks);
                 $('#staffInProgress').text(staff.in_progress);
                 $('#staffNotStarted').text(staff.not_started);
                 $('#staffCompleted').text(staff.completed);
 
-                var tasksHtml = '';
-                tasks.forEach(function(task) {
-                    var statusBadge = '';
+                if (response.tasks_limit) {
+                    $('#taskLimitNote').text(`Showing latest ${response.tasks_limit} tasks only`);
+                }
+
+                let tasksHtml = '';
+
+                tasks.forEach(function (task) {
+                    let statusBadge = '';
+
                     if (task.status == 0) {
                         statusBadge = '<span class="badge bg-warning text-dark">Processing</span>';
                     } else if (task.status == 1) {
@@ -750,21 +770,21 @@
                             <td>${task.client}</td>
                             <td>${task.service}</td>
                             <td>${task.sub_service}</td>
-                            <td>${task.deadline}</td>
+                            <td>${task.deadline ?? ''}</td>
                             <td>${statusBadge}</td>
                             <td><span class="badge bg-secondary">${task.duration}</span></td>
                         </tr>
                     `;
                 });
 
-                if (tasksHtml === '') {
-                    tasksHtml = '<tr><td colspan="6" class="text-center text-muted">No tasks assigned</td></tr>';
+                if (!tasksHtml) {
+                    tasksHtml = `<tr><td colspan="6" class="text-center text-muted">No tasks assigned</td></tr>`;
                 }
 
                 $('#staffTasksTable').html(tasksHtml);
                 $('#staffDetailsModal').modal('show');
             },
-            error: function(xhr) {
+            error: function (xhr) {
                 console.error('Error fetching staff details:', xhr);
                 alert('Error loading staff details');
             }

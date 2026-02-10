@@ -504,6 +504,8 @@ class ServiceController extends Controller
             $staffs = $manager->staffs;
         }
         
+        $staffs = $staffs->concat(collect([$manager]))->unique('id');
+        
         return response()->json([
             'staffs' => $staffs
         ]);
