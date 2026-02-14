@@ -214,7 +214,8 @@ class HomeController extends Controller
         $staffs = $user->staffs()
         ->select('users.id', 'users.first_name', 'users.last_name', 'users.type')
         ->orderBy('users.id', 'DESC')
-        ->get();
+        ->get()
+        ->push($user->only(['id','first_name','last_name','type']));
         $managers = User::whereIn('type', ['3','2'])->select('id', 'first_name', 'last_name')->orderby('id','DESC')->get();
         $users = User::whereIn('type', ['3','2', '1'])->select('id', 'first_name', 'last_name', 'type')->orderby('id','DESC')->get();
         $userId = auth()->id();
