@@ -133,13 +133,8 @@
                                             <input type="text" id="deadline" name="deadline" class="form-control subServiceDeadline" value="{{ isset($clientSubService->deadline) ? $clientSubService->deadline : '' }}">
                                         </td>
                                         <td>
-                                            <select class="form-control staffDropdown" id="selectedStaff" name="staff_id" style="width:100%">
+                                            <select class="form-control staffDropdown" id="selectedStaff" name="staff_id" style="width:100%" data-selected-staff="{{ $clientSubService->staff_id ?? '' }}">
                                                 <option value="">Select Staff</option>
-                                                @foreach($staffs as $staff)
-                                                    <option value="{{ $staff->id }}" {{ isset($clientSubService->staff_id) && $clientSubService->staff_id == $staff->id ? 'selected' : '' }}>
-                                                        {{ $staff->first_name }} {{ $staff->last_name }} ({{ $staff->type }})
-                                                    </option>
-                                                @endforeach
                                             </select>
                                         </td>
                                         <td>

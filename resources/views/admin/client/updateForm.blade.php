@@ -678,6 +678,20 @@
             var serviceDataId = selectedOption.data('service-id');
             var serviceId = $(this).val();
             if (serviceId) {
+
+                // var exists = false;
+
+                // $('.subServiceDetails').each(function() {
+                //     if ($(this).find('input[name="service_id"]').val() == serviceId) {
+                //         exists = true;
+                //         return false;
+                //     }
+                // });
+                // if (exists) {
+                //     alert('This service is already added.');
+                //     return;
+                // }
+
                 $.ajax({
                     url: '/admin/getSubServices/' + serviceId,
                     type: "GET",
@@ -692,15 +706,18 @@
                                         ${serviceDataId == 1 ? `
                                         <select class="form-select ms-auto directorDropdown" name="director_id" style="max-width: 200px;">
                                             <option value="">Select Director</option>
-                                            @foreach($directorInfos as $director)
-                                            <option value="{{ $director->id }}">{{ $director->name }} {{ $director->last_name }}</option>
-                                            @endforeach
+                                             @foreach($directorInfos as $director)
+                                             <option value="{{ $director->id }}">{{ $director->name }} {{ $director->last_name }}</option>
+                                             @endforeach
                                         </select>
                                         <input type="hidden" name="service_data_id" value="${serviceDataId}">
                                         ` : ''}
                                     </p>
+                                    
                                     <div class="border-theme p-3 border-1">
-                                        <div class="row mt-2"></div>
+                                        <div class="row mt-2">
+                                        <!-- Sub-service details -->
+                                        </div>
                                         <table class="table mt-3">
                                         <thead>
                                             <tr>
@@ -711,12 +728,15 @@
                                             <th style="text-align: center;">Action</th>
                                             </tr>
                                         </thead>
-                                        <tbody></tbody>
+                                        <tbody>
+                                            <!-- Sub-service rows  -->
+                                        </tbody>
                                         </table>
                                     </div>
                                 </div>
                             </div>
-                        `;
+                            `;
+
                         $('#serviceForm').append(subServiceDetailsTemplate);
 
                         var serviceFields = `
@@ -739,7 +759,7 @@
                                     <div class="col-md-2 text-center">
                                         <h5>Frequency</h5>
                                         <div class="form-check">
-                                            <select class="form-control mt-2 serviceFrequency" name="service_frequency">
+                                            <select class="form-control mt-2 serviceFrequency" id="serviceFrequency" name="service_frequency">
                                             <option value="">Select Frequency</option>
                                             <option>Weekly</option>
                                             <option>2 Weekly</option>
@@ -753,19 +773,19 @@
                                     <div class="col-md-2 text-center">
                                         <h5>Due Date</h5>
                                         <div class="form-check">
-                                            <input type="text" class="form-control dueDate" name="dueDate">
+                                            <input type="text" class="form-control dueDate" id="dueDate" name="dueDate">
                                         </div>
                                     </div>
                                     <div class="col-md-2 text-center">
                                         <h5>Target Deadline</h5>
                                         <div class="form-check">
-                                            <input type="text" class="form-control legalDeadline" name="legalDeadline">
+                                            <input type="text" class="form-control legalDeadline" id="legalDeadline" name="legalDeadline">
                                         </div>
                                     </div>
                                     <div class="col-md-2 text-center">
                                         <h5>Deadline</h5>
                                         <div class="form-check">
-                                            <input type="text" class="form-control serviceDeadline" name="service_deadline">
+                                            <input type="text" class="form-control serviceDeadline" id="serviceDeadline" name="service_deadline">
                                         </div>
                                     </div>
                                     <div class="col-md-1 text-center">
@@ -775,42 +795,46 @@
                                 </div>
                                 </div>
                             </div>
-                        `;
+                            `;
                         $('.subServiceDetails:last').find('.row:first').after(serviceFields);
-                        $('.subServiceDetails:last').find('tbody').empty();
 
+                        $('.subServiceDetails:last').find('tbody').empty();
                         $.each(data, function(key, value) {
                             var newRow = `
-                                <tr>
-                                <td>${value.name}</td>
-                                <td><input type="text" name="deadline" class="form-control subServiceDeadline"></td>
-                                <td>
-                                    <select class="form-control staffDropdown" name="staff_id">
-                                    <option value="">Select Staff</option>
-                                    </select>
-                                </td>
-                                <td><textarea name="note" rows="1" class="form-control" placeholder="Note for this task"></textarea></td>
-                                <td style="text-align: center;">
-                                    <span class="removeSubServiceRow" style="cursor: pointer; font-size: 24px; color: red;">&#10006;</span>
-                                </td>
-                                <input type="hidden" class="sub-service-id" data-sub-service-id="${value.id}">
-                                <input type="hidden" name="sub_service_id[]" value="${value.id}">
-                                <input type="hidden" name="client_sub_service_id[]" value="">
-                                </tr>
-                            `;
+                                    <tr>
+                                    <td>${value.name}</td>
+                                    <td><input type="text" id="deadline" name="deadline" class="form-control subServiceDeadline"></td>
+                                    <td>
+                                        <select class="form-control staffDropdown" id="selectedStaff" name="staff_id">
+                                        <option value="">Select Staff</option>
+                                        @foreach($staffs as $staff)
+                                        <option value="{{ $staff->id }}">{{ $staff->first_name }} {{ $staff->last_name }} ({{ $staff->type }})</option>
+                                        @endforeach
+                                        </select>
+                                    </td>
+                                    <td><textarea name="note" id="note" rows="1" class="form-control" placeholder="Note for this task"></textarea></td>
+                                    <td style="text-align: center;">
+                                        <span class="removeSubServiceRow" style="cursor: pointer; font-size: 24px; color: red;">&#10006;</span>
+                                    </td>
+                                    <input type="hidden" class="sub-service-id" data-sub-service-id="${value.id}">
+                                    <input type="hidden" name="sub_service_id[]" value="${value.id}">
+                                    <input type="hidden" name="client_sub_service_id[]" value="">
+                                    </tr>
+                                `;
                             $('.subServiceDetails:last').find('tbody').append(newRow);
-                        });
 
-                        $('.subServiceDetails:last').find('.subServiceDeadline').datepicker({
-                            format: 'dd-mm-yyyy',
-                            autoclose: true,
-                            todayHighlight: true
-                        });
+                            $('.subServiceDetails:last').find('.subServiceDeadline').datepicker({
+                                format: 'dd-mm-yyyy',
+                                autoclose: true,
+                                todayHighlight: true
+                            });
 
-                        $('.dueDate, .legalDeadline, .serviceDeadline').datepicker({
-                            format: 'dd-mm-yyyy',
-                            autoclose: true,
-                            todayHighlight: true
+                            $('.dueDate, .legalDeadline, .serviceDeadline').datepicker({
+                                format: 'dd-mm-yyyy',
+                                autoclose: true,
+                                todayHighlight: true
+                            });
+
                         });
                     },
                     error: function(xhr, status, error) {
@@ -820,41 +844,48 @@
             }
         });
 
-        function loadStaffForManager(managerId, staffSelect, selectedStaffId = null) {
-            staffSelect.html(`<option value="">Select Staff</option>`);
+        $(document).on('change', '.managerDropdown', function () {
+            let managerId = $(this).val();
+            let staffSelect = $(this)
+                .closest('.subServiceDetails')
+                .find('.staffDropdown');
+
+            staffSelect.empty().append(`<option value="">Select Staff</option>`);
 
             if (!managerId) return;
 
             $.get(`/admin/manager/${managerId}/staffs`, function (res) {
-                let opt = `<option value="">Select Staff</option>`;
+                console.log(res);
+                let opt = '';
                 res.staffs.forEach(m => {
-                    let selected = selectedStaffId && m.id == selectedStaffId ? 'selected' : '';
-                    opt += `<option value="${m.id}" ${selected}>
+                    opt += `<option value="${m.id}">
                         ${m.first_name} ${m.last_name} - ${m.type}
                     </option>`;
                 });
-                staffSelect.html(opt);
-            });
-        }
-
-        // Initialize existing services on page load
-        $('.subServiceDetails').each(function () {
-            let managerId = $(this).find('.managerDropdown').val();
-            let staffSelects = $(this).find('.staffDropdown');
-
-            staffSelects.each(function() {
-                let selectedStaffId = $(this).val();
-                loadStaffForManager(managerId, $(this), selectedStaffId);
+                staffSelect.html(opt).trigger('change');
             });
         });
 
-        // Handle manager change
-        $(document).on('change', '.managerDropdown', function () {
-            let managerId = $(this).val();
-            let staffSelects = $(this).closest('.subServiceDetails').find('.staffDropdown');
+        $('.subServiceDetails').each(function () {
+            let $section = $(this);
+            let managerId = $section.find('.managerDropdown').val();
+            
+            if (!managerId) return;
 
-            staffSelects.each(function() {
-                loadStaffForManager(managerId, $(this));
+            $section.find('.staffDropdown').each(function() {
+                let selectedStaffId = $(this).data('selected-staff');
+                let $staffSelect = $(this);
+                
+                $.get(`/admin/manager/${managerId}/staffs`, function (res) {
+                    let opt = `<option value="">Select Staff</option>`;
+                    res.staffs.forEach(m => {
+                        let selected = m.id == selectedStaffId ? 'selected' : '';
+                        opt += `<option value="${m.id}" ${selected}>
+                            ${m.first_name} ${m.last_name} - ${m.type}
+                        </option>`;
+                    });
+                    $staffSelect.html(opt);
+                });
             });
         });
 
