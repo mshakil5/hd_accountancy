@@ -2,20 +2,21 @@
   
 namespace App\Http\Controllers;
  
-use session;
-use App\Models\User;
 use App\Models\Client;
-use App\Models\Service;
-use App\Models\WorkTime;
-use Illuminate\View\View;
-use App\Models\SubService;
-use Illuminate\Http\Request;
-use App\Models\ProrotaDetail;
-use Illuminate\Support\Carbon;
-use App\Models\UserAttendanceLog;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 use App\Models\ClientService;
+use App\Models\ProrotaDetail;
+use App\Models\Service;
+use App\Models\SubService;
+use App\Models\User;
+use App\Models\UserAttendanceLog;
+use App\Models\WorkTime;
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\View\View;
+use session;
   
 class HomeController extends Controller
 {
@@ -315,6 +316,47 @@ class HomeController extends Controller
         $user->save();
 
         return redirect()->route('admin.home');
+    }
+
+    public function clean()
+    {
+      $tables = [
+        'accountancy_fees',
+        'activity_log',
+        'business_infos',
+        'clients',
+        'client_credentials',
+        'client_properties',
+        'client_service',
+        'client_sub_services',
+        'contact_infos',
+        'director_infos',
+        'holiday_records',
+        'holiday_requests',
+        'log_comments',
+        'notes',
+        'prorotas',
+        'prorota_details',
+        'recent_updates',
+        'service_messages',
+        'service_staff',
+        'staff_holiday_types',
+        'time_slots',
+        'user_attendance_logs',
+        'user_managers',
+        'work_times',
+      ];
+
+      Schema::disableForeignKeyConstraints();
+
+      foreach ($tables as $table) {
+        DB::table($table)->truncate();
+      }
+
+      DB::table('users')->where('id', '!=', 1)->delete();
+      Schema::enableForeignKeyConstraints();
+
+      return 'Tables truncated successfully.';
     }
 
 }

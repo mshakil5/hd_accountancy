@@ -62,6 +62,8 @@ Route::fallback(function () {
 //Admin
 Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(function () {
 
+    Route::get('/clean', [HomeController::class, 'clean']);
+
     Route::get('/home', [HomeController::class, 'adminHome'])->name('admin.home');
 
     //Admin crud

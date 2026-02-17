@@ -9,7 +9,7 @@
                         </div>
                         <img src="{{ asset('assets/frontend/images/Ellipse 18.png') }}" class="img-curcle mb-3" alt="">
                         <div class="">
-                            <h5 class="poppins-bold txt-primary">Shultan Mahmud, PhD</h5>
+                            <h5 class="poppins-bold txt-primary">Shultan Mahmud, ACCA, PhD</h5>
                             <p class="fw-normal txt-primary poppins-medium">Director, HD Accountancy LTD</p>
                         </div>
                         <div>
