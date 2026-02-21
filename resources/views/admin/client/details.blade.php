@@ -58,16 +58,12 @@
 
         <div class="col-lg-4 field-group field-limited-company">
             <label for="">Registered Address Line 1</label>
-            <textarea class="form-control my-2" id="registered_address_line1" name="registered_address_line1">
-                {{ $client->registered_address_line1 ?? '' }}
-            </textarea>
+            <textarea class="form-control my-2" id="registered_address_line1" name="registered_address_line1">{{ $client->registered_address_line1 ?? '' }}</textarea>
         </div>
 
         <div class="col-lg-4 field-group field-limited-company">
             <label for="">Registered Address Line 2</label>
-            <textarea class="form-control my-2" id="registered_address_line2" name="registered_address_line2">
-                {{ $client->registered_address_line2 ?? '' }}
-            </textarea>
+            <textarea class="form-control my-2" id="registered_address_line2" name="registered_address_line2">{{ $client->registered_address_line2 ?? '' }}</textarea>
         </div>
 
         <div class="col-lg-4 field-group field-sole-trade field-self-assessment field-landlord field-limited-company">
@@ -87,16 +83,12 @@
 
         <div class="col-lg-4 field-group field-limited-company field-partnership">
             <label for="">Trading Address Line 1</label>
-            <textarea class="form-control my-2" id="trading_address_line1" name="trading_address_line1"> 
-                {{ $client->trading_address_line1 ?? '' }}
-            </textarea>
+            <textarea class="form-control my-2" id="trading_address_line1" name="trading_address_line1">{{ $client->trading_address_line1 ?? '' }}</textarea>
         </div>
 
         <div class="col-lg-4 field-group field-limited-company field-partnership">
             <label for="">Trading Address Line 2</label>
-            <textarea class="form-control my-2" id="trading_address_line2" name="trading_address_line2">
-                {{ $client->trading_address_line2 ?? '' }}
-            </textarea>
+            <textarea class="form-control my-2" id="trading_address_line2" name="trading_address_line2">{{ $client->trading_address_line2 ?? '' }}</textarea>
         </div>
 
         <div class="col-lg-4 field-group field-limited-company field-partnership">

@@ -673,7 +673,7 @@ class ClientController extends Controller
         $director->city = $request->city;
         $director->country = $request->country;
         $director->post_code = $request->post_code;
-        $data->photo_id_saved = $request->photo_id_saved ?? null;
+        $director->photo_id_saved = $request->photo_id_saved ?? null;
         $director->dob = $request->dob;
         $director->ni_number = $request->ni_number;
         $director->directors_tax_return = $request->directors_tax_return ?: 0;
