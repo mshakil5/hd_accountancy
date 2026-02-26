@@ -249,8 +249,14 @@ class AdminController extends Controller
                     return $clientservice->service ? $clientservice->service->name : '';
                 })
                 ->filterColumn('servicename', function($query, $keyword) {
-                    $query->whereHas('service', function($q) use ($keyword) {
-                        $q->where('name', 'like', "%{$keyword}%");
+                    $query->where(function($q) use ($keyword) {
+                        $q->whereHas('service', function($q2) use ($keyword) {
+                            $q2->where('name', 'like', "%{$keyword}%");
+                        })->orWhereHas('clientSubServices', function($q2) use ($keyword) {
+                            $q2->whereHas('subService', function($q3) use ($keyword) {
+                                $q3->where('name', 'like', "%{$keyword}%");
+                            });
+                        });
                     });
                 })
                 ->addColumn('due_date', function (ClientService $clientservice) {
@@ -328,8 +334,14 @@ class AdminController extends Controller
                     return $clientservice->service ? $clientservice->service->name : '';
                 })
                 ->filterColumn('servicename', function($query, $keyword) {
-                    $query->whereHas('service', function($q) use ($keyword) {
-                        $q->where('name', 'like', "%{$keyword}%");
+                    $query->where(function($q) use ($keyword) {
+                        $q->whereHas('service', function($q2) use ($keyword) {
+                            $q2->where('name', 'like', "%{$keyword}%");
+                        })->orWhereHas('clientSubServices', function($q2) use ($keyword) {
+                            $q2->whereHas('subService', function($q3) use ($keyword) {
+                                $q3->where('name', 'like', "%{$keyword}%");
+                            });
+                        });
                     });
                 })
                 ->addColumn('due_date', function (ClientService $clientservice) {
@@ -380,8 +392,14 @@ class AdminController extends Controller
                     return $clientservice->service ? $clientservice->service->name : '';
                 })
                 ->filterColumn('servicename', function($query, $keyword) {
-                    $query->whereHas('service', function($q) use ($keyword) {
-                        $q->where('name', 'like', "%{$keyword}%");
+                    $query->where(function($q) use ($keyword) {
+                        $q->whereHas('service', function($q2) use ($keyword) {
+                            $q2->where('name', 'like', "%{$keyword}%");
+                        })->orWhereHas('clientSubServices', function($q2) use ($keyword) {
+                            $q2->whereHas('subService', function($q3) use ($keyword) {
+                                $q3->where('name', 'like', "%{$keyword}%");
+                            });
+                        });
                     });
                 })
                 ->addColumn('due_date', function (ClientService $clientservice) {
@@ -693,6 +711,33 @@ class AdminController extends Controller
         $clientService->save();
 
         return response()->json(['status' => 200, 'message' => 'Status updated successfully']);
+    }
+
+    public function getActiveJobs()
+    {
+        $authId = auth()->id();
+
+        $activeWorkTimes = WorkTime::whereNull('end_time')
+            ->where('is_break', 0)
+            ->where('staff_id', $authId)
+            ->whereNotNull('client_sub_service_id')
+            ->with(['clientSubService.subService', 'clientSubService.clientService', 'clientSubService.staff'])
+            ->get()
+            ->map(function ($workTime, $index) {
+                $sub     = $workTime->clientSubService;
+                $service = optional($sub)->clientService;
+                $staff   = optional($sub)->staff;
+
+                return [
+                    'DT_RowIndex'  => $index + 1,
+                    'servicename'  => optional(optional($sub)->subService)->name ?? 'N/A',
+                    'deadline'     => optional($service)->legal_deadline ?? 'N/A',
+                    'staff_name'   => $staff ? $staff->first_name . ' ' . $staff->last_name : 'N/A',
+                    'status'       => '<span class="badge bg-warning text-dark">Processing</span>',
+                ];
+            });
+
+        return response()->json(['data' => $activeWorkTimes]);
     }
 
     public function getServiceComment($clientServiceId)

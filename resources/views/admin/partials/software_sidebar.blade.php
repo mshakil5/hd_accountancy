@@ -244,7 +244,7 @@
             <i class="bi bi-chevron-down"></i>
         </a>
 
-        <ul id="reportDropdown" class="collapse list-unstyled {{ request()->routeIs('report.create') || request()->routeIs('client-acquisition-report') || request()->routeIs('client.fees-report') ? 'show' : '' }}">
+        <ul id="reportDropdown" class="collapse list-unstyled {{ request()->routeIs('report.create') || request()->routeIs('client-acquisition-report') || request()->routeIs('client.fees-report') || request()->routeIs('attendance.report') ? 'show' : '' }}">
             <li class="nav-item {{ request()->routeIs('report.create') ? 'active' : '' }}">
                 <a class="nav-link" href="{{ route('report.create') }}">
                     <i class="bi bi-people"></i>
@@ -261,6 +261,12 @@
                 <a class="nav-link" href="{{ route('client.fees-report') }}">
                     <i class="bi bi-cash"></i>
                     <span>Fees Report</span>
+                </a>
+            </li>
+            <li class="nav-item {{ request()->routeIs('attendance.report') ? 'active' : '' }}">
+                <a class="nav-link" href="{{ route('attendance.report') }}">
+                    <i class="bi bi-clock"></i>
+                    <span>Attendence Report</span>
                 </a>
             </li>
         </ul>

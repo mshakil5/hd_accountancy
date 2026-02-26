@@ -375,24 +375,19 @@
         <!-- Service message modal end -->
 
         <div class="col-lg-4 mb-3">
-            <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
-                <div class="card-body px-0">
-                    <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
-                        Your Notes
-                    </div>
-                    <div class="text-start my-3">
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#note">
-                            Add New Note
-                        </button>
-                    </div>
-                    <div class="table-wrapper my-4 mx-auto">
-                        <table id="notesTable" class="table table-striped">
+            <div class="col-lg-12 px-0 border shadow-sm mb-3">
+                <div class="card-body px-0 border-theme border-2">
+                    <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
+                        <i class="bx bxs-briefcase-alt-2 fs-4 me-2"></i>Active Jobs
+                    </p>
+                    <div class="table-wrapper my-2 table-responsive mx-1">
+                        <table id="activeJobsTable" class="table table-striped">
                             <thead>
                                 <tr>
-                                    <th>Sl</th>
-                                    <th>Note</th>
+                                    <th>#</th>
+                                    <th>Service</th>
+                                    <th>Deadline</th>
                                     <th>Status</th>
-                                    <th>Action</th>
                                 </tr>
                             </thead>
                         </table>
@@ -572,6 +567,34 @@
             </div>
         </div>
         <!-- One Time Jobs -->
+
+        <div class="col-lg-4 mb-3">
+            <div class="report-box border-theme sales-card p-4 rounded-4 border-3 h-100 position-relative">
+                <div class="card-body px-0">
+                    <div class="p-2 bg-theme-light border-theme border-2 text-center fs-4 txt-theme rounded-4 fw-bold">
+                        Your Notes
+                    </div>
+                    <div class="text-start my-3">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#note">
+                            Add New Note
+                        </button>
+                    </div>
+                    <div class="table-wrapper my-4 mx-auto">
+                        <table id="notesTable" class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Sl</th>
+                                    <th>Note</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <div class="modal fade" id="note" tabindex="-1" aria-labelledby="noteLabel" aria-hidden="true">
@@ -652,6 +675,23 @@
 
 <script>
     $(document).ready(function() {
+
+    $('#activeJobsTable').DataTable({
+            processing: true,
+            serverSide: false,
+            info: false,
+            ajax: {
+                url: '/get-active-jobs',
+                type: 'GET',
+            },
+            columns: [
+                { data: 'DT_RowIndex', orderable: false },
+                { data: 'servicename' },
+                { data: 'deadline' },
+                { data: 'status', orderable: false, render: function(data) { return data; } }
+            ]
+        });
+
         $('#teamOverviewTable').DataTable({
             processing: true,
             serverSide: true,
@@ -1562,6 +1602,10 @@
                     if ($.fn.DataTable.isDataTable('#completedTasksTable')) {
                         $('#completedTasksTable').DataTable().ajax.reload(null, false);
                     }
+
+                    if ($.fn.DataTable.isDataTable('#activeJobsTable')) {
+                        $('#activeJobsTable').DataTable().ajax.reload(null, false);
+                    }
                 },
                 error: function(xhr, status, error) {
                     console.error(xhr.responseText);
@@ -1594,6 +1638,9 @@
 
                     if ($.fn.DataTable.isDataTable('#completedTasksTable')) {
                         $('#completedTasksTable').DataTable().ajax.reload(null, false);
+                    }
+                    if ($.fn.DataTable.isDataTable('#activeJobsTable')) {
+                        $('#activeJobsTable').DataTable().ajax.reload(null, false);
                     }
                 },
                 error: function(xhr, status, error) {

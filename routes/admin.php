@@ -441,6 +441,9 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
 
     Route::get('/reports/generate-fees', [ReportController::class, 'generateFeesReport'])->name('reports.generate.fees');
 
+    Route::get('/attendance-report', [ReportController::class, 'attendanceReport'])->name('attendance.report');
+    Route::get('/attendance-report/generate', [ReportController::class, 'generateAttendanceReport'])->name('attendance.report.generate');
+
     // User absent log
     Route::post('/add-comment', [LogController::class, 'addComment'])->name('add.comment');
 
@@ -697,3 +700,5 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/check-break-status', [BreakController::class, 'checkBreakStatus'])->name('admin.check-break-status');
 
 });
+
+Route::get('/get-active-jobs', [AdminController::class, 'getActiveJobs'])->name('get.active.jobs');

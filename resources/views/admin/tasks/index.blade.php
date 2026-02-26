@@ -200,29 +200,27 @@
     </div>
     <!-- Notes section end -->
 
-      <!-- One Time Jobs -->
-      <div class="col-lg-5 mb-3">
+    <div class="col-lg-5 mb-3">
         <div class="col-lg-12 px-0 border shadow-sm mb-3">
             <div class="card-body px-0 border-theme border-2">
                 <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
-                        <i class="bx bxs-user-plus fs-4 me-2"></i>One Time Jobs
-                    </p>
-                    <div class="table-wrapper my-2 table-responsive mx-1">
-                    <table id="OneTimeJobsTable" class="table table-striped">
+                    <i class="bx bxs-briefcase-alt-2 fs-4 me-2"></i>Active Jobs
+                </p>
+                <div class="table-wrapper my-2 table-responsive mx-1">
+                    <table id="activeJobsTable" class="table table-striped">
                         <thead>
                             <tr>
-                                <th scope="col">#</th>
-                                <th scope="col">Service Name</th>
-                                <th scope="col">Deadline</th>
-                                <th scope="col">Action</th>
-                                <th scope="col">Comment</th>
+                                <th>#</th>
+                                <th>Service</th>
+                                <th>Deadline</th>
+                                <th>Status</th>
                             </tr>
                         </thead>
                     </table>
                 </div>
             </div>
         </div>
-      </div>
+    </div>
     <!-- One Time Jobs -->
 
     <!-- Works assigned to a user and specified staff start-->
@@ -317,6 +315,30 @@
         </div>
     </div>
     <!-- Completed service details section end -->
+
+    <!-- One Time Jobs -->
+    <div class="col-lg-5 mb-3">
+        <div class="col-lg-12 px-0 border shadow-sm mb-3">
+            <div class="card-body px-0 border-theme border-2">
+                <p class="p-2 bg-theme text-white px-3 mb-0 text-capitalize d-flex align-items-center fs-5">
+                        <i class="bx bxs-user-plus fs-4 me-2"></i>One Time Jobs
+                    </p>
+                    <div class="table-wrapper my-2 table-responsive mx-1">
+                    <table id="OneTimeJobsTable" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">Service Name</th>
+                                <th scope="col">Deadline</th>
+                                <th scope="col">Action</th>
+                                <th scope="col">Comment</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Completed tasks as staff table start-->
     <div class="col-lg-6 mb-3">
@@ -511,6 +533,22 @@
                 orderable: false,
                 searchable: false
             }
+        ]
+    });
+
+    $('#activeJobsTable').DataTable({
+        processing: true,
+        serverSide: false,
+        info: false,
+        ajax: {
+            url: '/get-active-jobs',
+            type: 'GET',
+        },
+        columns: [
+            { data: 'DT_RowIndex', orderable: false },
+            { data: 'servicename' },
+            { data: 'deadline' },
+            { data: 'status', orderable: false, render: function(data) { return data; } }
         ]
     });
 
@@ -1221,6 +1259,10 @@
                     if ($.fn.DataTable.isDataTable('#completedTasksTable')) {
                         $('#completedTasksTable').DataTable().ajax.reload(null, false);
                     }
+
+                    if ($.fn.DataTable.isDataTable('#activeJobsTable')) {
+                        $('#activeJobsTable').DataTable().ajax.reload(null, false);
+                    }
                 },
                 error: function(xhr, status, error) {
                     console.error(xhr.responseText);
@@ -1253,6 +1295,10 @@
 
                     if ($.fn.DataTable.isDataTable('#completedTasksTable')) {
                         $('#completedTasksTable').DataTable().ajax.reload(null, false);
+                    }
+
+                    if ($.fn.DataTable.isDataTable('#activeJobsTable')) {
+                        $('#activeJobsTable').DataTable().ajax.reload(null, false);
                     }
                 },
                 error: function(xhr, status, error) {

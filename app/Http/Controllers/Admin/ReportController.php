@@ -3,13 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Client;
-use App\Models\User;
-use Illuminate\Support\Carbon;
-use App\Models\WorkTime;
-use Illuminate\Support\Facades\DB;
 use App\Models\ClientSubService;
+use App\Models\User;
+use App\Models\UserAttendanceLog;
+use App\Models\WorkTime;
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class ReportController extends Controller
 {
@@ -583,6 +584,98 @@ class ReportController extends Controller
                 'without_standing_order' => $withoutStandingOrder,
             ]
         ]);
+    }
+
+    public function attendanceReport()
+    {
+        $employees = User::where('status', 1)->select('id', 'first_name', 'last_name', 'id_number')->latest()->get();
+        return view('admin.reports.attendance', compact('employees'));
+    }
+
+    public function generateAttendanceReport(Request $request)
+    {
+        $request->validate([
+            'date_range'  => 'required|string',
+            'employee_id' => 'required',
+        ]);
+
+        $dates     = explode(' - ', $request->date_range);
+        $startDate = Carbon::createFromFormat('d/m/Y', $dates[0])->startOfDay();
+        $endDate   = Carbon::createFromFormat('d/m/Y', $dates[1])->endOfDay();
+        $employeeId = $request->employee_id;
+
+        $logs = UserAttendanceLog::whereBetween('start_time', [$startDate, $endDate])
+            ->whereNotNull('end_time')
+            ->where('user_id', $employeeId)
+            ->with('user:id,first_name,last_name')
+            ->orderBy('start_time')
+            ->get();
+
+        $reportData        = [];
+        $totalActiveSeconds = 0;
+        $totalWorkedSeconds = 0;
+        $totalBreakSeconds  = 0;
+
+        foreach ($logs as $log) {
+            $entryTime     = Carbon::parse($log->start_time);
+            $exitTime      = Carbon::parse($log->end_time);
+            $activeSeconds = $entryTime->diffInSeconds($exitTime);
+
+            $breaks = WorkTime::where('staff_id', $log->user_id)
+                ->where('is_break', 1)
+                ->whereNotNull('end_time')
+                ->whereDate('created_at', $entryTime->toDateString())
+                ->orderBy('start_time')
+                ->get();
+
+            $breakSeconds  = $breaks->sum('duration');
+            $workedSeconds = max(0, $activeSeconds - $breakSeconds);
+
+            $totalActiveSeconds += $activeSeconds;
+            $totalWorkedSeconds += $workedSeconds;
+            $totalBreakSeconds  += $breakSeconds;
+
+            $breakDetails = $breaks->map(function ($break) {
+                return [
+                    'duration' => $this->formatDuration($break->duration),
+                    'start'    => Carbon::parse($break->start_time)->format('H:i:s'),
+                    'end'      => Carbon::parse($break->end_time)->format('H:i:s'),
+                ];
+            })->values()->toArray();
+
+            $reportData[] = [
+                'date'          => $entryTime->format('d/m/Y'),
+                'day'           => $entryTime->format('l'),
+                'employee_name' => trim(optional($log->user)->first_name . ' ' . optional($log->user)->last_name),
+                'active_hours'  => $this->formatDuration($activeSeconds),
+                'worked_hours'  => $this->formatDuration($workedSeconds),
+                'break_hours'   => $this->formatDuration($breakSeconds),
+                'entry'         => $entryTime->format('h:i:s A'),
+                'exit'          => $exitTime->format('h:i:s A'),
+                'breaks'        => $breakDetails,
+            ];
+        }
+
+        $employee = User::find($employeeId);
+
+        return response()->json([
+            'employee_name' => $employee ? trim($employee->first_name . ' ' . $employee->last_name) : '',
+            'data'          => $reportData,
+            'summary'       => [
+                'total_employees' => 1,
+                'total_active'    => $this->formatDuration($totalActiveSeconds),
+                'total_worked'    => $this->formatDuration($totalWorkedSeconds),
+                'total_break'     => $this->formatDuration($totalBreakSeconds),
+            ],
+        ]);
+    }
+
+    private function formatDuration($seconds)
+    {
+        $seconds = max(0, (int) $seconds);
+        $h = floor($seconds / 3600);
+        $m = floor(($seconds % 3600) / 60);
+        return $h . 'h ' . str_pad($m, 2, '0', STR_PAD_LEFT) . 'm';
     }
     
 }

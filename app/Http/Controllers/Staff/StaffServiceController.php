@@ -51,8 +51,14 @@ class StaffServiceController extends Controller
                     return $clientservice->service?->name ?? '';
                 })
                 ->filterColumn('servicename', function($query, $keyword) {
-                    $query->whereHas('service', function($q) use ($keyword) {
-                        $q->where('name', 'like', "%{$keyword}%");
+                    $query->where(function($q) use ($keyword) {
+                        $q->whereHas('service', function($q2) use ($keyword) {
+                            $q2->where('name', 'like', "%{$keyword}%");
+                        })->orWhereHas('clientSubServices', function($q2) use ($keyword) {
+                            $q2->whereHas('subService', function($q3) use ($keyword) {
+                                $q3->where('name', 'like', "%{$keyword}%");
+                            });
+                        });
                     });
                 })
                 ->addColumn('due_date', function (ClientService $clientservice) {
@@ -117,8 +123,14 @@ class StaffServiceController extends Controller
                     return $clientservice->service?->name ?? '';
                 })
                 ->filterColumn('servicename', function($query, $keyword) {
-                    $query->whereHas('service', function($q) use ($keyword) {
-                        $q->where('name', 'like', "%{$keyword}%");
+                    $query->where(function($q) use ($keyword) {
+                        $q->whereHas('service', function($q2) use ($keyword) {
+                            $q2->where('name', 'like', "%{$keyword}%");
+                        })->orWhereHas('clientSubServices', function($q2) use ($keyword) {
+                            $q2->whereHas('subService', function($q3) use ($keyword) {
+                                $q3->where('name', 'like', "%{$keyword}%");
+                            });
+                        });
                     });
                 })
                 ->addColumn('due_date', function (ClientService $clientservice) {
@@ -173,8 +185,14 @@ class StaffServiceController extends Controller
                     return $clientservice->service?->name ?? '';
                 })
                 ->filterColumn('servicename', function($query, $keyword) {
-                    $query->whereHas('service', function($q) use ($keyword) {
-                        $q->where('name', 'like', "%{$keyword}%");
+                    $query->where(function($q) use ($keyword) {
+                        $q->whereHas('service', function($q2) use ($keyword) {
+                            $q2->where('name', 'like', "%{$keyword}%");
+                        })->orWhereHas('clientSubServices', function($q2) use ($keyword) {
+                            $q2->whereHas('subService', function($q3) use ($keyword) {
+                                $q3->where('name', 'like', "%{$keyword}%");
+                            });
+                        });
                     });
                 })
                 ->addColumn('due_date', function (ClientService $clientservice) {
