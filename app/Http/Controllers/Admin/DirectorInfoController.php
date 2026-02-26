@@ -21,27 +21,25 @@ class DirectorInfoController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'client_id' => 'required',
-            'name' => 'required|string',
-            'last_name' => 'required|string',
-            'phone' => 'required',
-            'email' => 'required',
-            'address' => 'required',
-            'dob' => 'required',
+            'client_id' => 'nullable',
+            'name' => 'nullable|string',
+            'last_name' => 'nullable|string',
+            'phone' => 'nullable',
+            'email' => 'nullable',
+            'address' => 'nullable',
+            'dob' => 'nullable',
             'address_line_2' => 'nullable',
             'city' => 'nullable',
             'country' => 'nullable',
             'post_code' => 'nullable',
             'photo_id_saved' => 'nullable',
-            'ni_number' => 'required', 
+            'ni_number' => 'nullable', 
             'directors_tax_return' => 'nullable',
             'dir_verification_code' => 'nullable',
             'hmrc_authorisation' => 'nullable',
             'utr_number' => 'nullable', 
             'utr_authorization' => 'nullable', 
             'nino' => 'nullable', 
-        ],[
-            'client_id.required' => 'The client reference id field is required.',
         ]);
 
         if ($validator->fails()) {

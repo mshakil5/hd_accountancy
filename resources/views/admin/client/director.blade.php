@@ -12,27 +12,27 @@
                     <form id="directorForm">
                         <input type="hidden" id="directorIdInput" name="director_id">
                         <div class="form-group">
-                            <label for="name">First Name <span class="text-danger">*</span></label>
+                            <label for="name">First Name</label>
                             <input type="text" class="form-control my-2" id="dir-name" name="name" placeholder="Enter name">
                         </div>
                         <div class="form-group">
-                            <label for="name">Last Name <span class="text-danger">*</span></label>
+                            <label for="name">Last Name</label>
                             <input type="text" class="form-control my-2" id="dir-last-name" name="last_name" placeholder="Enter last name">
                         </div>
                         <div class="form-group">
-                            <label for="phone">Phone <span class="text-danger">*</span></label>
+                            <label for="phone">Phone</label>
                             <input type="number" class="form-control my-2" id="dir-phone" name="phone" placeholder="Enter phone number">
                         </div>
                         <div class="form-group">
-                            <label for="email">Email <span class="text-danger">*</span></label>
+                            <label for="email">Email</label>
                             <input type="email" class="form-control my-2" id="dir-email" name="email" placeholder="Enter email">
                         </div>
                         <div class="form-group">
-                            <label for="dob">Date Of Birth <span class="text-danger">*</span></label>
+                            <label for="dob">Date Of Birth</label>
                             <input type="date" class="form-control my-2" id="dob" name="dob" placeholder="Enter date of birth">
                         </div>
                         <div class="form-group">
-                            <label for="address">Address Line 1 <span class="text-danger">*</span></label>
+                            <label for="address">Address Line 1</label>
                             <input type="text" class="form-control my-2" id="address" name="address" placeholder="Enter address line 1">
                         </div>
                         <div class="form-group">
@@ -60,7 +60,7 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="ni_number">NI Number <span class="text-danger">*</span></label>
+                            <label for="ni_number">NI Number</label>
                             <input type="text" class="form-control my-2" id="ni_number" name="ni_number" placeholder="Enter NI number">
                         </div>
                         @php
