@@ -495,15 +495,12 @@ class StaffServiceController extends Controller
     public function checkWorkTimeStatus()
     {
         $staffId = Auth::id();
-        $startOfDay = Carbon::today()->startOfDay();
-        $endOfDay = Carbon::today()->endOfDay();
 
         $ongoingWorkTime = WorkTime::where('staff_id', $staffId)
             ->whereNull('end_time')
             ->where('is_break', 0)
             ->whereNotNull('start_time')
             ->whereNotNull('client_sub_service_id')
-            ->whereBetween('created_at', [$startOfDay, $endOfDay])
             ->exists();
         if ($ongoingWorkTime) {
             return response()->json(['status' => 'ongoing']);
