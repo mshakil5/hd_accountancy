@@ -17,8 +17,8 @@ class CheckAndCreateServiceJobs extends Command
 
     public function handle()
     {
-        $currentDate = Carbon::now();
-    
+        $currentDate = Carbon::now()->startOfDay();
+
         $clientServices = ClientService::where('continuous', 1)
             ->with('clientSubServices')
             ->whereNotNull('next_due_date')
@@ -30,132 +30,84 @@ class CheckAndCreateServiceJobs extends Command
             ->get();
 
         foreach ($clientServices as $clientService) {
-            $frequency = $clientService->service_frequency;
-            $nextDueDate = Carbon::createFromFormat('d-m-Y', $clientService->next_due_date);
+            try {
+                $frequency = $clientService->service_frequency;
+                $nextDueDate = Carbon::createFromFormat('d-m-Y', $clientService->next_due_date)->startOfDay();
+                
+                $isRelevant = false;
 
-            $next = DateTime::createFromFormat('d-m-Y', $clientService->next_due_date);
-            $today = new DateTime();
-              
-            if ($next < $today) {
-                $isRelevant = true;
-            }else {
-            if ($frequency == 'Monthly') {
-                $startOfNextMonth = $currentDate->copy()->addMonthNoOverflow()->startOfMonth();
-                $endOfNextMonth = $currentDate->copy()->addMonthNoOverflow()->endOfMonth();
-                $isRelevant = $nextDueDate->between($startOfNextMonth, $endOfNextMonth);
-            } elseif ($frequency == 'Weekly') {
-                $startOfNextWeek = $currentDate->copy()->startOfWeek();
-                $endOfNextWeek = $currentDate->copy()->endOfWeek();
-                $isRelevant = $nextDueDate->between($startOfNextWeek, $endOfNextWeek);
-            } elseif ($frequency == '2 Weekly') {
-                $startOfNextTwoWeeks = $currentDate->copy()->addWeeks(1)->startOfWeek();
-                $endOfNextTwoWeeks = $currentDate->copy()->addWeeks(1)->endOfWeek();
-                $isRelevant = $nextDueDate->between($startOfNextTwoWeeks, $endOfNextTwoWeeks);
-            } elseif ($frequency == '4 Weekly') {
-                $startOfNextFourWeeks = $currentDate->copy()->addWeeks(3)->startOfWeek();
-                $endOfNextFourWeeks = $currentDate->copy()->addWeeks(3)->endOfWeek();
-                $isRelevant = $nextDueDate->between($startOfNextFourWeeks, $endOfNextFourWeeks);
-            } elseif ($frequency == 'Quarterly') {
-                $startOfNextQuarter = $currentDate->copy()->addMonths(1)->startOfMonth();
-                $endOfNextQuarter = $currentDate->copy()->addMonthsNoOverflow(3)->endOfMonth();
-                $isRelevant = $nextDueDate->between($startOfNextQuarter, $endOfNextQuarter);
-            } elseif ($frequency == 'Annually') {
-                $startOfNextYear = $currentDate->copy()->addYearsNoOverflow()->startOfYear();
-                $endOfNextYear = $currentDate->copy()->addYearsNoOverflow()->endOfYear();
-                $isRelevant = $nextDueDate->between($startOfNextYear, $endOfNextYear);
-            }
-            }
-
-            $clientService->next_due_date = Carbon::parse($clientService->next_due_date)->format('d-m-Y');
-            $clientService->next_service_deadline = Carbon::parse($clientService->next_service_deadline)->format('d-m-Y');
-            $clientService->next_legal_deadline = Carbon::parse($clientService->next_legal_deadline)->format('d-m-Y');
-
-            if ($isRelevant) {
-                $newClientService = $clientService->replicate();
-                if ($frequency == 'Weekly') {
-                    $newClientService->due_date =  $clientService->next_due_date;
-                    $newClientService->service_deadline =  $clientService->next_service_deadline;
-                    $newClientService->legal_deadline =  $clientService->next_legal_deadline;
-                    $newClientService->next_due_date = Carbon::parse($clientService->next_due_date)->addWeek()->format('d-m-Y');
-                    $newClientService->next_service_deadline = Carbon::parse($clientService->next_service_deadline)->addWeek()->format('d-m-Y');
-                    $newClientService->next_legal_deadline = Carbon::parse($clientService->next_legal_deadline)->addWeek()->format('d-m-Y');
-                } elseif ($frequency == '2 Weekly') {
-                    $newClientService->due_date =  $clientService->next_due_date;
-                    $newClientService->service_deadline =  $clientService->next_service_deadline;
-                    $newClientService->legal_deadline =  $clientService->next_legal_deadline;
-                    $newClientService->next_due_date = Carbon::parse($clientService->next_due_date)->addWeeks(2)->format('d-m-Y');
-                    $newClientService->next_service_deadline = Carbon::parse($clientService->next_service_deadline)->addWeeks(2)->format('d-m-Y');
-                    $newClientService->next_legal_deadline = Carbon::parse($clientService->next_legal_deadline)->addWeeks(2)->format('d-m-Y');
-                } elseif ($frequency == '4 Weekly') {
-                    $newClientService->due_date =  $clientService->next_due_date;
-                    $newClientService->service_deadline =  $clientService->next_service_deadline;
-                    $newClientService->legal_deadline =  $clientService->next_legal_deadline;
-                    $newClientService->next_due_date = Carbon::parse($clientService->next_due_date)->addWeeks(4)->format('d-m-Y');
-                    $newClientService->next_service_deadline = Carbon::parse($clientService->next_service_deadline)->addWeeks(4)->format('d-m-Y');
-                    $newClientService->next_legal_deadline = Carbon::parse($clientService->next_legal_deadline)->addWeeks(4)->format('d-m-Y');
-                } elseif ($frequency == 'Monthly') {
-                    $newClientService->due_date =  $clientService->next_due_date;
-                    $newClientService->service_deadline =  $clientService->next_service_deadline;
-                    $newClientService->legal_deadline =  $clientService->next_legal_deadline;
-                    $newClientService->next_due_date = Carbon::parse($clientService->next_due_date)->addMonthNoOverflow()->format('d-m-Y');
-                    $newClientService->next_service_deadline = Carbon::parse($clientService->next_service_deadline)->addMonthNoOverflow()->format('d-m-Y');
-                    $newClientService->next_legal_deadline = Carbon::parse($clientService->next_legal_deadline)->addMonthNoOverflow()->format('d-m-Y');
-                } elseif ($frequency == 'Quarterly') {
-                    $newClientService->due_date =  $clientService->next_due_date;
-                    $newClientService->service_deadline =  $clientService->next_service_deadline;
-                    $newClientService->legal_deadline =  $clientService->next_legal_deadline;
-                    $newClientService->next_due_date = Carbon::parse($clientService->next_due_date)->addMonthsNoOverflow(3)->format('d-m-Y');
-                    $newClientService->next_service_deadline = Carbon::parse($clientService->next_service_deadline)->addMonthsNoOverflow(3)->format('d-m-Y');
-                    $newClientService->next_legal_deadline = Carbon::parse($clientService->next_legal_deadline)->addMonthsNoOverflow(3)->format('d-m-Y');
-                } elseif ($frequency == 'Annually') {
-                    $newClientService->due_date =  $clientService->next_due_date;
-                    $newClientService->service_deadline =  $clientService->next_service_deadline;
-                    $newClientService->legal_deadline =  $clientService->next_legal_deadline;
-                    $newClientService->next_due_date = Carbon::parse($clientService->next_due_date)->addYearsNoOverflow()->format('d-m-Y');
-                    $newClientService->next_service_deadline = Carbon::parse($clientService->next_service_deadline)->addYearsNoOverflow()->format('d-m-Y');
-                    $newClientService->next_legal_deadline = Carbon::parse($clientService->next_legal_deadline)->addYearsNoOverflow()->format('d-m-Y');
+                if ($nextDueDate->lessThanOrEqualTo($currentDate)) {
+                    $isRelevant = true;
+                } else {
+                    $horizonDate = match ($frequency) {
+                        'Weekly'    => $currentDate->copy()->addWeek(),
+                        '2 Weekly'  => $currentDate->copy()->addWeeks(2),
+                        '4 Weekly'  => $currentDate->copy()->addWeeks(4),
+                        'Monthly'   => $currentDate->copy()->addMonthNoOverflow(),
+                        'Quarterly' => $currentDate->copy()->addMonthsNoOverflow(3),
+                        'Annually'  => $currentDate->copy()->addYearNoOverflow(),
+                        default     => $currentDate,
+                    };
+                    $isRelevant = $nextDueDate->lessThanOrEqualTo($horizonDate);
                 }
-                $newClientService->unique_id = date("His") . '-' . $clientService->client_id;
-                $newClientService->task_counter = $clientService->task_counter + 1;
-                $newClientService->save();
 
-                $clientService->is_next_date_added = 1;
-                $clientService->save();
+                if ($isRelevant) {
+                    $newClientService = $clientService->replicate();
+                    
+                    $newClientService->due_date = $clientService->next_due_date;
+                    $newClientService->service_deadline = $clientService->next_service_deadline;
+                    $newClientService->legal_deadline = $clientService->next_legal_deadline;
 
-                if ($clientService->clientSubServices) {
-                    foreach ($clientService->clientSubServices as $subService) {
-                        $newSubService = $subService->replicate();
-                        $newSubService->client_service_id = $newClientService->id;
-                
-                        $frequency = $clientService->service_frequency;
-                        $nextDeadline = Carbon::parse($subService->deadline);
-                
-                        if ($frequency == 'Weekly') {
-                            $newSubService->deadline = $nextDeadline->addWeek()->format('d-m-Y');
-                        } elseif ($frequency == '2 Weekly') {
-                            $newSubService->deadline = $nextDeadline->addWeeks(2)->format('d-m-Y');
-                        } elseif ($frequency == '4 Weekly') {
-                            $newSubService->deadline = $nextDeadline->addWeeks(4)->format('d-m-Y');
-                        } elseif ($frequency == 'Monthly') {
-                            $newSubService->deadline = $nextDeadline->addMonthNoOverflow()->format('d-m-Y');
-                        } elseif ($frequency == 'Quarterly') {
-                            $newSubService->deadline = $nextDeadline->addMonthsNoOverflow(3)->format('d-m-Y');
-                        } elseif ($frequency == 'Annually') {
-                            $newSubService->deadline = $nextDeadline->addYearsNoOverflow()->format('d-m-Y');
+                    $newClientService->next_due_date = $this->getNextDate($clientService->next_due_date, $frequency);
+                    $newClientService->next_service_deadline = $this->getNextDate($clientService->next_service_deadline, $frequency);
+                    $newClientService->next_legal_deadline = $this->getNextDate($clientService->next_legal_deadline, $frequency);
+
+                    $newClientService->unique_id = date("His") . '-' . $clientService->client_id;
+                    $newClientService->task_counter = ($clientService->task_counter ?? 0) + 1;
+                    $newClientService->save();
+
+                    $clientService->is_next_date_added = 1;
+                    $clientService->save();
+
+                    if ($clientService->clientSubServices) {
+                        foreach ($clientService->clientSubServices as $subService) {
+                            $newSubService = $subService->replicate();
+                            $newSubService->client_service_id = $newClientService->id;
+                            $newSubService->deadline = $this->getNextDate($subService->deadline, $frequency);
+                            $newSubService->save();
                         }
-                
-                        $newSubService->save();
                     }
+
+                    $this->info("Created new service job for ClientService ID: {$clientService->id}");
                 }
-
-                $this->info("Created new service job for ClientService ID: {$clientService->id}");
-
+            } catch (\Exception $e) {
+                $this->error("Error processing ID {$clientService->id}: " . $e->getMessage());
             }
-        
         }
 
         $this->info("Service job creation process completed!");
-        
     }
-    
+
+
+
+    private function getNextDate($dateString, $frequency)
+    {
+        if (!$dateString) return null;
+
+        $date = Carbon::parse($dateString);
+
+        $nextDate = match ($frequency) {
+            'Weekly'    => $date->copy()->addWeek(),
+            '2 Weekly'  => $date->copy()->addWeeks(2),
+            '4 Weekly'  => $date->copy()->addWeeks(4),
+            'Monthly'   => $date->copy()->addMonthNoOverflow(),
+            'Quarterly' => $date->copy()->addMonthsNoOverflow(3),
+            'Annually'  => $date->copy()->addYearNoOverflow(),
+            default     => $date->copy(),
+        };
+
+        return $nextDate->format('d-m-Y');
+    }
+
+
 }
