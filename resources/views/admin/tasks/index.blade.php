@@ -677,7 +677,7 @@
                 url: '/admin/get-assigned-services',
                 type: 'GET',
                 error: function(xhr, error, thrown) {
-                    console.error('DataTables error:', error, thrown);
+                    console.log(xhr.responseText);
                 }
             },
             columns: [
