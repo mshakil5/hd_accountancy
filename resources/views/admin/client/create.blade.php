@@ -15,7 +15,10 @@
                     <select name="client_credential_id" id="client_credential_id" class="form-control mt-2 select2">
                         <option value="">Please Select</option>
                         @foreach ($clientCridentials as $clientCridential)
-                            <option value="{{ $clientCridential->id }}">{{$clientCridential->first_name}} {{$clientCridential->last_name}}</option>
+                            <option value="{{ $clientCridential->id }}">
+                                {{ $clientCridential->first_name }} {{ $clientCridential->last_name }}
+                                ({{ $clientCridential->email }}, {{ $clientCridential->phone }})
+                            </option>
                         @endforeach
                     </select>
                 </div>

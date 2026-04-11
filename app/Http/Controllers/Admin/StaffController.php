@@ -21,7 +21,9 @@ class StaffController extends Controller
     public function index()
     {
         $departments = Department::select('id', 'name')->orderby('id','DESC')->get();
-        $managers = User::where('type', '2')->select('id', 'id_number', 'first_name')->orderby('id','DESC')->get();
+        $managers = User::whereIn('type', [1, 2])
+                ->orderBy('id', 'DESC')
+                ->get();
         $roles = Role::select('id', 'name')->get();
         return view('admin.staff.index', compact('managers','departments', 'roles'));
     }
@@ -55,21 +57,21 @@ class StaffController extends Controller
             'last_name' => 'required|string|max:255',
             'phone' => 'required|numeric|digits:11',
             'email' => 'required|email|unique:users,email',
-            'ni_number' => 'required|regex:/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]+$/',
-            'date_of_birth' => 'required|date',
-            'address_line1' => 'required|string|max:255',
+            'ni_number' => 'nullable|regex:/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]+$/',
+            'date_of_birth' => 'nullable|date',
+            'address_line1' => 'nullable|string|max:255',
             'address_line2' => 'nullable|string|max:255',
-            'town' => 'required|string|max:255',
-            'postcode' => 'required|string|max:255',
-            'department_id' => 'required|integer',
-            'job_title' => 'required|string|max:255',
+            'town' => 'nullable|string|max:255',
+            'postcode' => 'nullable|string|max:255',
+            'department_id' => 'nullable|integer',
+            'job_title' => 'nullable|string|max:255',
             'employment_status' => 'nullable|string|max:255',
             'joining_date' => 'nullable|date',
             'image' => 'nullable|mimes:jpeg,png,jpg,gif,svg,pdf|max:8048',
-            'reporting_to' => 'required',
+            'reporting_to' => 'nullable',
             'password' => 'required|string|max:255',
             'confirm_password' => 'required|same:password',
-            'role_id' => 'required|integer',
+            'role_id' => 'nullable|integer',
         ],[
             'ni_number.regex' => 'The NI number must contain alphabet and  number.',
         ]);
@@ -137,21 +139,6 @@ class StaffController extends Controller
             return response()->json(['status'=> 303,'message'=>$message]);
             exit();
         }
-        // if(empty($request->last_name)){
-        //     $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Last name \" field..!</b></div>";
-        //     return response()->json(['status'=> 303,'message'=>$message]);
-        //     exit();
-        // }
-        // if(empty($request->phone)){
-        //     $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Phone \" field..!</b></div>";
-        //     return response()->json(['status'=> 303,'message'=>$message]);
-        //     exit();
-        // }
-        // if (!preg_match('/^\d{11}$/', $request->phone)) {
-        //     $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Phone number must be 11 digits.</b></div>";
-        //     return response()->json(['status'=> 303,'message'=>$message]);
-        //     exit();
-        // }
         if(empty($request->email)){
             $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Email \" field..!</b></div>";
             return response()->json(['status'=> 303,'message'=>$message]);
@@ -163,46 +150,6 @@ class StaffController extends Controller
             return response()->json(['status'=> 303,'message'=>$message]);
             exit();
         }
-        // if(empty($request->ni_number)){
-        //     $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"NI Number \" field..!</b></div>";
-        //     return response()->json(['status'=> 303,'message'=>$message]);
-        //     exit();
-        // }
-        // if(empty($request->date_of_birth)){
-        //     $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Date of birth \" field..!</b></div>";
-        //     return response()->json(['status'=> 303,'message'=>$message]);
-        //     exit();
-        // }
-        // if(empty($request->address_line1)){
-        //     $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Address \" field..!</b></div>";
-        //     return response()->json(['status'=> 303,'message'=>$message]);
-        //     exit();
-        // }
-        // if(empty($request->department_id )){
-        //     $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Department\" field..!</b></div>";
-        //     return response()->json(['status'=> 303,'message'=>$message]);
-        //     exit();
-        // }
-        // if(empty($request->job_title )){
-        //     $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Job title\" field..!</b></div>";
-        //     return response()->json(['status'=> 303,'message'=>$message]);
-        //     exit();
-        // }
-        // if(empty($request->employment_status )){
-        //     $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Employment status\" field..!</b></div>";
-        //     return response()->json(['status'=> 303,'message'=>$message]);
-        //     exit();
-        // }
-        // if(empty($request->joining_date )){
-        //     $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Joining date\" field..!</b></div>";
-        //     return response()->json(['status'=> 303,'message'=>$message]);
-        //     exit();
-        // }
-        // if(empty($request->reporting_to )){
-        //     $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please fill \"Reporting to\" field..!</b></div>";
-        //     return response()->json(['status'=> 303,'message'=>$message]);
-        //     exit();
-        // }
         if(isset($request->password) && ($request->password != $request->confirm_password)){
             $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Password doesn't match.</b></div>";
             return response()->json(['status'=> 303,'message'=>$message]);
@@ -361,7 +308,9 @@ class StaffController extends Controller
     {
         $staff = User::findOrFail($id);
         $departments = Department::orderby('id','DESC')->get();
-        $managers = User::where('type', '2')->orderby('id','DESC')->get();
+        $managers = User::whereIn('type', [1, 2])
+                ->orderBy('id', 'DESC')
+                ->get();
         return view('admin.staff.details', compact('staff', 'departments', 'managers'));
     }
     
@@ -571,7 +520,7 @@ class StaffController extends Controller
         $validator = Validator::make($request->all(), [
             'staff_id' => 'required',
             'first_name' => 'required|string',
-            'role_id' => 'required',
+            'role_id' => 'nullable',
             // 'last_name' => 'required|string',
             // 'phone' => 'required|numeric|digits:11',
             'email' => 'required|email|unique:users,email,'. $request->input('staff_id'),

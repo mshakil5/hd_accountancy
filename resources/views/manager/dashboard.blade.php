@@ -386,6 +386,7 @@
                                 <tr>
                                     <th>#</th>
                                     <th>Service</th>
+                                    <th>Client</th>
                                     <th>Deadline</th>
                                     <th>Status</th>
                                 </tr>
@@ -412,6 +413,7 @@
                                     <th scope="col">Service Name</th>
                                     <th scope="col">Due Date</th>
                                     <th scope="col">Target Deadline</th>
+                                    <th scope="col">Deadline</th>
                                     <th scope="col">Status</th>
                                     <th scope="col">Action</th>
                                 </tr>
@@ -687,6 +689,7 @@
             columns: [
                 { data: 'DT_RowIndex', orderable: false },
                 { data: 'servicename' },
+                { data: 'clientname' },
                 { data: 'deadline' },
                 { data: 'status', orderable: false, render: function(data) { return data; } }
             ]
@@ -1043,6 +1046,27 @@
                         return formattedDate;
                     }
                 },
+                                {
+                    data: 'legal_deadline',
+                    name: 'legal_deadline',
+                    render: function (data, type, row) {
+
+                        if (!data || !data.formatted) {
+                            return 'N/A';
+                        }
+
+                        var today = moment().startOf('day');
+                        var deadline = moment(data.original, 'YYYY-MM-DD').startOf('day');
+
+                        if (row.status != 2 && deadline.isBefore(today)) {
+                            return '<span style="background: yellow; padding:2px 6px;">' 
+                                + data.formatted + 
+                            '</span>';
+                        }
+
+                        return data.formatted;
+                    }
+                },
                 {
                     data: 'status',
                     name: 'status',
@@ -1188,12 +1212,20 @@
                 dataType: "json",
                 success: function(data) {
                     $('#previousMessages1').empty();
+
                     data.forEach(function(message) {
                         var messageDiv = $('<div>').addClass('message');
-                        var userName = message.userName;
-                        var messageContent = message.messageContent ? message.messageContent : '';
 
-                        messageDiv.html('<span style="font-weight: bold;">' + userName + ': </span>' + messageContent);
+                        var userName = message.userName;
+                        var messageContent = message.messageContent || '';
+                        var time = message.time || '';
+
+                        messageDiv.html(
+                            '<span style="font-weight: bold;">' + userName + ': </span>' +
+                            messageContent +
+                            ' <small style="color:gray;">(' + time + ')</small>'
+                        );
+
                         $('#previousMessages1').append(messageDiv);
                     });
                 },
@@ -1464,12 +1496,20 @@
                 dataType: "json",
                 success: function(data) {
                     $('#previousMessages').empty();
+
                     data.forEach(function(message) {
                         var messageDiv = $('<div>').addClass('message');
-                        var userName = message.userName;
-                        var messageContent = message.messageContent ? message.messageContent : '';
 
-                        messageDiv.html('<span style="font-weight: bold;">' + userName + ': </span>' + messageContent);
+                        var userName = message.userName;
+                        var messageContent = message.messageContent || '';
+                        var time = message.time || '';
+
+                        messageDiv.html(
+                            '<span style="font-weight: bold;">' + userName + ': </span>' +
+                            messageContent +
+                            ' <small style="color:gray;">(' + time + ')</small>'
+                        );
+
                         $('#previousMessages').append(messageDiv);
                     });
                 },

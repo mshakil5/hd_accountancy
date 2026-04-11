@@ -41,7 +41,7 @@
                                 </div>
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        <label for="manager_id">Assign To <span class="text-danger">*</span></label>
+                                        <label for="manager_id">Assign To</label>
                                         <select class="form-control select2" id="manager_id" name="manager_id">
                                             <option value="">Select a manager or staff</option>
                                             @foreach ($managerAndStaffs as $staff)
@@ -95,6 +95,7 @@
                                     <th>Assigned Date</th>
                                     <th>Task</th>
                                     <th>Assigned To</th>
+                                    <th>Created By</th>
                                     <th>Deadline</th>
                                     <th>Status</th>
                                     <th>Comment</th>
@@ -190,9 +191,13 @@
             {
                 data: null,
                 name: 'manager.first_name',
-                render: function (data) {
-                    return `${data.manager.first_name ?? ''} ${data.manager.last_name ?? ''}`.trim();
-                }
+                render: data => data.manager 
+                    ? `${data.manager.first_name || ''} ${data.manager.last_name || ''}`.trim()
+                    : ''
+            },
+            {
+                data: 'created_by_name',
+                name: 'created_by_name'
             },
             {
                 data: 'legal_deadline',

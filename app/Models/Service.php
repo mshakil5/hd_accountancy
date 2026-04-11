@@ -44,4 +44,9 @@ class Service extends Model
         return $this->hasMany(SubService::class);
     }
 
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
 }

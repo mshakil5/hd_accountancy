@@ -84,7 +84,7 @@
                 </div>
               </div>
 
-              <div class="row">
+              <div class="row d-none">
                 <div class="col-sm-6">
                   <div class="form-group">
                     <label>Role <span class="text-danger">*</span></label>
@@ -153,7 +153,7 @@
                   <th>Last Name</th>
                   <th>Phone</th>
                   <th>Email</th>
-                  <th>Role</th>
+                  {{-- <th>Role</th> --}}
                   <th>Log</th>
                   <th>Action</th>
                 </tr>
@@ -166,7 +166,7 @@
                     <td>{{$data->last_name}}</td>
                     <td>{{$data->phone}}</td>
                     <td>{{$data->email}}</td>
-                    <td>{{$data->role ? $data->role->name : ''}}</td>
+                    {{-- <td>{{$data->role ? $data->role->name : ''}}</td> --}}
                     <td>
                         <a href="{{ route('user.activities', $data->id) }}" class="btn btn-link">
                             <i class="fa fa-book" style="font-size: 20px;"></i>

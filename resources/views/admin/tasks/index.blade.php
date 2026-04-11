@@ -212,6 +212,7 @@
                             <tr>
                                 <th>#</th>
                                 <th>Service</th>
+                                <th>Client</th>
                                 <th>Deadline</th>
                                 <th>Status</th>
                             </tr>
@@ -547,6 +548,7 @@
         columns: [
             { data: 'DT_RowIndex', orderable: false },
             { data: 'servicename' },
+            { data: 'clientname' },
             { data: 'deadline' },
             { data: 'status', orderable: false, render: function(data) { return data; } }
         ]
@@ -847,12 +849,20 @@
                 dataType: "json",
                 success: function(data) {
                     $('#previousMessages1').empty();
+
                     data.forEach(function(message) {
                         var messageDiv = $('<div>').addClass('message');
-                        var userName = message.userName;
-                        var messageContent = message.messageContent ? message.messageContent : '';
 
-                        messageDiv.html('<span style="font-weight: bold;">' + userName + ': </span>' + messageContent);
+                        var userName = message.userName;
+                        var messageContent = message.messageContent || '';
+                        var time = message.time || '';
+
+                        messageDiv.html(
+                            '<span style="font-weight: bold;">' + userName + 
+                            ':</span> ' + messageContent +
+                            ' <small style="color:gray;">(' + time + ')</small>'
+                        );
+
                         $('#previousMessages1').append(messageDiv);
                     });
                 },
@@ -1121,12 +1131,20 @@
                 dataType: "json",
                 success: function(data) {
                     $('#previousMessages').empty();
+
                     data.forEach(function(message) {
                         var messageDiv = $('<div>').addClass('message');
-                        var userName = message.userName;
-                        var messageContent = message.messageContent ? message.messageContent : '';
 
-                        messageDiv.html('<span style="font-weight: bold;">' + userName + ': </span>' + messageContent);
+                        var userName = message.userName;
+                        var messageContent = message.messageContent || '';
+                        var time = message.time || '';
+
+                        messageDiv.html(
+                            '<span style="font-weight: bold;">' + userName + ': </span>' +
+                            messageContent +
+                            ' <small style="color:gray;">(' + time + ')</small>'
+                        );
+
                         $('#previousMessages').append(messageDiv);
                     });
                 },

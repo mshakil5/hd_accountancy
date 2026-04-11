@@ -57,11 +57,6 @@ class ManagerController extends Controller
             exit();
         }
 
-        if(empty($request->role_id)){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please select \"Role \" field..!</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
-            exit();
-        }
 
         $data = new User;
         $data->first_name = $request->first_name;
@@ -119,11 +114,6 @@ class ManagerController extends Controller
         if($request->filled('password') && ($request->password != $request->confirm_password || strlen($request->password) < 6)){
             $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Password doesn't match or is less than 6 characters.</b></div>";
             return response()->json(['status'=> 303,'message'=>$message]);
-        }
-        if(empty($request->role_id)){
-            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>Please select \"Role \" field..!</b></div>";
-            return response()->json(['status'=> 303,'message'=>$message]);
-            exit();
         }
 
         $data = User::find($request->codeid);

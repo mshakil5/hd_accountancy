@@ -377,6 +377,7 @@ class ServiceController extends Controller
                 return [
                     'userName' => $message->user->first_name,
                     'messageContent' => $message->message,
+                    'time' => $message->created_at->format('d M, H:i'),
                 ];
             });
     
@@ -1024,6 +1025,7 @@ class ServiceController extends Controller
                 return [
                     'userName' => $message->user->first_name,
                     'messageContent' => $message->message,
+                    'time' => $message->created_at->format('d M, H:i'),
                 ];
             });
     

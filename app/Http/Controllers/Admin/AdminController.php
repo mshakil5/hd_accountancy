@@ -236,13 +236,17 @@ class AdminController extends Controller
                     return $clientservice->id;
                 })
                 ->addColumn('clientname', function (ClientService $clientservice) {
-                    return $clientservice->director_info_id ? $clientservice->directorInfo->name : $clientservice->client->name;
+                    return $clientservice->directorInfo?->name
+                        ?? ($clientservice->client?->name ?? 'N/A');
                 })
                 ->filterColumn('clientname', function($query, $keyword) {
-                    $query->whereHas('client', function($q) use ($keyword) {
-                        $q->where('name', 'like', "%{$keyword}%");
-                    })->orWhereHas('directorInfo', function($q) use ($keyword) {
-                        $q->where('name', 'like', "%{$keyword}%");
+                    $query->where(function($q) use ($keyword) {
+                        $q->whereHas('client', function($q2) use ($keyword) {
+                            $q2->where('name', 'like', "%{$keyword}%");
+                        })
+                        ->orWhereHas('directorInfo', function($q2) use ($keyword) {
+                            $q2->where('name', 'like', "%{$keyword}%");
+                        });
                     });
                 })
                 ->addColumn('servicename', function (ClientService $clientservice) {
@@ -730,6 +734,7 @@ class AdminController extends Controller
 
                 return [
                     'DT_RowIndex'  => $index + 1,
+                    'clientname'   => optional(optional($service)->client)->name ?? '',
                     'servicename'  => optional(optional($sub)->subService)->name ?? 'N/A',
                     'deadline'     => optional($service)->legal_deadline ?? 'N/A',
                     'staff_name'   => $staff ? $staff->first_name . ' ' . $staff->last_name : 'N/A',

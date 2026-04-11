@@ -20,9 +20,9 @@
 
                                     <form id="myForm">
                                         <div class="row my-4">
-                                            <div class="col-lg-9">
+                                            <div class="col-lg-9 d-none">
                                             </div>
-                                            <div class="col-lg-3 text-center">
+                                            <div class="col-lg-3 text-center d-none">
                                                 <div class="img mb-2">
                                                     <img src="{{ asset('assets/img/human-placeholder.jpg') }} " id="imagePreview" width="150" class="border-theme border-2 rounded-3">
                                                 </div>
@@ -50,15 +50,15 @@
                                                 <input type="email" class="form-control my-2" id="email" name="email" placeholder="Enter email">
                                             </div>
                                             <div class="col-lg-4">
-                                                <label for="">NI Number <span class="text-danger">*</span></label>
+                                                <label for="">NI Number </label>
                                                 <input type="text" class="form-control my-2" id="ni_number" name="ni_number" placeholder="Enter NI number">
                                             </div>
                                             <div class="col-lg-4">
-                                                <label for="">Date of Birth <span class="text-danger">*</span></label>
+                                                <label for="">Date of Birth </label>
                                                 <input type="date" class="form-control my-2" id="date_of_birth" name="date_of_birth" placeholder="Enter date of birth">
                                             </div>
                                             <div class="col-lg-4">
-                                                <label for="">Address line 1 <span class="text-danger">*</span></label>
+                                                <label for="">Address line 1 </label>
                                                 <input type="text" class="form-control my-2" id="address_line1" name="address_line1" placeholder="Enter address line 1">
                                             </div>
                                             <div class="col-lg-4">
@@ -70,15 +70,15 @@
                                                 <input type="text" class="form-control my-2" id="address_line3" name="address_line3" placeholder="Enter address line 3">
                                             </div> -->
                                             <div class="col-lg-4">
-                                                <label for="">Town <span class="text-danger">*</span></label>
+                                                <label for="">Town </label>
                                                 <input type="text" class="form-control my-2" id="town" name="town" placeholder="Enter town">
                                             </div>
                                                                                                                                                                             <div class="col-lg-4">
-                                                <label for="">Post Code <span class="text-danger">*</span></label>
+                                                <label for="">Post Code </label>
                                                 <input type="text" class="form-control my-2" id="postcode" name="postcode" placeholder="Enter post code">
                                             </div>
                                             <div class="col-lg-4">
-                                                <label for="country">Department <span class="text-danger">*</span></label>
+                                                <label for="country">Department </label>
                                                 <div class="mt-2">
                                                 <select class="form-control my-2" id="department_id" name="department_id">
                                                     <option value="" selected disabled>Choose Department</option>
@@ -89,7 +89,7 @@
                                                 </div>
                                             </div>
                                             <div class="col-lg-4">
-                                                <label for="">Job Title <span class="text-danger">*</span></label>
+                                                <label for="">Job Title </label>
                                                 <input type="text" class="form-control my-2" id="job_title" name="job_title" placeholder="Enter job title">
                                             </div>
                                             <div class="col-lg-4">
@@ -101,7 +101,7 @@
                                                 <input type="date" class="form-control my-2" id="joining_date" name="joining_date" placeholder="Enter joining date">
                                             </div>
                                             <div class="col-lg-4">
-                                                <label for="">Reporting To <span class="text-danger">*</span></label>
+                                                <label for="">Reporting To </label>
                                                   <div class="mt-2">
                                                     <select class="form-control my-2" name="reporting_to" id="reporting_to">
                                                         <option value="">Please select</option>
@@ -112,7 +112,7 @@
                                                 </div>
                                             </div>
                                             <div class="col-lg-4">
-                                                <label for="">Reporting Employee ID <span class="text-danger">*</span></label>
+                                                <label for="">Reporting Employee ID </label>
                                                 <input type="number" class="form-control my-2" id="reporting_employee_id" name="reporting_employee_id" placeholder="Reporting Employee ID" readonly>
                                             </div>
                                             <div class="col-lg-4">
@@ -137,7 +137,7 @@
 
                                             <div class="col-lg-4">
                                                 <div class="form-group">
-                                                    <label>Role <span class="text-danger">*</span></label>
+                                                    <label>Role </label>
                                                     <select class="form-control" id="role_id" name="role_id">
                                                         <option value="">Select role</option>
                                                         @foreach ($roles as $role)

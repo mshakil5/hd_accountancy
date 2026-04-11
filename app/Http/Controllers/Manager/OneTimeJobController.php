@@ -25,7 +25,7 @@ class OneTimeJobController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'task' => 'required|string',
-            'manager_id' => 'required|integer',
+            'manager_id' => 'nullable',
             'legal_deadline' => 'nullable|date',
         ]);
 
@@ -65,9 +65,10 @@ class OneTimeJobController extends Controller
             'created_at'
         ])
             ->with([
-                'service:id,name',
+                'service:id,name,created_by',
                 'manager:id,first_name,last_name',
-                'messages:id,client_service_id,viewed_by'
+                'messages:id,client_service_id,viewed_by',
+                'service.creator:id,first_name,last_name',
             ])
             ->where('type', 2)
             ->orderBy('id', 'DESC')
@@ -94,6 +95,11 @@ class OneTimeJobController extends Controller
             ->addColumn('has_new_message', function ($clientService) {
                 return $clientService->has_new_message ? 'Yes' : 'No';
             })
+            ->addColumn('created_by_name', function ($row) {
+                return $row->service && $row->service->creator
+                    ? $row->service->creator->first_name . ' ' . $row->service->creator->last_name
+                    : '';
+            })
             ->make(true);
     }
 
@@ -108,7 +114,7 @@ class OneTimeJobController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'task' => 'required|string',
-            'manager_id' => 'required|integer',
+            'manager_id' => 'nullable',
             'legal_deadline' => 'nullable|date',
         ]);
 
@@ -148,9 +154,10 @@ class OneTimeJobController extends Controller
             'created_at'
         ])
             ->with([
-                'service:id,name',
+                'service:id,name,created_by',
                 'manager:id,first_name,last_name',
-                'messages:id,client_service_id,viewed_by'
+                'messages:id,client_service_id,viewed_by',
+                'service.creator:id,first_name,last_name',
             ])
             ->where('type', 2)
             ->orderBy('id', 'DESC')
@@ -176,6 +183,11 @@ class OneTimeJobController extends Controller
             })
             ->addColumn('has_new_message', function ($clientService) {
                 return $clientService->has_new_message ? 'Yes' : 'No';
+            })
+            ->addColumn('created_by_name', function ($row) {
+                return $row->service && $row->service->creator
+                    ? $row->service->creator->first_name . ' ' . $row->service->creator->last_name
+                    : '';
             })
             ->make(true);
     }
