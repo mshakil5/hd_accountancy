@@ -118,7 +118,7 @@
                         '<button class="btn btn-secondary" disabled style="margin-right: 10px;"><i class="fas fa-edit"></i></button>';
 
                     var deleteButtonHtml = canEditDelete ? 
-                        '<a href="#" class="btn btn-danger delete-client" data-client-id="' + data + '" style="margin-left: 10px;"><i class="fas fa-trash"></i></a>' : 
+                        '<a href="#" class="btn btn-danger delete-client d-none" data-client-id="' + data + '" style="margin-left: 10px;"><i class="fas fa-trash"></i></a>' : 
                         '<button class="btn btn-danger" disabled style="margin-left: 10px;"><i class="fas fa-trash"></i></button>';
 
                     var viewButtonHtml = '<a href="{{ url('admin/client/report') }}/' + data + '" class="btn btn-primary" style="margin-right: 15px;"><i class="fas fa-eye"></i></a>';
