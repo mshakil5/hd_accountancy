@@ -34,7 +34,7 @@
 
 
             <a href="https://maps.app.goo.gl/YdwshR7HabGbGg9N9" class="mx-auto" target="_blank">
-                <img src="{{ asset('assets/frontend/images/Google Review.png') }}" alt="">
+                <img src="{{ asset('assets/frontend/images/google_review.png') }}" alt="">
             </a>
         </p>
 
