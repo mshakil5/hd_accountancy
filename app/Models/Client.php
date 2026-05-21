@@ -105,4 +105,14 @@ class Client extends Model
     {
         return $this->belongsTo(ClientCredential::class);
     }
+
+    public function credential()
+    {
+        return $this->belongsTo(ClientCredential::class, 'client_credential_id');
+    }
+
+    public function receipts()
+    {
+        return $this->hasMany(Receipt::class, 'client_id');
+    }
 }

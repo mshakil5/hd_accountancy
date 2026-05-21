@@ -13,7 +13,6 @@ use Carbon\Carbon;
 
 class PassportAuthController extends Controller
 {
-    // ─── Login ────────────────────────────────────────────────────────────────
     public function login(Request $request)
     {
         $request->validate([
@@ -52,7 +51,6 @@ class PassportAuthController extends Controller
         ], 200);
     }
 
-    // ─── Logout ───────────────────────────────────────────────────────────────
     public function logout(Request $request)
     {
         $request->user()->token()->revoke();
@@ -62,7 +60,6 @@ class PassportAuthController extends Controller
         ], 200);
     }
 
-    // ─── Forgot Password ──────────────────────────────────────────────────────
     public function forgotPassword(Request $request)
     {
         $request->validate([
@@ -71,27 +68,22 @@ class PassportAuthController extends Controller
 
         $client = ClientCredential::where('email', $request->email)->first();
 
-        // Always return success to avoid email enumeration
         if (!$client) {
             return response()->json([
                 'message' => 'If this email is registered, a reset code has been sent.',
             ], 200);
         }
 
-        // Generate 6-digit OTP
         $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
-        // Delete old tokens for this email
         ClientPasswordResetToken::where('email', $request->email)->delete();
 
-        // Store hashed OTP
         ClientPasswordResetToken::create([
             'email'      => $request->email,
             'token'      => Hash::make($otp),
             'created_at' => now(),
         ]);
 
-        // Send OTP via email
         Mail::send('emails.client_otp', ['otp' => $otp, 'name' => $client->first_name], function ($mail) use ($request) {
             $mail->to($request->email)
                 ->subject('Your Password Reset Code — HD Accountancy');
@@ -102,7 +94,6 @@ class PassportAuthController extends Controller
         ], 200);
     }
 
-    // ─── Verify OTP ───────────────────────────────────────────────────────────
     public function verifyOtp(Request $request)
     {
         $request->validate([
@@ -118,7 +109,6 @@ class PassportAuthController extends Controller
             return response()->json(['message' => 'Invalid or expired code.'], 422);
         }
 
-        // Expire after 15 minutes
         if (Carbon::parse($record->created_at)->addMinutes(15)->isPast()) {
             $record->delete();
             return response()->json(['message' => 'Reset code has expired. Please request a new one.'], 422);
@@ -128,7 +118,6 @@ class PassportAuthController extends Controller
             return response()->json(['message' => 'Invalid code. Please try again.'], 422);
         }
 
-        // Issue a short-lived signed reset token for the next step
         $resetToken = Str::random(64);
         $record->update(['token' => Hash::make($resetToken)]);
 
@@ -138,7 +127,6 @@ class PassportAuthController extends Controller
         ], 200);
     }
 
-    // ─── Reset Password ───────────────────────────────────────────────────────
     public function resetPassword(Request $request)
     {
         $request->validate([
@@ -156,7 +144,6 @@ class PassportAuthController extends Controller
             return response()->json(['message' => 'Invalid or expired reset token.'], 422);
         }
 
-        // Expire after 30 minutes total from creation
         if (Carbon::parse($record->created_at)->addMinutes(30)->isPast()) {
             $record->delete();
             return response()->json(['message' => 'Reset session expired. Please start again.'], 422);
@@ -172,7 +159,6 @@ class PassportAuthController extends Controller
         ], 200);
     }
 
-    // ─── Authenticated User ───────────────────────────────────────────────────
     public function me(Request $request)
     {
         $client = $request->user();

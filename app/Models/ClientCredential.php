@@ -6,8 +6,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Passport\HasApiTokens;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
-class ClientCredential extends Model
+class ClientCredential extends Authenticatable
 {
     use HasFactory, SoftDeletes, HasApiTokens;
 
@@ -40,5 +41,15 @@ class ClientCredential extends Model
     public function updater()
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function profile()
+    {
+        return $this->hasOne(Client::class, 'client_credential_id');
+    }
+ 
+    public function clients()
+    {
+        return $this->hasMany(Client::class, 'client_credential_id');
     }
 }
