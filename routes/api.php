@@ -17,6 +17,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('businesses', [BusinessController::class, 'index']);
     Route::get('businesses/{id}', [BusinessController::class, 'show']);
 
+    Route::get('receipts', [ReceiptController::class, 'all']);
     Route::get('businesses/{businessId}/receipts', [ReceiptController::class, 'index']);
     Route::post('businesses/{businessId}/receipts', [ReceiptController::class, 'store']);
     Route::get('receipts/{id}', [ReceiptController::class, 'show']);

@@ -11,6 +11,28 @@ use Illuminate\Support\Str;
 
 class ReceiptController extends Controller
 {
+    public function all(Request $request)
+    {
+        $clientIds = Client::where('client_credential_id', $request->user()->id)
+            ->pluck('id');
+
+        $receipts = Receipt::whereIn('client_id', $clientIds)
+            ->withCount('files')
+            ->latest()
+            ->get()
+            ->map(fn($r) => [
+                'id'             => $r->id,
+                'receipt_number' => $r->receipt_number,
+                'receipt_date'   => $r->receipt_date?->format('d M Y'),
+                'notes'          => $r->notes,
+                'status'         => $r->status,
+                'file_count'     => $r->files_count,
+                'created_at'     => $r->created_at->format('Y-m-d H:i'),
+            ]);
+
+        return response()->json(['data' => $receipts], 200);
+    }
+    
     public function index(Request $request, $businessId)
     {
         $client = Client::where('id', $businessId)
@@ -24,7 +46,7 @@ class ReceiptController extends Controller
             ->map(fn($r) => [
                 'id'             => $r->id,
                 'receipt_number' => $r->receipt_number,
-                'receipt_date'   => $r->receipt_date?->format('Y-m-d'),
+                'receipt_date'   => $r->receipt_date?->format('d M Y'),
                 'notes'          => $r->notes,
                 'status'         => $r->status,
                 'file_count'     => $r->files_count,
@@ -46,7 +68,7 @@ class ReceiptController extends Controller
             'data' => [
                 'id'             => $receipt->id,
                 'receipt_number' => $receipt->receipt_number,
-                'receipt_date'   => $receipt->receipt_date?->format('Y-m-d'),
+                'receipt_date'   => $receipt->receipt_date?->format('d M Y'),
                 'notes'          => $receipt->notes,
                 'status'         => $receipt->status,
                 'client'         => [
