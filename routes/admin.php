@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AccountHeadController;
 use App\Http\Controllers\Admin\AccountTypeController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\BookingController;
@@ -719,6 +720,16 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::post('/account-types/update', [AccountTypeController::class, 'update']);
     Route::get('/account-types/{id}/delete', [AccountTypeController::class, 'delete']);
     Route::get('/account-types/{id}/toggle', [AccountTypeController::class, 'toggleStatus']);
+
+    //Account Heads
+    Route::get('/account-heads', [AccountHeadController::class, 'index'])->name('accountHeads');
+    Route::get('/account-heads/datatable', [AccountHeadController::class, 'datatable']);
+    Route::get('/account-heads/check-code', [AccountHeadController::class, 'checkCode']);
+    Route::post('/account-heads', [AccountHeadController::class, 'store']);
+    Route::get('/account-heads/{id}/edit', [AccountHeadController::class, 'edit']);
+    Route::post('/account-heads/update', [AccountHeadController::class, 'update']);
+    Route::get('/account-heads/{id}/delete', [AccountHeadController::class, 'delete']);
+    Route::get('/account-heads/{id}/toggle', [AccountHeadController::class, 'toggleStatus']);
 
 });
 
