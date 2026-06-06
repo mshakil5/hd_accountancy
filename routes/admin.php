@@ -1,58 +1,58 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\Admin\LogController;
 use App\Http\Controllers\Admin\AdminController;
-use App\Http\Controllers\Admin\StaffController;
-use App\Http\Controllers\Admin\ClientController;
-use App\Http\Controllers\Admin\HolidayController;
-use App\Http\Controllers\Admin\ManagerController;
-use App\Http\Controllers\Admin\ProrotaController;
-use App\Http\Controllers\Admin\ServiceController;
-use App\Http\Controllers\Admin\ClientTypeController;
-use App\Http\Controllers\Admin\DepartmentController;
-use App\Http\Controllers\Admin\SubServiceController;
-use App\Http\Controllers\Admin\WebServiceController;
-use App\Http\Controllers\Admin\ContactInfoController;
-use App\Http\Controllers\Admin\HolidayTypeController;
+use App\Http\Controllers\Admin\BookingController;
+use App\Http\Controllers\Admin\BreakController;
 use App\Http\Controllers\Admin\BusinessInfoController;
-use App\Http\Controllers\Admin\DirectorInfoController;
-use App\Http\Controllers\Admin\ContactMessageController;
-use App\Http\Controllers\Admin\WeWorkWithImageController;
-use App\Http\Controllers\Admin\CompanyDetailsController;
-use App\Http\Controllers\Admin\SoftCodeController;
-use App\Http\Controllers\Admin\MasterController;
-use App\Http\Controllers\Admin\HomepageController;
-use App\Http\Controllers\Admin\TimeslotController;
-use App\Http\Controllers\Admin\ServicepageController;
-use App\Http\Controllers\Admin\PackageController;
-use App\Http\Controllers\Admin\PackageFeatureController;
 use App\Http\Controllers\Admin\BusinessServiceController;
 use App\Http\Controllers\Admin\BusinessValueController;
-use App\Http\Controllers\Admin\TestimonialController;
-use App\Http\Controllers\CaseStudiesController;
-use App\Http\Controllers\Admin\LatestInsightController;
-use App\Http\Controllers\Admin\OurTeamController;
-use App\Http\Controllers\Admin\BookingController;
-use App\Http\Controllers\Admin\QuotationController;
 use App\Http\Controllers\Admin\CareerController;
+use App\Http\Controllers\Admin\ChatController;
+use App\Http\Controllers\Admin\ClientController;
+use App\Http\Controllers\Admin\ClientCredentialController;
+use App\Http\Controllers\Admin\ClientTypeController;
+use App\Http\Controllers\Admin\CompanyDetailsController;
+use App\Http\Controllers\Admin\ContactInfoController;
+use App\Http\Controllers\Admin\ContactMailController;
+use App\Http\Controllers\Admin\ContactMessageController;
+use App\Http\Controllers\Admin\DepartmentController;
+use App\Http\Controllers\Admin\DirectorInfoController;
 use App\Http\Controllers\Admin\FAQController;
 use App\Http\Controllers\Admin\GoogleReviewController;
-use App\Http\Controllers\Admin\MetaDataController;
-use App\Http\Controllers\Admin\ContactMailController;
-use App\Http\Controllers\Admin\MailContentController;
-use App\Http\Controllers\Admin\OneTimeJobController;
-use App\Http\Controllers\Admin\RecentUpdateController;
-use App\Http\Controllers\Admin\NoteController;
-use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\HolidayController;
+use App\Http\Controllers\Admin\HolidayTypeController;
+use App\Http\Controllers\Admin\HomepageController;
+use App\Http\Controllers\Admin\LatestInsightController;
+use App\Http\Controllers\Admin\LogController;
 use App\Http\Controllers\Admin\LogoutController;
-use App\Http\Controllers\Admin\ChatController;
+use App\Http\Controllers\Admin\MailContentController;
+use App\Http\Controllers\Admin\ManagerController;
+use App\Http\Controllers\Admin\MasterController;
+use App\Http\Controllers\Admin\MetaDataController;
+use App\Http\Controllers\Admin\NoteController;
+use App\Http\Controllers\Admin\OneTimeJobController;
+use App\Http\Controllers\Admin\OurTeamController;
+use App\Http\Controllers\Admin\PackageController;
+use App\Http\Controllers\Admin\PackageFeatureController;
+use App\Http\Controllers\Admin\ProrotaController;
+use App\Http\Controllers\Admin\QuotationController;
+use App\Http\Controllers\Admin\RecentUpdateController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\ServiceController;
+use App\Http\Controllers\Admin\ServicepageController;
+use App\Http\Controllers\Admin\SoftCodeController;
+use App\Http\Controllers\Admin\StaffController;
+use App\Http\Controllers\Admin\SubServiceController;
+use App\Http\Controllers\Admin\TaxRateController;
+use App\Http\Controllers\Admin\TestimonialController;
+use App\Http\Controllers\Admin\TimeslotController;
 use App\Http\Controllers\Admin\TrashBinController;
-use App\Http\Controllers\Admin\ClientCredentialController;
-use App\Http\Controllers\Admin\BreakController;
+use App\Http\Controllers\Admin\WebServiceController;
+use App\Http\Controllers\Admin\WeWorkWithImageController;
+use App\Http\Controllers\CaseStudiesController;
+use App\Http\Controllers\HomeController;
+use Illuminate\Support\Facades\Route;
 
 //Fallback route
 Route::fallback(function () {
@@ -698,6 +698,17 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::post('/take-break', [BreakController::class, 'takeBreak'])->name('admin.take-break');
     Route::post('/break-out', [BreakController::class, 'breakOut'])->name('admin.break-out');
     Route::get('/check-break-status', [BreakController::class, 'checkBreakStatus'])->name('admin.check-break-status');
+
+    //Accounting
+
+    //Tax Rates
+    Route::get('/tax-rates', [TaxRateController::class, 'index'])->name('taxRates');
+    Route::get('/tax-rates/datatable', [TaxRateController::class, 'datatable']);
+    Route::post('/tax-rates', [TaxRateController::class, 'store']);
+    Route::get('/tax-rates/{id}/edit', [TaxRateController::class, 'edit']);
+    Route::post('/tax-rates/update', [TaxRateController::class, 'update']);
+    Route::get('/tax-rates/{id}/delete', [TaxRateController::class, 'delete']);
+    Route::get('/tax-rates/{id}/toggle', [TaxRateController::class, 'toggleStatus']);
 
 });
 

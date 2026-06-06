@@ -235,6 +235,36 @@
 
     @endif
 
+    @php
+        $accountingRoutes = ['taxRates'];
+        $isAccountingOpen = request()->routeIs(...$accountingRoutes);
+    @endphp
+
+    <li class="nav-item {{ $isAccountingOpen ? 'menu-open' : '' }}">
+        <a class="nav-link collapsed {{ $isAccountingOpen ? 'active' : '' }}"
+            href="#"
+            data-bs-toggle="collapse"
+            data-bs-target="#accountingDropdown"
+            aria-expanded="{{ $isAccountingOpen ? 'true' : 'false' }}">
+
+            <i class="bi bi-calculator"></i>
+            <span>Accounting</span>
+            <i class="bi bi-chevron-down"></i>
+        </a>
+
+        <ul id="accountingDropdown"
+            class="collapse list-unstyled {{ $isAccountingOpen ? 'show' : '' }}">
+
+            <li class="nav-item {{ request()->routeIs('taxRates') ? 'active' : '' }}">
+                <a class="nav-link" href="{{ route('taxRates') }}">
+                    <i class="bi bi-percent"></i>
+                    <span>Tax Rates</span>
+                </a>
+            </li>
+
+        </ul>
+    </li>
+
     <li class="nav-item {{ request()->routeIs('report.create') || request()->routeIs('client-acquisition-report') || request()->routeIs('client.fees-report') ? 'menu-open' : '' }}">
         <a class="nav-link collapsed {{ request()->routeIs('report.create') || request()->routeIs('client-acquisition-report') || request()->routeIs('client.fees-report') ? 'active' : '' }}"
           href="#" data-bs-toggle="collapse" data-bs-target="#reportDropdown"
