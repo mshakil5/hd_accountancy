@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AccountTypeController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\BookingController;
 use App\Http\Controllers\Admin\BreakController;
@@ -709,6 +710,15 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::post('/tax-rates/update', [TaxRateController::class, 'update']);
     Route::get('/tax-rates/{id}/delete', [TaxRateController::class, 'delete']);
     Route::get('/tax-rates/{id}/toggle', [TaxRateController::class, 'toggleStatus']);
+
+    //Account Types
+    Route::get('/account-types', [AccountTypeController::class, 'index'])->name('accountTypes');
+    Route::get('/account-types/datatable', [AccountTypeController::class, 'datatable']);
+    Route::post('/account-types', [AccountTypeController::class, 'store']);
+    Route::get('/account-types/{id}/edit', [AccountTypeController::class, 'edit']);
+    Route::post('/account-types/update', [AccountTypeController::class, 'update']);
+    Route::get('/account-types/{id}/delete', [AccountTypeController::class, 'delete']);
+    Route::get('/account-types/{id}/toggle', [AccountTypeController::class, 'toggleStatus']);
 
 });
 

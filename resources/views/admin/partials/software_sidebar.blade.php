@@ -236,7 +236,7 @@
     @endif
 
     @php
-        $accountingRoutes = ['taxRates'];
+        $accountingRoutes = ['taxRates', 'accountTypes'];
         $isAccountingOpen = request()->routeIs(...$accountingRoutes);
     @endphp
 
@@ -259,6 +259,13 @@
                 <a class="nav-link" href="{{ route('taxRates') }}">
                     <i class="bi bi-percent"></i>
                     <span>Tax Rates</span>
+                </a>
+            </li>
+
+            <li class="nav-item {{ request()->routeIs('accountTypes') ? 'active' : '' }}">
+                <a class="nav-link" href="{{ route('accountTypes') }}">
+                    <i class="bi bi-diagram-3"></i>
+                    <span>Account Types</span>
                 </a>
             </li>
 
