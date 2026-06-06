@@ -236,7 +236,7 @@
     @endif
 
     @php
-        $accountingRoutes = ['taxRates', 'accountTypes', 'accountHeads'];
+        $accountingRoutes = ['taxRates', 'accountTypes', 'accountHeads', 'admin.receipt.index'];
         $isAccountingOpen = request()->routeIs(...$accountingRoutes);
     @endphp
 
@@ -272,7 +272,14 @@
             <li class="nav-item {{ request()->routeIs('accountHeads') ? 'active' : '' }}">
                 <a class="nav-link" href="{{ route('accountHeads') }}">
                     <i class="bi bi-folder"></i>
-                    <span>Account Heads</span>
+                    <span>Chart of Accounts</span>
+                </a>
+            </li>
+
+            <li class="nav-item {{ request()->routeIs('admin.receipt.index') ? 'active' : '' }}">
+                <a class="nav-link" href="{{ route('admin.receipt.index') }}">
+                    <i class="bi bi-receipt"></i>
+                    <span>Receipts</span>
                 </a>
             </li>
 

@@ -38,6 +38,7 @@ use App\Http\Controllers\Admin\PackageController;
 use App\Http\Controllers\Admin\PackageFeatureController;
 use App\Http\Controllers\Admin\ProrotaController;
 use App\Http\Controllers\Admin\QuotationController;
+use App\Http\Controllers\Admin\ReceiptController;
 use App\Http\Controllers\Admin\RecentUpdateController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\RoleController;
@@ -726,10 +727,22 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/account-heads/datatable', [AccountHeadController::class, 'datatable']);
     Route::get('/account-heads/check-code', [AccountHeadController::class, 'checkCode']);
     Route::post('/account-heads', [AccountHeadController::class, 'store']);
+    Route::get('/account-heads/by-type/{typeId}', [AccountHeadController::class, 'byType']);
     Route::get('/account-heads/{id}/edit', [AccountHeadController::class, 'edit']);
     Route::post('/account-heads/update', [AccountHeadController::class, 'update']);
     Route::get('/account-heads/{id}/delete', [AccountHeadController::class, 'delete']);
     Route::get('/account-heads/{id}/toggle', [AccountHeadController::class, 'toggleStatus']);
+
+    //Receipts
+    Route::get('/receipts/counts', [ReceiptController::class, 'counts']);
+    Route::get('/receipts', [ReceiptController::class, 'index'])->name('admin.receipt.index');
+    Route::get('/receipts/datatable', [ReceiptController::class, 'datatable']);
+    Route::get('/receipts/{id}', [ReceiptController::class, 'show'])->name('admin.receipt.show');
+    Route::post('/receipts/{id}/update', [ReceiptController::class, 'update']);
+    Route::post('/receipts/{id}/files', [ReceiptController::class, 'uploadFile']);
+    Route::get('/receipts/{id}/files/{fileId}/delete', [ReceiptController::class, 'deleteFile']);
+    Route::get('/receipts/{id}/archive', [ReceiptController::class, 'archive']);
+    Route::get('/receipts/{id}/cancel', [ReceiptController::class, 'cancel']);
 
 });
 

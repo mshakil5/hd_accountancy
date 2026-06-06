@@ -24,4 +24,14 @@ class Receipt extends Model
     {
         return $this->hasMany(ReceiptFile::class, 'receipt_id');
     }
+
+    public function detail()
+    {
+        return $this->hasOne(ReceiptDetail::class);
+    }
+
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class);
+    }
 }
