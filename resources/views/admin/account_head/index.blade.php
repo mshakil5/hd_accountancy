@@ -9,6 +9,14 @@
 .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: .4s; }
 input:checked + .slider { background-color: #28a745; }
 input:checked + .slider:before { transform: translateX(24px); }
+
+.category-tabs { display: flex; gap: 0; margin-bottom: 16px; border-bottom: 2px solid #dee2e6; }
+.category-tabs .tab-btn {
+    padding: 8px 18px; border: 1px solid #dee2e6; border-bottom: none;
+    background: #f8f9fa; cursor: pointer; font-size: 14px;
+    border-radius: 6px 6px 0 0; margin-right: 4px; color: #495057;
+}
+.category-tabs .tab-btn.active { background: #fff; font-weight: 600; border-bottom: 2px solid #fff; color: #212529; }
 </style>
 
 <section class="content">
@@ -58,7 +66,7 @@ input:checked + .slider:before { transform: translateX(24px); }
 
                             <div class="form-group">
                                 <label>Description</label>
-                                <input type="text" class="form-control" id="description" name="description" placeholder="e.g. Purchase from direct suppliers">
+                                <input type="text" class="form-control" id="description" name="description">
                             </div>
 
                             <div class="form-group">
@@ -91,6 +99,16 @@ input:checked + .slider:before { transform: translateX(24px); }
                         <h3 class="card-title">All Account Heads</h3>
                     </div>
                     <div class="card-body">
+
+                        <div class="category-tabs">
+                            <button class="tab-btn active" data-category="">All Accounts</button>
+                            <button class="tab-btn" data-category="asset">Assets</button>
+                            <button class="tab-btn" data-category="liability">Liabilities</button>
+                            <button class="tab-btn" data-category="equity">Equity</button>
+                            <button class="tab-btn" data-category="expense">Expenses</button>
+                            <button class="tab-btn" data-category="revenue">Revenue</button>
+                        </div>
+
                         <table id="example1" class="table table-striped">
                             <thead>
                                 <tr>
@@ -104,6 +122,7 @@ input:checked + .slider:before { transform: translateX(24px); }
                                 </tr>
                             </thead>
                         </table>
+
                     </div>
                 </div>
             </div>
@@ -117,11 +136,17 @@ input:checked + .slider:before { transform: translateX(24px); }
 <script>
 $(function(){
     var url = "{{ url('/admin/account-heads') }}";
+    var activeCategory = '';
 
     var table = $('#example1').DataTable({
         processing: true,
         serverSide: true,
-        ajax: url + '/datatable',
+        ajax: {
+            url: url + '/datatable',
+            data: function(d) {
+                d.category = activeCategory;
+            }
+        },
         columns: [
             {data: 'DT_RowIndex', orderable: false, searchable: false},
             {data: 'account_type_name'},
@@ -133,7 +158,13 @@ $(function(){
         ]
     });
 
-    // Code uniqueness check
+    $('.tab-btn').on('click', function(){
+        $('.tab-btn').removeClass('active');
+        $(this).addClass('active');
+        activeCategory = $(this).data('category');
+        table.ajax.reload();
+    });
+
     let codeTimer;
     $('#code').on('input', function(){
         clearTimeout(codeTimer);

@@ -20,7 +20,10 @@ class AccountHeadController extends Controller
     public function datatable()
     {
         $query = AccountHead::with('accountType:id,name', 'taxRate:id,name,rate')
-            ->select('account_heads.*');
+            ->select('account_heads.*')
+            ->when(request('category'), function($q) {
+                $q->whereHas('accountType', fn($q2) => $q2->where('category', request('category')));
+            });
 
         return DataTables::of($query)
             ->addIndexColumn()
@@ -80,6 +83,22 @@ class AccountHeadController extends Controller
             'is_active'       => 1,
         ]);
         return response()->json(['status'=>300,'message'=>'Account head created successfully.']);
+    }
+
+    public function byType($typeId)
+    {
+        $heads = AccountHead::where('account_type_id', $typeId)
+            ->where('is_active', 1)
+            ->select('id', 'name', 'tax_rate_id')
+            ->with('taxRate:id,rate')
+            ->get()
+            ->map(fn($h) => [
+                'id'       => $h->id,
+                'name'     => $h->name,
+                'tax_rate' => $h->taxRate?->rate ?? 0,
+            ]);
+
+        return response()->json($heads);
     }
 
     public function edit($id)
