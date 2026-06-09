@@ -2,225 +2,172 @@
 
 @section('content')
     <style>
-        .file-viewer img {
-            max-width: 100%;
-            border-radius: 8px;
-        }
-
-        .file-viewer iframe {
-            width: 100%;
-            height: 600px;
-            border-radius: 8px;
-        }
-
-        .archived-overlay {
-            pointer-events: none;
-            opacity: 0.65;
-        }
+        .file-viewer img { max-width: 100%; border-radius: 8px; }
+        .file-viewer iframe { width: 100%; height: 580px; border-radius: 8px; }
+        .detail-label { font-size: 12px; color: #888; margin-bottom: 3px; }
+        .detail-field { margin-bottom: 14px; }
+        .receipt-header { background: #f8f9fa; border-radius: 10px; padding: 14px 18px; margin-bottom: 16px; }
+        .notes-box { background: #fffdf0; border-left: 4px solid #ffc107; padding: 12px; border-radius: 4px; margin-top: 15px; }
     </style>
-
-    @php $isArchived = $receipt->status === 'archived'; @endphp
 
     <section class="content">
         <div class="container-fluid">
-
-            <div class="d-flex align-items-center justify-content-between my-3">
-                <a href="{{ route('admin.receipt.index') }}" class="btn btn-default">
+            <div class="receipt-header d-flex align-items-center justify-content-between mt-3">
+                <a href="{{ route('admin.receipt.index') }}" class="btn btn-secondary btn-sm">
                     <i class="fa fa-arrow-left"></i> Back
                 </a>
+                <div class="d-flex align-items-center gap-2">
+                    <strong>{{ $receipt->receipt_number }}</strong>
+                    <span class="badge badge-info">{{ ucfirst($receipt->status) }}</span>
+                </div>
                 <div>
-                    @if (!$isArchived && $receipt->status !== 'cancelled')
-                        <button type="button" class="btn btn-danger btn-sm" id="cancelBtn">Cancel Receipt</button>
-                    @endif
+                    @if ($prev) <a href="{{ route('admin.receipt.show', $prev) }}" class="btn btn-default btn-sm"><i class="fa fa-chevron-left"></i> Prev</a> @endif
+                    @if ($next) <a href="{{ route('admin.receipt.show', $next) }}" class="btn btn-default btn-sm">Next <i class="fa fa-chevron-right"></i></a> @endif
                 </div>
             </div>
 
-            @if ($isArchived)
-                <div class="alert alert-secondary">
-                    <i class="fa fa-lock"></i> This receipt is <strong>archived</strong> and cannot be edited.
-                </div>
-            @endif
+            <div class="ermsg"></div>
 
             <div class="row">
-
-                <div class="col-md-6">
-                    <div class="card card-secondary border-theme border-2">
-                        <div class="card-body file-viewer" id="fileViewer">
-                            @forelse($receipt->files as $i => $file)
-                                <div class="file-item" data-index="{{ $i }}"
-                                    style="{{ $i > 0 ? 'display:none' : '' }}">
-                                    @if ($file->file_type === 'pdf')
-                                        <iframe src="{{ asset($file->file_path) }}"></iframe>
-                                    @else
-                                        <img src="{{ asset($file->file_path) }}">
+                <div class="col-md-7">
+                    <div class="card card-outline card-primary">
+                        <div class="card-header"><h3 class="card-title">Receipt Media Viewer</h3></div>
+                        <div class="card-body">
+                            <div class="file-viewer text-center">
+                                @if($receipt->files->count() > 0)
+                                    @php $firstFile = $receipt->files->first(); @endphp
+                                    @if($firstFile->file_type == 'image')
+                                        <img src="{{ asset($firstFile->file_path) }}" alt="Receipt">
+                                    @elseif($firstFile->file_type == 'pdf')
+                                        <iframe src="{{ asset($firstFile->file_path) }}"></iframe>
                                     @endif
+                                @else
+                                    <p class="text-muted py-5">No files attached to this receipt.</p>
+                                @endif
+                            </div>
+
+                            @if($receipt->notes)
+                                <div class="notes-box">
+                                    <strong><i class="fa fa-pencil"></i> Client Notes:</strong>
+                                    <p class="mb-0 text-dark" style="white-space: pre-line;">{{ $receipt->notes }}</p>
                                 </div>
-                            @empty
-                                <p class="text-muted">No files uploaded.</p>
-                            @endforelse
-                        </div>
-                        <div class="card-footer d-flex align-items-center justify-content-between">
-                            <div>
-                                <button class="btn btn-sm btn-default" id="prevFile">
-                                    <i class="fa fa-chevron-left"></i> Previous
-                                </button>
-                                <span id="fileCount" class="mx-2">
-                                    1 / {{ $receipt->files->count() }}
-                                </span>
-                                <button class="btn btn-sm btn-default" id="nextFile">
-                                    Next <i class="fa fa-chevron-right"></i>
-                                </button>
-                            </div>
-                            @if (!$isArchived)
-                                <div>
-                                    <label class="btn btn-sm btn-secondary mb-0">
-                                        <i class="fa fa-upload"></i> Upload
-                                        <input type="file" id="uploadFileInput" style="display:none"
-                                            accept=".pdf,.jpg,.jpeg,.png">
-                                    </label>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-
-                    <div class="card card-secondary border-theme border-2 mt-2">
-                        <div class="card-body p-2" id="fileList">
-                            @foreach ($receipt->files as $i => $file)
-                                <div class="d-flex align-items-center justify-content-between p-1 border-bottom file-list-item"
-                                    data-index="{{ $i }}">
-                                    <span style="cursor:pointer" class="fileThumb">
-                                        <i class="fa fa-{{ $file->file_type === 'pdf' ? 'file-pdf-o' : 'image' }}"></i>
-                                        {{ $file->file_name }}
-                                    </span>
-                                    @if (!$isArchived)
-                                        <a class="btn btn-link text-danger deleteFileBtn" data-id="{{ $file->id }}">
-                                            <i class="fa fa-trash"></i>
-                                        </a>
-                                    @endif
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-6">
-                    <div class="card card-secondary border-theme border-2">
-                        <div class="card-body mt-3 {{ $isArchived ? 'archived-overlay' : '' }}">
-                            <div class="ermsg"></div>
-
-                            <div class="form-group">
-                                <label>Status</label>
-                                <select class="form-control" id="status" name="status"
-                                    {{ $isArchived || $receipt->status === 'cancelled' ? 'disabled' : '' }}>
-                                    <option value="to_review" {{ $receipt->status == 'to_review' ? 'selected' : '' }}>To
-                                        Review</option>
-                                    <option value="ready" {{ $receipt->status == 'ready' ? 'selected' : '' }}>Ready
-                                    </option>
-                                    <option value="cancelled" {{ $receipt->status == 'cancelled' ? 'selected' : '' }}>
-                                        Cancelled</option>
-                                    @if ($receipt->status === 'ready' || $receipt->status === 'archived')
-                                        <option value="archived" {{ $receipt->status == 'archived' ? 'selected' : '' }}>
-                                            Archived</option>
-                                    @endif
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Invoice Date</label>
-                                <input type="date" class="form-control" id="invoice_date"
-                                    value="{{ $receipt->detail?->invoice_date ?? ($receipt->receipt_date ? \Carbon\Carbon::parse($receipt->receipt_date)->format('Y-m-d') : '') }}"
-                                    {{ $isArchived ? 'disabled' : '' }}>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Due Date</label>
-                                <input type="date" class="form-control" id="due_date"
-                                    value="{{ $receipt->detail?->due_date }}" {{ $isArchived ? 'disabled' : '' }}>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Invoice Number</label>
-                                <input type="text" class="form-control" id="invoice_number"
-                                    value="{{ $receipt->detail?->invoice_number }}" {{ $isArchived ? 'disabled' : '' }}>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Account Type</label>
-                                <select class="form-control" id="filter_account_type_id" {{ $isArchived ? 'disabled' : '' }}>
-                                    <option value="">Select account type</option>
-                                    @foreach($accountTypes as $type)
-                                        <option value="{{ $type->id }}"
-                                            {{ $receipt->detail?->accountHead?->account_type_id == $type->id ? 'selected' : '' }}>
-                                            {{ $type->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Account Head</label>
-                                <select class="form-control" id="account_head_id" {{ $isArchived ? 'disabled' : '' }}>
-                                    <option value="">Select account head</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Net Amount</label>
-                                <input type="number" step="0.01" class="form-control" id="net_amount"
-                                    value="{{ $receipt->detail?->net_amount }}" {{ $isArchived ? 'disabled' : '' }}>
-                            </div>
-
-                            <div class="form-group">
-                                <label>VAT</label>
-                                <input type="number" step="0.01" class="form-control" id="vat_amount"
-                                    value="{{ $receipt->detail?->vat_amount }}" readonly>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Total Amount</label>
-                                <input type="number" step="0.01" class="form-control" id="total_amount"
-                                    value="{{ $receipt->detail?->total_amount }}" readonly>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Paid</label>
-                                <select class="form-control" id="paid" {{ $isArchived ? 'disabled' : '' }}>
-                                    <option value="no"
-                                        {{ $receipt->detail?->paid == 0 || is_null($receipt->detail?->paid) ? 'selected' : '' }}>
-                                        No</option>
-                                    <option value="yes" {{ $receipt->detail?->paid == 1 ? 'selected' : '' }}>Yes
-                                    </option>
-                                </select>
-                            </div>
-
-                            <div class="form-group" id="paymentMethodGroup" style="display:none">
-                                <label>Payment Method</label>
-                                <select class="form-control" id="payment_method" {{ $isArchived ? 'disabled' : '' }}>
-                                    <option value="">Select</option>
-                                    <option value="cash"
-                                        {{ $receipt->detail?->payment_method == 'cash' ? 'selected' : '' }}>Cash</option>
-                                    <option value="bank"
-                                        {{ $receipt->detail?->payment_method == 'bank' ? 'selected' : '' }}>Bank</option>
-                                    <option value="card"
-                                        {{ $receipt->detail?->payment_method == 'card' ? 'selected' : '' }}>Card</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Description</label>
-                                <input type="text" class="form-control" id="description"
-                                    value="{{ $receipt->detail?->description }}" {{ $isArchived ? 'disabled' : '' }}>
-                            </div>
-                        </div>
-                        <div class="card-footer text-right">
-                            @if (!$isArchived)
-                                <button class="btn btn-default" onclick="history.back()">Cancel</button>
-                                <button class="btn btn-secondary" id="saveBtn">Save</button>
                             @endif
                         </div>
                     </div>
                 </div>
 
+                <div class="col-md-5">
+                    <div class="card card-outline card-success">
+                        <div class="card-header"><h3 class="card-title">Audit & Process Details</h3></div>
+                        <div class="card-body">
+                            <form id="receiptForm">
+                                <div class="detail-field">
+                                    <label class="detail-label">Status Workflow</label>
+                                    <select class="form-control" id="status" name="status">
+                                        <option value="pending" {{ $receipt->status == 'pending' ? 'selected':'' }}>Pending</option>
+                                        <option value="to_review" {{ $receipt->status == 'to_review' ? 'selected':'' }}>To Review</option>
+                                        <option value="ready" {{ $receipt->status == 'ready' ? 'selected':'' }}>Ready</option>
+                                        <option value="archived" {{ $receipt->status == 'archived' ? 'selected':'' }}>Archived</option>
+                                    </select>
+                                </div>
+
+                                <div class="detail-field">
+                                    <label class="detail-label">Account Type</label>
+                                    <select class="form-control" id="account_type_id" name="account_type_id">
+                                        <option value="">Select Account Type</option>
+                                        @foreach($accountTypes as $type)
+                                            <option value="{{ $type->id }}" {{ ($receipt->detail?->accountHead?->account_type_id == $type->id) ? 'selected' : '' }}>
+                                                {{ $type->name }} ({{ ucfirst($type->category) }})
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="detail-field">
+                                    <label class="detail-label">Account Head</label>
+                                    <select class="form-control select2" id="account_head_id" name="account_head_id" style="width:100%;">
+                                        <option value="">First Select Account Type</option>
+                                        @foreach($heads as $h)
+                                            <option value="{{ $h->id }}" data-rate="{{ $h->taxRate?->rate ?? 0 }}" {{ $receipt->detail?->account_head_id == $h->id ? 'selected':'' }}>
+                                                {{ $h->code }} - {{ $h->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 detail-field">
+                                        <label class="detail-label">Invoice Date</label>
+                                        <input type="date" class="form-control" id="invoice_date" value="{{ $receipt->detail?->invoice_date ?? ($receipt->receipt_date ? $receipt->receipt_date->format('Y-m-d') : '') }}">
+                                    </div>
+                                    <div class="col-md-6 detail-field">
+                                        <label class="detail-label">Due Date</label>
+                                        <input type="date" class="form-control" id="due_date" value="{{ $receipt->detail?->due_date }}">
+                                    </div>
+                                </div>
+
+                                <div class="detail-field">
+                                    <label class="detail-label">Invoice / Reference Number</label>
+                                    <input type="text" class="form-control" id="invoice_number" value="{{ $receipt->detail?->invoice_number }}">
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 detail-field">
+                                        <label class="detail-label">Net Amount (£)</label>
+                                        <input type="number" step="0.01" class="form-control" id="net_amount" value="{{ $receipt->detail?->net_amount }}">
+                                    </div>
+                                    <div class="col-md-3 detail-field">
+                                        <label class="detail-label">Tax Rate (%)</label>
+                                        <input type="text" class="form-control" id="tax_percent" readonly value="{{ $receipt->detail?->accountHead?->taxRate?->rate ?? 0 }}">
+                                    </div>
+                                    <div class="col-md-3 detail-field">
+                                        <label class="detail-label">Tax Amt (£)</label>
+                                        <input type="text" class="form-control" id="tax_amount" readonly value="{{ $receipt->detail?->tax_amount ?? 0 }}">
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 detail-field">
+                                        <label class="detail-label">VAT Amount (£) [Manual Entry]</label>
+                                        <input type="number" step="0.01" class="form-control" id="vat_amount" value="{{ $receipt->detail?->vat_amount ?? 0 }}">
+                                    </div>
+                                    <div class="col-md-6 detail-field">
+                                        <label class="detail-label">Total Amount (£) [Net+Tax+VAT]</label>
+                                        <input type="text" class="form-control" id="total_amount" readonly value="{{ $receipt->detail?->total_amount }}">
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 detail-field">
+                                        <label class="detail-label">Is Paid?</label>
+                                        <select class="form-control" id="paid">
+                                            <option value="no" {{ $receipt->detail?->paid == 0 ? 'selected':'' }}>No</option>
+                                            <option value="yes" {{ $receipt->detail?->paid == 1 ? 'selected':'' }}>Yes</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 detail-field" id="method_box" style="{{ $receipt->detail?->paid == 1 ? '':'display:none;' }}">
+                                        <label class="detail-label">Payment Method</label>
+                                        <select class="form-control" id="payment_method">
+                                            <option value="cash" {{ $receipt->detail?->payment_method == 'cash' ? 'selected':'' }}>Cash</option>
+                                            <option value="bank" {{ $receipt->detail?->payment_method == 'bank' ? 'selected':'' }}>Bank</option>
+                                            <option value="card" {{ $receipt->detail?->payment_method == 'card' ? 'selected':'' }}>Card</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="detail-field">
+                                    <label class="detail-label">Internal Audit Description</label>
+                                    <textarea class="form-control" id="description" rows="2">{{ $receipt->detail?->description }}</textarea>
+                                </div>
+
+                                <div class="mt-4">
+                                    <button type="button" class="btn btn-success" id="saveBtn"><i class="fa fa-save"></i> Save Details</button>
+                                    <button type="button" class="btn btn-danger float-right" id="cancelBtn"><i class="fa fa-ban"></i> Cancel Receipt</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -229,110 +176,74 @@
 @section('script')
     <script>
         $(function() {
-            var receiptId = {{ $receipt->id }};
-            var baseUrl = "{{ url('/admin/receipts') }}";
-            var isArchived = {{ $isArchived ? 'true' : 'false' }};
-            var hasPaidTxn =
-                {{ $receipt->transactions->whereNotNull('parent_id')->count() > 0 ? 'true' : 'false' }};
+            const receiptId = "{{ $receipt->id }}";
+            const baseUrl = "{{ url('/admin/receipts') }}";
+            const currentStatus = "{{ $receipt->status }}";
 
-            function togglePayment() {
-                $('#paid').val() === 'yes' ?
-                    $('#paymentMethodGroup').show() :
-                    $('#paymentMethodGroup').hide();
-            }
-            togglePayment();
-            $('#paid').on('change', togglePayment);
-
-            function loadHeads(typeId, selectedHeadId) {
-                var $head = $('#account_head_id');
-                $head.html('<option value="">Select account head</option>');
-                if (!typeId) return;
-                $.get("{{ url('/admin/account-heads') }}/by-type/" + typeId, function(d) {
-                    $.each(d, function(i, h) {
-                        var sel = (h.id == selectedHeadId) ? 'selected' : '';
-                        $head.append('<option value="' + h.id + '" data-tax="' + h.tax_rate + '" ' + sel + '>' + h.name + '</option>');
-                    });
-                    calcAmounts();
-                });
+            // Status Lock Security
+            if (currentStatus === 'archived' || currentStatus === 'cancelled') {
+                $('#receiptForm input, #receiptForm select, #receiptForm textarea').prop('disabled', true);
+                $('#saveBtn, #cancelBtn').prop('disabled', true).addClass('disabled');
+                $('.ermsg').html(`<div class='alert alert-warning'><i class='fa fa-lock'></i> This receipt is locked under <strong>${currentStatus.toUpperCase()}</strong> status. No updates allowed.</div>`);
             }
 
-            $('#filter_account_type_id').on('change', function() {
-                loadHeads($(this).val(), null);
-            });
+            // Type-Based Dynamic Account Head Loading
+            $('#account_type_id').change(function() {
+                let typeId = $(this).val();
+                let headDropdown = $('#account_head_id');
+                
+                headDropdown.html('<option value="">Loading Heads...</option>').trigger('change');
 
-            var preType = $('#filter_account_type_id').val();
-            var preHead = {{ $receipt->detail?->account_head_id ?? 'null' }};
-            if (preType) {
-                loadHeads(preType, preHead);
-            }
-
-            function calcAmounts() {
-                var net = parseFloat($('#net_amount').val()) || 0;
-                var tax = parseFloat($('#account_head_id option:selected').data('tax')) || 0;
-                var vat = parseFloat((net * tax / 100).toFixed(2));
-                var total = parseFloat((net + vat).toFixed(2));
-                $('#vat_amount').val(vat);
-                $('#total_amount').val(total);
-            }
-            $('#net_amount, #account_head_id').on('change input', calcAmounts);
-
-            var currentIndex = 0;
-            var totalFiles = {{ $receipt->files->count() }};
-
-            function showFile(index) {
-                $('.file-item').hide();
-                $('.file-item[data-index="' + index + '"]').show();
-                $('#fileCount').text((index + 1) + ' / ' + totalFiles);
-                currentIndex = index;
-            }
-
-            $('#prevFile').click(function() {
-                if (currentIndex > 0) showFile(currentIndex - 1);
-            });
-            $('#nextFile').click(function() {
-                if (currentIndex < totalFiles - 1) showFile(currentIndex + 1);
-            });
-            $('#fileList').on('click', '.fileThumb', function() {
-                showFile($(this).closest('.file-list-item').data('index'));
-            });
-
-            $('#uploadFileInput').on('change', function() {
-                var formData = new FormData();
-                formData.append('file', this.files[0]);
-                formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
-                $.ajax({
-                    url: baseUrl + '/' + receiptId + '/files',
-                    type: 'POST',
-                    data: formData,
-                    contentType: false,
-                    processData: false,
-                    success: function(d) {
-                        if (d.success) {
-                            toastr.success(d.message, 'Success!');
-                            setTimeout(() => location.reload(), 1000);
-                        }
-                    }
-                });
-            });
-
-            $('#fileList').on('click', '.deleteFileBtn', function() {
-                if (!confirm('Delete this file?')) return;
-                var fileId = $(this).data('id');
-                $.get(baseUrl + '/' + receiptId + '/files/' + fileId + '/delete', function(d) {
-                    if (d.success) {
-                        toastr.success(d.message, 'Success!');
-                        setTimeout(() => location.reload(), 1000);
-                    }
-                });
-            });
-
-            $('#saveBtn').click(function() {
-                if ($('#paid').val() === 'no' && hasPaidTxn) {
-                    if (!confirm(
-                            'Marking as unpaid will remove the existing payment transaction. Continue?'))
-                        return;
+                if (!typeId) {
+                    headDropdown.html('<option value="">First Select Account Type</option>').trigger('change');
+                    $('#tax_percent').val(0);
+                    calculateAmounts();
+                    return;
                 }
 
+                $.get(baseUrl + '/get-account-heads', { account_type_id: typeId }, function(data) {
+                    let options = '<option value="">Select Account Head</option>';
+                    $.each(data, function(index, head) {
+                        let taxRate = head.tax_rate ? head.tax_rate.rate : 0;
+                        options += `<option value="${head.id}" data-rate="${taxRate}">${head.code} - ${head.name}</option>`;
+                    });
+                    headDropdown.html(options).trigger('change');
+                });
+            });
+
+            // Account Head চেঞ্জ হলে ট্যাক্স রেট ইনপুট বক্সে এসাইন হবে
+            $('#account_head_id').change(function() {
+                let selectedOption = $(this).find('option:selected');
+                let rate = parseFloat(selectedOption.data('rate')) || 0;
+                $('#tax_percent').val(rate);
+                calculateAmounts();
+            });
+
+            // 🧮 লাইভ ফিন্যান্সিয়াল ম্যাথ লজিক (Net + Tax + VAT = Total)
+            function calculateAmounts() {
+                let net = parseFloat($('#net_amount').val()) || 0;
+                let rate = parseFloat($('#tax_percent').val()) || 0;
+                let vat = parseFloat($('#vat_amount').val()) || 0;
+                
+                // ১. ট্যাক্স হিসাব
+                let taxAmount = net * (rate / 100);
+                $('#tax_amount').val(taxAmount.toFixed(2));
+                
+                // ২. গ্র্যান্ড টোটাল হিসাব (Net + Tax + VAT)
+                let total = net + taxAmount + vat;
+                $('#total_amount').val('£' + total.toFixed(2));
+            }
+
+            // ইভেন্ট লিসেনার ট্রিগার
+            $('#net_amount, #vat_amount').on('input keyup change', calculateAmounts);
+
+            $('#paid').change(function() {
+                if ($(this).val() === 'yes') $('#method_box').fadeIn();
+                else $('#method_box').fadeOut();
+            });
+
+            // Save Trigger
+            $('#saveBtn').click(function() {
                 $.post(baseUrl + '/' + receiptId + '/update', {
                     _token: $('meta[name="csrf-token"]').attr('content'),
                     status: $('#status').val(),
@@ -341,30 +252,33 @@
                     due_date: $('#due_date').val(),
                     invoice_number: $('#invoice_number').val(),
                     net_amount: $('#net_amount').val(),
+                    tax_percent: $('#tax_percent').val(),
+                    tax_amount: $('#tax_amount').val(),
+                    vat_amount: $('#vat_amount').val(),
                     paid: $('#paid').val(),
                     payment_method: $('#payment_method').val(),
                     description: $('#description').val(),
                 }, function(d) {
                     if (d.status == 303) {
                         $('.ermsg').html(d.message);
-                        $('html, body').animate({
-                            scrollTop: 0
-                        }, 300);
+                        window.scrollTo(0, 0);
                     } else {
-                        toastr.success(d.message, 'Success!');
+                        toastr.success(d.message);
                         $('.ermsg').html('');
-                        setTimeout(() => location.reload(), 800);
+                        setTimeout(() => window.location.reload(), 1000);
                     }
                 });
             });
 
+            // Cancel Trigger
             $('#cancelBtn').click(function() {
-                if (!confirm('Cancel this receipt?')) return;
+                if (!confirm('Are you sure you want to cancel? This clears all accounting logs.')) return;
                 $.get(baseUrl + '/' + receiptId + '/cancel', function(d) {
                     if (d.success) {
-                        toastr.success(d.message, 'Success!');
-                        setTimeout(() => window.location = "{{ route('admin.receipt.index') }}",
-                            1000);
+                        toastr.success(d.message);
+                        setTimeout(() => window.location = "{{ route('admin.receipt.index') }}", 1000);
+                    } else {
+                        toastr.error(d.message);
                     }
                 });
             });

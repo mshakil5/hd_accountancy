@@ -11,7 +11,7 @@ class Transaction extends Model
 
      protected $fillable = [
         'transaction_uid', 'receipt_id', 'account_head_id', 'type',
-        'amount', 'tax_percent', 'tax_amount', 'total_amount',
+        'amount', 'tax_percent', 'tax_amount', 'vat_amount', 'total_amount',
         'payment_method', 'parent_id', 'created_by',
     ];
 

@@ -10,7 +10,7 @@ class ReceiptDetail extends Model
     use HasFactory;
     protected $fillable = [
         'receipt_id', 'account_head_id', 'invoice_date', 'due_date',
-        'invoice_number', 'net_amount', 'vat_amount', 'total_amount',
+        'invoice_number', 'net_amount', 'vat_amount', 'tax_amount', 'total_amount',
         'paid', 'payment_method', 'description',
     ];
 

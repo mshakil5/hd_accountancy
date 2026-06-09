@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AccountHead;
 use App\Models\AccountType;
+use App\Models\ClientCredential;
 use App\Models\Receipt;
 use App\Models\ReceiptDetail;
 use App\Models\ReceiptFile;
@@ -24,7 +25,12 @@ class ReceiptController extends Controller
 
     public function datatable()
     {
-        $query = Receipt::with(['client', 'detail.accountHead.accountType'])
+        $query = Receipt::with(['client.credential', 'detail.accountHead.accountType'])
+            ->when(request('client_credential_id'), function($q) {
+                $q->whereHas('client', function($subQ) {
+                    $subQ->where('client_credential_id', request('client_credential_id'));
+                });
+            })
             ->when(request('status'), fn($q) => $q->where('status', request('status')))
             ->when(request('payment_method'), fn($q) => $q->whereHas('detail', fn($q) => $q->where('payment_method', request('payment_method'))))
             ->when(request('paid'), fn($q) => $q->whereHas('detail', fn($q) => $q->where('paid', request('paid') == 'yes' ? 1 : 0)))
@@ -32,21 +38,24 @@ class ReceiptController extends Controller
 
         return DataTables::of($query)
             ->addIndexColumn()
-            ->addColumn('client_name', fn($r) => trim($r->client->name . ' ' . $r->client->last_name))
-            ->addColumn('business_name', fn($r) => $r->client->business_name)
+            ->addColumn('client_name', function($r) {
+                $credential = $r->client?->credential;
+                return $credential ? trim(($credential->first_name ?? '') . ' ' . ($credential->last_name ?? '')) : '-';
+            })
+            ->addColumn('business_name', function($r) {
+                return $r->client ? trim(($r->client->name ?? '') . ' ' . ($r->client->last_name ?? '')) : '-';
+            })
             ->addColumn('account_type', fn($r) => $r->detail?->accountHead?->accountType?->name ?? '-')
             ->addColumn('account_head', fn($r) => $r->detail?->accountHead?->name ?? '-')
             ->addColumn('invoice_date', function($r) {
                 $date = $r->detail?->invoice_date ?? $r->receipt_date;
-
-                if (!$date) return '-';
-
-                return Carbon::parse($date)->format('d M y');
+                return $date ? Carbon::parse($date)->format('d M y') : '-';
             })
             ->addColumn('invoice_number', fn($r) => $r->detail?->invoice_number ?? '-')
-            ->addColumn('net_amount', fn($r) => $r->detail?->net_amount ? 'GBP ' . $r->detail->net_amount : '-')
-            ->addColumn('vat_amount', fn($r) => $r->detail?->vat_amount ? 'GBP ' . $r->detail->vat_amount : '-')
-            ->addColumn('total_amount', fn($r) => $r->detail?->total_amount ? 'GBP ' . $r->detail->total_amount : '-')
+            ->addColumn('net_amount', fn($r) => $r->detail?->net_amount ? '£' . $r->detail->net_amount : '-')
+            ->addColumn('vat_amount', fn($r) => $r->detail?->vat_amount ? '£' . $r->detail->vat_amount : '-')
+            ->addColumn('tax_amount', fn($r) => $r->detail?->tax_amount ? '£' . $r->detail->tax_amount : '-')
+            ->addColumn('total_amount', fn($r) => $r->detail?->total_amount ? '£' . $r->detail->total_amount : '-')
             ->addColumn('payment_method', fn($r) => $r->detail?->payment_method ?? '-')
             ->addColumn('status_badge', function ($r) {
                 $colors = [
@@ -56,9 +65,7 @@ class ReceiptController extends Controller
                     'cancelled' => 'danger',
                     'archived'  => 'secondary',
                 ];
-
                 $colorClass = $colors[$r->status] ?? 'warning';
-
                 return '<button class="btn btn-sm btn-' . $colorClass . '" style="pointer-events:none; border-radius: 20px; font-size: 11px; color: #fff;">'
                     . ucfirst(str_replace('_', ' ', $r->status)) .
                     '</button>';
@@ -73,61 +80,85 @@ class ReceiptController extends Controller
             ->make(true);
     }
 
+    public function searchClients(Request $request)
+    {
+        $search = $request->get('q');
+        $clients = ClientCredential::select('id', 'first_name', 'last_name')
+            ->when($search, function($q) use ($search) {
+                $q->where('first_name', 'LIKE', "%{$search}%")
+                  ->orWhere('last_name', 'LIKE', "%{$search}%");
+            })
+            ->limit(20)->get();
+
+        $formattedClients = [];
+        foreach ($clients as $client) {
+            $formattedClients[] = [
+                'id' => $client->id,
+                'text' => trim($client->first_name . ' ' . $client->last_name)
+            ];
+        }
+        return response()->json($formattedClients);
+    }
+
     public function show($id)
     {
-        $receipt = Receipt::with([
-            'client',
-            'files',
-            'detail.accountHead.accountType',
-            'detail.accountHead.taxRate',
-            'transactions',
-        ])->findOrFail($id);
+        $receipt = Receipt::with(['files', 'detail.accountHead.accountType', 'client'])->findOrFail($id);
+        $accountTypes = AccountType::where('is_active', true)->get();
 
-        $accountHeads = AccountHead::with('accountType', 'taxRate')
-            ->where('is_active', 1)
+        $currentAccountTypeId = $receipt->detail?->accountHead?->account_type_id;
+        $heads = $currentAccountTypeId 
+            ? AccountHead::with('taxRate')->where('account_type_id', $currentAccountTypeId)->where('is_active', true)->get()
+            : collect();
+
+        $prev = Receipt::where('id', '<', $id)->orderBy('id', 'desc')->first()?->id;
+        $next = Receipt::where('id', '>', $id)->orderBy('id', 'asc')->first()?->id;
+
+        return view('admin.receipt.show', compact('receipt', 'accountTypes', 'heads', 'prev', 'next'));
+    }
+
+    public function getAccountHeads(Request $request)
+    {
+        $heads = AccountHead::with('taxRate')
+            ->where('account_type_id', $request->account_type_id)
+            ->where('is_active', true)
             ->get();
 
-        $accountTypes = AccountType::where('is_active', 1)->select('id', 'name')->get();
-
-        return view('admin.receipt.show', compact('receipt', 'accountHeads', 'accountTypes'));
+        return response()->json($heads);
     }
 
     public function update(Request $request, $id)
     {
         $receipt = Receipt::findOrFail($id);
 
-        if ($receipt->status === 'archived') {
-            return response()->json(['status' => 303, 'message' => "<div class='alert alert-danger'>Archived receipts cannot be edited.</div>"]);
+        // Archived বা Cancelled অবস্থায় কোনো মডিফিকেশন সম্ভব নয়
+        if (in_array($receipt->status, ['archived', 'cancelled'])) {
+            return response()->json([
+                'status' => 303, 
+                'message' => "<div class='alert alert-danger'>This receipt is locked ({$receipt->status}) and cannot be modified.</div>"
+            ]);
         }
 
         $newStatus = $request->status;
 
-        if (!in_array($newStatus, ['cancelled', 'archived'])) {
-            $missingFields = empty($request->account_head_id) || empty($request->invoice_date) || empty($request->net_amount);
-
-            if ($newStatus === 'ready' && $missingFields) {
-                return response()->json(['status' => 303, 'message' => "<div class='alert alert-warning'>Please fill Account Head, Invoice Date, and Net Amount to mark as Ready.</div>"]);
-            }
-
-            if ($newStatus === 'ready' && $request->paid == 'yes' && empty($request->payment_method)) {
-                return response()->json(['status' => 303, 'message' => "<div class='alert alert-warning'>Please select Payment Method.</div>"]);
-            }
-
-            if ($missingFields) {
-                $newStatus = 'to_review';
+        if (in_array($newStatus, ['ready', 'archived'])) {
+            if (!$request->account_head_id || !$request->invoice_date || !$request->net_amount) {
+                return response()->json([
+                    'status' => 303,
+                    'message' => "<div class='alert alert-danger'>Account Head, Invoice Date, and Net Amount are required to set status to Ready/Archived.</div>"
+                ]);
             }
         }
 
-        if (in_array($newStatus, ['cancelled', 'archived'])) {
-            $receipt->update(['status' => $newStatus]);
-            return response()->json(['status' => 300, 'message' => 'Receipt updated successfully.']);
-        }
+        $receipt->update([
+            'status' => $newStatus,
+            'updated_by' => Auth::id()
+        ]);
 
-        $accountHead = AccountHead::with('taxRate')->find($request->account_head_id);
-        $taxPercent  = $accountHead?->taxRate?->rate ?? 0;
-        $netAmount   = $request->net_amount ?? 0;
-        $vatAmount   = round($netAmount * ($taxPercent / 100), 2);
-        $totalAmount = round($netAmount + $vatAmount, 2);
+        // টোটাল ক্যালকুলেশন: Net + Tax + VAT
+        $netAmount = (float)$request->net_amount;
+        $taxAmount = (float)($request->tax_amount ?? 0);
+        $vatAmount = (float)($request->vat_amount ?? 0);
+        $totalAmount = $netAmount + $taxAmount + $vatAmount;
 
         ReceiptDetail::updateOrCreate(
             ['receipt_id' => $receipt->id],
@@ -137,6 +168,7 @@ class ReceiptController extends Controller
                 'due_date'        => $request->due_date,
                 'invoice_number'  => $request->invoice_number,
                 'net_amount'      => $netAmount,
+                'tax_amount'      => $taxAmount,
                 'vat_amount'      => $vatAmount,
                 'total_amount'    => $totalAmount,
                 'paid'            => $request->paid == 'yes' ? 1 : 0,
@@ -145,70 +177,72 @@ class ReceiptController extends Controller
             ]
         );
 
-        $receipt->update(['status' => $newStatus]);
+        // কনফ্লিক্ট এড়াতে অলরেডি এক্সিস্টিং ট্রানজেকশন ক্লিয়ার
+        $receipt->transactions()->delete();
 
-        if ($newStatus === 'ready') {
-            $accountType = $accountHead->accountType;
-            $firstType   = in_array($accountType->category, ['asset', 'expense']) ? 'payable' : 'receivable';
-            $paidType    = $firstType === 'payable' ? 'paid' : 'received';
-
-            $firstTransaction = $receipt->transactions()->whereNull('parent_id')->first();
-            if (!$firstTransaction) {
-                $firstTransaction = Transaction::create([
-                    'transaction_uid' => 'TXN-' . strtoupper(Str::random(10)),
-                    'receipt_id'      => $receipt->id,
-                    'account_head_id' => $request->account_head_id,
-                    'type'            => $firstType,
-                    'amount'          => $netAmount,
-                    'tax_percent'     => $taxPercent,
-                    'tax_amount'      => $vatAmount,
-                    'total_amount'    => $totalAmount,
-                    'payment_method'  => null,
-                    'parent_id'       => null,
-                    'created_by'      => Auth::id(),
-                ]);
-            }
-
-            $existingPaidTxn = $receipt->transactions()->whereNotNull('parent_id')->first();
-
-            if ($request->paid == 'yes') {
-                if (!$existingPaidTxn) {
-                    Transaction::create([
-                        'transaction_uid' => 'TXN-' . strtoupper(Str::random(10)),
-                        'receipt_id'      => $receipt->id,
-                        'account_head_id' => $request->account_head_id,
-                        'type'            => $paidType,
-                        'amount'          => $netAmount,
-                        'tax_percent'     => $taxPercent,
-                        'tax_amount'      => $vatAmount,
-                        'total_amount'    => $totalAmount,
-                        'payment_method'  => $request->payment_method,
-                        'parent_id'       => $firstTransaction->id,
-                        'created_by'      => Auth::id(),
-                    ]);
+        if (in_array($newStatus, ['ready', 'archived'])) {
+            $head = AccountHead::with('accountType')->find($request->account_head_id);
+            if ($head && $head->accountType) {
+                $category = $head->accountType->category;
+                
+                if (in_array($category, ['asset', 'expense'])) {
+                    $type = 'payable';
+                } else {
+                    $type = 'receivable';
                 }
-            } else {
-                if ($existingPaidTxn) {
-                    $existingPaidTxn->delete();
+
+                // ১ম ট্রানজেকশন তৈরি
+                $firstTransaction = Transaction::create([
+                    'transaction_uid'=> 'TXN-' . strtoupper(Str::random(10)),
+                    'receipt_id'     => $receipt->id,
+                    'account_head_id'=> $head->id,
+                    'type'           => $type,
+                    'amount'         => $netAmount,
+                    'tax_percent'    => (float)($request->tax_percent ?? 0),
+                    'tax_amount'     => $taxAmount, // লেজারে সিস্টেমেটিক ট্যাক্স অ্যামাউন্ট সেভ হচ্ছে
+                    'total_amount'   => $totalAmount,
+                    'created_by'     => Auth::id(),
+                ]);
+
+                // ২য় ট্রানজেকশন তৈরি (যদি Paid = 'Yes' হয়)
+                if ($request->paid == 'yes') {
+                    $secondType = ($type === 'payable') ? 'paid' : 'received';
+
+                    Transaction::create([
+                        'transaction_uid'=> 'TXN-' . strtoupper(Str::random(10)),
+                        'receipt_id'     => $receipt->id,
+                        'account_head_id'=> $head->id,
+                        'type'           => $secondType,
+                        'amount'         => $totalAmount, 
+                        'tax_percent'    => 0,
+                        'tax_amount'     => 0,
+                        'total_amount'   => $totalAmount,
+                        'payment_method' => $request->payment_method,
+                        'parent_id'      => $firstTransaction->id,
+                        'created_by'     => Auth::id(),
+                    ]);
                 }
             }
         }
 
-        return response()->json(['status' => 300, 'message' => 'Receipt updated successfully.']);
+        return response()->json(['status' => 200, 'message' => 'Receipt and accounting transactions processed successfully.']);
     }
 
-    public function uploadFile(Request $request, $id)
+    public function uploadFiles(Request $request, $id)
     {
-        $request->validate([
-            'file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:20480',
-        ]);
+        $receipt = Receipt::findOrFail($id);
+        if (in_array($receipt->status, ['archived', 'cancelled'])) {
+            return response()->json(['success' => false, 'message' => 'Cannot upload files to a locked receipt.']);
+        }
 
-        $receipt  = Receipt::findOrFail($id);
-        $file     = $request->file('file');
-        $mime     = $file->getClientMimeType();
-        $size     = $file->getSize();
-        $fileType = $file->extension() === 'pdf' ? 'pdf' : 'image';
-        $filename = time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
+        $request->validate(['file' => 'required|file|max:10240']);
+        $file = $request->file('file');
+        
+        $filename = time() . '_' . rand(100, 999) . '.' . $file->getClientOriginalExtension();
+        $mime = $file->getMimeType();
+        $size = $file->getSize();
+        
+        $fileType = Str::startsWith($mime, 'image/') ? 'image' : ($mime === 'application/pdf' ? 'pdf' : 'unknown');
         $file->move(public_path('images/receipts'), $filename);
 
         $receipt->files()->create([
@@ -224,28 +258,29 @@ class ReceiptController extends Controller
 
     public function deleteFile($id, $fileId)
     {
-        $file = ReceiptFile::where('id', $fileId)
-            ->where('receipt_id', $id)
-            ->firstOrFail();
-
-        if (file_exists(public_path($file->file_path))) {
-            unlink(public_path($file->file_path));
+        $receipt = Receipt::findOrFail($id);
+        if (in_array($receipt->status, ['archived', 'cancelled'])) {
+            return response()->json(['success' => false, 'message' => 'Cannot delete files from a locked receipt.']);
         }
+
+        $file = ReceiptFile::where('id', $fileId)->where('receipt_id', $id)->firstOrFail();
+        if (file_exists(public_path($file->file_path))) unlink(public_path($file->file_path));
         $file->delete();
-
+        
         return response()->json(['success' => true, 'message' => 'File deleted successfully.']);
-    }
-
-    public function archive($id)
-    {
-        Receipt::findOrFail($id)->update(['status' => 'archived']);
-        return response()->json(['success' => true, 'message' => 'Receipt archived.']);
     }
 
     public function cancel($id)
     {
-        Receipt::findOrFail($id)->update(['status' => 'cancelled']);
-        return response()->json(['success' => true, 'message' => 'Receipt cancelled.']);
+        $receipt = Receipt::findOrFail($id);
+        if (in_array($receipt->status, ['archived', 'cancelled'])) {
+            return response()->json(['success' => false, 'message' => 'This receipt is already locked.']);
+        }
+
+        $receipt->transactions()->delete();
+        $receipt->update(['status' => 'cancelled', 'updated_by' => Auth::id()]);
+
+        return response()->json(['success' => true, 'message' => 'Receipt cancelled successfully.']);
     }
 
     public function counts()

@@ -737,11 +737,12 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/receipts/counts', [ReceiptController::class, 'counts']);
     Route::get('/receipts', [ReceiptController::class, 'index'])->name('admin.receipt.index');
     Route::get('/receipts/datatable', [ReceiptController::class, 'datatable']);
+    Route::get('/receipts/search-clients', [ReceiptController::class, 'searchClients']);
+    Route::get('/receipts/get-account-heads', [ReceiptController::class, 'getAccountHeads'])->name('admin.receipts.getHeads');
     Route::get('/receipts/{id}', [ReceiptController::class, 'show'])->name('admin.receipt.show');
     Route::post('/receipts/{id}/update', [ReceiptController::class, 'update']);
     Route::post('/receipts/{id}/files', [ReceiptController::class, 'uploadFile']);
     Route::get('/receipts/{id}/files/{fileId}/delete', [ReceiptController::class, 'deleteFile']);
-    Route::get('/receipts/{id}/archive', [ReceiptController::class, 'archive']);
     Route::get('/receipts/{id}/cancel', [ReceiptController::class, 'cancel']);
 
 });
