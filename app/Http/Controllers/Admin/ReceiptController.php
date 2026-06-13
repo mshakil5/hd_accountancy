@@ -26,8 +26,8 @@ class ReceiptController extends Controller
     public function datatable()
     {
         $query = Receipt::with(['client.credential', 'detail.accountHead.accountType'])
-            ->when(request('client_credential_id'), function($q) {
-                $q->whereHas('client', function($subQ) {
+            ->when(request('client_credential_id'), function ($q) {
+                $q->whereHas('client', function ($subQ) {
                     $subQ->where('client_credential_id', request('client_credential_id'));
                 });
             })
@@ -38,16 +38,19 @@ class ReceiptController extends Controller
 
         return DataTables::of($query)
             ->addIndexColumn()
-            ->addColumn('client_name', function($r) {
+            ->addColumn('client_name', function ($r) {
                 $credential = $r->client?->credential;
                 return $credential ? trim(($credential->first_name ?? '') . ' ' . ($credential->last_name ?? '')) : '-';
             })
-            ->addColumn('business_name', function($r) {
+            ->addColumn('business_name', function ($r) {
                 return $r->client ? trim(($r->client->name ?? '') . ' ' . ($r->client->last_name ?? '')) : '-';
             })
             ->addColumn('account_type', fn($r) => $r->detail?->accountHead?->accountType?->name ?? '-')
-            ->addColumn('account_head', fn($r) => $r->detail?->accountHead?->name ?? '-')
-            ->addColumn('invoice_date', function($r) {
+            ->addColumn('account_head', function ($r) {
+                $head = $r->detail?->accountHead;
+                return $head ? $head->code . ' - ' . $head->name : '-';
+            })
+            ->addColumn('invoice_date', function ($r) {
                 $date = $r->detail?->invoice_date ?? $r->receipt_date;
                 return $date ? Carbon::parse($date)->format('d M y') : '-';
             })
@@ -84,9 +87,9 @@ class ReceiptController extends Controller
     {
         $search = $request->get('q');
         $clients = ClientCredential::select('id', 'first_name', 'last_name')
-            ->when($search, function($q) use ($search) {
+            ->when($search, function ($q) use ($search) {
                 $q->where('first_name', 'LIKE', "%{$search}%")
-                  ->orWhere('last_name', 'LIKE', "%{$search}%");
+                    ->orWhere('last_name', 'LIKE', "%{$search}%");
             })
             ->limit(20)->get();
 
@@ -106,7 +109,7 @@ class ReceiptController extends Controller
         $accountTypes = AccountType::where('is_active', true)->get();
 
         $currentAccountTypeId = $receipt->detail?->accountHead?->account_type_id;
-        $heads = $currentAccountTypeId 
+        $heads = $currentAccountTypeId
             ? AccountHead::with('taxRate')->where('account_type_id', $currentAccountTypeId)->where('is_active', true)->get()
             : collect();
 
@@ -130,10 +133,9 @@ class ReceiptController extends Controller
     {
         $receipt = Receipt::findOrFail($id);
 
-        // Archived বা Cancelled অবস্থায় কোনো মডিফিকেশন সম্ভব নয়
         if (in_array($receipt->status, ['archived', 'cancelled'])) {
             return response()->json([
-                'status' => 303, 
+                'status' => 303,
                 'message' => "<div class='alert alert-danger'>This receipt is locked ({$receipt->status}) and cannot be modified.</div>"
             ]);
         }
@@ -154,7 +156,6 @@ class ReceiptController extends Controller
             'updated_by' => Auth::id()
         ]);
 
-        // টোটাল ক্যালকুলেশন: Net + Tax + VAT
         $netAmount = (float)$request->net_amount;
         $taxAmount = (float)($request->tax_amount ?? 0);
         $vatAmount = (float)($request->vat_amount ?? 0);
@@ -177,43 +178,37 @@ class ReceiptController extends Controller
             ]
         );
 
-        // কনফ্লিক্ট এড়াতে অলরেডি এক্সিস্টিং ট্রানজেকশন ক্লিয়ার
         $receipt->transactions()->delete();
 
         if (in_array($newStatus, ['ready', 'archived'])) {
             $head = AccountHead::with('accountType')->find($request->account_head_id);
             if ($head && $head->accountType) {
                 $category = $head->accountType->category;
-                
-                if (in_array($category, ['asset', 'expense'])) {
-                    $type = 'payable';
-                } else {
-                    $type = 'receivable';
-                }
 
-                // ১ম ট্রানজেকশন তৈরি
+                $normalBalance = $head->accountType->normal_balance;
+                $type = $normalBalance === 'debit' ? 'payable' : 'receivable';
+
                 $firstTransaction = Transaction::create([
-                    'transaction_uid'=> 'TXN-' . strtoupper(Str::random(10)),
+                    'transaction_uid' => 'TXN-' . strtoupper(Str::random(10)),
                     'receipt_id'     => $receipt->id,
-                    'account_head_id'=> $head->id,
+                    'account_head_id' => $head->id,
                     'type'           => $type,
                     'amount'         => $netAmount,
                     'tax_percent'    => (float)($request->tax_percent ?? 0),
-                    'tax_amount'     => $taxAmount, // লেজারে সিস্টেমেটিক ট্যাক্স অ্যামাউন্ট সেভ হচ্ছে
+                    'tax_amount'     => $taxAmount,
                     'total_amount'   => $totalAmount,
                     'created_by'     => Auth::id(),
                 ]);
 
-                // ২য় ট্রানজেকশন তৈরি (যদি Paid = 'Yes' হয়)
                 if ($request->paid == 'yes') {
                     $secondType = ($type === 'payable') ? 'paid' : 'received';
 
                     Transaction::create([
-                        'transaction_uid'=> 'TXN-' . strtoupper(Str::random(10)),
+                        'transaction_uid' => 'TXN-' . strtoupper(Str::random(10)),
                         'receipt_id'     => $receipt->id,
-                        'account_head_id'=> $head->id,
+                        'account_head_id' => $head->id,
                         'type'           => $secondType,
-                        'amount'         => $totalAmount, 
+                        'amount'         => $totalAmount,
                         'tax_percent'    => 0,
                         'tax_amount'     => 0,
                         'total_amount'   => $totalAmount,
@@ -228,7 +223,7 @@ class ReceiptController extends Controller
         return response()->json(['status' => 200, 'message' => 'Receipt and accounting transactions processed successfully.']);
     }
 
-    public function uploadFiles(Request $request, $id)
+    public function uploadFile(Request $request, $id)
     {
         $receipt = Receipt::findOrFail($id);
         if (in_array($receipt->status, ['archived', 'cancelled'])) {
@@ -237,11 +232,11 @@ class ReceiptController extends Controller
 
         $request->validate(['file' => 'required|file|max:10240']);
         $file = $request->file('file');
-        
+
         $filename = time() . '_' . rand(100, 999) . '.' . $file->getClientOriginalExtension();
         $mime = $file->getMimeType();
         $size = $file->getSize();
-        
+
         $fileType = Str::startsWith($mime, 'image/') ? 'image' : ($mime === 'application/pdf' ? 'pdf' : 'unknown');
         $file->move(public_path('images/receipts'), $filename);
 
@@ -266,7 +261,7 @@ class ReceiptController extends Controller
         $file = ReceiptFile::where('id', $fileId)->where('receipt_id', $id)->firstOrFail();
         if (file_exists(public_path($file->file_path))) unlink(public_path($file->file_path));
         $file->delete();
-        
+
         return response()->json(['success' => true, 'message' => 'File deleted successfully.']);
     }
 
@@ -281,6 +276,19 @@ class ReceiptController extends Controller
         $receipt->update(['status' => 'cancelled', 'updated_by' => Auth::id()]);
 
         return response()->json(['success' => true, 'message' => 'Receipt cancelled successfully.']);
+    }
+
+    public function bill($id)
+    {
+        $receipt = Receipt::with([
+            'files',
+            'detail.accountHead.accountType',
+            'detail.accountHead.taxRate',
+            'client',
+            'transactions'
+        ])->findOrFail($id);
+
+        return view('admin.receipt.bill', compact('receipt'));
     }
 
     public function counts()

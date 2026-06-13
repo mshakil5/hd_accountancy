@@ -755,15 +755,8 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
 
     Route::get('/accounting/balance-sheet',          [AccountingController::class, 'balanceSheet'])->name('accounting.balanceSheet');
     Route::get('/accounting/balance-sheet/data',     [AccountingController::class, 'balanceSheetData'])->name('accounting.balanceSheet.data');
-    
-    Route::get('/accounting/get-businesses',         [AccountingController::class, 'getBusinesses'])->name('accounting.getBusinesses');
 
-    Route::get('/reports/profit-loss',       [ReportController::class, 'profitLoss'])->name('admin.report.profitLoss');
-    Route::get('/reports/profit-loss/data',  [ReportController::class, 'profitLossData']);
-    Route::get('/reports/ledger',            [ReportController::class, 'ledger'])->name('admin.report.ledger');
-    Route::get('/reports/ledger/data',       [ReportController::class, 'ledgerData']);
-    Route::get('/reports/get-businesses',    [ReportController::class, 'getBusinesses']);
-    Route::get('/reports/drill-down',        [ReportController::class, 'drillDown']);
+    Route::get('/accounting/get-businesses',         [AccountingController::class, 'getBusinesses'])->name('accounting.getBusinesses');
 });
 
 Route::get('/get-active-jobs', [AdminController::class, 'getActiveJobs'])->name('get.active.jobs');

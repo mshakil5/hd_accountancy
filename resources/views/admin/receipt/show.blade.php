@@ -8,6 +8,14 @@
         .detail-field { margin-bottom: 14px; }
         .receipt-header { background: #f8f9fa; border-radius: 10px; padding: 14px 18px; margin-bottom: 16px; }
         .notes-box { background: #fffdf0; border-left: 4px solid #ffc107; padding: 12px; border-radius: 4px; margin-top: 15px; }
+        .file-thumb-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+        .file-thumb { position: relative; width: 60px; height: 60px; border: 2px solid #dee2e6; border-radius: 6px; overflow: hidden; cursor: pointer; }
+        .file-thumb.active { border-color: #007bff; }
+        .file-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .file-thumb .pdf-icon { display: flex; align-items: center; justify-content: center; height: 100%; background: #f8f9fa; font-size: 22px; color: #dc3545; }
+        .file-thumb .delete-file-btn { position: absolute; top: 1px; right: 1px; background: rgba(220,53,69,0.85); color: #fff; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; line-height: 18px; text-align: center; cursor: pointer; display: none; padding: 0; }
+        .file-thumb:hover .delete-file-btn { display: block; }
+        .file-counter { font-size: 12px; color: #888; margin-top: 6px; }
     </style>
 
     <section class="content">
@@ -31,23 +39,64 @@
             <div class="row">
                 <div class="col-md-7">
                     <div class="card card-outline card-primary">
-                        <div class="card-header"><h3 class="card-title">Receipt Media Viewer</h3></div>
+                        <div class="card-header d-flex align-items-center justify-content-between">
+                            <h3 class="card-title">Receipt Media Viewer</h3>
+                            @if(!in_array($receipt->status, ['archived', 'cancelled']))
+                                <label class="btn btn-sm btn-secondary mb-0" style="cursor:pointer;">
+                                    <i class="fa fa-upload"></i> Upload File
+                                    <input type="file" id="uploadFileInput" accept=".jpg,.jpeg,.png,.pdf" style="display:none;">
+                                </label>
+                            @endif
+                        </div>
                         <div class="card-body">
-                            <div class="file-viewer text-center">
+
+                            {{-- Main Viewer --}}
+                            <div class="file-viewer text-center" id="mainViewer">
                                 @if($receipt->files->count() > 0)
-                                    @php $firstFile = $receipt->files->first(); @endphp
-                                    @if($firstFile->file_type == 'image')
-                                        <img src="{{ asset($firstFile->file_path) }}" alt="Receipt">
-                                    @elseif($firstFile->file_type == 'pdf')
-                                        <iframe src="{{ asset($firstFile->file_path) }}"></iframe>
+                                    @php $first = $receipt->files->first(); @endphp
+                                    @if($first->file_type == 'image')
+                                        <img src="{{ asset($first->file_path) }}" id="mainImage" alt="Receipt">
+                                    @elseif($first->file_type == 'pdf')
+                                        <iframe src="{{ asset($first->file_path) }}" id="mainIframe"></iframe>
                                     @endif
                                 @else
-                                    <p class="text-muted py-5">No files attached to this receipt.</p>
+                                    <p class="text-muted py-5" id="noFileMsg">No files attached to this receipt.</p>
                                 @endif
                             </div>
 
+                            {{-- Navigation --}}
+                            @if($receipt->files->count() > 1)
+                                <div class="d-flex justify-content-center gap-2 mt-2">
+                                    <button class="btn btn-sm btn-secondary" id="prevFile"><i class="fa fa-chevron-left"></i> Prev</button>
+                                    <button class="btn btn-sm btn-secondary" id="nextFile">Next <i class="fa fa-chevron-right"></i></button>
+                                </div>
+                            @endif
+
+                            {{-- Thumbnail Bar --}}
+                            <div class="file-thumb-bar" id="thumbBar">
+                                @foreach($receipt->files as $index => $file)
+                                    <div class="file-thumb {{ $index == 0 ? 'active' : '' }}"
+                                         data-index="{{ $index }}"
+                                         data-id="{{ $file->id }}"
+                                         data-path="{{ asset($file->file_path) }}"
+                                         data-type="{{ $file->file_type }}">
+                                        @if($file->file_type == 'image')
+                                            <img src="{{ asset($file->file_path) }}" alt="">
+                                        @else
+                                            <div class="pdf-icon"><i class="fa fa-file-pdf-o"></i></div>
+                                        @endif
+                                        @if(!in_array($receipt->status, ['archived', 'cancelled']))
+                                            <button class="delete-file-btn" data-id="{{ $file->id }}" title="Delete">&times;</button>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                            <div class="file-counter" id="fileCounter">
+                                {{ $receipt->files->count() }} file(s)
+                            </div>
+
                             @if($receipt->notes)
-                                <div class="notes-box">
+                                <div class="notes-box mt-3">
                                     <strong><i class="fa fa-pencil"></i> Client Notes:</strong>
                                     <p class="mb-0 text-dark" style="white-space: pre-line;">{{ $receipt->notes }}</p>
                                 </div>
@@ -128,11 +177,11 @@
 
                                 <div class="row">
                                     <div class="col-md-6 detail-field">
-                                        <label class="detail-label">VAT Amount (£) [Manual Entry]</label>
+                                        <label class="detail-label">VAT Amount (£)</label>
                                         <input type="number" step="0.01" class="form-control" id="vat_amount" value="{{ $receipt->detail?->vat_amount ?? 0 }}">
                                     </div>
                                     <div class="col-md-6 detail-field">
-                                        <label class="detail-label">Total Amount (£) [Net+Tax+VAT]</label>
+                                        <label class="detail-label">Total Amount (£)</label>
                                         <input type="text" class="form-control" id="total_amount" readonly value="{{ $receipt->detail?->total_amount }}">
                                     </div>
                                 </div>
@@ -150,7 +199,6 @@
                                         <select class="form-control" id="payment_method">
                                             <option value="cash" {{ $receipt->detail?->payment_method == 'cash' ? 'selected':'' }}>Cash</option>
                                             <option value="bank" {{ $receipt->detail?->payment_method == 'bank' ? 'selected':'' }}>Bank</option>
-                                            <option value="card" {{ $receipt->detail?->payment_method == 'card' ? 'selected':'' }}>Card</option>
                                         </select>
                                     </div>
                                 </div>
@@ -177,87 +225,178 @@
     <script>
         $(function() {
             const receiptId = "{{ $receipt->id }}";
-            const baseUrl = "{{ url('/admin/receipts') }}";
+            const baseUrl   = "{{ url('/admin/receipts') }}";
             const currentStatus = "{{ $receipt->status }}";
+            const locked = (currentStatus === 'archived' || currentStatus === 'cancelled');
 
-            // Status Lock Security
-            if (currentStatus === 'archived' || currentStatus === 'cancelled') {
+            if (locked) {
                 $('#receiptForm input, #receiptForm select, #receiptForm textarea').prop('disabled', true);
                 $('#saveBtn, #cancelBtn').prop('disabled', true).addClass('disabled');
                 $('.ermsg').html(`<div class='alert alert-warning'><i class='fa fa-lock'></i> This receipt is locked under <strong>${currentStatus.toUpperCase()}</strong> status. No updates allowed.</div>`);
             }
 
-            // Type-Based Dynamic Account Head Loading
+            // ── File Navigation ──
+            let files = [];
+            $('#thumbBar .file-thumb').each(function() {
+                files.push({
+                    id:   $(this).data('id'),
+                    path: $(this).data('path'),
+                    type: $(this).data('type'),
+                });
+            });
+            let currentIndex = 0;
+
+            function showFile(index) {
+                if (!files.length) return;
+                currentIndex = index;
+                const f = files[index];
+                $('#mainViewer').html(
+                    f.type === 'image'
+                        ? `<img src="${f.path}" style="max-width:100%;border-radius:8px;">`
+                        : `<iframe src="${f.path}" style="width:100%;height:580px;border-radius:8px;"></iframe>`
+                );
+                $('#thumbBar .file-thumb').removeClass('active').eq(index).addClass('active');
+                $('#fileCounter').text(files.length + ' file(s)  [' + (index + 1) + ' / ' + files.length + ']');
+            }
+
+            $('#nextFile').click(function() {
+                showFile((currentIndex + 1) % files.length);
+            });
+
+            $('#prevFile').click(function() {
+                showFile((currentIndex - 1 + files.length) % files.length);
+            });
+
+            $(document).on('click', '.file-thumb', function(e) {
+                if ($(e.target).hasClass('delete-file-btn')) return;
+                showFile($(this).data('index'));
+            });
+
+            // ── Delete File ──
+            $(document).on('click', '.delete-file-btn', function(e) {
+                e.stopPropagation();
+                if (files.length <= 1) {
+                    toastr.warning('At least one file must remain.');
+                    return;
+                }
+                const fileId = $(this).data('id');
+                if (!confirm('Delete this file?')) return;
+
+                $.get(baseUrl + '/' + receiptId + '/files/' + fileId + '/delete', function(d) {
+                    if (d.success) {
+                        toastr.success(d.message);
+                        // remove from files array
+                        const idx = files.findIndex(f => f.id == fileId);
+                        files.splice(idx, 1);
+                        // remove thumb
+                        $('#thumbBar .file-thumb[data-id="' + fileId + '"]').remove();
+                        // re-index thumbs
+                        $('#thumbBar .file-thumb').each(function(i) {
+                            $(this).attr('data-index', i);
+                        });
+                        // show next available
+                        const newIndex = Math.min(currentIndex, files.length - 1);
+                        if (files.length === 0) {
+                            $('#mainViewer').html('<p class="text-muted py-5">No files attached.</p>');
+                            $('#fileCounter').text('0 file(s)');
+                        } else {
+                            showFile(newIndex);
+                        }
+                        $('#fileCounter').text(files.length + ' file(s)');
+                    } else {
+                        toastr.error(d.message);
+                    }
+                });
+            });
+
+            // ── Upload File ──
+            $('#uploadFileInput').on('change', function() {
+                const file = this.files[0];
+                if (!file) return;
+
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
+
+                $.ajax({
+                    url: baseUrl + '/' + receiptId + '/files',
+                    method: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(d) {
+                        if (d.success) {
+                            toastr.success(d.message);
+                            setTimeout(() => location.reload(), 800);
+                        } else {
+                            toastr.error(d.message);
+                        }
+                    },
+                    error: function() {
+                        toastr.error('Upload failed.');
+                    }
+                });
+                $(this).val('');
+            });
+
+            // ── Account Type → Head ──
             $('#account_type_id').change(function() {
                 let typeId = $(this).val();
                 let headDropdown = $('#account_head_id');
-                
-                headDropdown.html('<option value="">Loading Heads...</option>').trigger('change');
-
+                headDropdown.html('<option value="">Loading...</option>').trigger('change');
                 if (!typeId) {
                     headDropdown.html('<option value="">First Select Account Type</option>').trigger('change');
                     $('#tax_percent').val(0);
                     calculateAmounts();
                     return;
                 }
-
                 $.get(baseUrl + '/get-account-heads', { account_type_id: typeId }, function(data) {
                     let options = '<option value="">Select Account Head</option>';
-                    $.each(data, function(index, head) {
-                        let taxRate = head.tax_rate ? head.tax_rate.rate : 0;
-                        options += `<option value="${head.id}" data-rate="${taxRate}">${head.code} - ${head.name}</option>`;
+                    $.each(data, function(i, head) {
+                        let rate = head.tax_rate ? head.tax_rate.rate : 0;
+                        options += `<option value="${head.id}" data-rate="${rate}">${head.code} - ${head.name}</option>`;
                     });
                     headDropdown.html(options).trigger('change');
                 });
             });
 
-            // Account Head চেঞ্জ হলে ট্যাক্স রেট ইনপুট বক্সে এসাইন হবে
             $('#account_head_id').change(function() {
-                let selectedOption = $(this).find('option:selected');
-                let rate = parseFloat(selectedOption.data('rate')) || 0;
+                let rate = parseFloat($(this).find('option:selected').data('rate')) || 0;
                 $('#tax_percent').val(rate);
                 calculateAmounts();
             });
 
-            // 🧮 লাইভ ফিন্যান্সিয়াল ম্যাথ লজিক (Net + Tax + VAT = Total)
             function calculateAmounts() {
-                let net = parseFloat($('#net_amount').val()) || 0;
+                let net  = parseFloat($('#net_amount').val()) || 0;
                 let rate = parseFloat($('#tax_percent').val()) || 0;
-                let vat = parseFloat($('#vat_amount').val()) || 0;
-                
-                // ১. ট্যাক্স হিসাব
-                let taxAmount = net * (rate / 100);
-                $('#tax_amount').val(taxAmount.toFixed(2));
-                
-                // ২. গ্র্যান্ড টোটাল হিসাব (Net + Tax + VAT)
-                let total = net + taxAmount + vat;
-                $('#total_amount').val('£' + total.toFixed(2));
+                let vat  = parseFloat($('#vat_amount').val()) || 0;
+                let tax  = net * (rate / 100);
+                $('#tax_amount').val(tax.toFixed(2));
+                $('#total_amount').val('£' + (net + tax + vat).toFixed(2));
             }
 
-            // ইভেন্ট লিসেনার ট্রিগার
             $('#net_amount, #vat_amount').on('input keyup change', calculateAmounts);
 
             $('#paid').change(function() {
-                if ($(this).val() === 'yes') $('#method_box').fadeIn();
-                else $('#method_box').fadeOut();
+                $(this).val() === 'yes' ? $('#method_box').fadeIn() : $('#method_box').fadeOut();
             });
 
-            // Save Trigger
+            // ── Save ──
             $('#saveBtn').click(function() {
                 $.post(baseUrl + '/' + receiptId + '/update', {
-                    _token: $('meta[name="csrf-token"]').attr('content'),
-                    status: $('#status').val(),
+                    _token:          $('meta[name="csrf-token"]').attr('content'),
+                    status:          $('#status').val(),
                     account_head_id: $('#account_head_id').val(),
-                    invoice_date: $('#invoice_date').val(),
-                    due_date: $('#due_date').val(),
-                    invoice_number: $('#invoice_number').val(),
-                    net_amount: $('#net_amount').val(),
-                    tax_percent: $('#tax_percent').val(),
-                    tax_amount: $('#tax_amount').val(),
-                    vat_amount: $('#vat_amount').val(),
-                    paid: $('#paid').val(),
-                    payment_method: $('#payment_method').val(),
-                    description: $('#description').val(),
+                    invoice_date:    $('#invoice_date').val(),
+                    due_date:        $('#due_date').val(),
+                    invoice_number:  $('#invoice_number').val(),
+                    net_amount:      $('#net_amount').val(),
+                    tax_percent:     $('#tax_percent').val(),
+                    tax_amount:      $('#tax_amount').val(),
+                    vat_amount:      $('#vat_amount').val(),
+                    paid:            $('#paid').val(),
+                    payment_method:  $('#payment_method').val(),
+                    description:     $('#description').val(),
                 }, function(d) {
                     if (d.status == 303) {
                         $('.ermsg').html(d.message);
@@ -265,14 +404,14 @@
                     } else {
                         toastr.success(d.message);
                         $('.ermsg').html('');
-                        setTimeout(() => window.location.reload(), 1000);
+                        setTimeout(() => location.reload(), 1000);
                     }
                 });
             });
 
-            // Cancel Trigger
+            // ── Cancel ──
             $('#cancelBtn').click(function() {
-                if (!confirm('Are you sure you want to cancel? This clears all accounting logs.')) return;
+                if (!confirm('Are you sure? This clears all accounting logs.')) return;
                 $.get(baseUrl + '/' + receiptId + '/cancel', function(d) {
                     if (d.success) {
                         toastr.success(d.message);

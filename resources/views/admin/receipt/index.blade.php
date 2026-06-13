@@ -25,17 +25,19 @@
             background: #f8f9fa;
             border-top: 2px solid #e9ecef;
         }
-        
+
         /* Select2 AdminLTE Theme Compatibility Custom Height */
         .select2-container .select2-selection--single {
             height: 38px !important;
             border: 1px solid #ced4da !important;
             border-radius: .25rem !important;
         }
+
         .select2-container--default .select2-selection--single .select2-selection__rendered {
             line-height: 24px !important;
             padding-left: 0px !important;
         }
+
         .select2-container--default .select2-selection--single .select2-selection__arrow {
             height: 36px !important;
         }
@@ -140,12 +142,12 @@
                     url: "{{ url('/admin/receipts/search-clients') }}",
                     dataType: 'json',
                     delay: 250,
-                    data: function (params) {
+                    data: function(params) {
                         return {
                             q: params.term // search term
                         };
                     },
-                    processResults: function (data) {
+                    processResults: function(data) {
                         return {
                             results: data
                         };
@@ -170,27 +172,64 @@
                 ajax: {
                     url: "{{ url('/admin/receipts/datatable') }}",
                     data: function(d) {
-                        d.client_credential_id = $('#filterClient').val(); // Send Client Credential ID to controller
+                        d.client_credential_id = $('#filterClient').val();
                         d.status = $('#filterStatus').val();
                         d.paid = $('#filterPaid').val();
                         d.payment_method = $('#filterPaymentMethod').val();
                     }
                 },
-                columns: [
-                    { data: 'DT_RowIndex', orderable: false }, 
-                    { data: 'action', orderable: false }, 
-                    { data: 'status_badge', orderable: false },
-                    { data: 'client_name' },
-                    { data: 'business_name' },
-                    { data: 'invoice_date' }, 
-                    { data: 'invoice_number' },
-                    { data: 'account_type' }, 
-                    { data: 'account_head' },
-                    { data: 'net_amount' }, 
-                    { data: 'vat_amount' },
-                    { data: 'tax_amount' },
-                    { data: 'total_amount' }, 
-                    { data: 'payment_method' }
+                createdRow: function(row, data) {
+                    $(row).css('cursor', 'pointer').click(function(e) {
+                        if ($(e.target).closest('td').index() === 1) return;
+                        window.location.href = "{{ url('/admin/receipts') }}/" + data.id +
+                            "/bill";
+                    });
+                },
+                columns: [{
+                        data: 'DT_RowIndex',
+                        orderable: false
+                    },
+                    {
+                        data: 'action',
+                        orderable: false
+                    },
+                    {
+                        data: 'status_badge',
+                        orderable: false
+                    },
+                    {
+                        data: 'client_name'
+                    },
+                    {
+                        data: 'business_name'
+                    },
+                    {
+                        data: 'invoice_date'
+                    },
+                    {
+                        data: 'invoice_number'
+                    },
+                    {
+                        data: 'account_type'
+                    },
+                    {
+                        data: 'account_head'
+                    },
+                    {
+                        data: 'net_amount'
+                    },
+                    {
+                        data: 'vat_amount'
+                    },
+                    {
+                        data: 'tax_amount'
+                    },
+                    {
+                        data: 'total_amount'
+                    },
+                    {
+                        data: 'payment_method'
+                    }
                 ]
             });
 
@@ -202,7 +241,7 @@
             });
 
             $('#filterStatus, #filterPaid, #filterPaymentMethod').on('change', () => table.ajax.reload());
-            
+
             $('#resetFilter').click(function() {
                 $('#filterClient').val(null).trigger('change');
                 $('#filterStatus, #filterPaid, #filterPaymentMethod').val('');
