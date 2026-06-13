@@ -11,6 +11,12 @@
                     <option value="all" selected>All Clients</option>
                     <option value="assigned">Assigned Clients</option>
                 </select>
+                <select id="credentialFilter" class="form-select ms-2 select2" aria-label="Filter by Credential" style="max-width: 220px;">
+                    <option value="">All Credentials</option>
+                    @foreach($activeCredentials as $credential)
+                        <option value="{{ $credential->id }}">{{ $credential->email }}</option>
+                    @endforeach
+                </select>
             </p>
             <div class="row px-3">
                 <div class="col-lg-12 p-3 d-flex justify-content-end">
@@ -58,6 +64,10 @@
 
     var canEditDelete = @json(in_array('8', json_decode(Auth::user()->role->permission)));
 
+    $('#credentialFilter').on('change', function() {
+        table.ajax.reload();
+    });
+
     var table = $('#clientsTable').DataTable({
         processing: true,
         serverSide: true,
@@ -82,6 +92,7 @@
             url: "{{ route('get.Clients') }}",
             data: function(d) {
                 d.filter = $('#clientFilter').val();
+                d.credential_id = $('#credentialFilter').val();
             }
         },
         columns: [

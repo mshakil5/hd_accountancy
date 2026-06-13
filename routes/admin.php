@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AccountHeadController;
+use App\Http\Controllers\Admin\AccountingController;
 use App\Http\Controllers\Admin\AccountTypeController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\BookingController;
@@ -96,34 +97,34 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/staff/{id}', [StaffController::class, 'delete']);
 
     Route::get('/user-activities/{id}', [AdminController::class, 'showUserActivities'])->name('user.activities');
-    
+
     //Staff Delete
     Route::delete('/delete-staff/{id}', [StaffController::class, 'deleteStaff'])->name('delete.staff');
 
     //Staff status change
-    Route::post('/staff-change-status', [StaffController::class,'changeStatus'])->name('staff.change.status');
+    Route::post('/staff-change-status', [StaffController::class, 'changeStatus'])->name('staff.change.status');
 
     //Each staff details
-    Route::get('/staff/details/{id}', [StaffController::class,'showDetails'])->name('staff.details');
+    Route::get('/staff/details/{id}', [StaffController::class, 'showDetails'])->name('staff.details');
 
     // Update staff details
-    Route::post('/staff/{id}', [StaffController::class,'updateStaff'])->name('staff.update');
+    Route::post('/staff/{id}', [StaffController::class, 'updateStaff'])->name('staff.update');
 
     //Get staff details
-    Route::get('/get-staff-details/{id}', [StaffController::class,'getStaffDetails'])->name('get.staff.details');
+    Route::get('/get-staff-details/{id}', [StaffController::class, 'getStaffDetails'])->name('get.staff.details');
 
     // Update staff's personal and job Information
-    Route::post('/staff-personal-update', [StaffController::class,'updateStaffPersonal'])->name('staff.update.persoanl');
-    Route::post('/staff-job-update', [StaffController::class,'updateStaffJob'])->name('staff.update.job');
+    Route::post('/staff-personal-update', [StaffController::class, 'updateStaffPersonal'])->name('staff.update.persoanl');
+    Route::post('/staff-job-update', [StaffController::class, 'updateStaffJob'])->name('staff.update.job');
 
     // completed, in progress, due tasks list
-    Route::get('/completed-tasks', [ServiceController::class,'completedTasks'])->name('completed.tasks');
-    Route::get('/tasks-in-progress',  [ServiceController::class,'tasksInProgress'])->name('tasks.in_progress');
-    Route::get('/due-tasks',  [ServiceController::class,'dueTasks'])->name('due.tasks');
+    Route::get('/completed-tasks', [ServiceController::class, 'completedTasks'])->name('completed.tasks');
+    Route::get('/tasks-in-progress',  [ServiceController::class, 'tasksInProgress'])->name('tasks.in_progress');
+    Route::get('/due-tasks',  [ServiceController::class, 'dueTasks'])->name('due.tasks');
 
     // Holiday's list and edit holiday
-    Route::get('/holidays', [HolidayController::class,'getHolidaysForStaff']);
-    Route::post('/holidays/update', [HolidayController::class,'updateDay']);
+    Route::get('/holidays', [HolidayController::class, 'getHolidaysForStaff']);
+    Route::post('/holidays/update', [HolidayController::class, 'updateDay']);
 
     // Staff log out by admin
     Route::post('/staff-logout/{attendenceId}', [HomeController::class, 'customlogout']);
@@ -160,25 +161,25 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/client/report/{id}', [ClientController::class, 'clientReport'])->name('client.report');
 
     //Client status change
-    Route::post('/client-change-status', [ClientController::class,'changeStatus'])->name('client.change.status');
+    Route::post('/client-change-status', [ClientController::class, 'changeStatus'])->name('client.change.status');
 
     //client update form
-    Route::get('/client/update-form/{id}', [ClientController::class,'updateForm'])->name('client.update.form');
+    Route::get('/client/update-form/{id}', [ClientController::class, 'updateForm'])->name('client.update.form');
 
     //Client details update
-    Route::post('/client-details-update/{id}', [ClientController::class,'updateClientDetails']);
+    Route::post('/client-details-update/{id}', [ClientController::class, 'updateClientDetails']);
 
     //Client businessinfo update
-    Route::post('/client-businessinfo-update/{id}', [ClientController::class,'updateClientBusinessInfo']);
+    Route::post('/client-businessinfo-update/{id}', [ClientController::class, 'updateClientBusinessInfo']);
 
     //Client directorinfo update
-    Route::post('/client-directorinfo-update/{id}', [ClientController::class,'updateClientDirectorInfo']);
+    Route::post('/client-directorinfo-update/{id}', [ClientController::class, 'updateClientDirectorInfo']);
 
     //Director info delete
     Route::delete('/delete-director/{id}', [ClientController::class, 'destroyDirector']);
 
     //Client contactinfo update
-    Route::post('/client-contactinfo-update/{id}', [ClientController::class,'updateClientContactInfo']);
+    Route::post('/client-contactinfo-update/{id}', [ClientController::class, 'updateClientContactInfo']);
 
     //Contact info delete
     Route::delete('/delete-contact/{id}', [ClientController::class, 'destroyContact']);
@@ -187,7 +188,7 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/client-services/{clientId}', [ClientController::class, 'getClientServices']);
 
     //Clinet assigned services update
-    Route::post('/client-services-update/{id}', [ClientController::class,'updateClientServices']);
+    Route::post('/client-services-update/{id}', [ClientController::class, 'updateClientServices']);
 
     //Contact info crud
     Route::get('/contact-info', [ContactInfoController::class, 'index'])->name('allContactInfo');
@@ -204,40 +205,40 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     //Fetch all services
     Route::get('/all-services', [ServiceController::class, 'getAllServices']);
 
-     //Create specific service
-     Route::post('/create-specific-service', [ServiceController::class, 'createSpecificService']);
+    //Create specific service
+    Route::post('/create-specific-service', [ServiceController::class, 'createSpecificService']);
 
     // Service assign to client
-     Route::post('/service-assign', [ServiceController::class, 'serviceAssign']);
+    Route::post('/service-assign', [ServiceController::class, 'serviceAssign']);
 
     //Fetch all assigned service
     Route::get('/get-all-services', [ServiceController::class, 'getAllAssignedServices']);
 
-     //Fetch assigned services
-     Route::get('/get-assigned-services/{client_id}', [ServiceController::class, 'getAssignedServices']);
+    //Fetch assigned services
+    Route::get('/get-assigned-services/{client_id}', [ServiceController::class, 'getAssignedServices']);
 
-     //Fetch assigned services
-     Route::get('/getServiceMessage/{clientSubServiceId}', [ServiceController::class, 'getServiceMessage']);
+    //Fetch assigned services
+    Route::get('/getServiceMessage/{clientSubServiceId}', [ServiceController::class, 'getServiceMessage']);
 
-     Route::post('/store-message', [ServiceController::class, 'storeMessage']);
+    Route::post('/store-message', [ServiceController::class, 'storeMessage']);
 
     Route::get('/getServiceComment/{clientServiceId}', [ServiceController::class, 'getServiceComment']);
-    
+
     Route::post('/store-comment', [ServiceController::class, 'storeComment']);
 
-     //Store fetched services + staff
-     Route::post('/assign-service-staff', [ServiceController::class, 'assignServiceStaff']);
+    //Store fetched services + staff
+    Route::post('/assign-service-staff', [ServiceController::class, 'assignServiceStaff']);
 
     //  Fetch assigned services + staff 
-     Route::get('/get-services-client-staff', [ServiceController::class, 'getServicesClientStaff']);
+    Route::get('/get-services-client-staff', [ServiceController::class, 'getServicesClientStaff']);
 
-     //  Fetch completed services
-     Route::get('/get-completed-services', [ServiceController::class, 'getCompletedServices']);
+    //  Fetch completed services
+    Route::get('/get-completed-services', [ServiceController::class, 'getCompletedServices']);
 
-     //  Fetch assigned services
-     Route::get('/get-assigned-service', [ServiceController::class, 'getAssignedService']);
+    //  Fetch assigned services
+    Route::get('/get-assigned-service', [ServiceController::class, 'getAssignedService']);
 
-     Route::post('/client-service-change-status', [ServiceController::class, 'changeServiceStatus']);
+    Route::post('/client-service-change-status', [ServiceController::class, 'changeServiceStatus']);
 
     //  Fetch one time  assigned services
     Route::get('/get-one-time-assigned-service', [ServiceController::class, 'getOneTimeAssignedService']);
@@ -245,14 +246,14 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     //  Fetch one time completed services
     Route::get('/get-one-time-completed-service', [ServiceController::class, 'getOneTimeCompletedService']);
 
-     //  Fetch todays deadline services
-     Route::get('/get-todays-deadline-service', [ServiceController::class, 'getTodaysDeadlineService']);
-     
-     // Fetch Sub Services
-     Route::get('/getClientSubService/{clientserviceId}', [ServiceController::class, 'getClientSubService']);
+    //  Fetch todays deadline services
+    Route::get('/get-todays-deadline-service', [ServiceController::class, 'getTodaysDeadlineService']);
 
-     //Change status of assigned services + staff
-     Route::post('/update-service-status', [ServiceController::class, 'updateServiceStatus'])->name('update-service-status');
+    // Fetch Sub Services
+    Route::get('/getClientSubService/{clientserviceId}', [ServiceController::class, 'getClientSubService']);
+
+    //Change status of assigned services + staff
+    Route::post('/update-service-status', [ServiceController::class, 'updateServiceStatus'])->name('update-service-status');
 
     //  Fetch sub services under one service
     Route::get('/getSubServices/{serviceId}', [ServiceController::class, 'getSubServices'])->name('getSubServices');
@@ -260,13 +261,13 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/manager/{manager}/staffs', [ServiceController::class, 'getManagerStaffs']);
 
     //Store service + sub service + assign to staff
-    Route::post('/store-service', [ServiceController::class,'saveService'])->name('saveService');
+    Route::post('/store-service', [ServiceController::class, 'saveService'])->name('saveService');
 
     //Update service + sub service + assign to staff
-    Route::post('/update-service', [ServiceController::class,'updateService'])->name('updateService');
+    Route::post('/update-service', [ServiceController::class, 'updateService'])->name('updateService');
 
     //Update service + sub service + assign to staff from Dashboard
-    Route::post('/update-service-staff', [ServiceController::class,'updateStaffService']);
+    Route::post('/update-service-staff', [ServiceController::class, 'updateStaffService']);
 
     Route::delete('/delete-sub-service/{id}', [ServiceController::class, 'deleteSubservice']);
 
@@ -274,7 +275,7 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/getClientSubServices/{clientserviceId}', [ServiceController::class, 'getClientSubServices']);
 
     //Update sub service from dashboard
-    Route::post('/update-sub-services', [ServiceController::class,'updateSubservices'])->name('updateSubServices');
+    Route::post('/update-sub-services', [ServiceController::class, 'updateSubservices'])->name('updateSubServices');
 
     //Business info crud
     Route::get('/business-info', [BusinessInfoController::class, 'index'])->name('allBusinessInfo');
@@ -395,25 +396,25 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/create-prorota', [ProrotaController::class, 'create'])->name('prorota.create');
     Route::post('/prorota', [ProrotaController::class, 'store']);
     Route::post('/prorota/update', [ProrotaController::class, 'update']);
-    Route::get('/prorota/details/{id}', [ProrotaController::class,'showDetails'])->name('prorota.details');
+    Route::get('/prorota/details/{id}', [ProrotaController::class, 'showDetails'])->name('prorota.details');
     Route::delete('/delete-prorota/{id}', [ProrotaController::class, 'deleteData'])->name('delete.prorota');
-    Route::get('/prorota/edit/{id}', [ProrotaController::class,'edit'])->name('prorota.edit');
+    Route::get('/prorota/edit/{id}', [ProrotaController::class, 'edit'])->name('prorota.edit');
 
     Route::get('/prorota-log/{id}', [ProrotaController::class, 'prorotaLog'])->name('prorota.log');
 
-    
+
     // holiday make
     Route::get('/holiday', [HolidayController::class, 'index'])->name('holiday');
     Route::get('/holiday-list', [HolidayController::class, 'getholiday'])->name('get.holiday');
     Route::get('/create-holiday', [HolidayController::class, 'create'])->name('createholiday');
     Route::post('/holiday', [HolidayController::class, 'store']);
     Route::post('/holiday/update', [HolidayController::class, 'update']);
-    Route::get('/holiday/details/{id}', [HolidayController::class,'showDetails'])->name('holiday.details');
+    Route::get('/holiday/details/{id}', [HolidayController::class, 'showDetails'])->name('holiday.details');
     Route::delete('/delete-holiday/{id}', [HolidayController::class, 'deleteData'])->name('delete.holiday');
-    Route::get('/holiday/edit/{id}', [HolidayController::class,'edit'])->name('holiday.edit');
+    Route::get('/holiday/edit/{id}', [HolidayController::class, 'edit'])->name('holiday.edit');
     Route::post('/store-holiday', [HolidayController::class, 'storeHoliday'])->name('store.holiday');
-    Route::get('/edit-holiday/{id}', [HolidayController::class,'editHoliday'])->name('editHoliday');
-    Route::post('/holiday-update/{id}', [HolidayController::class,'updateHoliday']);
+    Route::get('/edit-holiday/{id}', [HolidayController::class, 'editHoliday'])->name('editHoliday');
+    Route::post('/holiday-update/{id}', [HolidayController::class, 'updateHoliday']);
 
     // get holiday type
     Route::post('/get-holiday-type', [HolidayController::class, 'getHolidayType'])->name('get.holiday.type');
@@ -436,7 +437,7 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
 
     //Client fee report
     Route::get('/client-acquisition-report', [ReportController::class, 'clientAcquisitionReport'])->name('client-acquisition-report');
-    
+
     Route::get('/reports/generate/acquisition', [ReportController::class, 'generateAcquisitionReport'])->name('reports.generate.acquisition');
 
     //Client fee report
@@ -464,28 +465,28 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::post('/company-details', [CompanyDetailsController::class, 'update'])->name('admin.companyDetails');
 
     //SoftCode crud
-    Route::get('/soft-code', [SoftCodeController::class, 'index'])->name('allSoftCode');    
+    Route::get('/soft-code', [SoftCodeController::class, 'index'])->name('allSoftCode');
     Route::post('/soft-code', [SoftCodeController::class, 'store']);
     Route::get('/soft-code/{id}/edit', [SoftCodeController::class, 'edit']);
     Route::post('/soft-code-update', [SoftCodeController::class, 'update']);
     Route::get('/soft-code/{id}', [SoftCodeController::class, 'delete']);
 
     //Master crud
-    Route::get('/master', [MasterController::class, 'index'])->name('allMaster');    
+    Route::get('/master', [MasterController::class, 'index'])->name('allMaster');
     Route::post('/master', [MasterController::class, 'store']);
     Route::get('/master/{id}/edit', [MasterController::class, 'edit']);
     Route::post('/master-update', [MasterController::class, 'update']);
     Route::get('/master/{id}', [MasterController::class, 'delete']);
 
     //Timeslot crud
-    Route::get('/time-slot', [TimeslotController::class, 'index'])->name('allTimeslot');    
+    Route::get('/time-slot', [TimeslotController::class, 'index'])->name('allTimeslot');
     Route::post('/time-slot', [TimeslotController::class, 'store']);
     Route::get('/time-slot/{id}/edit', [TimeslotController::class, 'edit']);
     Route::post('/time-slot-update', [TimeslotController::class, 'update']);
     Route::get('/time-slot/{id}', [TimeslotController::class, 'delete']);
 
     //Package Features crud
-    Route::get('/package', [PackageController::class, 'index'])->name('allPackage');    
+    Route::get('/package', [PackageController::class, 'index'])->name('allPackage');
     Route::post('/package', [PackageController::class, 'store']);
     Route::get('/package/{id}/edit', [PackageController::class, 'edit']);
     Route::post('/package-update', [PackageController::class, 'update']);
@@ -498,51 +499,51 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::post('/package-turnover-update', [PackageController::class, 'updateTurnover']);
     Route::get('/package-turnover/{id}', [PackageController::class, 'deleteTurnover']);
     Route::get('/package-turnovers/{id}', [PackageController::class, 'manageTurnovers'])->name('package-turnover');
-    
+
     //Package crud
-    Route::get('/package-feature', [PackageFeatureController::class, 'index'])->name('allPackageFeature');    
+    Route::get('/package-feature', [PackageFeatureController::class, 'index'])->name('allPackageFeature');
     Route::post('/package-feature', [PackageFeatureController::class, 'store']);
     Route::get('/package-feature/{id}/edit', [PackageFeatureController::class, 'edit']);
     Route::post('/package-feature-update', [PackageFeatureController::class, 'update']);
     Route::get('/package-feature/{id}', [PackageFeatureController::class, 'delete']);
 
     //Business service crud
-    Route::get('/business-service', [BusinessServiceController::class, 'index'])->name('allBusinessService');    
+    Route::get('/business-service', [BusinessServiceController::class, 'index'])->name('allBusinessService');
     Route::post('/business-service', [BusinessServiceController::class, 'store']);
     Route::get('/business-service/{id}/edit', [BusinessServiceController::class, 'edit']);
     Route::post('/business-service-update', [BusinessServiceController::class, 'update']);
     Route::get('/business-service/{id}', [BusinessServiceController::class, 'delete']);
 
     //Business value crud
-    Route::get('/business-value', [BusinessValueController::class, 'index'])->name('allBusinessValue');    
+    Route::get('/business-value', [BusinessValueController::class, 'index'])->name('allBusinessValue');
     Route::post('/business-value', [BusinessValueController::class, 'store']);
     Route::get('/business-value/{id}/edit', [BusinessValueController::class, 'edit']);
     Route::post('/business-value-update', [BusinessValueController::class, 'update']);
     Route::get('/business-value/{id}', [BusinessValueController::class, 'delete']);
 
     //Client testimonial crud
-    Route::get('/client-testimonial', [TestimonialController::class, 'index'])->name('allClientTestimonial');    
+    Route::get('/client-testimonial', [TestimonialController::class, 'index'])->name('allClientTestimonial');
     Route::post('/client-testimonial', [TestimonialController::class, 'store']);
     Route::get('/client-testimonial/{id}/edit', [TestimonialController::class, 'edit']);
     Route::post('/client-testimonial-update', [TestimonialController::class, 'update']);
     Route::get('/client-testimonial/{id}', [TestimonialController::class, 'delete']);
 
     //Case Studies crud
-    Route::get('/case-studies', [CaseStudiesController::class, 'index'])->name('allCaseStudies');    
+    Route::get('/case-studies', [CaseStudiesController::class, 'index'])->name('allCaseStudies');
     Route::post('/case-studies', [CaseStudiesController::class, 'store']);
     Route::get('/case-studies/{id}/edit', [CaseStudiesController::class, 'edit']);
     Route::post('/case-studies-update', [CaseStudiesController::class, 'update']);
     Route::get('/case-studies/{id}', [CaseStudiesController::class, 'delete']);
 
     //Latest Insights crud
-    Route::get('/latest-insights', [LatestInsightController::class, 'index'])->name('allLatestInsight');    
+    Route::get('/latest-insights', [LatestInsightController::class, 'index'])->name('allLatestInsight');
     Route::post('/latest-insights', [LatestInsightController::class, 'store']);
     Route::get('/latest-insights/{id}/edit', [LatestInsightController::class, 'edit']);
     Route::post('/latest-insights-update', [LatestInsightController::class, 'update']);
     Route::get('/latest-insights/{id}', [LatestInsightController::class, 'delete']);
 
     //Our Team crud
-    Route::get('/our-teams', [OurTeamController::class, 'index'])->name('allOurTeam');    
+    Route::get('/our-teams', [OurTeamController::class, 'index'])->name('allOurTeam');
     Route::post('/our-teams', [OurTeamController::class, 'store']);
     Route::get('/our-teams/{id}/edit', [OurTeamController::class, 'edit']);
     Route::post('/our-teams-update', [OurTeamController::class, 'update']);
@@ -568,28 +569,28 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/career-list/{id}', [CareerController::class, 'delete']);
 
     //Accounting Solution crud
-    Route::get('/accounting-solution', [BusinessValueController::class, 'AccoutingSolutionindex'])->name('allAccoutingSolution');    
+    Route::get('/accounting-solution', [BusinessValueController::class, 'AccoutingSolutionindex'])->name('allAccoutingSolution');
     Route::post('/accounting-solution', [BusinessValueController::class, 'AccoutingSolutionstore']);
     Route::get('/accounting-solution/{id}/edit', [BusinessValueController::class, 'AccoutingSolutionedit']);
     Route::post('/accounting-solution-update', [BusinessValueController::class, 'AccoutingSolutionupdate']);
     Route::get('/accounting-solution/{id}', [BusinessValueController::class, 'AccoutingSolutiondelete']);
 
     //Tax Solution crud
-    Route::get('/tax-solution', [BusinessValueController::class, 'Taxindex'])->name('allTax');    
+    Route::get('/tax-solution', [BusinessValueController::class, 'Taxindex'])->name('allTax');
     Route::post('/tax-solution', [BusinessValueController::class, 'Taxstore']);
     Route::get('/tax-solution/{id}/edit', [BusinessValueController::class, 'Taxedit']);
     Route::post('/tax-solution-update', [BusinessValueController::class, 'Taxupdate']);
     Route::get('/tax-solution/{id}', [BusinessValueController::class, 'Taxdelete']);
 
     //Faq Question crud
-    Route::get('/faq-questions', [FAQController::class, 'index'])->name('allFaq');    
+    Route::get('/faq-questions', [FAQController::class, 'index'])->name('allFaq');
     Route::post('/faq-questions', [FAQController::class, 'store']);
     Route::get('/faq-questions/{id}/edit', [FAQController::class, 'edit']);
     Route::post('/faq-questions-update', [FAQController::class, 'update']);
     Route::get('/faq-questions/{id}', [FAQController::class, 'delete']);
 
     //Google Review crud
-    Route::get('/google-review', [GoogleReviewController::class, 'index'])->name('allClientReview');    
+    Route::get('/google-review', [GoogleReviewController::class, 'index'])->name('allClientReview');
     Route::post('/google-review', [GoogleReviewController::class, 'store']);
     Route::get('/google-review/{id}/edit', [GoogleReviewController::class, 'edit']);
     Route::post('/google-review-update', [GoogleReviewController::class, 'update']);
@@ -656,10 +657,10 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/getClientSubServices-admin/{clientserviceId}', [AdminController::class, 'getClientSubServices']);
     Route::post('client-service-status-chnange', [AdminController::class, 'changeServiceStatus']);
     Route::post('/update-sub-service-staff', [AdminController::class, 'updateSubServiceStaff']);
-    Route::post('/update-sub-service-status', [AdminController::class,'updateSubServiceStatus']);
-    Route::post('/change-sub-service-status', [AdminController::class,'changeSubServiceStatus']);
-    Route::post('/start-work-time', [AdminController::class,'startWorkTime']);
-    Route::post('/stop-work-time', [AdminController::class,'stopWorkTime']);
+    Route::post('/update-sub-service-status', [AdminController::class, 'updateSubServiceStatus']);
+    Route::post('/change-sub-service-status', [AdminController::class, 'changeSubServiceStatus']);
+    Route::post('/start-work-time', [AdminController::class, 'startWorkTime']);
+    Route::post('/stop-work-time', [AdminController::class, 'stopWorkTime']);
     // Route::get('/getServiceMessage/{clientSubServiceId}', [AdminController::class, 'getServiceMessages']);
     // Route::post('/store-message', [AdminController::class,'storeMessage']);
     Route::post('/update-job-status/{id}', [AdminController::class, 'updateJobStatus']);
@@ -678,8 +679,8 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::post('/role-update', [RoleController::class, 'update'])->name('admin.roleupdate');
 
     Route::post('/logout', [LogoutController::class, 'logout'])->name('admin.logout');
-    
-    Route::get('/check-work-time-status', [LogoutController::class,'checkWorkTimeStatus']);
+
+    Route::get('/check-work-time-status', [LogoutController::class, 'checkWorkTimeStatus']);
 
     Route::get('/get-completed-services-modal', [LogoutController::class, 'getCompetedServicesModal']);
 
@@ -744,7 +745,25 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::post('/receipts/{id}/files', [ReceiptController::class, 'uploadFile']);
     Route::get('/receipts/{id}/files/{fileId}/delete', [ReceiptController::class, 'deleteFile']);
     Route::get('/receipts/{id}/cancel', [ReceiptController::class, 'cancel']);
+    Route::get('/receipts/{id}/bill', [ReceiptController::class, 'bill'])->name('admin.receipt.bill');
 
+    Route::get('/accounting/profit-loss',            [AccountingController::class, 'profitLoss'])->name('accounting.profitLoss');
+    Route::get('/accounting/profit-loss/data',       [AccountingController::class, 'profitLossData'])->name('accounting.profitLoss.data');
+
+    Route::get('/accounting/trial-balance',          [AccountingController::class, 'trialBalance'])->name('accounting.trialBalance');
+    Route::get('/accounting/trial-balance/data',     [AccountingController::class, 'trialBalanceData'])->name('accounting.trialBalance.data');
+
+    Route::get('/accounting/balance-sheet',          [AccountingController::class, 'balanceSheet'])->name('accounting.balanceSheet');
+    Route::get('/accounting/balance-sheet/data',     [AccountingController::class, 'balanceSheetData'])->name('accounting.balanceSheet.data');
+    
+    Route::get('/accounting/get-businesses',         [AccountingController::class, 'getBusinesses'])->name('accounting.getBusinesses');
+
+    Route::get('/reports/profit-loss',       [ReportController::class, 'profitLoss'])->name('admin.report.profitLoss');
+    Route::get('/reports/profit-loss/data',  [ReportController::class, 'profitLossData']);
+    Route::get('/reports/ledger',            [ReportController::class, 'ledger'])->name('admin.report.ledger');
+    Route::get('/reports/ledger/data',       [ReportController::class, 'ledgerData']);
+    Route::get('/reports/get-businesses',    [ReportController::class, 'getBusinesses']);
+    Route::get('/reports/drill-down',        [ReportController::class, 'drillDown']);
 });
 
 Route::get('/get-active-jobs', [AdminController::class, 'getActiveJobs'])->name('get.active.jobs');

@@ -28,7 +28,8 @@ class ClientController extends Controller
 
     public function index()
     {
-        return view('admin.client.index');
+         $activeCredentials = \App\Models\ClientCredential::latest()->get();
+        return view('admin.client.index', compact('activeCredentials'));
     }
 
     public function getClients(Request $request)
@@ -37,6 +38,11 @@ class ClientController extends Controller
         $filter = $request->input('filter', 'all');
 
         $query = Client::with(['clientType', 'manager', 'clientSubServices', 'directorInfos'])->latest();
+
+        $credentialId = $request->input('credential_id');
+        if ($credentialId) {
+            $query->where('client_credential_id', $credentialId);
+        }
 
         if ($filter == 'assigned') {
             $query->whereHas('clientSubServices', function ($subQuery) use ($authUserId) {
