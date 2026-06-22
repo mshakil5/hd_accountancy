@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AccountHead;
 use App\Models\AccountType;
+use App\Models\Client;
 use App\Models\ClientCredential;
 use App\Models\Receipt;
 use App\Models\ReceiptDetail;
@@ -315,5 +316,146 @@ class ReceiptController extends Controller
             'archived'  => Receipt::where('status', 'archived')->count(),
             'total'     => Receipt::count(),
         ]);
+    }
+
+    public function create()
+    {
+        $accountTypes = AccountType::where('is_active', true)->get();
+        return view('admin.receipt.create', compact('accountTypes'));
+    }
+
+    public function store(Request $request)
+    {
+        $errors = [];
+        if (!$request->client_credential_id) $errors[] = 'Client (Credential) is required.';
+        if (!$request->client_id)            $errors[] = 'Business/Client is required.';
+
+        if (in_array($request->status, ['ready', 'archived'])) {
+            if (!$request->account_type_id) $errors[] = 'Account Type is required.';
+            if (!$request->account_head_id) $errors[] = 'Account Head is required.';
+            if (!$request->invoice_date)    $errors[] = 'Invoice Date is required.';
+            if (!$request->net_amount)      $errors[] = 'Net Amount is required.';
+        }
+
+        if (!$request->hasFile('files') || count($request->file('files')) === 0) {
+            $errors[] = 'At least one file is required.';
+        }
+
+        if (count($errors)) {
+            return response()->json([
+                'status'  => 303,
+                'message' => "<div class='alert alert-danger'><ul class='mb-0'><li>" . implode('</li><li>', $errors) . "</li></ul></div>"
+            ]);
+        }
+
+        $receipt = Receipt::create([
+            'client_id'      => $request->client_id,
+            'receipt_number' => 'RCT-' . now()->format('Ymd') . '-' . strtoupper(Str::random(4)),
+            'receipt_date'   => $request->receipt_date ?? now()->toDateString(),
+            'notes'          => $request->notes,
+            'status'         => $request->status ?? 'pending',
+            'created_by'     => Auth::id(),
+        ]);
+
+        foreach ($request->file('files') as $file) {
+            $mime     = $file->getMimeType();
+            $size     = $file->getSize();
+            $fileType = Str::startsWith($mime, 'image/') ? 'image' : 'pdf';
+            $filename = time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('images/receipts'), $filename);
+
+            $receipt->files()->create([
+                'file_path' => 'images/receipts/' . $filename,
+                'file_name' => $file->getClientOriginalName(),
+                'file_type' => $fileType,
+                'mime_type' => $mime,
+                'file_size' => $size,
+            ]);
+        }
+
+        if ($request->account_head_id) {
+            $netAmount   = (float)$request->net_amount;
+            $taxAmount   = (float)($request->tax_amount ?? 0);
+            $vatAmount   = (float)($request->vat_amount ?? 0);
+            $totalAmount = $netAmount + $taxAmount + $vatAmount;
+
+            ReceiptDetail::create([
+                'receipt_id'      => $receipt->id,
+                'account_head_id' => $request->account_head_id,
+                'invoice_date'    => $request->invoice_date ?: null,
+                'due_date'        => $request->due_date ?: null,
+                'invoice_number'  => $request->invoice_number,
+                'net_amount'      => $netAmount ?: null,
+                'tax_amount'      => $taxAmount,
+                'vat_amount'      => $vatAmount,
+                'total_amount'    => $totalAmount ?: null,
+                'paid'            => $request->paid == 'yes' ? 1 : 0,
+                'payment_method'  => $request->paid == 'yes' ? $request->payment_method : null,
+                'description'     => $request->description,
+            ]);
+
+            if (in_array($request->status, ['ready', 'archived'])) {
+                $head = AccountHead::with('accountType')->find($request->account_head_id);
+                if ($head && $head->accountType) {
+                    $normalBalance = $head->accountType->normal_balance;
+                    $type          = $normalBalance === 'debit' ? 'payable' : 'receivable';
+
+                    $firstTransaction = Transaction::create([
+                        'transaction_uid' => 'TXN-' . strtoupper(Str::random(10)),
+                        'receipt_id'      => $receipt->id,
+                        'account_head_id' => $head->id,
+                        'type'            => $type,
+                        'amount'          => $netAmount,
+                        'tax_percent'     => (float)($request->tax_percent ?? 0),
+                        'tax_amount'      => $taxAmount,
+                        'total_amount'    => $totalAmount,
+                        'created_by'      => Auth::id(),
+                    ]);
+
+                    if ($request->paid == 'yes') {
+                        $secondType = ($type === 'payable') ? 'paid' : 'received';
+                        Transaction::create([
+                            'transaction_uid' => 'TXN-' . strtoupper(Str::random(10)),
+                            'receipt_id'      => $receipt->id,
+                            'account_head_id' => $head->id,
+                            'type'            => $secondType,
+                            'amount'          => $totalAmount,
+                            'tax_percent'     => 0,
+                            'tax_amount'      => 0,
+                            'total_amount'    => $totalAmount,
+                            'payment_method'  => $request->payment_method,
+                            'parent_id'       => $firstTransaction->id,
+                            'created_by'      => Auth::id(),
+                        ]);
+                    }
+                }
+            }
+        }
+
+        return response()->json([
+            'status'  => 200,
+            'message' => 'Receipt created successfully.',
+            'id'      => $receipt->id,
+        ]);
+    }
+
+    public function getClientsByCredential(Request $request)
+    {
+        $clients = \App\Models\Client::where('client_credential_id', $request->client_credential_id)
+            ->where('status', 1)
+            ->with(['clientType'])
+            ->get()
+            ->map(function ($c) {
+                $name     = trim(($c->name ?? '') . ' ' . ($c->last_name ?? ''));
+                $business = $c->business_name ?? $c->company_name ?? '';
+                $type     = $c->clientType?->name ?? '';
+                return [
+                    'id'   => $c->id,
+                    'name' => $name . ($business ? " ({$business})" : ''),
+                    'info' => implode(' | ', array_filter([$name, $business, $type, $c->city])),
+                ];
+            });
+
+        return response()->json($clients);
     }
 }

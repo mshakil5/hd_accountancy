@@ -735,11 +735,14 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/account-heads/{id}/toggle', [AccountHeadController::class, 'toggleStatus']);
 
     //Receipts
+    Route::get('/receipts/create', [ReceiptController::class, 'create'])->name('admin.receipt.create');
+    Route::post('/receipts/store', [ReceiptController::class, 'store'])->name('admin.receipt.store');
     Route::get('/receipts/counts', [ReceiptController::class, 'counts']);
     Route::get('/receipts', [ReceiptController::class, 'index'])->name('admin.receipt.index');
     Route::get('/receipts/datatable', [ReceiptController::class, 'datatable']);
     Route::get('/receipts/search-clients', [ReceiptController::class, 'searchClients']);
     Route::get('/receipts/get-account-heads', [ReceiptController::class, 'getAccountHeads'])->name('admin.receipts.getHeads');
+    Route::get('/receipts/get-clients-by-credential', [ReceiptController::class, 'getClientsByCredential']);
     Route::get('/receipts/{id}', [ReceiptController::class, 'show'])->name('admin.receipt.show');
     Route::post('/receipts/{id}/update', [ReceiptController::class, 'update']);
     Route::post('/receipts/{id}/files', [ReceiptController::class, 'uploadFile']);

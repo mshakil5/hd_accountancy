@@ -87,7 +87,7 @@
                                 <option value="no">Unpaid</option>
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label>Method</label>
                             <select class="form-control" id="filterPaymentMethod">
                                 <option value="">All</option>
@@ -96,10 +96,15 @@
                                 <option value="card">Card</option>
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <button class="btn btn-secondary btn-block" id="resetFilter">
                                 <i class="fa fa-refresh"></i> Reset
                             </button>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="{{ route('admin.receipt.create') }}" class="btn btn-primary btn-block">
+                                <i class="fa fa-plus"></i> New
+                            </a>
                         </div>
                     </div>
 
