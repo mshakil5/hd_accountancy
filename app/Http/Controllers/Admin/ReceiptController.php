@@ -135,7 +135,7 @@ class ReceiptController extends Controller
 
         if (in_array($receipt->status, ['archived', 'cancelled'])) {
             return response()->json([
-                'status' => 303,
+                'status'  => 303,
                 'message' => "<div class='alert alert-danger'>This receipt is locked ({$receipt->status}) and cannot be modified.</div>"
             ]);
         }
@@ -143,78 +143,92 @@ class ReceiptController extends Controller
         $newStatus = $request->status;
 
         if (in_array($newStatus, ['ready', 'archived'])) {
-            if (!$request->account_head_id || !$request->invoice_date || !$request->net_amount) {
+            $errors = [];
+            if (!$request->account_type_id) $errors[] = 'Account Type is required.';
+            if (!$request->account_head_id) $errors[] = 'Account Head is required.';
+            if (!$request->invoice_date)    $errors[] = 'Invoice Date is required.';
+            if (!$request->net_amount)      $errors[] = 'Net Amount is required.';
+
+            if (count($errors)) {
                 return response()->json([
-                    'status' => 303,
-                    'message' => "<div class='alert alert-danger'>Account Head, Invoice Date, and Net Amount are required to set status to Ready/Archived.</div>"
+                    'status'  => 303,
+                    'message' => "<div class='alert alert-danger'><ul class='mb-0'><li>" . implode('</li><li>', $errors) . "</li></ul></div>"
                 ]);
             }
         }
 
         $receipt->update([
-            'status' => $newStatus,
+            'status'     => $newStatus,
             'updated_by' => Auth::id()
         ]);
 
-        $netAmount = (float)$request->net_amount;
-        $taxAmount = (float)($request->tax_amount ?? 0);
-        $vatAmount = (float)($request->vat_amount ?? 0);
+        $netAmount   = (float)$request->net_amount;
+        $taxAmount   = (float)($request->tax_amount ?? 0);
+        $vatAmount   = (float)($request->vat_amount ?? 0);
         $totalAmount = $netAmount + $taxAmount + $vatAmount;
 
-        ReceiptDetail::updateOrCreate(
-            ['receipt_id' => $receipt->id],
-            [
-                'account_head_id' => $request->account_head_id,
-                'invoice_date'    => $request->invoice_date,
-                'due_date'        => $request->due_date,
-                'invoice_number'  => $request->invoice_number,
-                'net_amount'      => $netAmount,
-                'tax_amount'      => $taxAmount,
-                'vat_amount'      => $vatAmount,
-                'total_amount'    => $totalAmount,
-                'paid'            => $request->paid == 'yes' ? 1 : 0,
-                'payment_method'  => $request->paid == 'yes' ? $request->payment_method : null,
-                'description'     => $request->description,
-            ]
-        );
+        if ($request->account_head_id) {
+            ReceiptDetail::updateOrCreate(
+                ['receipt_id' => $receipt->id],
+                [
+                    'account_head_id' => $request->account_head_id,
+                    'invoice_date'    => $request->invoice_date ?: null,
+                    'due_date'        => $request->due_date ?: null,
+                    'invoice_number'  => $request->invoice_number,
+                    'net_amount'      => $netAmount ?: null,
+                    'tax_amount'      => $taxAmount,
+                    'vat_amount'      => $vatAmount,
+                    'total_amount'    => $totalAmount ?: null,
+                    'paid'            => $request->paid == 'yes' ? 1 : 0,
+                    'payment_method'  => $request->paid == 'yes' ? $request->payment_method : null,
+                    'description'     => $request->description,
+                ]
+            );
+        } elseif ($receipt->detail) {
+            $receipt->detail->update([
+                'invoice_date'   => $request->invoice_date ?: null,
+                'due_date'       => $request->due_date ?: null,
+                'invoice_number' => $request->invoice_number,
+                'description'    => $request->description,
+                'paid'           => $request->paid == 'yes' ? 1 : 0,
+                'payment_method' => $request->paid == 'yes' ? $request->payment_method : null,
+            ]);
+        }
 
         $receipt->transactions()->delete();
 
         if (in_array($newStatus, ['ready', 'archived'])) {
             $head = AccountHead::with('accountType')->find($request->account_head_id);
             if ($head && $head->accountType) {
-                $category = $head->accountType->category;
-
                 $normalBalance = $head->accountType->normal_balance;
-                $type = $normalBalance === 'debit' ? 'payable' : 'receivable';
+                $type          = $normalBalance === 'debit' ? 'payable' : 'receivable';
 
                 $firstTransaction = Transaction::create([
                     'transaction_uid' => 'TXN-' . strtoupper(Str::random(10)),
-                    'receipt_id'     => $receipt->id,
+                    'receipt_id'      => $receipt->id,
                     'account_head_id' => $head->id,
-                    'type'           => $type,
-                    'amount'         => $netAmount,
-                    'tax_percent'    => (float)($request->tax_percent ?? 0),
-                    'tax_amount'     => $taxAmount,
-                    'total_amount'   => $totalAmount,
-                    'created_by'     => Auth::id(),
+                    'type'            => $type,
+                    'amount'          => $netAmount,
+                    'tax_percent'     => (float)($request->tax_percent ?? 0),
+                    'tax_amount'      => $taxAmount,
+                    'total_amount'    => $totalAmount,
+                    'created_by'      => Auth::id(),
                 ]);
 
                 if ($request->paid == 'yes') {
                     $secondType = ($type === 'payable') ? 'paid' : 'received';
-
                     Transaction::create([
                         'transaction_uid' => 'TXN-' . strtoupper(Str::random(10)),
-                        'receipt_id'     => $receipt->id,
+                        'receipt_id'      => $receipt->id,
                         'account_head_id' => $head->id,
-                        'type'           => $secondType,
-                        'amount'         => $totalAmount,
-                        'tax_percent'    => 0,
-                        'tax_amount'     => 0,
-                        'total_amount'   => $totalAmount,
-                        'payment_method' => $request->payment_method,
-                        'parent_id'      => $firstTransaction->id,
-                        'created_by'     => Auth::id(),
+                        'type'            => $secondType,
+                        'amount'          => $totalAmount,
+                        'tax_percent'     => 0,
+                        'tax_amount'      => 0,
+                        'total_amount'    => $totalAmount,
+                        'payment_method'  => $request->payment_method,
+                        'parent_id'       => $firstTransaction->id,
+                        'created_by'      => Auth::id(),
                     ]);
                 }
             }

@@ -32,7 +32,7 @@ class ReceiptController extends Controller
 
         return response()->json(['data' => $receipts], 200);
     }
-    
+
     public function index(Request $request, $businessId)
     {
         $client = Client::where('id', $businessId)
@@ -93,10 +93,15 @@ class ReceiptController extends Controller
     {
         $request->validate([
             'files'        => 'required|array|min:1',
-            'files.*'      => 'required|file|mimes:pdf,jpg,jpeg,png|max:20480',
+            'files.*'      => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
             'receipt_date' => 'nullable|date',
             'notes'        => 'nullable|string|max:500',
         ]);
+
+        $totalBytes = collect($request->file('files'))->sum(fn($f) => $f->getSize());
+        if ($totalBytes > 5 * 1024 * 1024) {
+            return response()->json(['message' => 'Total file size must not exceed 5MB.'], 422);
+        }
 
         $client = Client::where('id', $businessId)
             ->where('client_credential_id', $request->user()->id)
