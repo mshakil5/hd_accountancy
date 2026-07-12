@@ -169,23 +169,23 @@
                                     </div>
 
                                     <div class="row">
-                                        <div class="col-md-3 detail-field">
+                                        <div class="col-md-4 detail-field">
+                                            <label class="detail-label">Supplier</label>
+                                            <input type="text" class="form-control" id="supplier" name="supplier" placeholder="Supplier name...">
+                                        </div>
+                                        <div class="col-md-4 detail-field">
                                             <label class="detail-label">Is Paid?</label>
                                             <select class="form-control" id="paid" name="paid">
                                                 <option value="no">No</option>
                                                 <option value="yes">Yes</option>
                                             </select>
                                         </div>
-                                        <div class="col-md-3 detail-field" id="method_box" style="display:none;">
+                                        <div class="col-md-4 detail-field" id="method_box" style="display:none;">
                                             <label class="detail-label">Payment Method</label>
                                             <select class="form-control" id="payment_method" name="payment_method">
                                                 <option value="cash">Cash</option>
                                                 <option value="bank">Bank</option>
                                             </select>
-                                        </div>
-                                        <div class="col-md-6 detail-field">
-                                            <label class="detail-label">Internal Audit Description</label>
-                                            <textarea class="form-control" id="description" name="description" rows="2"></textarea>
                                         </div>
                                     </div>
 
@@ -377,6 +377,7 @@ $(function () {
         formData.append('client_id',            $('#client_id').val());
         formData.append('receipt_date',         $('#receipt_date').val());
         formData.append('notes',                $('#notes').val());
+        formData.append('supplier',             $('#supplier').val());
         formData.append('status',               $('#status').val());
         formData.append('account_type_id',      $('#account_type_id').val());
         formData.append('account_head_id',      $('#account_head_id').val());

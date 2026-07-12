@@ -10,7 +10,7 @@ class Receipt extends Model
 
     protected $fillable = [
         'client_id', 'receipt_number', 'receipt_date',
-        'notes', 'status', 'created_by',
+        'notes', 'supplier', 'status', 'created_by',
     ];
 
     protected $casts = ['receipt_date' => 'date'];

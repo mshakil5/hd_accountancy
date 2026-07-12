@@ -125,6 +125,7 @@
                                     <th>VAT</th>
                                     <th>Tax</th>
                                     <th>Total</th>
+                                    <th>Supplier</th>
                                     <th>Method</th>
                                 </tr>
                             </thead>
@@ -231,6 +232,9 @@
                     },
                     {
                         data: 'total_amount'
+                    },
+                    {
+                        data: 'supplier'
                     },
                     {
                         data: 'payment_method'

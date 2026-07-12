@@ -2,9 +2,8 @@
 
 @section('content')
 <style>
-/* ── Screen layout container ── */
 .bill-topbar {
-    max-width: 680px;
+    max-width: 740px;
     margin: 24px auto 12px;
     display: flex;
     justify-content: space-between;
@@ -12,402 +11,410 @@
 }
 
 .bill-page {
-    max-width: 680px;
+    max-width: 740px;
     margin: 0 auto 48px;
     background: #fff;
-    box-shadow: 0 2px 32px rgba(0,0,0,0.13);
-    font-family: 'Segoe UI', Arial, sans-serif;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.1);
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+    color: #222;
+    line-height: 1.5;
 }
 
-/* ── Dark header & Teal strip ── */
-.bill-header-row {
-    background: #0f2544;
-    padding: 28px 36px 22px;
+/* ── Header ── */
+.bill-header {
+    background: #1e293b;
+    padding: 36px 48px;
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
 }
 
-.bill-label-invoice {
+.bill-title {
     font-size: 28px;
-    font-weight: 800;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
     color: #fff;
-    letter-spacing: 3px;
-    line-height: 1;
 }
 
-.bill-receipt-no {
-    font-size: 11px;
-    color: #7fa3cc;
-    margin-top: 5px;
+.bill-ref {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: 4px;
 }
 
-.bill-company-block {
+.bill-brand {
     text-align: right;
 }
 
-.bill-company-name {
-    font-size: 17px;
+.bill-brand-name {
+    font-size: 18px;
     font-weight: 700;
     color: #fff;
 }
 
-.bill-company-sub {
+.bill-brand-sub {
     font-size: 11px;
-    color: #7fa3cc;
-    line-height: 1.8;
-    margin-top: 3px;
+    color: #94a3b8;
+    line-height: 1.6;
+    margin-top: 2px;
 }
 
+/* ── Accent ── */
 .bill-accent {
-    height: 4px;
-    background: linear-gradient(90deg, #1a9e78, #26c9a0);
+    height: 3px;
+    background: #1e293b;
 }
 
-/* ── Main body wrapper ── */
-.bill-inner {
-    padding: 28px 36px;
+/* ── Body ── */
+.bill-body {
+    padding: 32px 48px;
 }
 
-/* ── Status stamp ── */
-.bill-status-stamp-row {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 20px;
-}
-
-/* ── Client / Processed Box ── */
-.bill-parties {
-    display: flex;
-    border: 1px solid #e4e9ee;
-    margin-bottom: 0;
-}
-
-.bill-party {
-    flex: 1;
-    padding: 14px 18px;
-}
-
-.bill-party:first-child {
-    border-right: 1px solid #e4e9ee;
-}
-
-.bill-party-label {
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
+/* ── Status text ── */
+.bill-status-text {
+    font-size: 12px;
+    font-weight: 600;
     text-transform: uppercase;
-    color: #1a9e78;
-    margin-bottom: 6px;
+    letter-spacing: 0.5px;
 }
+.bill-status-pending   { color: #b45309; }
+.bill-status-to_review { color: #1d4ed8; }
+.bill-status-ready     { color: #15803d; }
+.bill-status-archived  { color: #6b7280; }
+.bill-status-cancelled { color: #dc2626; }
 
-.bill-party-name {
-    font-size: 14px;
-    font-weight: 700;
-    color: #0f2544;
-    margin-bottom: 2px;
-}
-
-.bill-party-sub {
-    font-size: 11px;
-    color: #6b7a8d;
-    line-height: 1.7;
-}
-
-/* ── Meta items grid ── */
-.bill-meta-row {
+/* ── Meta row ── */
+.bill-meta {
     display: flex;
-    border: 1px solid #e4e9ee;
-    border-top: none;
-    margin-bottom: 24px;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e5e7eb;
 }
 
-.bill-meta-pill {
+.bill-meta-item {
+    text-align: center;
     flex: 1;
-    padding: 10px 18px;
-    border-right: 1px solid #e4e9ee;
 }
 
-.bill-meta-pill:last-child {
-    border-right: none;
+.bill-meta-item:not(:last-child) {
+    border-right: 1px solid #e5e7eb;
 }
 
-.bill-meta-pill-label {
+.bill-meta-key {
     font-size: 9px;
     font-weight: 700;
     letter-spacing: 1.2px;
     text-transform: uppercase;
-    color: #9aa5b4;
-    margin-bottom: 3px;
+    color: #6b7280;
+    margin-bottom: 4px;
 }
 
-.bill-meta-pill-value {
-    font-size: 12px;
+.bill-meta-val {
+    font-size: 13px;
     font-weight: 600;
-    color: #0f2544;
+    color: #111827;
 }
 
-/* Dynamic status styles mapping to original HTML format inside the metadata row */
-.status-pill-pending   { color: #b45309; font-weight: 700; }
-.status-pill-to_review { color: #0369a1; font-weight: 700; }
-.status-pill-ready     { color: #15803d; font-weight: 700; }
-.status-pill-archived  { color: #374151; font-weight: 700; }
-.status-pill-cancelled { color: #b91c1c; font-weight: 700; }
+/* ── Addresses ── */
+.bill-addresses {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #e5e7eb;
+}
 
-/* Global raw stamp box (Top right) */
-.stamp-box {
-    font-size: 10px;
+.bill-address-block {
+    width: 48%;
+}
+
+.bill-address-label {
+    font-size: 9px;
     font-weight: 700;
-    letter-spacing: 1.5px;
+    letter-spacing: 1.2px;
     text-transform: uppercase;
-    padding: 5px 14px;
-    border-radius: 3px;
-    border: 2px solid #9ca3af;
+    color: #6b7280;
+    margin-bottom: 6px;
 }
-.stamp-pending   { border-color: #fef3c7; color: #b45309; }
-.stamp-to_review { border-color: #e0f2fe; color: #0369a1; }
-.stamp-ready     { border-color: #dcfce7; color: #15803d; }
-.stamp-archived  { border-color: #9ca3af; color: #374151; }
-.stamp-cancelled { border-color: #fee2e2; color: #b91c1c; }
 
-/* ── Line items table ── */
+.bill-address-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 2px;
+}
+
+.bill-address-detail {
+    font-size: 12px;
+    color: #4b5563;
+    line-height: 1.7;
+}
+
+/* ── Table ── */
 .bill-table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 0;
-}
-
-.bill-table thead tr {
-    background: #0f2544;
+    margin-bottom: 28px;
 }
 
 .bill-table thead th {
     padding: 10px 12px;
-    color: #b0c4d8;
     font-size: 9px;
-    font-weight: 600;
-    letter-spacing: 1.2px;
+    font-weight: 700;
+    letter-spacing: 1px;
     text-transform: uppercase;
+    color: #fff;
+    background: #1e293b;
     text-align: left;
 }
 
-.bill-table thead th:last-child { text-align: right; }
+.bill-table thead th:first-child { border-radius: 4px 0 0 0; }
+.bill-table thead th:last-child { text-align: right; border-radius: 0 4px 0 0; }
 
 .bill-table tbody td {
     padding: 14px 12px;
-    border-bottom: 1px solid #f0f4f8;
-    color: #374151;
-    font-size: 12px;
+    font-size: 13px;
+    color: #1f2937;
+    border-bottom: 1px solid #f3f4f6;
     vertical-align: top;
 }
 
 .bill-table tbody td:last-child {
     text-align: right;
+    font-weight: 600;
 }
 
-.head-code {
-    font-weight: 700;
-    color: #0f2544;
-    font-size: 12px;
+.bill-table tbody tr:nth-child(even) { background: #f9fafb; }
+
+.bill-item-code {
+    font-weight: 600;
+    color: #111827;
 }
 
-.head-category {
-    font-size: 10px;
-    color: #9aa5b4;
+.bill-item-sub {
+    font-size: 11px;
+    color: #6b7280;
     margin-top: 2px;
 }
 
-.tax-name { font-size: 12px; color: #374151; }
-.tax-pct  { font-size: 10px; color: #9aa5b4; margin-top: 2px; }
-
-.amount-val {
-    font-size: 14px;
-    font-weight: 700;
-    color: #0f2544;
-}
-
-/* ── Totals block ── */
-.bill-totals-wrap {
-    border-top: 2px solid #0f2544;
+/* ── Totals ── */
+.bill-totals {
     display: flex;
     justify-content: flex-end;
+    margin-bottom: 28px;
 }
 
-.bill-totals-box {
-    width: 240px;
+.bill-totals-table {
+    width: 260px;
 }
 
-.totals-row {
+.bill-totals-row {
     display: flex;
     justify-content: space-between;
     padding: 8px 12px;
     font-size: 12px;
-    color: #6b7a8d;
-    border-bottom: 1px solid #f0f4f8;
+    color: #4b5563;
 }
 
-.totals-row span:last-child { font-weight: 600; }
+.bill-totals-row:nth-child(odd) { background: #f9fafb; }
 
-.totals-row-final {
+.bill-totals-row span:last-child {
+    font-weight: 600;
+    color: #111827;
+}
+
+.bill-totals-total {
     display: flex;
     justify-content: space-between;
-    padding: 11px 12px;
-    font-size: 13px;
+    padding: 12px;
+    font-size: 14px;
     font-weight: 700;
-    background: #0f2544;
+    background: #1e293b;
     color: #fff;
+    border-radius: 0 0 4px 4px;
 }
-.totals-row-final span:last-child { color: #1a9e78; }
+
+/* ── Supplier ── */
+.bill-supplier {
+    margin-bottom: 20px;
+    padding: 12px 16px;
+    background: #f8fafc;
+    border-left: 3px solid #1e293b;
+    border-radius: 0 4px 4px 0;
+}
+
+.bill-supplier-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #6b7280;
+    margin-bottom: 4px;
+}
+
+.bill-supplier-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: #111827;
+}
+
+/* ── Notes ── */
+.bill-notes {
+    margin-bottom: 24px;
+    padding: 12px 16px;
+    background: #f8fafc;
+    border-left: 3px solid #6b7280;
+    border-radius: 0 4px 4px 0;
+}
+
+.bill-notes-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #6b7280;
+    margin-bottom: 4px;
+}
+
+.bill-notes-text {
+    font-size: 12px;
+    color: #374151;
+    line-height: 1.6;
+    white-space: pre-line;
+}
 
 /* ── Footer ── */
-.bill-footer-row {
-    padding: 16px 36px 24px;
+.bill-footer {
+    padding: 16px 48px;
+    background: #f8fafc;
+    border-top: 1px solid #e5e7eb;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-top: 1px solid #e4e9ee;
-    margin-top: 20px;
+    font-size: 12px;
+    color: #374151;
 }
 
-.bill-payment-label {
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
-    color: #9aa5b4;
-    margin-bottom: 3px;
-}
-.bill-payment-value {
-    font-size: 13px;
+.bill-footer-paid {
+    color: #15803d;
     font-weight: 600;
-    color: #0f2544;
 }
 
-.pay-status-badge {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.8px;
-    padding: 7px 20px;
-    border-radius: 3px;
-    text-transform: uppercase;
+.bill-footer-unpaid {
+    color: #b45309;
+    font-weight: 600;
 }
-.pay-status-paid      { background: #dcfce7; color: #15803d; }
-.pay-status-unpaid    { background: #fef9c3; color: #78350f; }
-.pay-status-cancelled { background: #fee2e2; color: #b91c1c; }
 
-/* ── Print styles ── */
+/* ── Print ── */
 @media print {
-    @page {
-        size: A4;
-        margin: 14mm;
-    }
+    @page { size: A4; margin: 10mm; }
 
-    body * { visibility: hidden; }
-    .bill-page, .bill-page * { visibility: visible; }
-
-    .no-print,
-    .main-header,
-    .main-sidebar,
-    .main-footer,
-    .content-header,
-    .bill-topbar { display: none !important; }
-
-    body, .wrapper, .content-wrapper {
-        background: #fff !important;
+    html, body {
         margin: 0 !important;
         padding: 0 !important;
+        background: #fff !important;
+        width: 100% !important;
+    }
+
+    body > * { visibility: hidden !important; }
+
+    .bill-page,
+    .bill-page * {
+        visibility: visible !important;
+    }
+
+    /* Hide ALL AdminLTE chrome + topbar */
+    .main-sidebar, .main-header, .main-footer,
+    .content-header, .content-wrapper, .wrapper,
+    .app-sidebar, .app-header, .app-footer,
+    .main-sidebar-dark, .nav-sidebar, .sidebar,
+    .navbar, .main-sidebar .brand-link,
+    .no-print, .bill-topbar {
+        display: none !important;
+        visibility: hidden !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
     }
 
     .bill-page {
-        max-width: 100%;
-        margin: 0;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        margin: 0 !important;
+        padding: 0;
         box-shadow: none;
         page-break-inside: avoid;
     }
 
-    .bill-header-row { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .bill-accent { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .bill-table thead tr { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .totals-row-final { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .pay-status-badge { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .bill-header { padding: 24px 36px !important; }
+    .bill-body { padding: 20px 36px !important; }
+    .bill-footer { padding: 12px 36px !important; }
+    .bill-meta { margin-bottom: 16px !important; padding-bottom: 14px !important; }
+    .bill-addresses { margin-bottom: 16px !important; padding-bottom: 16px !important; }
+    .bill-table tbody td { padding: 10px 12px !important; }
+    .bill-totals { margin-bottom: 16px !important; }
+    .bill-notes { margin-bottom: 12px !important; }
+    .bill-supplier { margin-bottom: 12px !important; }
 
-    .bill-table tbody tr { page-break-inside: avoid; }
-    .bill-totals-wrap { page-break-inside: avoid; }
-    .bill-footer-row  { page-break-inside: avoid; }
+    .bill-header,
+    .bill-accent,
+    .bill-table thead th,
+    .bill-table tbody tr:nth-child(even),
+    .bill-totals-row:nth-child(odd),
+    .bill-totals-total,
+    .bill-notes,
+    .bill-supplier,
+    .bill-footer,
+    .bill-status-text,
+    .bill-footer-paid,
+    .bill-footer-unpaid {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+    }
 }
 </style>
 
-{{-- Top action bar (hidden in print) --}}
 <div class="bill-topbar no-print">
     <a href="{{ route('admin.receipt.index') }}" class="btn btn-secondary btn-sm">
-        <i class="fa fa-arrow-left"></i> Back to Inbox
+        <i class="fa fa-arrow-left"></i> Back
     </a>
     <div style="display:flex; gap:8px;">
         <a href="{{ route('admin.receipt.show', $receipt->id) }}" class="btn btn-default btn-sm">
-            <i class="fa fa-edit"></i> Edit Receipt
+            <i class="fa fa-edit"></i> Edit
         </a>
-        <button onclick="window.print()" class="btn btn-sm" style="background:#0f2544; color:#fff;">
+        <button onclick="window.print()" class="btn btn-sm" style="background:#1e293b; color:#fff;">
             <i class="fa fa-print"></i> Print / PDF
         </button>
     </div>
 </div>
 
 <div class="bill-page">
-    {{-- Header --}}
-    <div class="bill-header-row">
+
+    <div class="bill-header">
         <div>
-            <div class="bill-label-invoice">INVOICE</div>
-            <div class="bill-receipt-no">{{ $receipt->receipt_number }}</div>
+            <div class="bill-title">Invoice</div>
+            <div class="bill-ref">{{ $receipt->receipt_number }}</div>
         </div>
-        <div class="bill-company-block">
-            <div class="bill-company-name">HD Accountancy</div>
-            <div class="bill-company-sub">
+        <div class="bill-brand">
+            <div class="bill-brand-name">HD Accountancy</div>
+            <div class="bill-brand-sub">
                 Professional Accounting Services<br>
                 United Kingdom
             </div>
         </div>
     </div>
 
-    {{-- Teal Strip --}}
     <div class="bill-accent"></div>
 
-    <div class="bill-inner">
-        {{-- Status Stamp Row --}}
-        <div class="bill-status-stamp-row">
-            <div class="stamp-box stamp-{{ $receipt->status }}">
-                {{ str_replace('_', ' ', $receipt->status) }}
-            </div>
-        </div>
+    <div class="bill-body">
 
-        {{-- From / To --}}
         @php
-            $client     = $receipt->client;
-            $clientName = $client ? trim(($client->name ?? '') . ' ' . ($client->last_name ?? '')) : '—';
-        @endphp
-        <div class="bill-parties">
-            <div class="bill-party">
-                <div class="bill-party-label">From (Client)</div>
-                <div class="bill-party-name">{{ $clientName }}</div>
-                <div class="bill-party-sub">
-                    @if($client?->business_name) {{ $client->business_name }}<br>@endif
-                    @if($client?->city) {{ $client->city }}@if($client?->postcode), {{ $client->postcode }}@endif<br>@endif
-                    @if($client?->country) {{ $client->country }}@endif
-                </div>
-            </div>
-            <div class="bill-party">
-                <div class="bill-party-label">Processed By</div>
-                <div class="bill-party-name">HD Accountancy</div>
-                <div class="bill-party-sub">
-                    Accounting Department<br>
-                    United Kingdom
-                </div>
-            </div>
-        </div>
-
-        {{-- Meta row with identical styling --}}
-        @php
-            $statusClass = 'status-pill-' . $receipt->status;
-            $statusLabel = ucfirst(str_replace('_', ' ', $receipt->status));
             $invoiceDate = $receipt->detail?->invoice_date
                 ? \Carbon\Carbon::parse($receipt->detail->invoice_date)->format('d M Y')
                 : ($receipt->receipt_date ? $receipt->receipt_date->format('d M Y') : '—');
@@ -415,115 +422,158 @@
                 ? \Carbon\Carbon::parse($receipt->detail->due_date)->format('d M Y')
                 : '—';
         @endphp
-        <div class="bill-meta-row">
-            <div class="bill-meta-pill">
-                <div class="bill-meta-pill-label">Invoice No.</div>
-                <div class="bill-meta-pill-value">{{ $receipt->detail?->invoice_number ?? '—' }}</div>
+        <div class="bill-meta">
+            <div class="bill-meta-item">
+                <div class="bill-meta-key">Invoice No</div>
+                <div class="bill-meta-val">{{ $receipt->detail?->invoice_number ?? '—' }}</div>
             </div>
-            <div class="bill-meta-pill">
-                <div class="bill-meta-pill-label">Receipt Ref.</div>
-                <div class="bill-meta-pill-value">{{ $receipt->receipt_number }}</div>
+            <div class="bill-meta-item">
+                <div class="bill-meta-key">Date</div>
+                <div class="bill-meta-val">{{ $invoiceDate }}</div>
             </div>
-            <div class="bill-meta-pill">
-                <div class="bill-meta-pill-label">Invoice Date</div>
-                <div class="bill-meta-pill-value">{{ $invoiceDate }}</div>
+            <div class="bill-meta-item">
+                <div class="bill-meta-key">Due Date</div>
+                <div class="bill-meta-val">{{ $dueDate }}</div>
             </div>
-            <div class="bill-meta-pill">
-                <div class="bill-meta-pill-label">Due Date</div>
-                <div class="bill-meta-pill-value">{{ $dueDate }}</div>
+            <div class="bill-meta-item">
+                <div class="bill-meta-key">Status</div>
+                <div class="bill-meta-val">
+                    <span class="bill-status-text bill-status-{{ $receipt->status }}">
+                        {{ str_replace('_', ' ', $receipt->status) }}
+                    </span>
+                </div>
             </div>
         </div>
 
-        {{-- Line items Table --}}
+        @php
+            $client     = $receipt->client;
+            $clientName = $client ? trim(($client->name ?? '') . ' ' . ($client->last_name ?? '')) : '—';
+        @endphp
+        <div class="bill-addresses">
+            <div class="bill-address-block">
+                <div class="bill-address-label">Bill To</div>
+                <div class="bill-address-name">{{ $clientName }}</div>
+                <div class="bill-address-detail">
+                    @if($client?->business_name) {{ $client->business_name }}<br>@endif
+                    @if($client?->city) {{ $client->city }}@endif
+                    @if($client?->postcode) &middot; {{ $client->postcode }}@endif
+                    @if($client?->country)<br>{{ $client->country }}@endif
+                </div>
+            </div>
+            <div class="bill-address-block" style="text-align:right;">
+                <div class="bill-address-label">From</div>
+                <div class="bill-address-name">HD Accountancy</div>
+                <div class="bill-address-detail">
+                    Accounting Department<br>
+                    United Kingdom
+                </div>
+            </div>
+        </div>
+
         <table class="bill-table">
             <thead>
                 <tr>
-                    <th style="width:35%">Description</th>
-                    <th style="width:28%">Account Head</th>
-                    <th style="width:18%">Tax Rate</th>
-                    <th style="width:19%">Amount</th>
+                    <th style="width:40%">Description</th>
+                    <th style="width:30%">Account Head</th>
+                    <th style="width:15%">Tax</th>
+                    <th style="width:15%">Amount</th>
                 </tr>
             </thead>
             <tbody>
                 @if($receipt->detail)
                 <tr>
-                    <td>{{ $receipt->detail->description ?: ($receipt->notes ?: 'Accounting Service') }}</td>
+                    <td>
+                        {{ $receipt->detail->description ?: ($receipt->notes ?: 'Accounting Service') }}
+                        @if($receipt->detail->invoice_number)
+                            <div class="bill-item-sub">Ref: {{ $receipt->detail->invoice_number }}</div>
+                        @endif
+                    </td>
                     <td>
                         @if($receipt->detail->accountHead)
-                            <div class="head-code">{{ $receipt->detail->accountHead->code }} — {{ $receipt->detail->accountHead->name }}</div>
+                            <div class="bill-item-code">{{ $receipt->detail->accountHead->name }}</div>
                             @if($receipt->detail->accountHead->accountType)
-                                <div class="head-category">{{ ucfirst($receipt->detail->accountHead->accountType->category) }}</div>
+                                <div class="bill-item-sub">{{ $receipt->detail->accountHead->code }} &middot; {{ ucfirst($receipt->detail->accountHead->accountType->category) }}</div>
                             @endif
                         @else
-                            <span style="color:#9aa5b4;">—</span>
+                            <span style="color:#ccc;">—</span>
                         @endif
                     </td>
                     <td>
                         @if($receipt->detail->accountHead?->taxRate)
-                            <div class="tax-name">{{ $receipt->detail->accountHead->taxRate->name }}</div>
-                            <div class="tax-pct">{{ $receipt->detail->accountHead->taxRate->rate }}%</div>
+                            {{ $receipt->detail->accountHead->taxRate->name }}
+                            <div class="bill-item-sub">{{ $receipt->detail->accountHead->taxRate->rate }}%</div>
                         @else
-                            <span style="color:#9aa5b4;">—</span>
+                            <span style="color:#ccc;">—</span>
                         @endif
                     </td>
-                    <td>
-                        <div class="amount-val">£{{ number_format($receipt->detail->net_amount ?? 0, 2) }}</div>
-                    </td>
+                    <td>£{{ number_format($receipt->detail->net_amount ?? 0, 2) }}</td>
                 </tr>
                 @else
                 <tr>
-                    <td colspan="4" style="text-align:center; color:#9aa5b4; padding:32px 0;">
-                        No details added yet — admin has not processed this receipt.
+                    <td colspan="4" style="text-align:center; color:#9ca3af; padding:40px 0;">
+                        No details added yet.
                     </td>
                 </tr>
                 @endif
             </tbody>
         </table>
 
-        {{-- Totals Box --}}
-        <div class="bill-totals-wrap">
-            <div class="bill-totals-box">
-                <div class="totals-row">
-                    <span>Net Amount</span>
+        <div class="bill-totals">
+            <div class="bill-totals-table">
+                <div class="bill-totals-row">
+                    <span>Subtotal</span>
                     <span>£{{ number_format($receipt->detail?->net_amount ?? 0, 2) }}</span>
                 </div>
-                <div class="totals-row">
-                    <span>Tax Amount</span>
-                    <span>£{{ number_format($receipt->detail?->tax_amount ?? 0, 2) }}</span>
+                @if(($receipt->detail?->tax_amount ?? 0) > 0)
+                <div class="bill-totals-row">
+                    <span>Tax</span>
+                    <span>£{{ number_format($receipt->detail->tax_amount, 2) }}</span>
                 </div>
-                <div class="totals-row">
-                    <span>VAT Amount</span>
-                    <span>£{{ number_format($receipt->detail?->vat_amount ?? 0, 2) }}</span>
+                @endif
+                @if(($receipt->detail?->vat_amount ?? 0) > 0)
+                <div class="bill-totals-row">
+                    <span>VAT</span>
+                    <span>£{{ number_format($receipt->detail->vat_amount, 2) }}</span>
                 </div>
-                <div class="totals-row-final">
-                    <span>Total Due</span>
+                @endif
+                <div class="bill-totals-total">
+                    <span>Total</span>
                     <span>£{{ number_format($receipt->detail?->total_amount ?? 0, 2) }}</span>
                 </div>
             </div>
         </div>
 
-    </div>{{-- /.bill-inner --}}
-
-    {{-- Footer Row --}}
-    <div class="bill-footer-row">
-        <div class="bill-payment-block">
-            <div class="bill-payment-label">Payment Method</div>
-            <div class="bill-payment-value">
-                @if($receipt->detail?->paid)
-                    {{ ucfirst($receipt->detail->payment_method ?? '—') }}
-                @else
-                    Not yet paid
-                @endif
+        @if($receipt->supplier)
+            <div class="bill-supplier">
+                <div class="bill-supplier-label">Supplier</div>
+                <div class="bill-supplier-text">{{ $receipt->supplier }}</div>
             </div>
-        </div>
+        @endif
 
+        @if($receipt->notes)
+            <div class="bill-notes">
+                <div class="bill-notes-label">Notes</div>
+                <div class="bill-notes-text">{{ $receipt->notes }}</div>
+            </div>
+        @endif
+
+    </div>
+
+    <div class="bill-footer">
+        <div>
+            Payment: @if($receipt->detail?->paid)
+                {{ ucfirst($receipt->detail->payment_method ?? '—') }}
+            @else
+                <span class="bill-footer-unpaid">Not yet paid</span>
+            @endif
+        </div>
         <div>
             @if($receipt->status === 'cancelled')
-                <span class="pay-status-badge pay-status-cancelled">Cancelled</span>
+                <span style="color:#dc2626; font-weight:600;">Cancelled</span>
             @elseif($receipt->detail?->paid)
-                <span class="pay-status-badge pay-status-paid">Paid</span>
+                <span class="bill-footer-paid">Paid</span>
             @else
-                <span class="pay-status-badge pay-status-unpaid">Awaiting Payment</span>
+                <span class="bill-footer-unpaid">Unpaid</span>
             @endif
         </div>
     </div>

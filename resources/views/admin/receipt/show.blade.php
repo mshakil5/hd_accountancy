@@ -221,6 +221,12 @@
                                 </div>
 
                                 <div class="detail-field">
+                                    <label class="detail-label">Supplier</label>
+                                    <input type="text" class="form-control" id="supplier"
+                                        value="{{ $receipt->supplier }}" placeholder="Supplier name...">
+                                </div>
+
+                                <div class="detail-field">
                                     <label class="detail-label">Account Type</label>
                                     <select class="form-control" id="account_type_id" name="account_type_id">
                                         <option value="">Select Account Type</option>
@@ -531,6 +537,7 @@
                 $.post(baseUrl + '/' + receiptId + '/update', {
                     _token: $('meta[name="csrf-token"]').attr('content'),
                     status: $('#status').val(),
+                    supplier: $('#supplier').val(),
                     account_type_id: $('#account_type_id').val(),
                     account_head_id: $('#account_head_id').val(),
                     invoice_date: $('#invoice_date').val(),

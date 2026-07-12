@@ -60,6 +60,7 @@ class ReceiptController extends Controller
             ->addColumn('vat_amount', fn($r) => $r->detail?->vat_amount ? '£' . $r->detail->vat_amount : '-')
             ->addColumn('tax_amount', fn($r) => $r->detail?->tax_amount ? '£' . $r->detail->tax_amount : '-')
             ->addColumn('total_amount', fn($r) => $r->detail?->total_amount ? '£' . $r->detail->total_amount : '-')
+            ->addColumn('supplier', fn($r) => $r->supplier ?? '-')
             ->addColumn('payment_method', fn($r) => $r->detail?->payment_method ?? '-')
             ->addColumn('status_badge', function ($r) {
                 $colors = [
@@ -160,6 +161,7 @@ class ReceiptController extends Controller
 
         $receipt->update([
             'status'     => $newStatus,
+            'supplier'   => $request->supplier,
             'updated_by' => Auth::id()
         ]);
 
@@ -353,6 +355,7 @@ class ReceiptController extends Controller
             'receipt_number' => 'RCT-' . now()->format('Ymd') . '-' . strtoupper(Str::random(4)),
             'receipt_date'   => $request->receipt_date ?? now()->toDateString(),
             'notes'          => $request->notes,
+            'supplier'       => $request->supplier,
             'status'         => $request->status ?? 'pending',
             'created_by'     => Auth::id(),
         ]);
