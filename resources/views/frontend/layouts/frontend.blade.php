@@ -45,14 +45,23 @@
         <meta name="google-site-verification" content="B66_NizNd9PxdegluYuSlPYKQVJDPFfFY5TKA2RmdTI" />
 
         <!-- Google tag (gtag.js) -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-NH9VPXW8Z0">
-        </script>
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-T2590EV8NS"></script>
         <script>
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
 
-        gtag('config', 'G-NH9VPXW8Z0');
+        gtag('config', 'G-T2590EV8NS');
+        </script>
+
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17486797834"></script>
+        <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'AW-17486797834');
         </script>
 
     </head>
