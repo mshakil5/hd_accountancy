@@ -108,24 +108,31 @@ class ReceiptController extends Controller
                 'user_id' => $request->user()?->id,
                 'user_type' => get_class($request->user()),
                 'has_files' => $request->hasFile('files'),
-                'file_count' => $request->file('files') ? count($request->file('files')) : 0,
+                'file_count' => is_array($request->file('files')) ? count($request->file('files')) : 1,
                 'all_input' => array_keys($request->all()),
                 'content_type' => $request->header('Content-Type'),
             ]);
 
-            $validator = \Validator::make($request->all(), [
-                'files'        => 'required|array|min:1',
-                'files.*'      => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
-                'receipt_date' => 'nullable|date',
-                'notes'        => 'nullable|string|max:500',
-            ]);
+            $files = $request->hasFile('files')
+                ? (is_array($request->file('files')) ? $request->file('files') : [$request->file('files')])
+                : [];
+
+            $validator = \Validator::make(
+                array_merge($request->all(), ['files' => $files]),
+                [
+                    'files'        => 'required|array|min:1',
+                    'files.*'      => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
+                    'receipt_date' => 'nullable|date',
+                    'notes'        => 'nullable|string|max:500',
+                ]
+            );
 
             if ($validator->fails()) {
                 \Log::error('Receipt validation failed', $validator->errors()->toArray());
                 return response()->json(['message' => 'Validation failed', 'errors' => $validator->errors()], 422);
             }
 
-            $totalBytes = collect($request->file('files'))->sum(fn($f) => $f->getSize());
+            $totalBytes = collect($files)->sum(fn($f) => $f->getSize());
             if ($totalBytes > 5 * 1024 * 1024) {
                 return response()->json(['message' => 'Total file size must not exceed 5MB.'], 422);
             }
@@ -157,7 +164,7 @@ class ReceiptController extends Controller
 
             $receiptDir = $this->getReceiptDirectory($client, $receipt->id);
 
-            foreach ($request->file('files') as $file) {
+            foreach ($files as $file) {
                 $mime = $file->getClientMimeType();
                 $size = $file->getSize();
 
@@ -325,14 +332,16 @@ class ReceiptController extends Controller
             'files.*' => 'required|file|mimes:pdf|max:5120',
         ]);
 
-        $totalBytes = collect($request->file('files'))->sum(fn($f) => $f->getSize());
+        $files = is_array($request->file('files')) ? $request->file('files') : [$request->file('files')];
+
+        $totalBytes = collect($files)->sum(fn($f) => $f->getSize());
         if ($totalBytes > 5 * 1024 * 1024) {
             return response()->json(['message' => 'Total file size must not exceed 5MB.'], 422);
         }
 
         $receiptDir = $this->getReceiptDirectory($receipt->client, $receipt->id);
 
-        foreach ($request->file('files') as $file) {
+        foreach ($files as $file) {
             $mime = $file->getClientMimeType();
             $size = $file->getSize();
             $fileType = $file->extension() === 'pdf' ? 'pdf' : 'image';
