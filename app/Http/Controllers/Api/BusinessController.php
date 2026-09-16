@@ -118,9 +118,19 @@ class BusinessController extends Controller
 
     public function clientCredentials(Request $request)
     {
-        $credentials = ClientCredential::where('status', 1)
-            ->withCount('clients')
-            ->latest()
+        $query = ClientCredential::where('status', 1)
+            ->withCount('clients');
+
+        if ($search = $request->query('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        $credentials = $query->latest()
+            ->limit(50)
             ->get()
             ->map(function ($cc) {
                 return [
@@ -137,11 +147,21 @@ class BusinessController extends Controller
 
     public function businessesByCredential(Request $request, $clientCredentialId)
     {
-        $clients = Client::where('client_credential_id', $clientCredentialId)
+        $query = Client::where('client_credential_id', $clientCredentialId)
             ->where('status', 1)
             ->with(['clientType', 'manager'])
-            ->withCount('receipts')
-            ->latest()
+            ->withCount('receipts');
+
+        if ($search = $request->query('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('business_name', 'like', "%{$search}%")
+                  ->orWhere('company_name', 'like', "%{$search}%");
+            });
+        }
+
+        $clients = $query->latest()
+            ->limit(50)
             ->get()
             ->map(function ($c) {
                 return [
