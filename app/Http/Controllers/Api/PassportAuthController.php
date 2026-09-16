@@ -60,7 +60,7 @@ class PassportAuthController extends Controller
             $typeMap = [0 => 'user', 1 => 'admin', 2 => 'manager', 3 => 'staff'];
             $role = $typeMap[$user->getRawOriginal('type')] ?? 'user';
 
-            $token = $user->createToken('ClientApp')->plainTextToken;
+            $token = $user->createToken('ClientApp')->accessToken;
 
             return response()->json([
                 'message' => 'Login successful.',

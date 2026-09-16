@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use App\Models\ClientCredential;
 use App\Models\User;
 
@@ -20,7 +21,8 @@ class DualAuth
             ], 401);
         }
 
-        $passportToken = \Laravel\Passport\Token::where('token', hash('sha256', $token))->first();
+        $plainPart = Str::after($token, '|');
+        $passportToken = \Laravel\Passport\Token::where('token', hash('sha256', $plainPart))->first();
 
         if ($passportToken) {
             $client = ClientCredential::find($passportToken->user_id);
