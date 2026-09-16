@@ -4,33 +4,57 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Client;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class BusinessController extends Controller
 {
     public function index(Request $request)
     {
-        $clients = Client::where('client_credential_id', $request->user()->id)
-            ->where('status', 1)
-            ->with(['clientType', 'manager'])
-            ->withCount('receipts')
-            ->latest()
-            ->get()
-            ->map(function ($c) {
+        $user = $request->user();
 
-                return [
-                    'id'            => $c->id,
-                    'name'          => trim($c->name . ' ' . $c->last_name),
-                    'business_name' => $c->business_name,
-                    'company_name'  => $c->company_name,
-                    'company_number' => $c->company_number,
-                    'type_of_business' => $c->type_of_business,
-                    'client_type'   => $c->clientType?->name,
-                    'manager'       => $c->manager?->name,
-                    'city'          => $c->city,
-                    'receipt_count' => $c->receipts_count,
-                ];
-            });
+        if ($user instanceof User) {
+            $clients = Client::where('status', 1)
+                ->with(['clientType', 'manager'])
+                ->withCount('receipts')
+                ->latest()
+                ->get()
+                ->map(function ($c) {
+                    return [
+                        'id'            => $c->id,
+                        'name'          => trim($c->name . ' ' . $c->last_name),
+                        'business_name' => $c->business_name,
+                        'company_name'  => $c->company_name,
+                        'company_number' => $c->company_number,
+                        'type_of_business' => $c->type_of_business,
+                        'client_type'   => $c->clientType?->name,
+                        'manager'       => $c->manager?->name,
+                        'city'          => $c->city,
+                        'receipt_count' => $c->receipts_count,
+                    ];
+                });
+        } else {
+            $clients = Client::where('client_credential_id', $user->id)
+                ->where('status', 1)
+                ->with(['clientType', 'manager'])
+                ->withCount('receipts')
+                ->latest()
+                ->get()
+                ->map(function ($c) {
+                    return [
+                        'id'            => $c->id,
+                        'name'          => trim($c->name . ' ' . $c->last_name),
+                        'business_name' => $c->business_name,
+                        'company_name'  => $c->company_name,
+                        'company_number' => $c->company_number,
+                        'type_of_business' => $c->type_of_business,
+                        'client_type'   => $c->clientType?->name,
+                        'manager'       => $c->manager?->name,
+                        'city'          => $c->city,
+                        'receipt_count' => $c->receipts_count,
+                    ];
+                });
+        }
 
         return response()->json(['data' => $clients], 200);
     }
@@ -38,7 +62,6 @@ class BusinessController extends Controller
     public function show(Request $request, $id)
     {
         $client = Client::where('id', $id)
-            ->where('client_credential_id', $request->user()->id)
             ->with(['clientType', 'manager', 'properties'])
             ->firstOrFail();
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\ClientCredential;
 use App\Models\ClientPasswordResetToken;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -22,38 +23,79 @@ class PassportAuthController extends Controller
 
         $client = ClientCredential::where('email', $request->email)->first();
 
-        if (!$client || !Hash::check($request->password, $client->password)) {
+        if ($client && Hash::check($request->password, $client->password)) {
+            if (!$client->status) {
+                return response()->json([
+                    'message' => 'Your account is inactive. Please contact support.',
+                    'error'   => 'Unauthorized',
+                ], 403);
+            }
+
+            $token = $client->createToken('ClientApp')->accessToken;
+
             return response()->json([
-                'message' => 'Invalid credentials.',
-                'error'   => 'Unauthenticated',
-            ], 401);
+                'message' => 'Login successful.',
+                'token'   => $token,
+                'role'    => 'client',
+                'user'    => [
+                    'id'         => $client->id,
+                    'first_name' => $client->first_name,
+                    'last_name'  => $client->last_name,
+                    'email'      => $client->email,
+                    'phone'      => $client->phone,
+                ],
+            ], 200);
         }
 
-        if (!$client->status) {
-            return response()->json([
-                'message' => 'Your account is inactive. Please contact support.',
-                'error'   => 'Unauthorized',
-            ], 403);
-        }
+        $user = User::where('email', $request->email)->first();
 
-        $token = $client->createToken('ClientApp')->accessToken;
+        if ($user && Hash::check($request->password, $user->password)) {
+            if (!$user->status) {
+                return response()->json([
+                    'message' => 'Your account is inactive. Please contact support.',
+                    'error'   => 'Unauthorized',
+                ], 403);
+            }
+
+            $typeMap = [0 => 'user', 1 => 'admin', 2 => 'manager', 3 => 'staff'];
+            $role = $typeMap[$user->getRawOriginal('type')] ?? 'user';
+
+            $token = $user->createToken('ClientApp')->plainTextToken;
+
+            return response()->json([
+                'message' => 'Login successful.',
+                'token'   => $token,
+                'role'    => $role,
+                'user'    => [
+                    'id'         => $user->id,
+                    'first_name' => $user->first_name,
+                    'last_name'  => $user->last_name,
+                    'email'      => $user->email,
+                    'phone'      => $user->phone,
+                    'type'       => $user->getRawOriginal('type'),
+                ],
+            ], 200);
+        }
 
         return response()->json([
-            'message' => 'Login successful.',
-            'token'   => $token,
-            'user'    => [
-                'id'         => $client->id,
-                'first_name' => $client->first_name,
-                'last_name'  => $client->last_name,
-                'email'      => $client->email,
-                'phone'      => $client->phone,
-            ],
-        ], 200);
+            'message' => 'Invalid credentials.',
+            'error'   => 'Unauthenticated',
+        ], 401);
     }
 
     public function logout(Request $request)
     {
-        $request->user()->token()->revoke();
+        $user = $request->user();
+
+        if ($user instanceof User) {
+            $user->tokens()->delete();
+        } else {
+            try {
+                $request->user()->token()->revoke();
+            } catch (\Exception $e) {
+                $user->tokens()->delete();
+            }
+        }
 
         return response()->json([
             'message' => 'Logged out successfully.',
@@ -67,24 +109,28 @@ class PassportAuthController extends Controller
         ]);
 
         $client = ClientCredential::where('email', $request->email)->first();
+        $user = User::where('email', $request->email)->first();
 
-        if (!$client) {
+        if (!$client && !$user) {
             return response()->json([
                 'message' => 'If this email is registered, a reset code has been sent.',
             ], 200);
         }
 
         $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $email = $client ? $client->email : ($user ? $user->email : '');
+        $name = $client ? $client->first_name : ($user ? $user->first_name : '');
 
-        ClientPasswordResetToken::where('email', $request->email)->delete();
+        if ($client) {
+            ClientPasswordResetToken::where('email', $request->email)->delete();
+            ClientPasswordResetToken::create([
+                'email'      => $request->email,
+                'token'      => Hash::make($otp),
+                'created_at' => now(),
+            ]);
+        }
 
-        ClientPasswordResetToken::create([
-            'email'      => $request->email,
-            'token'      => Hash::make($otp),
-            'created_at' => now(),
-        ]);
-
-        Mail::send('emails.client_otp', ['otp' => $otp, 'name' => $client->first_name], function ($mail) use ($request) {
+        Mail::send('emails.client_otp', ['otp' => $otp, 'name' => $name], function ($mail) use ($request) {
             $mail->to($request->email)
                 ->subject('Your Password Reset Code — HD Accountancy');
         });
@@ -161,16 +207,59 @@ class PassportAuthController extends Controller
 
     public function me(Request $request)
     {
-        $client = $request->user();
+        $user = $request->user();
+
+        if ($user instanceof User) {
+            $typeMap = [0 => 'user', 1 => 'admin', 2 => 'manager', 3 => 'staff'];
+            return response()->json([
+                'user' => [
+                    'id'         => $user->id,
+                    'first_name' => $user->first_name,
+                    'last_name'  => $user->last_name,
+                    'email'      => $user->email,
+                    'phone'      => $user->phone,
+                    'type'       => $user->getRawOriginal('type'),
+                    'role'       => $typeMap[$user->getRawOriginal('type')] ?? 'user',
+                ],
+            ], 200);
+        }
 
         return response()->json([
             'user' => [
-                'id'         => $client->id,
-                'first_name' => $client->first_name,
-                'last_name'  => $client->last_name,
-                'email'      => $client->email,
-                'phone'      => $client->phone,
+                'id'         => $user->id,
+                'first_name' => $user->first_name,
+                'last_name'  => $user->last_name,
+                'email'      => $user->email,
+                'phone'      => $user->phone,
             ],
+        ], 200);
+    }
+
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password'     => 'required',
+            'new_password'         => 'required|min:6|confirmed',
+            'password_confirmation' => 'required',
+        ]);
+
+        $user = $request->user();
+
+        if ($user instanceof User) {
+            if (!Hash::check($request->current_password, $user->password)) {
+                return response()->json(['message' => 'Current password is incorrect.'], 422);
+            }
+            $user->update(['password' => Hash::make($request->new_password)]);
+        } else {
+            $client = $user;
+            if (!Hash::check($request->current_password, $client->password)) {
+                return response()->json(['message' => 'Current password is incorrect.'], 422);
+            }
+            $client->update(['password' => Hash::make($request->new_password)]);
+        }
+
+        return response()->json([
+            'message' => 'Password changed successfully.',
         ], 200);
     }
 }

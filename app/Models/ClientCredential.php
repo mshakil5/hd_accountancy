@@ -33,6 +33,22 @@ class ClientCredential extends Authenticatable
         'status' => 'boolean',
     ];
 
+    protected static function booted(): void
+    {
+        static::creating(function ($model) {
+            $model->ensureUniqueCreatedAt();
+        });
+    }
+
+    protected function ensureUniqueCreatedAt(): void
+    {
+        $second = now()->format('Y-m-d H:i:s');
+        while (static::where('created_at', 'like', $second . '%')->exists()) {
+            $this->created_at = now()->addSecond();
+            $second = $this->created_at->format('Y-m-d H:i:s');
+        }
+    }
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
@@ -47,7 +63,7 @@ class ClientCredential extends Authenticatable
     {
         return $this->hasOne(Client::class, 'client_credential_id');
     }
- 
+
     public function clients()
     {
         return $this->hasMany(Client::class, 'client_credential_id');

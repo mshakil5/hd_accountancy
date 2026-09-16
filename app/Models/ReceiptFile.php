@@ -12,6 +12,6 @@ class ReceiptFile extends Model
 
     public function getUrlAttribute()
     {
-        return asset('images/receipts/' . basename($this->file_path));
+        return asset($this->file_path);
     }
 }

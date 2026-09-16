@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\ClientCredential;
+use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -38,6 +39,12 @@ class ClientCredentialController extends Controller
         $chkemail = ClientCredential::where('email',$request->email)->first();
         if($chkemail){
             $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>This email already added.</b></div>";
+            return response()->json(['status'=> 303,'message'=>$message]);
+            exit();
+        }
+        $chkUserEmail = User::where('email',$request->email)->first();
+        if($chkUserEmail){
+            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>This email already exists in users.</b></div>";
             return response()->json(['status'=> 303,'message'=>$message]);
             exit();
         }
@@ -107,6 +114,12 @@ class ClientCredentialController extends Controller
         $duplicateemail = ClientCredential::where('email',$request->email)->where('id','!=', $request->codeid)->first();
         if($duplicateemail){
             $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>This email already added.</b></div>";
+            return response()->json(['status'=> 303,'message'=>$message]);
+            exit();
+        }
+        $duplicateUserEmail = User::where('email',$request->email)->first();
+        if($duplicateUserEmail){
+            $message ="<div class='alert alert-warning'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><b>This email already exists in users.</b></div>";
             return response()->json(['status'=> 303,'message'=>$message]);
             exit();
         }

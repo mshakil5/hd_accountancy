@@ -15,6 +15,8 @@ use App\Models\AccountancyFee;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 use Laravel\Passport\HasApiTokens;
@@ -41,77 +43,72 @@ class Client extends Model
             ->setDescriptionForEvent(fn(string $eventName) => "Client record has been {$eventName}");
     }
 
-    public function getKey()
-    {
-        return $this->getAttribute($this->getKeyName());
-    }
-
-    public function clientType()
+    public function clientType(): BelongsTo
     {
         return $this->belongsTo(ClientType::class);
     }
 
-    public function services()
+    public function services(): HasMany
     {
         return $this->belongsToMany(Service::class, 'client_service', 'client_id', 'service_id');
     }
 
-    public function manager()
+    public function manager(): BelongsTo
     {
         return $this->belongsTo(User::class, 'manager_id');
     }
 
-    public function businessInfo()
+    public function businessInfo(): BelongsTo
     {
         return $this->hasOne(BusinessInfo::class);
     }
 
-    public function directorInfos()
+    public function directorInfos(): HasMany
     {
         return $this->hasMany(DirectorInfo::class);
     }
 
-    public function clientServices()
+    public function clientServices(): HasMany
     {
         return $this->hasMany(ClientService::class);
     }
 
-    public function contactInfos()
+    public function contactInfos(): HasMany
     {
         return $this->hasMany(ContactInfo::class);
     }
 
-    public function clientSubServices()
+    public function clientSubServices(): HasMany
     {
         return $this->hasMany(ClientSubService::class, 'client_id', 'id');
     }
 
-    public function recentUpdates()
+    public function recentUpdates(): HasMany
     {
         return $this->hasMany(RecentUpdate::class);
     }
 
-    public function accountancyFee()
+    public function accountancyFee(): BelongsTo
     {
         return $this->hasOne(AccountancyFee::class);
     }
 
-    public function properties()
+    public function properties(): HasMany
     {
         return $this->hasMany(ClientProperty::class);
     }
 
-    public function clientCredential()
+    public function clientCredential(): BelongsTo
     {
         return $this->belongsTo(ClientCredential::class);
     }
 
-    public function credential()
+    public function credential(): BelongsTo
     {
         return $this->belongsTo(ClientCredential::class, 'client_credential_id');
     }
 
-    public function receipts()
+    public function receipts(): HasMany
     {
         return $this->hasMany(Receipt::class, 'client_id');
     }

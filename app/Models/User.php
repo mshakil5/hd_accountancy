@@ -17,6 +17,13 @@ use Spatie\Activitylog\LogOptions;
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes, LogsActivity;
+
+    protected static function booted(): void
+    {
+        static::creating(function ($model) {
+            $model->ensureUniqueCreatedAt();
+        });
+    }
     /**
      * The attributes that are mass assignable.
      *
@@ -105,16 +112,34 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class, 'role_id');
     }
 
-    protected function type(): Attribute
-    {
-        return new Attribute(
-            get: fn ($value) =>  ["user", "admin", "manager", "staff"][$value],
-        );
-    }
-
     public function getNameAttribute()
     {
         return "{$this->first_name} {$this->last_name}";
     }
 
+    protected function type(): Attribute
+    {
+        return new Attribute(
+            get: fn ($value) =>  ["user", "admin", "manager", "staff"][$value] ?? 'user',
+        );
+    }
+
+    public function getRawTypeAttribute()
+    {
+        return $this->attributes['type'] ?? null;
+    }
+
+    public function getRawStatusAttribute()
+    {
+        return $this->attributes['status'] ?? null;
+    }
+
+    protected function ensureUniqueCreatedAt(): void
+    {
+        $second = now()->format('Y-m-d H:i:s');
+        while (static::where('created_at', 'like', $second . '%')->exists()) {
+            $this->created_at = now()->addSecond();
+            $second = $this->created_at->format('Y-m-d H:i:s');
+        }
+    }
 }
