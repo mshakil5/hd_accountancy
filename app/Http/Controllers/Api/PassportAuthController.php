@@ -238,9 +238,9 @@ class PassportAuthController extends Controller
     public function changePassword(Request $request)
     {
         $request->validate([
-            'current_password'     => 'required',
-            'new_password'         => 'required|min:6|confirmed',
-            'password_confirmation' => 'required',
+            'current_password'      => 'required',
+            'new_password'          => 'required|min:6',
+            'password_confirmation' => 'required|same:new_password',
         ]);
 
         $user = $request->user();
