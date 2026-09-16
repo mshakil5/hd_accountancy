@@ -4,9 +4,6 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Laravel\Passport\Token;
-use Laravel\Sanctum\PersonalAccessToken;
 use App\Models\ClientCredential;
 use App\Models\User;
 
@@ -23,23 +20,22 @@ class DualAuth
             ], 401);
         }
 
-        $plainPart = \Illuminate\Support\Str::after($token, '|');
-        $passportToken = Token::where('token', hash('sha256', $plainPart))->first();
+        $passportToken = \Laravel\Passport\Token::where('token', hash('sha256', $token))->first();
 
         if ($passportToken) {
             $client = ClientCredential::find($passportToken->user_id);
             if ($client) {
-                Auth::setUser($client);
+                auth()->setUser($client);
                 return $next($request);
             }
         }
 
-        $sanctumToken = PersonalAccessToken::where('token', hash('sha256', $token))->first();
+        $sanctumToken = \Laravel\Sanctum\PersonalAccessToken::where('token', hash('sha256', $token))->first();
 
         if ($sanctumToken) {
             $user = User::find($sanctumToken->tokenable_id);
             if ($user) {
-                Auth::setUser($user);
+                auth()->setUser($user);
                 return $next($request);
             }
         }

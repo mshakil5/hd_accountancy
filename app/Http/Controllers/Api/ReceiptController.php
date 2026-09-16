@@ -102,104 +102,67 @@ class ReceiptController extends Controller
 
     public function store(Request $request, $businessId)
     {
-        try {
-            \Log::info('Receipt store called', [
-                'businessId' => $businessId,
-                'user_id' => $request->user()?->id,
-                'user_type' => get_class($request->user()),
-                'has_files' => $request->hasFile('files'),
-                'file_count' => is_array($request->file('files')) ? count($request->file('files')) : 1,
-                'all_input' => array_keys($request->all()),
-                'content_type' => $request->header('Content-Type'),
-            ]);
+        $request->validate([
+            'files'        => 'required|array|min:1',
+            'files.*'      => 'required|file|mimes:pdf|max:5120',
+            'receipt_date' => 'nullable|date',
+            'notes'        => 'nullable|string|max:500',
+        ]);
 
-            $files = $request->hasFile('files')
-                ? (is_array($request->file('files')) ? $request->file('files') : [$request->file('files')])
-                : [];
-
-            $validator = \Validator::make(
-                array_merge($request->all(), ['files' => $files]),
-                [
-                    'files'        => 'required|array|min:1',
-                    'files.*'      => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
-                    'receipt_date' => 'nullable|date',
-                    'notes'        => 'nullable|string|max:500',
-                ]
-            );
-
-            if ($validator->fails()) {
-                \Log::error('Receipt validation failed', $validator->errors()->toArray());
-                return response()->json(['message' => 'Validation failed', 'errors' => $validator->errors()], 422);
-            }
-
-            $totalBytes = collect($files)->sum(fn($f) => $f->getSize());
-            if ($totalBytes > 5 * 1024 * 1024) {
-                return response()->json(['message' => 'Total file size must not exceed 5MB.'], 422);
-            }
-
-            $user = $request->user();
-
-            if ($user instanceof User) {
-                $client = Client::findOrFail($businessId);
-            } else {
-                $client = Client::where('id', $businessId)
-                    ->where('client_credential_id', $user->id)
-                    ->where('status', true)
-                    ->first();
-            }
-
-            if (!$client) {
-                \Log::error('Client not found for businessId', ['businessId' => $businessId, 'user_id' => $user->id]);
-                return response()->json(['message' => 'Business not found.'], 404);
-            }
-
-            $receipt = Receipt::create([
-                'client_id'      => $client->id,
-                'receipt_number' => 'RCT-' . now()->format('Ymd') . '-' . strtoupper(Str::random(4)),
-                'receipt_date'   => $request->receipt_date ?? now()->toDateString(),
-                'notes'          => $request->notes,
-                'status'         => 'pending',
-                'created_by'     => $request->user()->id,
-            ]);
-
-            $receiptDir = $this->getReceiptDirectory($client, $receipt->id);
-
-            foreach ($files as $file) {
-                $mime = $file->getClientMimeType();
-                $size = $file->getSize();
-
-                $fileType = $file->extension() === 'pdf' ? 'pdf' : 'image';
-                $filename = time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
-
-                $file->move(public_path($receiptDir), $filename);
-
-                ReceiptFile::create([
-                    'receipt_id' => $receipt->id,
-                    'file_path'  => $receiptDir . '/' . $filename,
-                    'file_name'  => $file->getClientOriginalName(),
-                    'file_type'  => $fileType,
-                    'mime_type'  => $mime,
-                    'file_size'  => $size,
-                ]);
-            }
-
-            return response()->json([
-                'message' => 'Receipt uploaded successfully.',
-                'data'    => [
-                    'id'             => $receipt->id,
-                    'receipt_number' => $receipt->receipt_number,
-                    'status'         => $receipt->status,
-                ],
-            ], 201);
-        } catch (\Exception $e) {
-            \Log::error('Receipt store exception', [
-                'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-            return response()->json(['message' => 'Upload failed: ' . $e->getMessage()], 500);
+        $totalBytes = collect($request->file('files'))->sum(fn($f) => $f->getSize());
+        if ($totalBytes > 5 * 1024 * 1024) {
+            return response()->json(['message' => 'Total file size must not exceed 5MB.'], 422);
         }
+
+        $user = $request->user();
+
+        if ($user instanceof User) {
+            $client = Client::findOrFail($businessId);
+        } else {
+            $client = Client::where('id', $businessId)
+                ->where('client_credential_id', $user->id)
+                ->where('status', true)
+                ->firstOrFail();
+        }
+
+        $receipt = Receipt::create([
+            'client_id'      => $client->id,
+            'receipt_number' => 'RCT-' . now()->format('Ymd') . '-' . strtoupper(Str::random(4)),
+            'receipt_date'   => $request->receipt_date ?? now()->toDateString(),
+            'notes'          => $request->notes,
+            'status'         => 'pending',
+            'created_by'     => $request->user()->id,
+        ]);
+
+        $receiptDir = $this->getReceiptDirectory($client, $receipt->id);
+
+        foreach ($request->file('files') as $file) {
+            $mime = $file->getClientMimeType();
+            $size = $file->getSize();
+
+            $fileType = $file->extension() === 'pdf' ? 'pdf' : 'image';
+            $filename = time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
+
+            $file->move(public_path($receiptDir), $filename);
+
+            ReceiptFile::create([
+                'receipt_id' => $receipt->id,
+                'file_path'  => $receiptDir . '/' . $filename,
+                'file_name'  => $file->getClientOriginalName(),
+                'file_type'  => $fileType,
+                'mime_type'  => $mime,
+                'file_size'  => $size,
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Receipt uploaded successfully.',
+            'data'    => [
+                'id'             => $receipt->id,
+                'receipt_number' => $receipt->receipt_number,
+                'status'         => $receipt->status,
+            ],
+        ], 201);
     }
 
     private function getReceiptDirectory($client, $receiptId)
@@ -332,16 +295,14 @@ class ReceiptController extends Controller
             'files.*' => 'required|file|mimes:pdf|max:5120',
         ]);
 
-        $files = is_array($request->file('files')) ? $request->file('files') : [$request->file('files')];
-
-        $totalBytes = collect($files)->sum(fn($f) => $f->getSize());
+        $totalBytes = collect($request->file('files'))->sum(fn($f) => $f->getSize());
         if ($totalBytes > 5 * 1024 * 1024) {
             return response()->json(['message' => 'Total file size must not exceed 5MB.'], 422);
         }
 
         $receiptDir = $this->getReceiptDirectory($receipt->client, $receipt->id);
 
-        foreach ($files as $file) {
+        foreach ($request->file('files') as $file) {
             $mime = $file->getClientMimeType();
             $size = $file->getSize();
             $fileType = $file->extension() === 'pdf' ? 'pdf' : 'image';
