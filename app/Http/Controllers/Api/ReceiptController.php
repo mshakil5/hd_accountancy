@@ -102,6 +102,15 @@ class ReceiptController extends Controller
 
     public function store(Request $request, $businessId)
     {
+        \Log::info('Receipt store called', [
+            'businessId' => $businessId,
+            'user_id' => $request->user()?->id,
+            'user_type' => get_class($request->user()),
+            'has_files' => $request->hasFile('files'),
+            'file_count' => $request->file('files') ? count($request->file('files')) : 0,
+            'all_input' => array_keys($request->all()),
+        ]);
+
         $request->validate([
             'files'        => 'required|array|min:1',
             'files.*'      => 'required|file|mimes:pdf|max:5120',
