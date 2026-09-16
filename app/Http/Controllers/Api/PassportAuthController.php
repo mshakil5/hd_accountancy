@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Client;
 use App\Models\ClientCredential;
 use App\Models\ClientPasswordResetToken;
 use App\Models\User;
@@ -87,20 +88,19 @@ class PassportAuthController extends Controller
     {
         $user = $request->user();
 
-        if ($user instanceof User) {
+        try {
+            $user->token()->revoke();
+        } catch (\Exception $e) {
             $user->tokens()->delete();
-        } else {
-            try {
-                $request->user()->token()->revoke();
-            } catch (\Exception $e) {
-                $user->tokens()->delete();
-            }
         }
 
         return response()->json([
             'message' => 'Logged out successfully.',
         ], 200);
     }
+
+    // logout works for both User and ClientCredential now — no instanceof needed,
+    // since $request->user() always resolves to the correct model.
 
     public function forgotPassword(Request $request)
     {
@@ -238,25 +238,18 @@ class PassportAuthController extends Controller
     public function changePassword(Request $request)
     {
         $request->validate([
-            'current_password'     => 'required',
-            'new_password'         => 'required|min:6|confirmed',
-            'password_confirmation' => 'required',
+            'current_password'      => 'required',
+            'new_password'          => 'required|min:6',
+            'password_confirmation' => 'required|same:new_password',
         ]);
 
         $user = $request->user();
 
-        if ($user instanceof User) {
-            if (!Hash::check($request->current_password, $user->password)) {
-                return response()->json(['message' => 'Current password is incorrect.'], 422);
-            }
-            $user->update(['password' => Hash::make($request->new_password)]);
-        } else {
-            $client = $user;
-            if (!Hash::check($request->current_password, $client->password)) {
-                return response()->json(['message' => 'Current password is incorrect.'], 422);
-            }
-            $client->update(['password' => Hash::make($request->new_password)]);
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json(['message' => 'Current password is incorrect.'], 422);
         }
+
+        $user->update(['password' => Hash::make($request->new_password)]);
 
         return response()->json([
             'message' => 'Password changed successfully.',

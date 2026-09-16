@@ -6,22 +6,26 @@ use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\Receipt;
 use App\Models\ReceiptFile;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class ReceiptController extends Controller
 {
+    private function hasOwnClients($user)
+    {
+        return Client::where('client_credential_id', $user->id)->exists();
+    }
+
     public function all(Request $request)
     {
         $user = $request->user();
 
-        if ($user instanceof User) {
-            $clientIds = Client::pluck('id');
-        } else {
+        if ($this->hasOwnClients($user)) {
             $clientIds = Client::where('client_credential_id', $user->id)
                 ->where('status', true)
                 ->pluck('id');
+        } else {
+            $clientIds = Client::pluck('id');
         }
 
         $receipts = Receipt::whereIn('client_id', $clientIds)
@@ -67,9 +71,7 @@ class ReceiptController extends Controller
         $receipt = Receipt::with(['files', 'client'])->findOrFail($id);
 
         $user = $request->user();
-        if ($user instanceof User) {
-            // Admin/manager/staff: all clients
-        } else {
+        if ($this->hasOwnClients($user)) {
             if ($receipt->client->client_credential_id !== $user->id) {
                 return response()->json(['message' => 'Unauthorized.'], 403);
             }
@@ -104,7 +106,7 @@ class ReceiptController extends Controller
     {
         $request->validate([
             'files'        => 'required|array|min:1',
-            'files.*'      => 'required|file|mimes:pdf|max:5120',
+            'files.*'      => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
             'receipt_date' => 'nullable|date',
             'notes'        => 'nullable|string|max:500',
         ]);
@@ -116,13 +118,13 @@ class ReceiptController extends Controller
 
         $user = $request->user();
 
-        if ($user instanceof User) {
-            $client = Client::findOrFail($businessId);
-        } else {
+        if ($this->hasOwnClients($user)) {
             $client = Client::where('id', $businessId)
                 ->where('client_credential_id', $user->id)
                 ->where('status', true)
                 ->firstOrFail();
+        } else {
+            $client = Client::findOrFail($businessId);
         }
 
         $receipt = Receipt::create([
@@ -194,7 +196,7 @@ class ReceiptController extends Controller
         }
 
         $user = $request->user();
-        if (!$user instanceof User) {
+        if ($this->hasOwnClients($user)) {
             if ($receipt->client->client_credential_id !== $user->id) {
                 return response()->json(['message' => 'Unauthorized.'], 403);
             }
@@ -229,7 +231,7 @@ class ReceiptController extends Controller
         }
 
         $user = $request->user();
-        if (!$user instanceof User) {
+        if ($this->hasOwnClients($user)) {
             if ($receipt->client->client_credential_id !== $user->id) {
                 return response()->json(['message' => 'Unauthorized.'], 403);
             }
@@ -257,7 +259,7 @@ class ReceiptController extends Controller
         }
 
         $user = $request->user();
-        if (!$user instanceof User) {
+        if ($this->hasOwnClients($user)) {
             if ($receipt->client->client_credential_id !== $user->id) {
                 return response()->json(['message' => 'Unauthorized.'], 403);
             }
@@ -284,7 +286,7 @@ class ReceiptController extends Controller
         }
 
         $user = $request->user();
-        if (!$user instanceof User) {
+        if ($this->hasOwnClients($user)) {
             if ($receipt->client->client_credential_id !== $user->id) {
                 return response()->json(['message' => 'Unauthorized.'], 403);
             }
@@ -292,7 +294,7 @@ class ReceiptController extends Controller
 
         $request->validate([
             'files'   => 'required|array|min:1',
-            'files.*' => 'required|file|mimes:pdf|max:5120',
+            'files.*' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
 
         $totalBytes = collect($request->file('files'))->sum(fn($f) => $f->getSize());

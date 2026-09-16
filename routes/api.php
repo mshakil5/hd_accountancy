@@ -10,7 +10,7 @@ Route::post('forgot-password', [PassportAuthController::class, 'forgotPassword']
 Route::post('verify-otp', [PassportAuthController::class, 'verifyOtp']);
 Route::post('reset-password', [PassportAuthController::class, 'resetPassword']);
 
-Route::middleware('auth:api')->group(function () {
+Route::middleware('auth:api,api_client')->group(function () {
     Route::get('me', [PassportAuthController::class, 'me']);
     Route::post('logout', [PassportAuthController::class, 'logout']);
     Route::post('change-password', [PassportAuthController::class, 'changePassword']);
