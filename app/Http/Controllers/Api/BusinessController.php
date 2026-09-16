@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Client;
+use App\Models\ClientCredential;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -13,9 +14,7 @@ class BusinessController extends Controller
     {
         $user = $request->user();
 
-        $hasOwnClients = Client::where('client_credential_id', $user->id)->exists();
-
-        if ($hasOwnClients) {
+        if ($user instanceof \App\Models\ClientCredential) {
             $clients = Client::where('client_credential_id', $user->id)
                 ->where('status', 1);
         } else {
@@ -115,5 +114,50 @@ class BusinessController extends Controller
         ]);
 
         return response()->json(['data' => $data], 200);
+    }
+
+    public function clientCredentials(Request $request)
+    {
+        $credentials = ClientCredential::where('status', 1)
+            ->withCount('clients')
+            ->latest()
+            ->get()
+            ->map(function ($cc) {
+                return [
+                    'id'             => $cc->id,
+                    'name'           => trim($cc->first_name . ' ' . $cc->last_name),
+                    'email'          => $cc->email,
+                    'phone'          => $cc->phone,
+                    'business_count' => $cc->clients_count,
+                ];
+            });
+
+        return response()->json(['data' => $credentials], 200);
+    }
+
+    public function businessesByCredential(Request $request, $clientCredentialId)
+    {
+        $clients = Client::where('client_credential_id', $clientCredentialId)
+            ->where('status', 1)
+            ->with(['clientType', 'manager'])
+            ->withCount('receipts')
+            ->latest()
+            ->get()
+            ->map(function ($c) {
+                return [
+                    'id'            => $c->id,
+                    'name'          => trim($c->name . ' ' . $c->last_name),
+                    'business_name' => $c->business_name,
+                    'company_name'  => $c->company_name,
+                    'company_number' => $c->company_number,
+                    'type_of_business' => $c->type_of_business,
+                    'client_type'   => $c->clientType?->name,
+                    'manager'       => $c->manager?->name,
+                    'city'          => $c->city,
+                    'receipt_count' => $c->receipts_count,
+                ];
+            });
+
+        return response()->json(['data' => $clients], 200);
     }
 }

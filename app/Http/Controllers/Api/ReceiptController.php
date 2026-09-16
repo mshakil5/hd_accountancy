@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Client;
+use App\Models\ClientCredential;
 use App\Models\Receipt;
 use App\Models\ReceiptFile;
 use Illuminate\Http\Request;
@@ -11,16 +12,11 @@ use Illuminate\Support\Str;
 
 class ReceiptController extends Controller
 {
-    private function hasOwnClients($user)
-    {
-        return Client::where('client_credential_id', $user->id)->exists();
-    }
-
     public function all(Request $request)
     {
         $user = $request->user();
 
-        if ($this->hasOwnClients($user)) {
+        if ($user instanceof ClientCredential) {
             $clientIds = Client::where('client_credential_id', $user->id)
                 ->where('status', true)
                 ->pluck('id');
@@ -71,7 +67,7 @@ class ReceiptController extends Controller
         $receipt = Receipt::with(['files', 'client'])->findOrFail($id);
 
         $user = $request->user();
-        if ($this->hasOwnClients($user)) {
+        if ($user instanceof ClientCredential) {
             if ($receipt->client->client_credential_id !== $user->id) {
                 return response()->json(['message' => 'Unauthorized.'], 403);
             }
@@ -118,7 +114,7 @@ class ReceiptController extends Controller
 
         $user = $request->user();
 
-        if ($this->hasOwnClients($user)) {
+        if ($user instanceof ClientCredential) {
             $client = Client::where('id', $businessId)
                 ->where('client_credential_id', $user->id)
                 ->where('status', true)
@@ -196,7 +192,7 @@ class ReceiptController extends Controller
         }
 
         $user = $request->user();
-        if ($this->hasOwnClients($user)) {
+        if ($user instanceof ClientCredential) {
             if ($receipt->client->client_credential_id !== $user->id) {
                 return response()->json(['message' => 'Unauthorized.'], 403);
             }
@@ -231,7 +227,7 @@ class ReceiptController extends Controller
         }
 
         $user = $request->user();
-        if ($this->hasOwnClients($user)) {
+        if ($user instanceof ClientCredential) {
             if ($receipt->client->client_credential_id !== $user->id) {
                 return response()->json(['message' => 'Unauthorized.'], 403);
             }
@@ -259,7 +255,7 @@ class ReceiptController extends Controller
         }
 
         $user = $request->user();
-        if ($this->hasOwnClients($user)) {
+        if ($user instanceof ClientCredential) {
             if ($receipt->client->client_credential_id !== $user->id) {
                 return response()->json(['message' => 'Unauthorized.'], 403);
             }
@@ -286,7 +282,7 @@ class ReceiptController extends Controller
         }
 
         $user = $request->user();
-        if ($this->hasOwnClients($user)) {
+        if ($user instanceof ClientCredential) {
             if ($receipt->client->client_credential_id !== $user->id) {
                 return response()->json(['message' => 'Unauthorized.'], 403);
             }
