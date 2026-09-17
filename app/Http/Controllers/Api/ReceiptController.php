@@ -202,9 +202,14 @@ class ReceiptController extends Controller
             'receipt_date' => 'nullable|date',
             'notes'        => 'nullable|string|max:500',
             'supplier'     => 'nullable|string',
+            'client_id'    => 'nullable|integer|exists:clients,id',
         ]);
 
-        $receipt->update($request->only(['receipt_date', 'notes', 'supplier']));
+        $fields = $request->only(['receipt_date', 'notes', 'supplier']);
+        if ($request->filled('client_id')) {
+            $fields['client_id'] = $request->client_id;
+        }
+        $receipt->update($fields);
 
         return response()->json([
             'message' => 'Receipt updated successfully.',
