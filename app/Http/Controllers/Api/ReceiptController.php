@@ -102,14 +102,14 @@ class ReceiptController extends Controller
     {
         $request->validate([
             'files'        => 'required|array|min:1',
-            'files.*'      => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'files.*'      => 'required|file|mimes:pdf,jpg,jpeg,png|max:51200',
             'receipt_date' => 'nullable|date',
             'notes'        => 'nullable|string|max:500',
         ]);
 
         $totalBytes = collect($request->file('files'))->sum(fn($f) => $f->getSize());
-        if ($totalBytes > 5 * 1024 * 1024) {
-            return response()->json(['message' => 'Total file size must not exceed 5MB.'], 422);
+        if ($totalBytes > 50 * 1024 * 1024) {
+            return response()->json(['message' => 'Total file size must not exceed 50MB.'], 422);
         }
 
         $user = $request->user();
@@ -290,12 +290,12 @@ class ReceiptController extends Controller
 
         $request->validate([
             'files'   => 'required|array|min:1',
-            'files.*' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'files.*' => 'required|file|mimes:pdf,jpg,jpeg,png|max:51200',
         ]);
 
         $totalBytes = collect($request->file('files'))->sum(fn($f) => $f->getSize());
-        if ($totalBytes > 5 * 1024 * 1024) {
-            return response()->json(['message' => 'Total file size must not exceed 5MB.'], 422);
+        if ($totalBytes > 50 * 1024 * 1024) {
+            return response()->json(['message' => 'Total file size must not exceed 50MB.'], 422);
         }
 
         $receiptDir = $this->getReceiptDirectory($receipt->client, $receipt->id);
