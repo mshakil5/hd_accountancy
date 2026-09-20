@@ -512,7 +512,8 @@
                     return;
                 }
                 $.get(baseUrl + '/get-account-heads', {
-                    account_type_id: typeId
+                    account_type_id: typeId,
+                    client_credential_id: $('#client_credential_id').val() || '{{ $credentialId }}'
                 }, function(data) {
                     let options = '<option value="">Select Account Head</option>';
                     $.each(data, function(i, head) {

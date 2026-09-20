@@ -155,7 +155,16 @@ class ReceiptController extends Controller
 
         $currentAccountTypeId = $receipt->detail?->accountHead?->account_type_id;
         $heads = $currentAccountTypeId
-            ? AccountHead::with('taxRate')->where('account_type_id', $currentAccountTypeId)->where('is_active', true)->get()
+            ? AccountHead::with('taxRate')
+                ->where('account_type_id', $currentAccountTypeId)
+                ->where('is_active', true)
+                ->where(function ($q) use ($credentialId) {
+                    $q->whereNull('client_credential_id');
+                    if ($credentialId) {
+                        $q->orWhere('client_credential_id', $credentialId);
+                    }
+                })
+                ->orderBy('code')->get()
             : collect();
 
         $credentialId = $receipt->client?->client_credential_id;
@@ -188,6 +197,13 @@ class ReceiptController extends Controller
         $heads = AccountHead::with('taxRate')
             ->where('account_type_id', $request->account_type_id)
             ->where('is_active', true)
+            ->where(function ($q) use ($request) {
+                $q->whereNull('client_credential_id');
+                if ($request->client_credential_id) {
+                    $q->orWhere('client_credential_id', $request->client_credential_id);
+                }
+            })
+            ->orderBy('code')
             ->get();
 
         return response()->json($heads);

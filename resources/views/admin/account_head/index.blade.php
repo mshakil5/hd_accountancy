@@ -21,9 +21,15 @@ input:checked + .slider:before { transform: translateX(24px); }
 
 <section class="content">
     <div class="container-fluid">
-        <div class="row">
-            <div class="col-2">
-                <button type="button" class="btn btn-secondary my-3" id="newBtn">Add new</button>
+        <div class="row align-items-center mb-3">
+            <div class="col-md-2">
+                <button type="button" class="btn btn-secondary" id="newBtn">Add new</button>
+            </div>
+            <div class="col-md-4 offset-md-6">
+                <label class="font-weight-bold">Filter by Client</label>
+                <select class="form-control select2" id="filterClientCredential" style="width:100%;">
+                    <option value="">All (Global + All Clients)</option>
+                </select>
             </div>
         </div>
     </div>
@@ -78,6 +84,13 @@ input:checked + .slider:before { transform: translateX(24px); }
                                     @endforeach
                                 </select>
                             </div>
+
+                            <div class="form-group">
+                                <label>Client (optional — leave blank for Global)</label>
+                                <select class="form-control select2" id="client_credential_id" name="client_credential_id" style="width:100%;">
+                                    <option value="">Global (all clients)</option>
+                                </select>
+                            </div>
                         </form>
                     </div>
                     <div class="card-footer">
@@ -116,6 +129,7 @@ input:checked + .slider:before { transform: translateX(24px); }
                                     <th>Account Type</th>
                                     <th>Code</th>
                                     <th>Account Head</th>
+                                    <th>Client</th>
                                     <th>Tax</th>
                                     <th>Status</th>
                                     <th>Action</th>
@@ -138,6 +152,20 @@ $(function(){
     var url = "{{ url('/admin/account-heads') }}";
     var activeCategory = '';
 
+    // Client Select2 with AJAX search (form)
+    $('#client_credential_id').select2({
+        placeholder: 'Global (all clients)',
+        allowClear: true,
+        ajax: {
+            url: "{{ url('/admin/receipts/search-clients') }}",
+            dataType: 'json',
+            delay: 250,
+            data: function(params) { return { q: params.term }; },
+            processResults: function(data) { return { results: data }; },
+            cache: true
+        }
+    });
+
     var table = $('#example1').DataTable({
         processing: true,
         serverSide: true,
@@ -145,6 +173,7 @@ $(function(){
             url: url + '/datatable',
             data: function(d) {
                 d.category = activeCategory;
+                d.client_credential_id = $('#filterClientCredential').val();
             }
         },
         columns: [
@@ -152,6 +181,7 @@ $(function(){
             {data: 'account_type_name'},
             {data: 'code'},
             {data: 'name'},
+            {data: 'client_name', orderable: false, searchable: false},
             {data: 'tax_rate_name', orderable: false, searchable: false},
             {data: 'status', orderable: false, searchable: false},
             {data: 'action', orderable: false, searchable: false},
@@ -165,6 +195,25 @@ $(function(){
         table.ajax.reload();
     });
 
+    // Top filter Select2 (after table is created)
+    $('#filterClientCredential').select2({
+        placeholder: 'Select client...',
+        allowClear: true,
+        ajax: {
+            url: "{{ url('/admin/receipts/search-clients') }}",
+            dataType: 'json',
+            delay: 250,
+            data: function(params) { return { q: params.term }; },
+            processResults: function(data) {
+                data.unshift({ id: '', text: 'All (Global + All Clients)' });
+                return { results: data };
+            },
+            cache: true
+        }
+    }).on('change', function() {
+        table.ajax.reload();
+    });
+
     let codeTimer;
     $('#code').on('input', function(){
         clearTimeout(codeTimer);
@@ -172,7 +221,7 @@ $(function(){
         let editId = $('#codeid').val();
         if(!code) { $('#codeMsg').text('').removeClass(); return; }
         codeTimer = setTimeout(function(){
-            $.get(url+'/check-code', {code: code, id: editId}, function(d){
+            $.get(url+'/check-code', {code: code, id: editId, client_credential_id: $('#client_credential_id').val()}, function(d){
                 if(d.available){
                     $('#codeMsg').text(code+' is available').removeClass().addClass('text-success');
                 } else {
@@ -180,6 +229,12 @@ $(function(){
                 }
             });
         }, 400);
+    });
+
+    // Re-check code when client changes
+    $('#client_credential_id').on('change', function(){
+        let code = $('#code').val().trim();
+        if(code) $('#code').trigger('input');
     });
 
     $('#newBtn').click(function(){
@@ -203,6 +258,7 @@ $(function(){
             name:            $('#name').val(),
             description:     $('#description').val(),
             tax_rate_id:     $('#tax_rate_id').val(),
+            client_credential_id: $('#client_credential_id').val(),
         };
         if(isUpdate) data.codeid = $('#codeid').val();
 
@@ -228,6 +284,17 @@ $(function(){
             $('#name').val(d.name);
             $('#description').val(d.description);
             $('#tax_rate_id').val(d.tax_rate_id);
+            if(d.client_credential_id) {
+                $.get("{{ url('/admin/receipts/search-clients') }}", { q: '' }, function(data) {
+                    var match = data.find(function(item) { return item.id == d.client_credential_id; });
+                    if(match) {
+                        var option = new Option(match.text, match.id, true, true);
+                        $('#client_credential_id').append(option).trigger('change');
+                    }
+                });
+            } else {
+                $('#client_credential_id').val(null).trigger('change');
+            }
             $('#codeMsg').text('');
             $('#addBtn').val('Update').text('Update');
             $('#formTitle').text('Edit Account');
@@ -258,6 +325,7 @@ $(function(){
     function clearForm(){
         $('#createThisForm')[0].reset();
         $('#codeid').val('');
+        $('#client_credential_id').val(null).trigger('change');
         $('#codeMsg').text('').removeClass();
         $('#addBtn').val('Create').text('Create');
         $('#formTitle').text('Add new Account');

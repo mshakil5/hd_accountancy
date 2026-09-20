@@ -330,7 +330,7 @@ $(function () {
             calculateAmounts();
             return;
         }
-        $.get(baseUrl + '/get-account-heads', { account_type_id: typeId }, function (data) {
+        $.get(baseUrl + '/get-account-heads', { account_type_id: typeId, client_credential_id: $('#client_credential_id').val() }, function (data) {
             let opts = '<option value="">Select Account Head</option>';
             $.each(data, function (i, h) {
                 const rate = h.tax_rate ? h.tax_rate.rate : 0;

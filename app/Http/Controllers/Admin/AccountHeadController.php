@@ -19,16 +19,23 @@ class AccountHeadController extends Controller
 
     public function datatable()
     {
-        $query = AccountHead::with('accountType:id,name', 'taxRate:id,name,rate')
-            ->select('account_heads.*')
-            ->when(request('category'), function($q) {
+    $query = AccountHead::with('accountType:id,name', 'taxRate:id,name,rate', 'clientCredential:id,first_name,last_name')
+        ->select('account_heads.*')
+        ->orderBy('code')
+        ->when(request('category'), function($q) {
                 $q->whereHas('accountType', fn($q2) => $q2->where('category', request('category')));
+            })
+        ->when(request('client_credential_id'), function($q) {
+                $credId = request('client_credential_id');
+                if (is_array($credId)) $credId = reset($credId);
+                $q->where('client_credential_id', $credId);
             });
 
         return DataTables::of($query)
             ->addIndexColumn()
             ->addColumn('account_type_name', fn($row) => $row->accountType?->name)
             ->addColumn('tax_rate_name', fn($row) => $row->taxRate ? $row->taxRate->name.' ('.$row->taxRate->rate.'%)' : '-')
+            ->addColumn('client_name', fn($row) => $row->clientCredential ? trim($row->clientCredential->first_name . ' ' . $row->clientCredential->last_name) : '<span class="text-muted">Global</span>')
             ->addColumn('status', function($row){
                 $checked = $row->is_active ? 'checked' : '';
                 return '<label class="switch">
@@ -44,13 +51,15 @@ class AccountHeadController extends Controller
                             <i class="fa fa-trash" style="font-size:20px;color:red"></i>
                         </a>';
             })
-            ->rawColumns(['status', 'action'])
+            ->rawColumns(['status', 'action', 'client_name'])
             ->make(true);
     }
 
     public function checkCode(Request $request)
     {
+        $credId = $request->client_credential_id ?: null;
         $exists = AccountHead::where('code', $request->code)
+            ->where('client_credential_id', $credId)
             ->when($request->id, fn($q) => $q->where('id', '!=', $request->id))
             ->exists();
         return response()->json(['available' => !$exists]);
@@ -64,23 +73,27 @@ class AccountHeadController extends Controller
         if(empty($request->code)){
             return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>Please fill Code field.</div>"]);
         }
-        if(AccountHead::where('code', $request->code)->exists()){
-            return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>This code already exists.</div>"]);
-        }
         if(empty($request->name)){
             return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>Please fill Account Head field.</div>"]);
         }
-        if(AccountHead::where('name', $request->name)->exists()){
-            return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>This account head already exists.</div>"]);
+
+        $credId = $request->client_credential_id ?: null;
+
+        if(AccountHead::where('code', $request->code)->where('client_credential_id', $credId)->exists()){
+            return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>This code already exists for this client scope.</div>"]);
+        }
+        if(AccountHead::where('name', $request->name)->where('client_credential_id', $credId)->exists()){
+            return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>This account head already exists for this client scope.</div>"]);
         }
 
         AccountHead::create([
-            'account_type_id' => $request->account_type_id,
-            'tax_rate_id'     => $request->tax_rate_id ?: null,
-            'code'            => $request->code,
-            'name'            => $request->name,
-            'description'     => $request->description,
-            'is_active'       => 1,
+            'account_type_id'        => $request->account_type_id,
+            'tax_rate_id'            => $request->tax_rate_id ?: null,
+            'client_credential_id'   => $request->client_credential_id ?: null,
+            'code'                   => $request->code,
+            'name'                   => $request->name,
+            'description'            => $request->description,
+            'is_active'              => 1,
         ]);
         return response()->json(['status'=>300,'message'=>'Account head created successfully.']);
     }
@@ -89,8 +102,15 @@ class AccountHeadController extends Controller
     {
         $heads = AccountHead::where('account_type_id', $typeId)
             ->where('is_active', 1)
-            ->select('id', 'name', 'tax_rate_id')
+            ->where(function ($q) {
+                $q->whereNull('client_credential_id');
+                if (request('client_credential_id')) {
+                    $q->orWhere('client_credential_id', request('client_credential_id'));
+                }
+            })
+            ->select('id', 'name', 'tax_rate_id', 'code')
             ->with('taxRate:id,rate')
+            ->orderBy('code')
             ->get()
             ->map(fn($h) => [
                 'id'       => $h->id,
@@ -114,22 +134,26 @@ class AccountHeadController extends Controller
         if(empty($request->code)){
             return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>Please fill Code field.</div>"]);
         }
-        if(AccountHead::where('code', $request->code)->where('id','!=',$request->codeid)->exists()){
-            return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>This code already exists.</div>"]);
-        }
         if(empty($request->name)){
             return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>Please fill Account Head field.</div>"]);
         }
-        if(AccountHead::where('name', $request->name)->where('id','!=',$request->codeid)->exists()){
-            return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>This account head already exists.</div>"]);
+
+        $credId = $request->client_credential_id ?: null;
+
+        if(AccountHead::where('code', $request->code)->where('client_credential_id', $credId)->where('id','!=',$request->codeid)->exists()){
+            return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>This code already exists for this client scope.</div>"]);
+        }
+        if(AccountHead::where('name', $request->name)->where('client_credential_id', $credId)->where('id','!=',$request->codeid)->exists()){
+            return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>This account head already exists for this client scope.</div>"]);
         }
 
         AccountHead::find($request->codeid)->update([
-            'account_type_id' => $request->account_type_id,
-            'tax_rate_id'     => $request->tax_rate_id ?: null,
-            'code'            => $request->code,
-            'name'            => $request->name,
-            'description'     => $request->description,
+            'account_type_id'        => $request->account_type_id,
+            'tax_rate_id'            => $request->tax_rate_id ?: null,
+            'client_credential_id'   => $request->client_credential_id ?: null,
+            'code'                   => $request->code,
+            'name'                   => $request->name,
+            'description'            => $request->description,
         ]);
         return response()->json(['status'=>300,'message'=>'Account head updated successfully.']);
     }

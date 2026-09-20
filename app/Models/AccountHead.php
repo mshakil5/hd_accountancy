@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class AccountHead extends Model
 {
     use HasFactory;
-    protected $fillable = ['account_type_id', 'tax_rate_id', 'code', 'name', 'description', 'is_active'];
+    protected $fillable = ['account_type_id', 'tax_rate_id', 'client_credential_id', 'code', 'name', 'description', 'is_active'];
 
     public function accountType()
     {
@@ -18,5 +18,10 @@ class AccountHead extends Model
     public function taxRate()
     {
         return $this->belongsTo(TaxRate::class);
+    }
+
+    public function clientCredential()
+    {
+        return $this->belongsTo(ClientCredential::class);
     }
 }
