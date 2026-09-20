@@ -88,18 +88,21 @@ class ReceiptController extends Controller
     public function searchClients(Request $request)
     {
         $search = $request->get('q');
-        $clients = ClientCredential::select('id', 'first_name', 'last_name')
+        $clients = ClientCredential::select('id', 'first_name', 'last_name', 'email', 'phone', 'status')
             ->when($search, function ($q) use ($search) {
                 $q->where('first_name', 'LIKE', "%{$search}%")
                     ->orWhere('last_name', 'LIKE', "%{$search}%");
             })
-            ->limit(20)->get();
+            ->latest()->limit(20)->get();
 
         $formattedClients = [];
         foreach ($clients as $client) {
             $formattedClients[] = [
                 'id' => $client->id,
-                'text' => trim($client->first_name . ' ' . $client->last_name)
+                'text' => trim($client->first_name . ' ' . $client->last_name),
+                'email' => $client->email,
+                'phone' => $client->phone,
+                'status' => $client->status
             ];
         }
         return response()->json($formattedClients);
@@ -308,15 +311,21 @@ class ReceiptController extends Controller
         return view('admin.receipt.bill', compact('receipt'));
     }
 
-    public function counts()
+    public function counts(Request $request)
     {
+        $query = Receipt::query();
+        if ($request->client_credential_id) {
+            $query->whereHas('client', function ($q) {
+                $q->where('client_credential_id', request('client_credential_id'));
+            });
+        }
         return response()->json([
-            'pending'   => Receipt::where('status', 'pending')->count(),
-            'to_review' => Receipt::where('status', 'to_review')->count(),
-            'ready'     => Receipt::where('status', 'ready')->count(),
-            'cancelled' => Receipt::where('status', 'cancelled')->count(),
-            'archived'  => Receipt::where('status', 'archived')->count(),
-            'total'     => Receipt::count(),
+            'pending'   => (clone $query)->where('status', 'pending')->count(),
+            'to_review' => (clone $query)->where('status', 'to_review')->count(),
+            'ready'     => (clone $query)->where('status', 'ready')->count(),
+            'cancelled' => (clone $query)->where('status', 'cancelled')->count(),
+            'archived'  => (clone $query)->where('status', 'archived')->count(),
+            'total'     => (clone $query)->count(),
         ]);
     }
 

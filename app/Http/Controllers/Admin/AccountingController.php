@@ -13,7 +13,7 @@ class AccountingController extends Controller
 {
     public function profitLoss()
     {
-        $clients = ClientCredential::select('id', 'first_name', 'last_name')->get();
+        $clients = ClientCredential::select('id', 'first_name', 'last_name')->latest()->get();
         return view('admin.accounting.profit_loss', compact('clients'));
     }
 
@@ -161,7 +161,7 @@ class AccountingController extends Controller
 
     public function trialBalance()
     {
-        $clients = ClientCredential::select('id', 'first_name', 'last_name')->get();
+        $clients = ClientCredential::select('id', 'first_name', 'last_name')->latest()->get();
         return view('admin.accounting.trial_balance', compact('clients'));
     }
 
@@ -266,7 +266,7 @@ class AccountingController extends Controller
 
     public function balanceSheet()
     {
-        $clients = ClientCredential::select('id', 'first_name', 'last_name')->get();
+        $clients = ClientCredential::select('id', 'first_name', 'last_name')->latest()->get();
         return view('admin.accounting.balance_sheet', compact('clients'));
     }
 

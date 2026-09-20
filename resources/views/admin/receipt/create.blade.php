@@ -248,6 +248,19 @@ $(function () {
         });
     });
 
+    // Pre-select client from URL parameter
+    var urlParams = new URLSearchParams(window.location.search);
+    var presetId = urlParams.get('client_credential_id');
+    if (presetId) {
+        $.get("{{ url('/admin/receipts/search-clients') }}", { q: '' }, function(data) {
+            var match = data.find(function(item) { return item.id == presetId; });
+            if (match) {
+                var option = new Option(match.text, match.id, true, true);
+                $('#client_credential_id').append(option).trigger('change');
+            }
+        });
+    }
+
     $('#client_id').select2({ placeholder: 'Select Business / Client', allowClear: true })
         .on('change', function () {
             const selected = $(this).find('option:selected');

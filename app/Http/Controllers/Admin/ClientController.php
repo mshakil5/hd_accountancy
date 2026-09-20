@@ -201,7 +201,7 @@ class ClientController extends Controller
         $managers = User::whereIn('type', ['1', '2'])->select('id', 'first_name', 'last_name', 'type')->orderby('id', 'DESC')->get();
         $clientTypes = ClientType::select('id', 'name')->orderby('id', 'DESC')->get();
         $client = "";
-        $clientCridentials = ClientCredential::where('status',1)->get();
+        $clientCridentials = ClientCredential::where('status',1)->latest()->get();
         return view('admin.client.create', compact('clientTypes', 'managers', 'client','clientCridentials'));
     }
 
