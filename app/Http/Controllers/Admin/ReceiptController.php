@@ -21,7 +21,8 @@ class ReceiptController extends Controller
 {
     public function index()
     {
-        return view('admin.receipt.index');
+        $users = \App\Models\User::select('id', 'first_name', 'last_name')->orderBy('first_name')->get();
+        return view('admin.receipt.index', compact('users'));
     }
 
     public function datatable()
@@ -35,6 +36,45 @@ class ReceiptController extends Controller
             ->when(request('status'), fn($q) => $q->where('status', request('status')))
             ->when(request('payment_method'), fn($q) => $q->whereHas('detail', fn($q) => $q->where('payment_method', request('payment_method'))))
             ->when(request('paid'), fn($q) => $q->whereHas('detail', fn($q) => $q->where('paid', request('paid') == 'yes' ? 1 : 0)))
+            ->when(request('business'), fn($q) => $q->where('client_id', request('business')))
+            ->when(request('supplier'), fn($q) => $q->where('supplier', 'LIKE', '%' . request('supplier') . '%'))
+            ->when(request('invoice_number'), fn($q) => $q->whereHas('detail', fn($q) => $q->where('invoice_number', 'LIKE', '%' . request('invoice_number') . '%')))
+            ->when(request('notes'), fn($q) => $q->where('notes', 'LIKE', '%' . request('notes') . '%'))
+            ->when(request('created_by'), fn($q) => $q->where('created_by', request('created_by')))
+            ->when(request('date_from'), function ($q) {
+                $dateFrom = request('date_from');
+                $dateType = request('date_type', 'invoice');
+                if ($dateType === 'created') {
+                    $q->where('created_at', '>=', $dateFrom);
+                } elseif ($dateType === 'receipt') {
+                    $q->where('receipt_date', '>=', $dateFrom);
+                } else {
+                    $q->where(function ($sub) use ($dateFrom) {
+                        $sub->whereHas('detail', fn($d) => $d->where('invoice_date', '>=', $dateFrom))
+                            ->orWhere(function ($sub2) use ($dateFrom) {
+                                $sub2->whereDoesntHave('detail')->where('receipt_date', '>=', $dateFrom);
+                            });
+                    });
+                }
+            })
+            ->when(request('date_to'), function ($q) {
+                $dateTo = request('date_to');
+                $dateType = request('date_type', 'invoice');
+                if ($dateType === 'created') {
+                    $q->where('created_at', '<=', $dateTo);
+                } elseif ($dateType === 'receipt') {
+                    $q->where('receipt_date', '<=', $dateTo);
+                } else {
+                    $q->where(function ($sub) use ($dateTo) {
+                        $sub->whereHas('detail', fn($d) => $d->where('invoice_date', '<=', $dateTo))
+                            ->orWhere(function ($sub2) use ($dateTo) {
+                                $sub2->whereDoesntHave('detail')->where('receipt_date', '<=', $dateTo);
+                            });
+                    });
+                }
+            })
+            ->when(request('amount_min'), fn($q) => $q->whereHas('detail', fn($d) => $d->where('total_amount', '>=', request('amount_min'))))
+            ->when(request('amount_max'), fn($q) => $q->whereHas('detail', fn($d) => $d->where('total_amount', '<=', request('amount_max'))))
             ->latest();
 
         return DataTables::of($query)
@@ -110,7 +150,7 @@ class ReceiptController extends Controller
 
     public function show($id)
     {
-        $receipt = Receipt::with(['files', 'detail.accountHead.accountType', 'client'])->findOrFail($id);
+        $receipt = Receipt::with(['files', 'detail.accountHead.accountType', 'client.credential'])->findOrFail($id);
         $accountTypes = AccountType::where('is_active', true)->get();
 
         $currentAccountTypeId = $receipt->detail?->accountHead?->account_type_id;
@@ -118,10 +158,29 @@ class ReceiptController extends Controller
             ? AccountHead::with('taxRate')->where('account_type_id', $currentAccountTypeId)->where('is_active', true)->get()
             : collect();
 
-        $prev = Receipt::where('id', '<', $id)->orderBy('id', 'desc')->first()?->id;
-        $next = Receipt::where('id', '>', $id)->orderBy('id', 'asc')->first()?->id;
+        $credentialId = $receipt->client?->client_credential_id;
 
-        return view('admin.receipt.show', compact('receipt', 'accountTypes', 'heads', 'prev', 'next'));
+        $baseQuery = Receipt::whereHas('client', fn($q) => $q->where('client_credential_id', $credentialId));
+
+        $pendingQuery = (clone $baseQuery)->whereIn('status', ['pending', 'to_review'])->orderBy('id', 'asc');
+        $pendingTotal = (clone $pendingQuery)->count();
+        $pendingBefore = (clone $pendingQuery)->where('id', '<', $id)->count();
+        $pendingPosition = in_array($receipt->status, ['pending', 'to_review']) ? ($pendingBefore + 1) : 0;
+
+        $completedCount = (clone $baseQuery)->whereNotIn('status', ['pending', 'to_review'])->count();
+        $totalCount = (clone $baseQuery)->count();
+
+        $prev = (clone $baseQuery)->where('id', '<', $id)
+            ->whereIn('status', ['pending', 'to_review'])
+            ->orderBy('id', 'desc')->first()?->id;
+        $next = (clone $baseQuery)->where('id', '>', $id)
+            ->whereIn('status', ['pending', 'to_review'])
+            ->orderBy('id', 'asc')->first()?->id;
+
+        $businesses = \App\Models\Client::where('client_credential_id', $credentialId)
+            ->where('status', 1)->get();
+
+        return view('admin.receipt.show', compact('receipt', 'accountTypes', 'heads', 'prev', 'next', 'credentialId', 'businesses', 'pendingPosition', 'pendingTotal', 'totalCount'));
     }
 
     public function getAccountHeads(Request $request)
@@ -164,6 +223,7 @@ class ReceiptController extends Controller
 
         $receipt->update([
             'status'     => $newStatus,
+            'client_id'  => $request->client_id ?: $receipt->client_id,
             'supplier'   => $request->supplier,
             'updated_by' => Auth::id()
         ]);
@@ -245,27 +305,34 @@ class ReceiptController extends Controller
 
     public function uploadFile(Request $request, $id)
     {
-        $receipt = Receipt::findOrFail($id);
+        $receipt = Receipt::with('client')->findOrFail($id);
         if (in_array($receipt->status, ['archived', 'cancelled'])) {
             return response()->json(['success' => false, 'message' => 'Cannot upload files to a locked receipt.']);
         }
 
-        $request->validate(['file' => 'required|file|max:10240']);
-        $file = $request->file('file');
+        $request->validate([
+            'file' => 'required|file|mimes:pdf|max:51200',
+        ]);
 
-        $filename = time() . '_' . rand(100, 999) . '.' . $file->getClientOriginalExtension();
-        $mime = $file->getMimeType();
+        $existingCount = $receipt->files()->count();
+        if ($existingCount >= 10) {
+            return response()->json(['success' => false, 'message' => 'Cannot exceed 10 PDF files per receipt.']);
+        }
+
+        $file = $request->file('file');
+        $mime = $file->getClientMimeType();
         $size = $file->getSize();
 
-        $fileType = Str::startsWith($mime, 'image/') ? 'image' : ($mime === 'application/pdf' ? 'pdf' : 'unknown');
-        $file->move(public_path('images/receipts'), $filename);
+        $receiptDir = $this->getReceiptDirectory($receipt->client, $receipt->id);
+        $filename = time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
+        $file->move(public_path($receiptDir), $filename);
 
         $receipt->files()->create([
-            'file_path' => 'images/receipts/' . $filename,
-            'file_name' => $file->getClientOriginalName(),
-            'file_type' => $fileType,
-            'mime_type' => $mime,
-            'file_size' => $size,
+            'file_path'  => $receiptDir . '/' . $filename,
+            'file_name'  => $file->getClientOriginalName(),
+            'file_type'  => 'pdf',
+            'mime_type'  => $mime,
+            'file_size'  => $size,
         ]);
 
         return response()->json(['success' => true, 'message' => 'File uploaded successfully.']);
@@ -276,6 +343,10 @@ class ReceiptController extends Controller
         $receipt = Receipt::findOrFail($id);
         if (in_array($receipt->status, ['archived', 'cancelled'])) {
             return response()->json(['success' => false, 'message' => 'Cannot delete files from a locked receipt.']);
+        }
+
+        if ($receipt->files()->count() <= 1) {
+            return response()->json(['success' => false, 'message' => 'Cannot delete the last file. Receipt must have at least one file.']);
         }
 
         $file = ReceiptFile::where('id', $fileId)->where('receipt_id', $id)->firstOrFail();
@@ -348,9 +419,10 @@ class ReceiptController extends Controller
             if (!$request->net_amount)      $errors[] = 'Net Amount is required.';
         }
 
-        if (!$request->hasFile('files') || count($request->file('files')) === 0) {
-            $errors[] = 'At least one file is required.';
-        }
+        $request->validate([
+            'files'   => 'required|array|min:1|max:10',
+            'files.*' => 'required|file|mimes:pdf|max:51200',
+        ]);
 
         if (count($errors)) {
             return response()->json([
@@ -359,8 +431,10 @@ class ReceiptController extends Controller
             ]);
         }
 
+        $client = \App\Models\Client::findOrFail($request->client_id);
+
         $receipt = Receipt::create([
-            'client_id'      => $request->client_id,
+            'client_id'      => $client->id,
             'receipt_number' => 'RCT-' . now()->format('Ymd') . '-' . strtoupper(Str::random(4)),
             'receipt_date'   => $request->receipt_date ?? now()->toDateString(),
             'notes'          => $request->notes,
@@ -369,19 +443,22 @@ class ReceiptController extends Controller
             'created_by'     => Auth::id(),
         ]);
 
-        foreach ($request->file('files') as $file) {
-            $mime     = $file->getMimeType();
-            $size     = $file->getSize();
-            $fileType = Str::startsWith($mime, 'image/') ? 'image' : 'pdf';
-            $filename = time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
-            $file->move(public_path('images/receipts'), $filename);
+        $receiptDir = $this->getReceiptDirectory($client, $receipt->id);
 
-            $receipt->files()->create([
-                'file_path' => 'images/receipts/' . $filename,
-                'file_name' => $file->getClientOriginalName(),
-                'file_type' => $fileType,
-                'mime_type' => $mime,
-                'file_size' => $size,
+        foreach ($request->file('files') as $file) {
+            $mime     = $file->getClientMimeType();
+            $size     = $file->getSize();
+            $fileType = $file->extension() === 'pdf' ? 'pdf' : 'image';
+            $filename = time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path($receiptDir), $filename);
+
+            ReceiptFile::create([
+                'receipt_id' => $receipt->id,
+                'file_path'  => $receiptDir . '/' . $filename,
+                'file_name'  => $file->getClientOriginalName(),
+                'file_type'  => $fileType,
+                'mime_type'  => $mime,
+                'file_size'  => $size,
             ]);
         }
 
@@ -469,5 +546,25 @@ class ReceiptController extends Controller
             });
 
         return response()->json($clients);
+    }
+
+    private function getReceiptDirectory($client, $receiptId)
+    {
+        $clientName = $this->sanitizeDirName($client->name ?? 'unknown');
+        $businessName = $this->sanitizeDirName($client->business_name ?? $client->name ?? 'unknown');
+        $year = now()->format('Y');
+
+        $path = public_path("images/receipts/{$clientName}/{$businessName}/{$year}/{$receiptId}");
+
+        if (!is_dir($path)) {
+            mkdir($path, 0755, true);
+        }
+
+        return "images/receipts/{$clientName}/{$businessName}/{$year}/{$receiptId}";
+    }
+
+    private function sanitizeDirName($name)
+    {
+        return preg_replace('/[^a-zA-Z0-9_-]/', '_', $name ?? 'unknown');
     }
 }

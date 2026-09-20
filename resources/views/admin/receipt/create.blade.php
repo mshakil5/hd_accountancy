@@ -84,7 +84,7 @@
                             </div>
                             <div class="detail-field">
                                 <label class="detail-label">Files (JPG, PNG, PDF) <span class="text-danger">*</span></label>
-                                <input type="file" class="form-control" id="fileInput" name="files[]" multiple accept=".jpg,.jpeg,.png,.pdf">
+                                <input type="file" class="form-control" id="fileInput" name="files[]" multiple accept=".pdf">
                                 <small class="text-muted">You can select multiple files.</small>
                             </div>
                             <div class="file-preview-bar" id="filePreviewBar"></div>

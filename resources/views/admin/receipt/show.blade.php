@@ -113,6 +113,17 @@
                 <div class="d-flex align-items-center gap-2">
                     <strong>{{ $receipt->receipt_number }}</strong>
                     <span class="badge badge-info">{{ ucfirst($receipt->status) }}</span>
+                    @if($pendingPosition > 0)
+                        <span class="ml-3 px-3 py-1 rounded" style="background:#e9ecef; font-size:13px;">
+                            Pending: <span class="font-weight-bold text-warning">{{ $pendingPosition }}/{{ $pendingTotal }}</span>
+                            &nbsp;|&nbsp; Total: <span class="font-weight-bold">{{ $totalCount }}</span>
+                        </span>
+                    @else
+                        <span class="ml-3 px-3 py-1 rounded" style="background:#e9ecef; font-size:13px;">
+                            <span class="font-weight-bold text-success">Completed</span>
+                            &nbsp;|&nbsp; Total: <span class="font-weight-bold">{{ $totalCount }}</span>
+                        </span>
+                    @endif
                 </div>
                 <div>
                     @if ($prev)
@@ -136,7 +147,7 @@
                             @if (!in_array($receipt->status, ['archived', 'cancelled']))
                                 <label class="btn btn-sm btn-secondary mb-0" style="cursor:pointer;">
                                     <i class="fa fa-upload"></i> Upload File
-                                    <input type="file" id="uploadFileInput" accept=".jpg,.jpeg,.png,.pdf"
+                                    <input type="file" id="uploadFileInput" accept=".pdf"
                                         style="display:none;">
                                 </label>
                             @endif
@@ -206,6 +217,24 @@
                         </div>
                         <div class="card-body">
                             <form id="receiptForm">
+                                <div class="detail-field">
+                                    <label class="detail-label">Client (Credential)</label>
+                                    <select class="form-control select2" id="client_credential_id" style="width:100%;">
+                                        <option value="{{ $credentialId }}">{{ $receipt->client?->credential?->first_name }} {{ $receipt->client?->credential?->last_name }}</option>
+                                    </select>
+                                </div>
+
+                                <div class="detail-field">
+                                    <label class="detail-label">Business / Client</label>
+                                    <select class="form-control select2" id="client_id" name="client_id" style="width:100%;">
+                                        @foreach ($businesses as $biz)
+                                            <option value="{{ $biz->id }}" {{ $receipt->client_id == $biz->id ? 'selected' : '' }}>
+                                                {{ $biz->name }}{{ $biz->business_name ? ' (' . $biz->business_name . ')' : '' }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
                                 <div class="detail-field">
                                     <label class="detail-label">Status Workflow</label>
                                     <select class="form-control" id="status" name="status">
@@ -334,7 +363,9 @@
 
                                 <div class="mt-4">
                                     <button type="button" class="btn btn-success" id="saveBtn"><i
-                                            class="fa fa-save"></i> Save Details</button>
+                                            class="fa fa-save"></i> Save</button>
+                                    <button type="button" class="btn btn-primary" id="saveNextBtn"><i
+                                            class="fa fa-save"></i> Save & Next</button>
                                     <button type="button" class="btn btn-danger float-right" id="cancelBtn"><i
                                             class="fa fa-ban"></i> Cancel Receipt</button>
                                 </div>
@@ -357,7 +388,7 @@
 
             if (locked) {
                 $('#receiptForm input, #receiptForm select, #receiptForm textarea').prop('disabled', true);
-                $('#saveBtn, #cancelBtn').prop('disabled', true).addClass('disabled');
+                $('#saveBtn, #cancelBtn, #saveNextBtn').prop('disabled', true).addClass('disabled');
                 $('.ermsg').html(
                     `<div class='alert alert-warning'><i class='fa fa-lock'></i> This receipt is locked under <strong>${currentStatus.toUpperCase()}</strong> status. No updates allowed.</div>`
                     );
@@ -514,28 +545,41 @@
                 $(this).val() === 'yes' ? $('#method_box').fadeIn() : $('#method_box').fadeOut();
             });
 
-            // ── Save ──
-            $('#saveBtn').click(function() {
-                const status = $('#status').val();
-
-                if (['ready', 'archived'].includes(status)) {
-                    let errs = [];
-                    if (!$('#account_type_id').val()) errs.push('Account Type is required.');
-                    if (!$('#account_head_id').val()) errs.push('Account Head is required.');
-                    if (!$('#invoice_date').val()) errs.push('Invoice Date is required.');
-                    if (!$('#net_amount').val()) errs.push('Net Amount is required.');
-
-                    if (errs.length) {
-                        $('.ermsg').html(
-                            `<div class='alert alert-danger'><ul class='mb-0'><li>${errs.join('</li><li>')}</li></ul></div>`
-                            );
-                        window.scrollTo(0, 0);
-                        return;
-                    }
+            // ── Credential -> Business Cascade ──
+            $('#client_credential_id').select2({
+                placeholder: 'Search client...',
+                allowClear: true,
+                ajax: {
+                    url: "{{ url('/admin/receipts/search-clients') }}",
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) { return { q: params.term }; },
+                    processResults: function(data) { return { results: data }; },
+                    cache: true
                 }
+            }).on('change', function() {
+                var credId = $(this).val();
+                var bizDrop = $('#client_id');
+                bizDrop.html('<option value="">Loading...</option>').trigger('change');
+                if (!credId) {
+                    bizDrop.html('<option value="">First select client</option>').trigger('change');
+                    return;
+                }
+                $.get(baseUrl + '/get-clients-by-credential', { client_credential_id: credId }, function(data) {
+                    var opts = '<option value="">Select Business / Client</option>';
+                    $.each(data, function(i, c) {
+                        opts += '<option value="' + c.id + '">' + c.name + '</option>';
+                    });
+                    bizDrop.html(opts).trigger('change');
+                });
+            });
 
-                $.post(baseUrl + '/' + receiptId + '/update', {
+            $('#client_id').select2({ placeholder: 'Select Business / Client', allowClear: true });
+
+            function getFormData() {
+                return {
                     _token: $('meta[name="csrf-token"]').attr('content'),
+                    client_id: $('#client_id').val(),
                     status: $('#status').val(),
                     supplier: $('#supplier').val(),
                     account_type_id: $('#account_type_id').val(),
@@ -549,15 +593,57 @@
                     vat_amount: $('#vat_amount').val(),
                     paid: $('#paid').val(),
                     payment_method: $('#payment_method').val(),
-                    description: $('#description').val(),
-                }, function(d) {
+                    description: $('#description').val()
+                };
+            }
+
+            function validateForm() {
+                var status = $('#status').val();
+                if (['ready', 'archived'].includes(status)) {
+                    var errs = [];
+                    if (!$('#account_type_id').val()) errs.push('Account Type is required.');
+                    if (!$('#account_head_id').val()) errs.push('Account Head is required.');
+                    if (!$('#invoice_date').val()) errs.push('Invoice Date is required.');
+                    if (!$('#net_amount').val()) errs.push('Net Amount is required.');
+                    if (errs.length) {
+                        $('.ermsg').html('<div class="alert alert-danger"><ul class="mb-0"><li>' + errs.join('</li><li>') + '</li></ul></div>');
+                        window.scrollTo(0, 0);
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            // ── Save ──
+            $('#saveBtn').click(function() {
+                if (!validateForm()) return;
+                $.post(baseUrl + '/' + receiptId + '/update', getFormData(), function(d) {
                     if (d.status == 303) {
                         $('.ermsg').html(d.message);
                         window.scrollTo(0, 0);
                     } else {
                         toastr.success(d.message);
                         $('.ermsg').html('');
-                        setTimeout(() => location.reload(), 1000);
+                        setTimeout(function() { location.reload(); }, 1000);
+                    }
+                });
+            });
+
+            // ── Save & Next ──
+            $('#saveNextBtn').click(function() {
+                if (!validateForm()) return;
+                $.post(baseUrl + '/' + receiptId + '/update', getFormData(), function(d) {
+                    if (d.status == 303) {
+                        $('.ermsg').html(d.message);
+                        window.scrollTo(0, 0);
+                    } else {
+                        toastr.success(d.message);
+                        @if($next)
+                            setTimeout(function() { window.location = "{{ route('admin.receipt.show', $next) }}"; }, 1000);
+                        @else
+                            toastr.info('No more receipts for this client.');
+                            setTimeout(function() { location.reload(); }, 1000);
+                        @endif
                     }
                 });
             });

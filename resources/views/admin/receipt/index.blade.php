@@ -121,7 +121,8 @@
                 {{-- Table --}}
                 <div class="card modern-card mt-3">
                     <div class="card-body">
-                        <div class="row mb-4 align-items-end justify-content-between">
+                        {{-- Basic Filters --}}
+                        <div class="row mb-3 align-items-end">
                             <div class="col-md-2">
                                 <label>Status</label>
                                 <select class="form-control" id="filterStatus">
@@ -151,14 +152,83 @@
                                 </select>
                             </div>
                             <div class="col-md-2">
+                                <label>&nbsp;</label>
+                                <button class="btn btn-outline-secondary btn-block" type="button" id="toggleDeepSearch">
+                                    <i class="fa fa-search"></i> Deep Search <i class="fa fa-chevron-down" id="deepSearchIcon"></i>
+                                </button>
+                            </div>
+                            <div class="col-md-2">
+                                <label>&nbsp;</label>
                                 <button class="btn btn-secondary btn-block" id="resetFilter">
                                     <i class="fa fa-refresh"></i> Reset
                                 </button>
                             </div>
                             <div class="col-md-2">
+                                <label>&nbsp;</label>
                                 <a href="{{ url('/admin/receipts/create') }}?client_credential_id={{ $presetId }}" class="btn btn-primary btn-block">
                                     <i class="fa fa-plus"></i> New
                                 </a>
+                            </div>
+                        </div>
+
+                        {{-- Deep Search - Collapsible --}}
+                        <div id="deepSearchFilters" style="display:none;">
+                            <div class="card card-body mb-3" style="background:#f8f9fa; border-radius:10px;">
+                                <div class="row align-items-end">
+                                    <div class="col-md-2">
+                                        <label>Business</label>
+                                        <select class="form-control" id="filterBusiness" style="width:100%">
+                                            <option value="">All</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label>Supplier</label>
+                                        <input type="text" class="form-control" id="filterSupplier" placeholder="Search supplier...">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label>Inv No.</label>
+                                        <input type="text" class="form-control" id="filterInvNo" placeholder="Invoice #">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label>Notes</label>
+                                        <input type="text" class="form-control" id="filterNotes" placeholder="Search notes...">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label>Created By</label>
+                                        <select class="form-control" id="filterCreatedBy">
+                                            <option value="">All</option>
+                                            @foreach($users as $u)
+                                                <option value="{{ $u->id }}">{{ $u->first_name }} {{ $u->last_name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label>Date Type</label>
+                                        <select class="form-control" id="filterDateType">
+                                            <option value="invoice">Invoice Date</option>
+                                            <option value="created">Created Date</option>
+                                            <option value="receipt">Receipt Date</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row align-items-end mt-2">
+                                    <div class="col-md-2">
+                                        <label>Date From</label>
+                                        <input type="date" class="form-control" id="filterDateFrom">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label>Date To</label>
+                                        <input type="date" class="form-control" id="filterDateTo">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label>Amount Min (£)</label>
+                                        <input type="number" step="0.01" class="form-control" id="filterAmountMin" placeholder="Min">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label>Amount Max (£)</label>
+                                        <input type="number" step="0.01" class="form-control" id="filterAmountMax" placeholder="Max">
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -202,6 +272,11 @@
         $(function() {
             var presetCredentialId = '{{ $presetId }}';
             var presetApplied = false;
+
+            $('#toggleDeepSearch').click(function() {
+                $('#deepSearchFilters').slideToggle(200);
+                $('#deepSearchIcon').toggleClass('fa-chevron-down fa-chevron-up');
+            });
 
             $('#filterClient').select2({
                 placeholder: "-- Choose a client --",
@@ -251,6 +326,15 @@
                     $('#count_total').text(d.total);
                 });
 
+                // Load businesses for filter
+                $.get("{{ url('/admin/receipts/get-clients-by-credential') }}", { client_credential_id: presetCredentialId }, function(data) {
+                    var opts = '<option value="">All</option>';
+                    $.each(data, function(i, c) {
+                        opts += '<option value="' + c.id + '">' + c.name + '</option>';
+                    });
+                    $('#filterBusiness').html(opts);
+                });
+
                 var table = $('#example1').DataTable({
                     processing: true,
                     serverSide: true,
@@ -262,6 +346,16 @@
                             d.status = $('#filterStatus').val();
                             d.paid = $('#filterPaid').val();
                             d.payment_method = $('#filterPaymentMethod').val();
+                            d.business = $('#filterBusiness').val();
+                            d.supplier = $('#filterSupplier').val();
+                            d.invoice_number = $('#filterInvNo').val();
+                            d.date_from = $('#filterDateFrom').val();
+                            d.date_to = $('#filterDateTo').val();
+                            d.date_type = $('#filterDateType').val();
+                            d.amount_min = $('#filterAmountMin').val();
+                            d.amount_max = $('#filterAmountMax').val();
+                            d.notes = $('#filterNotes').val();
+                            d.created_by = $('#filterCreatedBy').val();
                         }
                     },
                     createdRow: function(row, data) {
@@ -271,9 +365,9 @@
                         });
                     },
                     columns: [
-                        { data: 'DT_RowIndex', orderable: false },
-                        { data: 'action', orderable: false },
-                        { data: 'status_badge', orderable: false },
+                        { data: 'DT_RowIndex', orderable: false, searchable: false },
+                        { data: 'action', orderable: false, searchable: false },
+                        { data: 'status_badge', orderable: false, searchable: false },
                         { data: 'business_name' },
                         { data: 'invoice_date' },
                         { data: 'invoice_number' },
@@ -294,12 +388,20 @@
                     table.ajax.reload();
                 });
 
-                $('#filterStatus, #filterPaid, #filterPaymentMethod').on('change', function() {
+                $('#filterStatus, #filterPaid, #filterPaymentMethod, #filterBusiness').on('change', function() {
                     table.ajax.reload();
                 });
 
+                var searchTimeout;
+                $('#filterSupplier, #filterInvNo, #filterNotes, #filterAmountMin, #filterAmountMax, #filterDateFrom, #filterDateTo').on('keyup change', function() {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(function() { table.ajax.reload(); }, 400);
+                });
+
                 $('#resetFilter').click(function() {
-                    $('#filterStatus, #filterPaid, #filterPaymentMethod').val('');
+                    $('#filterStatus, #filterPaid, #filterPaymentMethod, #filterBusiness, #filterCreatedBy').val('');
+                    $('#filterSupplier, #filterInvNo, #filterNotes, #filterAmountMin, #filterAmountMax, #filterDateFrom, #filterDateTo').val('');
+                    $('#filterDateType').val('invoice');
                     table.ajax.reload();
                 });
             }
