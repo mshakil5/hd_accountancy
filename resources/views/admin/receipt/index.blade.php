@@ -140,6 +140,9 @@
 @section('script')
     <script>
         $(function() {
+            var urlParams = new URLSearchParams(window.location.search);
+            var presetCredentialId = urlParams.get('client_credential_id');
+
             // Select2 Remote Data Integration (AJAX Search for Client Credentials)
             $('#filterClient').select2({
                 placeholder: "Search Client Name...",
@@ -161,6 +164,16 @@
                     cache: true
                 }
             }).on('change', () => table.ajax.reload());
+
+            if (presetCredentialId) {
+                $.get("{{ url('/admin/receipts/search-clients') }}", { q: '' }, function(data) {
+                    var match = data.find(function(item) { return item.id == presetCredentialId; });
+                    if (match) {
+                        var option = new Option(match.text, match.id, true, true);
+                        $('#filterClient').append(option).trigger('change');
+                    }
+                });
+            }
 
             $.get("{{ url('/admin/receipts/counts') }}", function(d) {
                 $('#count_pending').text(d.pending);

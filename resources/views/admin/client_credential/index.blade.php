@@ -130,22 +130,20 @@
               <table id="example1" class="table table-striped">
                 <thead>
                 <tr>
-                  <th>Sl</th>
-                  <th>First Name</th>
-                  <th>Last Name</th>
+                  <th>ID</th>
+                  <th>Name</th>
                   <th>Phone</th>
                   <th>Email</th>
                   <th>Status</th>
-                  <th>Created At</th>
+                  <th>Joined</th>
                   <th>Action</th>
                 </tr>
                 </thead>
                 <tbody>
-                  @foreach ($data as $key => $data)
+                  @foreach ($data as $data)
                   <tr>
-                    <td>{{ $key + 1 }}</td>
-                    <td>{{$data->first_name}}</td>
-                    <td>{{$data->last_name}}</td>
+                    <td>{{$data->id}}</td>
+                    <td>{{ trim($data->first_name . ' ' . $data->last_name) }}</td>
                     <td>{{$data->phone}}</td>
                     <td>{{$data->email}}</td>
                     <td>
@@ -156,9 +154,11 @@
                       @endif
                     </td>
                     <td>{{$data->created_at->format('d-m-Y')}}</td>
-                    <td>
-                      <a class="btn btn-link" id="EditBtn" rid="{{$data->id}}"><i class="fa fa-edit" style="font-size: 20px;"></i></a>
-                      <a class="btn btn-link d-none" id="deleteBtn" rid="{{$data->id}}"><i class="fas fa-trash" style="color: red; font-size: 20px;"></i></a>
+                    <td style="white-space:nowrap;">
+                      <a href="{{ url('/admin/receipts?client_credential_id=' . $data->id) }}" class="btn btn-link py-0 px-1" title="Receipts"><i class="fas fa-file-invoice" style="font-size: 16px; color: #1A2B5F;"></i><span style="font-size: 11px; color: #1A2B5F;"> {{ $data->receipt_count ?? 0 }}</span></a>
+                      <a class="btn btn-link py-0 px-1" id="EditBtn" rid="{{$data->id}}"><i class="fa fa-edit" style="font-size: 16px;"></i></a>
+                      <a class="btn btn-link py-0 px-1" id="sendCredentialsBtn" rid="{{$data->id}}" rname="{{ trim($data->first_name . ' ' . $data->last_name) }}" remail="{{$data->email}}"><i class="fas fa-paper-plane" style="font-size: 16px; color: #1A2B5F;"></i></a>
+                      <a class="btn btn-link py-0 px-1 d-none" id="deleteBtn" rid="{{$data->id}}"><i class="fas fa-trash" style="font-size: 16px; color: red;"></i></a>
                     </td>
                   </tr>
                   @endforeach
@@ -182,7 +182,14 @@
 @section('script')
 <script>
     $(function () {
-      $("#example1").DataTable();
+      $("#example1").DataTable({
+        scrollX: true,
+        pageLength: 25,
+        order: [[0, 'desc']],
+        columnDefs: [
+          { orderable: false, targets: [6] }
+        ],
+      });
     });
 
     $(document).on('click', '.toggle-password', function () {
@@ -316,6 +323,30 @@
               },
               error:function(d){
                   console.log(d);
+              }
+          });
+      });
+
+      //Send Credentials Email
+      $("#contentContainer").on('click','#sendCredentialsBtn', function(){
+          var rid = $(this).attr('rid');
+          var rname = $(this).attr('rname');
+          var remail = $(this).attr('remail');
+          if(!confirm('Send login details to ' + rname + ' (' + remail + ')?\n\nA new temporary password will be generated and sent. The client will be asked to change it on first login.')) return;
+
+          $.ajax({
+              url: url + '/' + rid + '/send-credentials',
+              method: "POST",
+              data: { _token: $('meta[name="csrf-token"]').attr('content') },
+              success: function(d){
+                  if(d.status == 300){
+                      toastr.success(d.message, "Email Sent!");
+                  } else {
+                      toastr.error(d.message, "Error!");
+                  }
+              },
+              error: function(d){
+                  toastr.error("Failed to send email. Please try again.", "Error!");
               }
           });
       });

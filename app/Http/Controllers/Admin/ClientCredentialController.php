@@ -8,12 +8,16 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 
 class ClientCredentialController extends Controller
 {
     public function index()
     {
         $data = ClientCredential::select('id', 'first_name', 'last_name', 'phone', 'email', 'status', 'created_at')
+            ->withCount(['clients as receipt_count' => function ($q) {
+                $q->select(\DB::raw('COALESCE(SUM((SELECT COUNT(*) FROM receipts WHERE receipts.client_id = clients.id)), 0)'));
+            }])
             ->orderBy('id', 'DESC')
             ->get();
         return view('admin.client_credential.index', compact('data'));
@@ -156,5 +160,34 @@ class ClientCredentialController extends Controller
         } else {
             return response()->json(['success'=>false,'message'=>'Delete Failed']);
         }
+    }
+
+    public function sendCredentials($id)
+    {
+        $cc = ClientCredential::where('id', $id)->where('status', 1)->first();
+
+        if (!$cc) {
+            return response()->json(['status' => 303, 'message' => 'Client credential not found or inactive.']);
+        }
+
+        $email = $cc->email;
+        if (empty($email)) {
+            return response()->json(['status' => 303, 'message' => 'Client has no email address.']);
+        }
+
+        $name = trim($cc->first_name . ' ' . $cc->last_name);
+        $plainPassword = strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
+        $cc->update(['password' => Hash::make($plainPassword)]);
+
+        Mail::send('emails.client_credentials', [
+            'name'     => $name,
+            'email'    => $email,
+            'password' => $plainPassword,
+        ], function ($mail) use ($email, $name) {
+            $mail->to($email)
+                ->subject('Your HD Accountancy Login Details');
+        });
+
+        return response()->json(['status' => 300, 'message' => "Login details sent to {$email}."]);
     }
 }

@@ -144,6 +144,7 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/client-credentials/{id}/edit', [ClientCredentialController::class, 'edit']);
     Route::post('/client-credentials-update', [ClientCredentialController::class, 'update']);
     Route::get('/client-credentials/{id}', [ClientCredentialController::class, 'delete']);
+    Route::post('/client-credentials/{id}/send-credentials', [ClientCredentialController::class, 'sendCredentials']);
 
     //Clients crud
     Route::get('/client', [ClientController::class, 'index'])->name('allClient');
