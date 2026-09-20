@@ -101,8 +101,8 @@ class ReceiptController extends Controller
     public function store(Request $request, $businessId)
     {
         $request->validate([
-            'files'        => 'required|array|min:1',
-            'files.*'      => 'required|file|mimes:pdf,jpg,jpeg,png|max:51200',
+            'files'        => 'required|array|min:1|max:10',
+            'files.*'      => 'required|file|mimes:pdf|max:51200',
             'receipt_date' => 'nullable|date',
             'notes'        => 'nullable|string|max:500',
         ]);
@@ -266,6 +266,10 @@ class ReceiptController extends Controller
             }
         }
 
+        if ($receipt->files()->count() <= 1) {
+            return response()->json(['message' => 'Receipt must have at least one file. Delete the receipt instead.'], 422);
+        }
+
         $file = ReceiptFile::where('receipt_id', $receiptId)->where('id', $fileId)->firstOrFail();
 
         $fullPath = public_path($file->file_path);
@@ -294,9 +298,15 @@ class ReceiptController extends Controller
         }
 
         $request->validate([
-            'files'   => 'required|array|min:1',
-            'files.*' => 'required|file|mimes:pdf,jpg,jpeg,png|max:51200',
+            'files'   => 'required|array|min:1|max:10',
+            'files.*' => 'required|file|mimes:pdf|max:51200',
         ]);
+
+        $existingCount = $receipt->files()->count();
+        $newCount = count($request->file('files'));
+        if ($existingCount + $newCount > 10) {
+            return response()->json(['message' => 'Cannot exceed 10 PDF files per receipt. You currently have ' . $existingCount . ' file(s).'], 422);
+        }
 
         $totalBytes = collect($request->file('files'))->sum(fn($f) => $f->getSize());
         if ($totalBytes > 50 * 1024 * 1024) {
