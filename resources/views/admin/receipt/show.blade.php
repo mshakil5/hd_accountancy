@@ -409,6 +409,7 @@
                 if (!files.length) return;
                 currentIndex = index;
                 const f = files[index];
+                
                 $('#mainViewer').html(
                     f.type === 'image' ?
                     `<img src="${f.path}" style="max-width:100%;border-radius:8px;">` :
@@ -416,6 +417,52 @@
                 );
                 $('#thumbBar .file-thumb').removeClass('active').eq(index).addClass('active');
                 $('#fileCounter').text(files.length + ' file(s)  [' + (index + 1) + ' / ' + files.length + ']');
+                console.log(f.id);
+                // ── NEW: Fetch Extracted Data for Current File ──
+                fetchInvoiceData(f.id);
+            }
+
+            // ── NEW: Function to Fetch Data via AJAX ──
+            function fetchInvoiceData(fileId) {
+                // Only attempt to extract if it's a PDF
+                const currentFileType = files[currentIndex].type;
+                if (currentFileType !== 'pdf') {
+                    return; // You can add image OCR later if needed
+                }
+
+                // Show loading state in fields
+                $('#net_amount, #vat_amount, #tax_amount, #total_amount').val('Loading...');
+                $('#vat_percent, #tax_percent').val('Loading...');
+
+                $.ajax({
+                    url: "{{ route('admin.invoice.extractData', '') }}/" + fileId,
+                    method: 'GET',
+                    success: function(response) {
+                        if (response.success) {
+                            const data = response.data;
+                            
+                            // Populate fields if data exists, otherwise keep empty
+                            $('#net_amount').val(data.net_amount || '');
+                            $('#vat_amount').val(data.vat_amount || 0);
+                            $('#tax_amount').val(data.tax_amount || 0);
+                            $('#total_amount').val(data.total_amount || 0);
+                            $('#vat_percent').val(data.vat_percent || 0);
+                            $('#tax_percent').val(data.tax_percent || 0);
+
+                            // Trigger calculation
+                            calculateAmounts();
+                        } else {
+                            toastr.warning('Could not extract data: ' + response.message);
+                            $('#net_amount, #vat_amount, #tax_amount, #total_amount').val('');
+                            $('#vat_percent, #tax_percent').val(0);
+                        }
+                    },
+                    error: function() {
+                        toastr.error('Error connecting to extraction service.');
+                        $('#net_amount, #vat_amount, #tax_amount, #total_amount').val('');
+                        $('#vat_percent, #tax_percent').val(0);
+                    }
+                });
             }
 
             $('#nextFile').click(function() {

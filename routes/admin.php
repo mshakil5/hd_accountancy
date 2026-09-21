@@ -25,6 +25,7 @@ use App\Http\Controllers\Admin\GoogleReviewController;
 use App\Http\Controllers\Admin\HolidayController;
 use App\Http\Controllers\Admin\HolidayTypeController;
 use App\Http\Controllers\Admin\HomepageController;
+use App\Http\Controllers\Admin\InvoiceExtractionController;
 use App\Http\Controllers\Admin\LatestInsightController;
 use App\Http\Controllers\Admin\LogController;
 use App\Http\Controllers\Admin\LogoutController;
@@ -750,6 +751,9 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/receipts/{id}/files/{fileId}/delete', [ReceiptController::class, 'deleteFile']);
     Route::get('/receipts/{id}/cancel', [ReceiptController::class, 'cancel']);
     Route::get('/receipts/{id}/bill', [ReceiptController::class, 'bill'])->name('admin.receipt.bill');
+
+    // invoice extraction
+    Route::get('/invoice-extract-data/{fileId}', [InvoiceExtractionController::class, 'extractData'])->name('admin.invoice.extractData');
 
     Route::get('/accounting/profit-loss',            [AccountingController::class, 'profitLoss'])->name('accounting.profitLoss');
     Route::get('/accounting/profit-loss/data',       [AccountingController::class, 'profitLossData'])->name('accounting.profitLoss.data');
