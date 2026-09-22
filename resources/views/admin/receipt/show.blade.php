@@ -422,17 +422,22 @@
                 fetchInvoiceData(f.id);
             }
 
-            // ── NEW: Function to Fetch Data via AJAX ──
+            // ── Auto trigger OCR for the first file on page load ──
+            if (files.length > 0) {
+                if (files[0].type === 'pdf') {
+                    fetchInvoiceData(files[0].id);
+                }
+            }
+
+            // ── Function to Fetch Data via AJAX ──
             function fetchInvoiceData(fileId) {
-                // Only attempt to extract if it's a PDF
                 const currentFileType = files[currentIndex].type;
                 if (currentFileType !== 'pdf') {
-                    return; // You can add image OCR later if needed
+                    return; 
                 }
 
-                // Show loading state in fields
-                $('#net_amount, #vat_amount, #tax_amount, #total_amount').val('Loading...');
-                $('#vat_percent, #tax_percent').val('Loading...');
+                $('#net_amount, #vat_amount, #tax_amount, #total_amount').val('');
+                $('#vat_percent, #tax_percent').val(0);
 
                 $.ajax({
                     url: "{{ route('admin.invoice.extractData', '') }}/" + fileId,
@@ -442,7 +447,6 @@
                             const data = response.data;
                             console.log(response.data);
                             
-                            
                             $('#net_amount').val(data.net_amount || '');
                             $('#vat_amount').val(data.vat_amount || '');
                             $('#tax_amount').val(data.tax_amount || '');
@@ -451,17 +455,19 @@
                             $('#tax_percent').val(data.tax_percent || 0);
 
                             calculateAmounts();
+
+                            if (!data.net_amount && !data.vat_amount && !data.total_amount) {
+                                toastr.error('Could not read any amounts from this file. Please enter manually.');
+                            } else {
+                                toastr.success('Amount extracted successfully!');
+                            }
                             
                         } else {
-                            toastr.warning('Could not extract data: ' + response.message);
-                            $('#net_amount, #vat_amount, #tax_amount, #total_amount').val('');
-                            $('#vat_percent, #tax_percent').val(0);
+                            toastr.error('Extraction failed: ' + response.message);
                         }
                     },
                     error: function() {
                         toastr.error('Error connecting to extraction service.');
-                        $('#net_amount, #vat_amount, #tax_amount, #total_amount').val('');
-                        $('#vat_percent, #tax_percent').val(0);
                     }
                 });
             }
