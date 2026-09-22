@@ -60,7 +60,7 @@ class InvoiceExtractorService
             @unlink($imagePath);
             @unlink($textFilePath);
 
-            Log::info('Raw OCR Text Extracted (CLI)', ['text' => $text]);
+            // Log::info('Raw OCR Text Extracted (CLI)', ['text' => $text]);
 
             return $this->parseExtractedText($text);
 
