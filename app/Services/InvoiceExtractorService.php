@@ -87,15 +87,20 @@ class InvoiceExtractorService
         return $data;
     }
 
-    /**
+        /**
      * Helper function to find numeric value based on keywords
      */
     private function extractValue(string $text, array $keywords): ?string
     {
         foreach ($keywords as $keyword) {
-            $pattern = '/' . $keyword . '[^\d]*?(\d+(?:,\d{3})*(?:\.\d{2})?)/i';
+            $pattern = '/' . $keyword . '[\s\:\$£€]*?(\d+(?:,\d{3})*(?:\.\d{2})?)/i';
             if (preg_match($pattern, $text, $matches)) {
                 return str_replace(',', '', $matches[1]);
+            }
+            
+            $pattern2 = '/' . $keyword . '[\s\:\$£€]*?(\d+)/i';
+            if (preg_match($pattern2, $text, $matches)) {
+                return $matches[1];
             }
         }
         return null;

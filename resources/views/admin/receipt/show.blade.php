@@ -440,17 +440,18 @@
                     success: function(response) {
                         if (response.success) {
                             const data = response.data;
+                            console.log(response.data);
                             
-                            // Populate fields if data exists, otherwise keep empty
+                            
                             $('#net_amount').val(data.net_amount || '');
-                            $('#vat_amount').val(data.vat_amount || 0);
-                            $('#tax_amount').val(data.tax_amount || 0);
-                            $('#total_amount').val(data.total_amount || 0);
+                            $('#vat_amount').val(data.vat_amount || '');
+                            $('#tax_amount').val(data.tax_amount || '');
+                            $('#total_amount').val(data.total_amount || '');
                             $('#vat_percent').val(data.vat_percent || 0);
                             $('#tax_percent').val(data.tax_percent || 0);
 
-                            // Trigger calculation
                             calculateAmounts();
+                            
                         } else {
                             toastr.warning('Could not extract data: ' + response.message);
                             $('#net_amount, #vat_amount, #tax_amount, #total_amount').val('');
@@ -579,12 +580,40 @@
             });
 
             function calculateAmounts() {
-                let net = parseFloat($('#net_amount').val()) || 0;
+                let netStr = $('#net_amount').val();
+                let vatStr = $('#vat_amount').val();
+                let totalStr = $('#total_amount').val();
+                
                 let rate = parseFloat($('#tax_percent').val()) || 0;
-                let vat = parseFloat($('#vat_amount').val()) || 0;
+                
+                let net = parseFloat(netStr) || 0;
+                let vat = parseFloat(vatStr) || 0;
+                let total = parseFloat(totalStr) || 0;
+
+                
                 let tax = net * (rate / 100);
                 $('#tax_amount').val(tax.toFixed(2));
-                $('#total_amount').val('£' + (net + tax + vat).toFixed(2));
+
+                
+                if (netStr === '' && vatStr !== '' && totalStr !== '') {
+                    let calcNet = total - vat - tax;
+                    $('#net_amount').val(calcNet.toFixed(2));
+                } 
+                
+                else if (totalStr === '' && netStr !== '' && vatStr !== '') {
+                    let calcTotal = net + tax + vat;
+                    $('#total_amount').val(calcTotal.toFixed(2));
+                } 
+                
+                else if (vatStr === '' && netStr !== '' && totalStr !== '') {
+                    let calcVat = total - net - tax;
+                    $('#vat_amount').val(calcVat.toFixed(2));
+                } 
+                
+                else if (netStr !== '' && vatStr !== '') {
+                    let calcTotal = net + tax + vat;
+                    $('#total_amount').val(calcTotal.toFixed(2));
+                }
             }
 
             $('#net_amount, #vat_amount').on('input keyup change', calculateAmounts);
