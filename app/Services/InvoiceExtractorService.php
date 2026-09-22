@@ -19,7 +19,7 @@ class InvoiceExtractorService
             ];
         } else {
             $this->config = [
-                'ghostscript' => 'gs',
+                'ghostscript' => '/usr/bin/gs', 
                 'tesseract'   => '/usr/bin/tesseract',
             ];
         }
@@ -28,27 +28,31 @@ class InvoiceExtractorService
     /**
      * Extract specific fields from Image-based Invoice PDF using CLI OCR
      */
+    /**
+     * Extract specific fields from Image-based Invoice PDF using CLI OCR
+     */
     public function extractInvoiceData(string $pdfPath): array
     {
         try {
             $tempDir = sys_get_temp_dir();
             $baseName = uniqid('invoice_ocr_');
-            $imagePath = $tempDir . '\\' . $baseName . '.png';
-            $textPath = $tempDir . '\\' . $baseName; // Tesseract automatically adds .txt
+            $imagePath = $tempDir . '/' . $baseName . '.png';
+            $textPath = $tempDir . '/' . $baseName;
+ 
+            $gsCmd = "{$this->config['ghostscript']} -dSAFER -dBATCH -dNOPAUSE -sDEVICE=png16m -r300 -dFirstPage=1 -dLastPage=1 -sOutputFile=\"{$imagePath}\" \"{$pdfPath}\" 2>&1";
+            $gsOutput = shell_exec($gsCmd);
 
-            $gsCmd = "{$this->config['ghostscript']} -dSAFER -dBATCH -dNOPAUSE -sDEVICE=png16m -r300 -dFirstPage=1 -dLastPage=1 -sOutputFile=\"{$imagePath}\" \"{$pdfPath}\"";
-            shell_exec($gsCmd);
-
-            if (!file_exists($imagePath)) {
-                return ['error' => 'Ghostscript failed to convert PDF to image.'];
+            if (!file_exists($imagePath)) { 
+                Log::error('Ghostscript Failed', ['command' => $gsCmd, 'output' => $gsOutput]);
+                return ['error' => 'Ghostscript failed to convert PDF: ' . $gsOutput];
             }
-
-            $tessCmd = "{$this->config['tesseract']} \"{$imagePath}\" \"{$textPath}\" -l eng";
-            shell_exec($tessCmd);
+ 
+            $tessCmd = "{$this->config['tesseract']} \"{$imagePath}\" \"{$textPath}\" -l eng 2>&1";
+            $tessOutput = shell_exec($tessCmd);
 
             $textFilePath = $textPath . '.txt';
             if (!file_exists($textFilePath)) {
-                return ['error' => 'Tesseract failed to extract text.'];
+                return ['error' => 'Tesseract failed: ' . $tessOutput];
             }
 
             $text = file_get_contents($textFilePath);
