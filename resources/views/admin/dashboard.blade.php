@@ -925,6 +925,10 @@
 
 @section('script')
 
+{{-- Dashboard scripts only when the dashboard content (perm 1) is rendered;
+     otherwise DataTables would init on missing tables and throw warnings. --}}
+@if (in_array('1', json_decode(optional(Auth::user()->role)->permission ?? '[]', true) ?: []))
+
 <script>
     $.ajaxSetup({
         headers: {
@@ -2396,5 +2400,7 @@
     });
 </script>
 <!-- Duration Time end -->
+
+@endif
 
 @endsection
