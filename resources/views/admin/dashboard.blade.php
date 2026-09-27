@@ -2,7 +2,7 @@
 
 @section('content')
 
-@if (in_array('1', json_decode(Auth::user()->role->permission)))
+@if (in_array('1', json_decode(optional(Auth::user()->role)->permission ?? '[]', true) ?: []))
 
 <section class="section dashboard">
     <div class="row">

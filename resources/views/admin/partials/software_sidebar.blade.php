@@ -9,7 +9,7 @@
             </a>
         </li>
 
-        @if (in_array('2', json_decode(Auth::user()->role->permission)))
+        @if (in_array('2', json_decode(optional(Auth::user()->role)->permission ?? '[]', true) ?: []))
             <form action="{{ route('toggle.sidebar') }}" method="POST">
                 @csrf
                 <input type="hidden" name="sidebar" value="1">
@@ -19,7 +19,7 @@
             </form>
         @endif
 
-        @if (in_array('3', json_decode(Auth::user()->role->permission)))
+        @if (in_array('3', json_decode(optional(Auth::user()->role)->permission ?? '[]', true) ?: []))
             <li class="nav-item {{ request()->routeIs('allAdmin') ? 'active' : '' }}">
                 <a class="nav-link collapsed" href="{{ route('allAdmin') }}">
                     <i class="bi bi-shield"></i>
@@ -28,7 +28,7 @@
             </li>
         @endif
 
-        @if (in_array('4', json_decode(Auth::user()->role->permission)))
+        @if (in_array('4', json_decode(optional(Auth::user()->role)->permission ?? '[]', true) ?: []))
             <li class="nav-item {{ request()->routeIs('allManager') ? 'active' : '' }}">
                 <a class="nav-link collapsed" href="{{ route('allManager') }}">
                     <i class="bi bi-briefcase"></i>
@@ -37,7 +37,7 @@
             </li>
         @endif
 
-        @if (in_array('5', json_decode(Auth::user()->role->permission)))
+        @if (in_array('5', json_decode(optional(Auth::user()->role)->permission ?? '[]', true) ?: []))
             <li class="nav-item {{ request()->routeIs('allStaff', 'createStaff', 'staff.details') ? 'active' : '' }}">
                 <a class="nav-link collapsed" href="{{ route('allStaff') }}">
                     <i class="bi bi-person-badge"></i>
@@ -46,7 +46,7 @@
             </li>
         @endif
 
-        @if (in_array('6', json_decode(Auth::user()->role->permission)))
+        @if (in_array('6', json_decode(optional(Auth::user()->role)->permission ?? '[]', true) ?: []))
             <li class="nav-item {{ request()->routeIs('allDepartment') ? 'active' : '' }}">
                 <a class="nav-link collapsed" href="{{ route('allDepartment') }}">
                     <i class="bi bi-building"></i>
@@ -55,9 +55,10 @@
             </li>
         @endif
 
-        @if (in_array('7', json_decode(Auth::user()->role->permission)) ||
-                in_array('8', json_decode(Auth::user()->role->permission)) ||
-                in_array('9', json_decode(Auth::user()->role->permission)))
+        @if (in_array('7', json_decode(optional(Auth::user()->role)->permission ?? '[]', true) ?: []) ||
+                in_array('8', json_decode(optional(Auth::user()->role)->permission ?? '[]', true) ?: []) ||
+                in_array('9', json_decode(optional(Auth::user()->role)->permission ?? '[]', true) ?: []) ||
+                in_array('28', json_decode(optional(Auth::user()->role)->permission ?? '[]', true) ?: []))
             <li
                 class="nav-item
             {{ request()->routeIs(
@@ -117,8 +118,8 @@
                     : '' }}">
 
                     {{-- Client Business --}}
-                    @if (in_array('7', json_decode(Auth::user()->role->permission)) ||
-                            in_array('8', json_decode(Auth::user()->role->permission)))
+                    @if (in_array('7', json_decode(optional(Auth::user()->role)->permission ?? '[]', true) ?: []) ||
+                            in_array('8', json_decode(optional(Auth::user()->role)->permission ?? '[]', true) ?: []))
                         <li
                             class="nav-item {{ request()->routeIs('allClient', 'createClient', 'client.update.form', 'createNewClient', 'client.activities')
                                 ? 'active'
@@ -128,8 +129,10 @@
                                 <span>Client Business</span>
                             </a>
                         </li>
+                    @endif
 
-                        {{-- Client Credentials --}}
+                    {{-- Client Credentials (own permission: 28) --}}
+                    @if (in_array('28', json_decode(optional(Auth::user()->role)->permission ?? '[]', true) ?: []))
                         <li class="nav-item {{ request()->routeIs('client.credentials') ? 'active' : '' }}">
                             <a class="nav-link" href="{{ route('client.credentials') }}">
                                 <i class="bi bi-key"></i>
@@ -139,7 +142,7 @@
                     @endif
 
                     {{-- Client Type --}}
-                    @if (in_array('9', json_decode(Auth::user()->role->permission)))
+                    @if (in_array('9', json_decode(optional(Auth::user()->role)->permission ?? '[]', true) ?: []))
                         <li class="nav-item {{ request()->routeIs('allClientType') ? 'active' : '' }}">
                             <a class="nav-link" href="{{ route('allClientType') }}">
                                 <i class="bi bi-people"></i>
@@ -152,7 +155,7 @@
             </li>
         @endif
 
-        @if (in_array('10', json_decode(Auth::user()->role->permission)))
+        @if (in_array('10', json_decode(optional(Auth::user()->role)->permission ?? '[]', true) ?: []))
             <li class="nav-item {{ request()->routeIs('my.tasks') ? 'active' : '' }}">
                 <a class="nav-link collapsed" href="{{ route('my.tasks') }}">
                     <i class="bi bi-check-circle"></i>
@@ -161,7 +164,7 @@
             </li>
         @endif
 
-        @if (in_array('11', json_decode(Auth::user()->role->permission)))
+        @if (in_array('11', json_decode(optional(Auth::user()->role)->permission ?? '[]', true) ?: []))
             <li class="nav-item {{ request()->routeIs('oneTimeJob.create') ? 'active' : '' }}">
                 <a class="nav-link collapsed" href="{{ route('oneTimeJob.create') }}">
                     <i class="bi bi-journal-text"></i>
@@ -170,7 +173,7 @@
             </li>
         @endif
 
-        @if (in_array('12', json_decode(Auth::user()->role->permission)))
+        @if (in_array('12', json_decode(optional(Auth::user()->role)->permission ?? '[]', true) ?: []))
             <li class="nav-item {{ request()->routeIs('allService') ? 'active' : '' }}">
                 <a class="nav-link collapsed" href="{{ route('allService') }}">
                     <i class="bi bi-tools"></i>
@@ -179,7 +182,7 @@
             </li>
         @endif
 
-        @if (in_array('13', json_decode(Auth::user()->role->permission)))
+        @if (in_array('13', json_decode(optional(Auth::user()->role)->permission ?? '[]', true) ?: []))
             <li
                 class="nav-item {{ request()->routeIs('prevLogStaffs', 'task.details.staff', 'allPrevLogStaffs') ? 'active' : '' }}">
                 <a class="nav-link collapsed" href="{{ route('prevLogStaffs') }}">
@@ -189,7 +192,7 @@
             </li>
         @endif
 
-        @if (in_array('14', json_decode(Auth::user()->role->permission)))
+        @if (in_array('14', json_decode(optional(Auth::user()->role)->permission ?? '[]', true) ?: []))
             <li
                 class="nav-item {{ request()->routeIs('holiday', 'createholiday', 'holidayReport', 'editHoliday') ? 'active' : '' }}">
                 <a class="nav-link collapsed" href="{{ route('holiday') }}">
@@ -199,7 +202,7 @@
             </li>
         @endif
 
-        @if (in_array('15', json_decode(Auth::user()->role->permission)))
+        @if (in_array('15', json_decode(optional(Auth::user()->role)->permission ?? '[]', true) ?: []))
             <li class="nav-item {{ request()->routeIs('allHolidayType') ? 'active' : '' }}">
                 <a class="nav-link collapsed" href="{{ route('allHolidayType') }}">
                     <i class="bi bi-list"></i>
@@ -208,7 +211,7 @@
             </li>
         @endif
 
-        @if (in_array('16', json_decode(Auth::user()->role->permission)))
+        @if (in_array('16', json_decode(optional(Auth::user()->role)->permission ?? '[]', true) ?: []))
             <li class="nav-item {{ request()->routeIs('prorota*') ? 'active' : '' }}">
                 <a class="nav-link collapsed" href="{{ route('prorota') }}">
                     <i class="bi bi-box-arrow-in-right"></i>
@@ -228,8 +231,11 @@
                 'accounting.balanceSheet',
             ];
             $isAccountingOpen = request()->routeIs(...$accountingRoutes);
+            $sidebarPerms = json_decode(optional(Auth::user()->role)->permission ?? '[]', true) ?: [];
+            $hasAccounting = count(array_intersect(['21', '22', '23', '24', '25', '26', '27'], array_map('strval', (array) $sidebarPerms))) > 0;
         @endphp
 
+        @if ($hasAccounting)
         <li class="nav-item {{ $isAccountingOpen ? 'menu-open' : '' }}">
             <a class="nav-link collapsed {{ $isAccountingOpen ? 'active' : '' }}" href="#"
                 data-bs-toggle="collapse" data-bs-target="#accountingDropdown"
@@ -242,57 +248,73 @@
 
             <ul id="accountingDropdown" class="collapse list-unstyled {{ $isAccountingOpen ? 'show' : '' }}">
 
+                @if (in_array('22', array_map('strval', (array) $sidebarPerms)))
                 <li class="nav-item {{ request()->routeIs('taxRates') ? 'active' : '' }}">
                     <a class="nav-link" href="{{ route('taxRates') }}">
                         <i class="bi bi-percent"></i>
                         <span>Tax Rates</span>
                     </a>
                 </li>
+                @endif
 
+                @if (in_array('23', array_map('strval', (array) $sidebarPerms)))
                 <li class="nav-item {{ request()->routeIs('accountTypes') ? 'active' : '' }}">
                     <a class="nav-link" href="{{ route('accountTypes') }}">
                         <i class="bi bi-diagram-3"></i>
                         <span>Account Types</span>
                     </a>
                 </li>
+                @endif
 
+                @if (in_array('24', array_map('strval', (array) $sidebarPerms)))
                 <li class="nav-item {{ request()->routeIs('accountHeads') ? 'active' : '' }}">
                     <a class="nav-link" href="{{ route('accountHeads') }}">
                         <i class="bi bi-cash-stack"></i>
                         <span>Chart of Accounts</span>
                     </a>
                 </li>
+                @endif
 
+                @if (in_array('21', array_map('strval', (array) $sidebarPerms)))
                 <li class="nav-item {{ request()->routeIs('admin.receipt.index') ? 'active' : '' }}">
                     <a class="nav-link" href="{{ route('admin.receipt.index') }}">
                         <i class="bi bi-receipt-cutoff"></i>
                         <span>Receipts</span>
                     </a>
                 </li>
+                @endif
 
+                @if (in_array('25', array_map('strval', (array) $sidebarPerms)))
                 <li class="nav-item {{ request()->routeIs('accounting.profitLoss') ? 'active' : '' }}">
                     <a class="nav-link" href="{{ route('accounting.profitLoss') }}">
                         <i class="bi bi-graph-up-arrow"></i>
                         <span>Profit & Loss</span>
                     </a>
                 </li>
+                @endif
 
+                @if (in_array('26', array_map('strval', (array) $sidebarPerms)))
                 <li class="nav-item {{ request()->routeIs('accounting.trialBalance') ? 'active' : '' }}">
                     <a class="nav-link" href="{{ route('accounting.trialBalance') }}">
                         <i class="bi bi-journal-check"></i>
                         <span>Trial Balance</span>
                     </a>
                 </li>
+                @endif
 
+                @if (in_array('27', array_map('strval', (array) $sidebarPerms)))
                 <li class="nav-item {{ request()->routeIs('accounting.balanceSheet') ? 'active' : '' }}">
                     <a class="nav-link" href="{{ route('accounting.balanceSheet') }}">
                         <i class="bi bi-pie-chart"></i>
                         <span>Balance Sheet</span>
                     </a>
                 </li>
+                @endif
             </ul>
         </li>
+        @endif
 
+        @if (in_array('20', json_decode(optional(Auth::user()->role)->permission ?? '[]', true) ?: []))
         <li
             class="nav-item {{ request()->routeIs('report.create') || request()->routeIs('client-acquisition-report') || request()->routeIs('client.fees-report') ? 'menu-open' : '' }}">
             <a class="nav-link collapsed {{ request()->routeIs('report.create') || request()->routeIs('client-acquisition-report') || request()->routeIs('client.fees-report') ? 'active' : '' }}"
@@ -331,8 +353,9 @@
                 </li>
             </ul>
         </li>
+        @endif
 
-        @if (in_array('17', json_decode(Auth::user()->role->permission)))
+        @if (in_array('17', json_decode(optional(Auth::user()->role)->permission ?? '[]', true) ?: []))
             <li class="nav-item {{ request()->is('admin/role*') ? 'active' : '' }}">
                 <a class="nav-link collapsed" href="{{ route('admin.role') }}">
                     <i class="bi bi-person-lock"></i>
@@ -341,7 +364,7 @@
             </li>
         @endif
 
-        @if (in_array('19', json_decode(Auth::user()->role->permission)))
+        @if (in_array('19', json_decode(optional(Auth::user()->role)->permission ?? '[]', true) ?: []))
             <li class="nav-item {{ request()->routeIs('trash-bin') ? 'active' : '' }}">
                 <a class="nav-link collapsed" href="{{ route('trash-bin') }}">
                     <i class="bi bi-trash"></i>

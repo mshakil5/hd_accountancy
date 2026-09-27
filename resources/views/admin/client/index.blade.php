@@ -21,7 +21,7 @@
             <div class="row px-3">
                 <div class="col-lg-12 p-3 d-flex justify-content-end">
 
-                    @if (in_array('7', json_decode(Auth::user()->role->permission)))
+                    @if (in_array('7', json_decode(optional(Auth::user()->role)->permission ?? '[]', true) ?: []))
 
                     <a href="{{ route('createClient') }}" class="btn btn-sm bg-theme text-light btn-outline-dark">+ New Client</a>
 
@@ -62,7 +62,7 @@
 <script>
  $(document).ready(function() {
 
-    var canEditDelete = @json(in_array('8', json_decode(Auth::user()->role->permission)));
+    var canEditDelete = @json(in_array('8', json_decode(optional(Auth::user()->role)->permission ?? '[]', true) ?: []));
 
     $('#credentialFilter').on('change', function() {
         table.ajax.reload();

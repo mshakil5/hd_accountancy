@@ -47,6 +47,61 @@
   input:checked + .slider:before {
       transform: translateX(24px);
   }
+
+  .perm-group {
+      border: 1px solid #e3e6ea;
+      border-radius: 10px;
+      padding: 10px 14px 6px;
+      margin-bottom: 14px;
+      background: #fff;
+  }
+
+  .perm-group > legend {
+      float: left;
+      width: auto;
+      padding: 2px 12px;
+      margin-bottom: 0;
+      font-size: 13px;
+      font-weight: 700;
+      color: #233969;
+      background: #eef2f7;
+      border: 1px solid #e3e6ea;
+      border-radius: 20px;
+  }
+
+  .perm-group .group-toggle {
+      font-size: 11px;
+      font-weight: 400;
+      color: #6c757d;
+      margin-left: 8px;
+  }
+
+  .perm-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 2px;
+      border-bottom: 1px dashed #f0f0f0;
+  }
+
+  .perm-row:last-child {
+      border-bottom: none;
+  }
+
+  .perm-cols {
+      column-count: 2;
+      column-gap: 16px;
+  }
+
+  .perm-cols .perm-group {
+      break-inside: avoid;
+  }
+
+  @media (max-width: 767px) {
+      .perm-cols {
+          column-count: 1;
+      }
+  }
 </style>
 
 <meta name="csrf-token" content="{{ csrf_token() }}" />
@@ -104,176 +159,51 @@
                 </tr>
               </table>
 
-              <div class="row">
-                <div class="col-md-6">
-                  <table class="table table-hover">
-                    @if(in_array(1, $permissions))
-                    <tr>
-                      <td><label class="control-label">Dashboard Content</label></td>
-                      <td>
-                        <label style="margin-top: -9px" class="switch"><input name="permission[]" type="checkbox" value="1"><span class="slider round"></span></label>
-                      </td>
-                    </tr>
-                    @endif
-                    @if(in_array(2, $permissions))
-                    <tr>
-                      <td><label class="control-label">Switch To Web And Software</label></td>
-                      <td>
-                        <label style="margin-top: -9px" class="switch"><input name="permission[]" type="checkbox" value="2"><span class="slider round"></span></label>
-                      </td>
-                    </tr>
-                    @endif
-                    @if(in_array(3, $permissions))
-                    <tr>
-                      <td><label class="control-label">Manage Admin</label></td>
-                      <td>
-                        <label style="margin-top: -9px" class="switch"><input name="permission[]" type="checkbox" value="3"><span class="slider round"></span></label>
-                      </td>
-                    </tr>
-                    @endif
-                    @if(in_array(4, $permissions))
-                    <tr>
-                      <td><label class="control-label">Manage Manager</label></td>
-                      <td>
-                        <label style="margin-top: -9px" class="switch"><input name="permission[]" type="checkbox" value="4"><span class="slider round"></span></label>
-                      </td>
-                    </tr>
-                    @endif
-                    @if(in_array(5, $permissions))
-                    <tr>
-                      <td><label class="control-label">Manage Staff</label></td>
-                      <td>
-                        <label style="margin-top: -9px" class="switch"><input name="permission[]" type="checkbox" value="5"><span class="slider round"></span></label>
-                      </td>
-                    </tr>
-                    @endif
-                    @if(in_array(6, $permissions))
-                    <tr>
-                      <td><label class="control-label">Manage Department</label></td>
-                      <td>
-                        <label style="margin-top: -9px" class="switch"><input name="permission[]" type="checkbox" value="6"><span class="slider round"></span></label>
-                      </td>
-                    </tr>
-                    @endif
-                    @if(in_array(7, $permissions))
-                    <tr>
-                      <td><label class="control-label">Client Entry</label></td>
-                      <td>
-                        <label style="margin-top: -9px" class="switch"><input name="permission[]" type="checkbox" value="7"><span class="slider round"></span></label>
-                      </td>
-                    </tr>
-                    @endif
-                    @if(in_array(8, $permissions))
-                    <tr>
-                      <td><label class="control-label">Client Manage</label></td>
-                      <td>
-                        <label style="margin-top: -9px" class="switch"><input name="permission[]" type="checkbox" value="8"><span class="slider round"></span></label>
-                      </td>
-                    </tr>
-                    @endif
-                    @if(in_array(9, $permissions))
-                    <tr>
-                      <td><label class="control-label">Client Type</label></td>
-                      <td>
-                        <label style="margin-top: -9px" class="switch"><input name="permission[]" type="checkbox" value="9"><span class="slider round"></span></label>
-                      </td>
-                    </tr>
-                    @endif
-                    @if(in_array(10, $permissions))
-                    <tr>
-                      <td><label class="control-label">Manage Admin Tasks</label></td>
-                      <td>
-                        <label style="margin-top: -9px" class="switch"><input name="permission[]" type="checkbox" value="10"><span class="slider round"></span></label>
-                      </td>
-                    </tr>
-                    @endif
-                    @if(in_array(11, $permissions))
-                    <tr>
-                      <td><label class="control-label">Manage One Time Tasks</label></td>
-                      <td>
-                        <label style="margin-top: -9px" class="switch"><input name="permission[]" type="checkbox" value="11"><span class="slider round"></span></label>
-                      </td>
-                    </tr>
-                    @endif
-                  </table>
-                </div>
-                <div class="col-md-6">
-                  <table class="table table-hover">
-                    @if(in_array(12, $permissions))
-                    <tr>
-                      <td><label class="control-label">Manage Services</label></td>
-                      <td>
-                        <label style="margin-top: -9px" class="switch"><input name="permission[]" type="checkbox" value="12"><span class="slider round"></span></label>
-                      </td>
-                    </tr>
-                    @endif
-                    @if(in_array(13, $permissions))
-                    <tr>
-                      <td><label class="control-label">Manage Attendence Records</label></td>
-                      <td>
-                        <label style="margin-top: -9px" class="switch"><input name="permission[]" type="checkbox" value="13"><span class="slider round"></span></label>
-                      </td>
-                    </tr>
-                    @endif
-                    @if(in_array(14, $permissions))
-                    <tr>
-                      <td><label class="control-label">Manage Holidays</label></td>
-                      <td>
-                        <label style="margin-top: -9px" class="switch"><input name="permission[]" type="checkbox" value="14"><span class="slider round"></span></label>
-                      </td>
-                    </tr>
-                    @endif
-                    @if(in_array(15, $permissions))
-                    <tr>
-                      <td><label class="control-label">Manage Holiday Types</label></td>
-                      <td>
-                        <label style="margin-top: -9px" class="switch"><input name="permission[]" type="checkbox" value="15"><span class="slider round"></span></label>
-                      </td>
-                    </tr>
-                    @endif
-                    @if(in_array(16, $permissions))
-                    <tr>
-                      <td><label class="control-label">Prorota</label></td>
-                      <td>
-                        <label style="margin-top: -9px" class="switch"><input name="permission[]" type="checkbox" value="16"><span class="slider round"></span></label>
-                      </td>
-                    </tr>
-                    @endif
-                    @if(in_array(20, $permissions))
-                    <tr>
-                      <td><label class="control-label">Reports</label></td>
-                      <td>
-                        <label style="margin-top: -9px" class="switch"><input name="permission[]" type="checkbox" value="20"><span class="slider round"></span></label>
-                      </td>
-                    </tr>
-                    @endif
-                    @if(in_array(17, $permissions))
-                    <tr>
-                      <td><label class="control-label">Manage Role & Permission</label></td>
-                      <td>
-                        <label style="margin-top: -9px" class="switch"><input name="permission[]" type="checkbox" value="17"><span class="slider round"></span></label>
-                      </td>
-                    </tr>
-                    @endif
-                    @if(in_array(19, $permissions))
-                    <tr>
-                      <td><label class="control-label">Manage Recycle Bin</label></td>
-                      <td>
-                        <label style="margin-top: -9px" class="switch"><input name="permission[]" type="checkbox" value="19"><span class="slider round"></span></label>
-                      </td>
-                    </tr>
-                    @endif
-                    @if(in_array(18, $permissions))
-                    <tr>
-                      <td><label class="control-label">Update Frontend Contents</label></td>
-                      <td>
-                        <label style="margin-top: -9px" class="switch"><input name="permission[]" type="checkbox" value="18"><span class="slider round"></span></label>
-                      </td>
-                    </tr>
-                    @endif
-                  </table>
-                </div>
+              @php
+                // Module-grouped permissions: one module = one legend.
+                // A creator only sees toggles they hold themselves (no escalation).
+                $myPerms = array_map('intval', (array) ($permissions ?? []));
+                $modules = [
+                  'Dashboard' => [1 => 'Dashboard Content'],
+                  'Access' => [2 => 'Switch To Web And Software'],
+                  'Team' => [3 => 'Manage Admin', 4 => 'Manage Manager', 5 => 'Manage Staff', 6 => 'Manage Department'],
+                  'Clients' => [7 => 'Client Entry', 8 => 'Client Manage', 9 => 'Client Type', 28 => 'Client Credentials'],
+                  'Tasks' => [10 => 'Manage Admin Tasks', 11 => 'Manage One Time Tasks'],
+                  'Services' => [12 => 'Manage Services'],
+                  'Attendance & Leave' => [13 => 'Attendance Records', 14 => 'Holidays', 15 => 'Holiday Types'],
+                  'Prorota' => [16 => 'Prorota'],
+                  'Accounting' => [21 => 'Receipts', 22 => 'Tax Rates', 23 => 'Account Types', 24 => 'Chart of Accounts', 25 => 'Profit & Loss', 26 => 'Trial Balance', 27 => 'Balance Sheet'],
+                  'Reports' => [20 => 'Reports'],
+                  'System' => [17 => 'Roles & Permissions', 19 => 'Recycle Bin'],
+                  'Website' => [18 => 'Frontend Contents'],
+                ];
+              @endphp
+
+              <div class="perm-cols">
+              @foreach ($modules as $group => $items)
+                @php $visible = array_filter(array_keys($items), fn($id) => in_array($id, $myPerms)); @endphp
+                @if(count($visible))
+                  <fieldset class="perm-group" data-group="{{ Str::slug($group) }}">
+                    <legend>{{ $group }}<label class="group-toggle"><input type="checkbox" class="group-check"> all</label></legend>
+                    @foreach ($items as $id => $label)
+                      @if(in_array($id, $myPerms))
+                        <div class="perm-row">
+                          <label class="control-label mb-0">{{ $label }}</label>
+                          <label style="margin-top: -9px" class="switch mb-0"><input name="permission[]" type="checkbox" value="{{ $id }}"><span class="slider round"></span></label>
+                        </div>
+                      @endif
+                    @endforeach
+                  </fieldset>
+                @endif
+              @endforeach
               </div>
+            </div>
+            <div class="col-md-1">
+              <table class="table table-hover">
+              </table>
+            </div>
+          </div>
+        </form>
 
               <br>
               <button class="btn btn-success btn-md center-block" id="submitBtn" type="submit"><i class="fa fa-plus-circle"></i> Submit </button>
@@ -302,6 +232,10 @@
     });
 
     var url = "{{URL::to('/admin/role')}}";
+    // Per-module "select all" toggles (only affects visible checkboxes in that fieldset)
+    $("body").delegate(".group-check", "change", function() {
+      $(this).closest("fieldset").find("input[name='permission[]']").prop("checked", $(this).is(":checked"));
+    });
     $("body").delegate("#submitBtn", "click", function(event) {
       event.preventDefault();
 
@@ -326,6 +260,8 @@
                 }, 2000);
             } else if (d.status == 422) {
                 toastr.error(d.message);
+            } else {
+                toastr.error((d && d.message) ? d.message : "Request rejected.");
             }
         },
         error: function(d) {

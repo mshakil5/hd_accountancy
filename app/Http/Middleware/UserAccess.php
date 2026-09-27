@@ -19,7 +19,10 @@ class UserAccess
     {
         if(auth()->user()->type == $userType){
             return $next($request);
-        }    
-        return response()->json(['You do not have permission to access for this page.']);
+        }
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'You do not have permission to access this page.'], 403);
+        }
+        abort(403, 'You do not have permission to access this page.');
     }
 }
