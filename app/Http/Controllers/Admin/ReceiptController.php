@@ -153,6 +153,8 @@ class ReceiptController extends Controller
         $receipt = Receipt::with(['files', 'detail.accountHead.accountType', 'client.credential'])->findOrFail($id);
         $accountTypes = AccountType::where('is_active', true)->get();
 
+        $credentialId = $receipt->client?->client_credential_id;
+
         $currentAccountTypeId = $receipt->detail?->accountHead?->account_type_id;
         $heads = $currentAccountTypeId
             ? AccountHead::with('taxRate')
@@ -166,8 +168,6 @@ class ReceiptController extends Controller
                 })
                 ->orderBy('code')->get()
             : collect();
-
-        $credentialId = $receipt->client?->client_credential_id;
 
         $baseQuery = Receipt::whereHas('client', fn($q) => $q->where('client_credential_id', $credentialId));
 
@@ -370,6 +370,71 @@ class ReceiptController extends Controller
         $file->delete();
 
         return response()->json(['success' => true, 'message' => 'File deleted successfully.']);
+    }
+
+    public function downloadFile($id, $fileId)
+    {
+        $file = ReceiptFile::where('id', $fileId)->where('receipt_id', $id)->firstOrFail();
+        $fullPath = public_path($file->file_path);
+
+        if (!file_exists($fullPath)) {
+            abort(404, 'File not found on server.');
+        }
+
+        $downloadName = $file->file_name ?: basename($fullPath);
+
+        return response()->download($fullPath, $downloadName);
+    }
+
+    public function downloadAll($id)
+    {
+        $receipt = Receipt::with('files')->findOrFail($id);
+
+        if ($receipt->files->isEmpty()) {
+            abort(404, 'No files attached to this receipt.');
+        }
+
+        if ($receipt->files->count() === 1) {
+            $file = $receipt->files->first();
+            $fullPath = public_path($file->file_path);
+            if (!file_exists($fullPath)) {
+                abort(404, 'File not found on server.');
+            }
+            return response()->download($fullPath, $file->file_name ?: basename($fullPath));
+        }
+
+        $zipName = ($receipt->receipt_number ?: 'receipt-' . $receipt->id) . '.zip';
+        $zipName = preg_replace('/[^a-zA-Z0-9_.-]/', '_', $zipName);
+        $tmpPath = tempnam(sys_get_temp_dir(), 'receipt_') . '.zip';
+
+        $zip = new \ZipArchive();
+        if ($zip->open($tmpPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            abort(500, 'Could not create zip archive.');
+        }
+
+        $usedNames = [];
+        foreach ($receipt->files as $index => $file) {
+            $fullPath = public_path($file->file_path);
+            if (!file_exists($fullPath)) {
+                continue;
+            }
+            $name = $file->file_name ?: basename($fullPath);
+            $name = preg_replace('/[\\\\\\/\\:*?"<>|]/', '_', $name);
+            if (isset($usedNames[$name])) {
+                $info = pathinfo($name);
+                $name = ($info['filename'] ?? 'file') . '_' . ($index + 1) . '.' . ($info['extension'] ?? 'pdf');
+            }
+            $usedNames[$name] = true;
+            $zip->addFile($fullPath, $name);
+        }
+        $zip->close();
+
+        if (!file_exists($tmpPath) || filesize($tmpPath) === 0) {
+            @unlink($tmpPath);
+            abort(404, 'No files available for download.');
+        }
+
+        return response()->download($tmpPath, $zipName)->deleteFileAfterSend(true);
     }
 
     public function cancel($id)

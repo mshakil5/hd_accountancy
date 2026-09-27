@@ -381,7 +381,7 @@
 </style>
 
 <div class="bill-topbar no-print">
-    <a href="{{ route('admin.receipt.index') }}" class="btn btn-secondary btn-sm">
+    <a href="{{ route('admin.receipt.index', ['client_credential_id' => $receipt->client?->client_credential_id]) }}" class="btn btn-secondary btn-sm">
         <i class="fa fa-arrow-left"></i> Back
     </a>
     <div style="display:flex; gap:8px;">

@@ -21,7 +21,7 @@
     <section class="content">
         <div class="container-fluid">
             <div class="d-flex align-items-center justify-content-between mt-3 mb-3">
-                <a href="{{ route('admin.receipt.index') }}" class="btn btn-secondary btn-sm">
+                <a href="{{ route('admin.receipt.index', request('client_credential_id') ? ['client_credential_id' => request('client_credential_id')] : []) }}" class="btn btn-secondary btn-sm">
                     <i class="fa fa-arrow-left"></i> Back
                 </a>
                 <h5 class="mb-0">Create New Receipt</h5>

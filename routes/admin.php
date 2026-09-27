@@ -745,6 +745,8 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/receipts/search-clients', [ReceiptController::class, 'searchClients']);
     Route::get('/receipts/get-account-heads', [ReceiptController::class, 'getAccountHeads'])->name('admin.receipts.getHeads');
     Route::get('/receipts/get-clients-by-credential', [ReceiptController::class, 'getClientsByCredential']);
+    Route::get('/receipts/{id}/files/{fileId}/download', [ReceiptController::class, 'downloadFile'])->name('admin.receipt.file.download');
+    Route::get('/receipts/{id}/download-all', [ReceiptController::class, 'downloadAll'])->name('admin.receipt.downloadAll');
     Route::get('/receipts/{id}', [ReceiptController::class, 'show'])->name('admin.receipt.show');
     Route::post('/receipts/{id}/update', [ReceiptController::class, 'update']);
     Route::post('/receipts/{id}/files', [ReceiptController::class, 'uploadFile']);

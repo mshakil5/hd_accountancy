@@ -107,7 +107,7 @@
     <section class="content">
         <div class="container-fluid">
             <div class="receipt-header d-flex align-items-center justify-content-between mt-3">
-                <a href="{{ route('admin.receipt.index') }}" class="btn btn-secondary btn-sm">
+                <a href="{{ route('admin.receipt.index', ['client_credential_id' => $credentialId ?? request('client_credential_id')]) }}" class="btn btn-secondary btn-sm">
                     <i class="fa fa-arrow-left"></i> Back
                 </a>
                 <div class="d-flex align-items-center gap-2">
@@ -126,6 +126,18 @@
                     @endif
                 </div>
                 <div>
+                    <a href="{{ route('admin.receipt.bill', $receipt->id) }}" class="btn btn-default btn-sm">
+                        <i class="fa fa-file-text-o"></i> Bill
+                    </a>
+                    @if ($receipt->files->count() > 0)
+                        <a href="{{ route('admin.receipt.downloadAll', $receipt->id) }}"
+                           class="btn btn-success btn-sm receipt-download-btn"
+                           data-mode="{{ $receipt->files->count() > 1 ? 'zip' : 'single' }}"
+                           data-count="{{ $receipt->files->count() }}"
+                           title="{{ $receipt->files->count() > 1 ? 'All ' . $receipt->files->count() . ' PDFs will be zipped into one file' : 'Download the PDF' }}">
+                            <i class="fa fa-download"></i> Download {{ $receipt->files->count() > 1 ? 'All (ZIP)' : 'PDF' }}
+                        </a>
+                    @endif
                     @if ($prev)
                         <a href="{{ route('admin.receipt.show', $prev) }}" class="btn btn-default btn-sm"><i
                                 class="fa fa-chevron-left"></i> Prev</a>
@@ -144,13 +156,21 @@
                     <div class="card card-outline card-primary">
                         <div class="card-header d-flex align-items-center justify-content-between">
                             <h3 class="card-title">Receipt Media Viewer</h3>
-                            @if (!in_array($receipt->status, ['archived', 'cancelled']))
-                                <label class="btn btn-sm btn-secondary mb-0" style="cursor:pointer;">
-                                    <i class="fa fa-upload"></i> Upload File
-                                    <input type="file" id="uploadFileInput" accept=".pdf"
-                                        style="display:none;">
-                                </label>
-                            @endif
+                            <div class="d-flex align-items-center" style="gap:6px;">
+                                @if ($receipt->files->count() > 0)
+                                    <a href="#" id="downloadCurrentBtn" class="btn btn-sm btn-success receipt-download-btn"
+                                       data-mode="single" title="Download the currently viewed file">
+                                        <i class="fa fa-download"></i> Download Current
+                                    </a>
+                                @endif
+                                @if (!in_array($receipt->status, ['archived', 'cancelled']))
+                                    <label class="btn btn-sm btn-secondary mb-0" style="cursor:pointer;">
+                                        <i class="fa fa-upload"></i> Upload File
+                                        <input type="file" id="uploadFileInput" accept=".pdf"
+                                            style="display:none;">
+                                    </label>
+                                @endif
+                            </div>
                         </div>
                         <div class="card-body">
 
@@ -199,6 +219,49 @@
                             <div class="file-counter" id="fileCounter">
                                 {{ $receipt->files->count() }} file(s)
                             </div>
+
+                            {{-- Attached files with individual download buttons --}}
+                            @if ($receipt->files->count() > 0)
+                                <div class="mt-3">
+                                    <div class="d-flex align-items-center justify-content-between mb-1">
+                                        <strong style="font-size:13px;">Attached Files</strong>
+                                        @if ($receipt->files->count() > 1)
+                                            <a href="{{ route('admin.receipt.downloadAll', $receipt->id) }}"
+                                                class="btn btn-sm btn-success receipt-download-btn"
+                                                data-mode="zip" data-count="{{ $receipt->files->count() }}"
+                                                title="All {{ $receipt->files->count() }} PDFs will be zipped into one file">
+                                                <i class="fa fa-download"></i> Download All (ZIP)
+                                            </a>
+                                        @endif
+                                    </div>
+                                    @if ($receipt->files->count() > 1)
+                                        <div class="text-muted mb-2" style="font-size:12px;">
+                                            <i class="fa fa-info-circle"></i>
+                                            Multiple files are bundled as a single <strong>ZIP</strong>
+                                            ({{ $receipt->files->count() }} PDFs inside).
+                                        </div>
+                                    @endif
+                                    <ul class="list-group">
+                                        @foreach ($receipt->files as $index => $file)
+                                            <li
+                                                class="list-group-item d-flex align-items-center justify-content-between py-2 px-3">
+                                                <span style="font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:60%;"
+                                                    title="{{ $file->file_name }}">
+                                                    <i class="fa fa-file-pdf-o text-danger mr-1"></i>
+                                                    {{ $index + 1 }}. {{ $file->file_name }}
+                                                </span>
+                                                <span class="d-flex" style="gap:6px;">
+                                                    <a href="{{ route('admin.receipt.file.download', [$receipt->id, $file->id]) }}"
+                                                        class="btn btn-sm btn-success receipt-download-btn" data-mode="single"
+                                                        data-filename="{{ $file->file_name }}" title="Download this PDF">
+                                                        <i class="fa fa-download"></i> Download
+                                                    </a>
+                                                </span>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
 
                             @if ($receipt->notes)
                                 <div class="notes-box mt-3">
@@ -409,7 +472,7 @@
                 if (!files.length) return;
                 currentIndex = index;
                 const f = files[index];
-                
+
                 $('#mainViewer').html(
                     f.type === 'image' ?
                     `<img src="${f.path}" style="max-width:100%;border-radius:8px;">` :
@@ -417,6 +480,7 @@
                 );
                 $('#thumbBar .file-thumb').removeClass('active').eq(index).addClass('active');
                 $('#fileCounter').text(files.length + ' file(s)  [' + (index + 1) + ' / ' + files.length + ']');
+                $('#downloadCurrentBtn').attr('href', baseUrl + '/' + receiptId + '/files/' + f.id + '/download');
                 console.log(f.id);
                 // ── NEW: Fetch Extracted Data for Current File ──
                 fetchInvoiceData(f.id);
@@ -424,6 +488,7 @@
 
             // ── Auto trigger OCR for the first file on page load ──
             if (files.length > 0) {
+                $('#downloadCurrentBtn').attr('href', baseUrl + '/' + receiptId + '/files/' + files[0].id + '/download');
                 if (files[0].type === 'pdf') {
                     fetchInvoiceData(files[0].id);
                 }
@@ -731,13 +796,43 @@
                 });
             });
 
+            // ── Download feedback ──
+            // Single file → direct PDF download. Multiple → one ZIP containing all PDFs.
+            $(document).on('click', '.receipt-download-btn', function() {
+                var mode = $(this).data('mode') || 'single';
+                var origHtml = $(this).html();
+                var $btn = $(this);
+
+                if (mode === 'zip') {
+                    var count = $btn.data('count') || files.length || 0;
+                    toastr.info('Preparing ZIP with ' + count + ' PDFs…');
+                    $btn.html('<i class="fa fa-spinner fa-spin"></i> Preparing ZIP…');
+                    setTimeout(function() {
+                        $btn.html(origHtml);
+                        toastr.success('ZIP download started — check your downloads folder.');
+                    }, 2500);
+                } else {
+                    var name = $btn.data('filename') || 'PDF';
+                    if ($btn.is('#downloadCurrentBtn') && files.length) {
+                        name = 'File ' + (currentIndex + 1) + ' of ' + files.length;
+                    }
+                    toastr.info('Downloading ' + name + '…');
+                    $btn.html('<i class="fa fa-spinner fa-spin"></i> Downloading…');
+                    setTimeout(function() {
+                        $btn.html(origHtml);
+                        toastr.success('Download started — check your downloads folder.');
+                    }, 2000);
+                }
+                // let the browser follow the href so the file actually downloads
+            });
+
             // ── Cancel ──
             $('#cancelBtn').click(function() {
                 if (!confirm('Are you sure? This clears all accounting logs.')) return;
                 $.get(baseUrl + '/' + receiptId + '/cancel', function(d) {
                     if (d.success) {
                         toastr.success(d.message);
-                        setTimeout(() => window.location = "{{ route('admin.receipt.index') }}",
+                        setTimeout(() => window.location = "{{ route('admin.receipt.index', ['client_credential_id' => $credentialId ?? request('client_credential_id')]) }}",
                             1000);
                     } else {
                         toastr.error(d.message);
