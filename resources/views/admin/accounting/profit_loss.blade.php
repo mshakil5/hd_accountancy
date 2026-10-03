@@ -108,6 +108,10 @@
             <div class="d-flex align-items-center justify-content-between mb-3">
                 <h4 class="mb-0"><i class="fa fa-chart-line mr-2"></i> Profit & Loss</h4>
                 <div>
+                    <button class="btn btn-sm btn-outline-success" id="exportCsvBtn"><i class="fa fa-file-csv"></i>
+                        CSV</button>
+                    <button class="btn btn-sm btn-outline-success" id="exportXlsxBtn"><i class="fa fa-file-excel"></i>
+                        Excel</button>
                     <button class="btn btn-sm btn-outline-secondary" onclick="window.print()"><i class="fa fa-print"></i>
                         Print</button>
                 </div>
@@ -217,8 +221,57 @@
                 loadReport(currentFilters);
             });
 
+            function exportUrl(format) {
+                var p = $.extend({
+                    from: $('#from').val(),
+                    to: $('#to').val(),
+                    client_credential_id: $('#clientSelect').val(),
+                    client_id: $('#businessSelect').val(),
+                    payment_method: $('#paymentMethod').val(),
+                }, {});
+                return "{{ url('/admin/accounting/profit-loss/export') }}?format=" + format + '&' + $.param(p);
+            }
+
+            $('#exportCsvBtn').click(function() { window.location = exportUrl('csv'); });
+            $('#exportXlsxBtn').click(function() { window.location = exportUrl('xlsx'); });
+
             function fmt(n) {
                 return '£' + parseFloat(n || 0).toFixed(2);
+            }
+
+            function excelHeadRow(label) {
+                return '<tr><td colspan="5" class="section-subhead">EXCEL: ' + label + '</td></tr>';
+            }
+
+            function excelRows(heads) {
+                var html = '';
+                $.each(heads || [], function(i, head) {
+                    var label = (head.code ? head.code + ' - ' : '') + head.head_name;
+                    html += '<tr class="report-row" data-head-id="' + (head.head_id || '') + '" data-code="' + (head.code || '') + '" title="Click for breakdown">' +
+                        '<td style="padding-left:28px;">' + label + '</td>' +
+                        '<td class="col-amount">' + fmt(head.cash) + '</td>' +
+                        '<td class="col-amount">' + fmt(head.bank) + '</td>' +
+                        '<td class="col-amount">' + fmt(head.card) + '</td>' +
+                        '<td class="col-amount">' + fmt(head.total) + '</td>' +
+                        '</tr>';
+                });
+                return html;
+            }
+
+            function excelTotalRow(label, t) {
+                return '<tr class="total-row"><td>' + label + '</td>' +
+                    '<td class="col-amount">' + fmt(t.cash) + '</td>' +
+                    '<td class="col-amount">' + fmt(t.bank) + '</td>' +
+                    '<td class="col-amount">' + fmt(t.card) + '</td>' +
+                    '<td class="col-amount">' + fmt(t.total) + '</td></tr>';
+            }
+
+            function excelEmphRow(label, t, cls) {
+                return '<tr class="' + cls + '"><td>' + label + '</td>' +
+                    '<td class="col-amount">' + fmt(t.cash) + '</td>' +
+                    '<td class="col-amount">' + fmt(t.bank) + '</td>' +
+                    '<td class="col-amount">' + fmt(t.card) + '</td>' +
+                    '<td class="col-amount">' + fmt(t.total) + '</td></tr>';
             }
 
             function buildSection(label, sections, colorClass) {
@@ -237,7 +290,7 @@
                     html += '<tr><td colspan="5" class="section-subhead">' + section.type_name +
                         '</td></tr>';
                     $.each(section.heads, function(j, head) {
-                        html += '<tr class="report-row" data-head-id="' + head.head_id + '">' +
+                        html += '<tr class="report-row" data-head-id="' + head.head_id + '" title="Click for breakdown">' +
                             '<td style="padding-left:28px;">' + head.head_name + '</td>' +
                             '<td class="col-amount">' + fmt(head.cash) + '</td>' +
                             '<td class="col-amount">' + fmt(head.bank) + '</td>' +
@@ -269,6 +322,37 @@
                 $.get("{{ url('/admin/accounting/profit-loss/data') }}", filters, function(d) {
                     var body = '';
 
+                    // Excel-layout sections (Chart of account, P&L, BS.xlsx). Cash/Bank/Card kept.
+                    if (d.excel) {
+                        body += excelHeadRow('TURNOVER');
+                        body += excelRows(d.excel.turnover_heads);
+                        body += excelHeadRow('OTHER INCOME (Investment + Non-Trading)');
+                        body += excelRows(d.excel.other_income_heads);
+                        body += excelTotalRow('Total Turnover (A)', d.excel.total_turnover_A);
+
+                        body += excelHeadRow('COST OF SALES / DIRECT EXPENSES');
+                        body += excelRows(d.excel.direct_heads);
+                        body += excelTotalRow('Total Cost of Sales (B = 201 only per Excel R25)', d.excel.total_cost_B_excel);
+
+                        body += excelEmphRow('GROSS PROFIT (C = A-B)', d.excel.gross_profit_C, 'grand-row');
+
+                        body += excelHeadRow('ADMINISTRATIVE COSTS (301-329)');
+                        body += excelRows(d.excel.admin_heads);
+                        body += excelTotalRow('Total Administrative Costs (D)', d.excel.total_admin_D);
+
+                        var eCls = d.excel.operating_profit_E.total >= 0 ? 'profit-row' : 'loss-row';
+                        body += '<tr class="' + eCls + '"><td>OPERATING PROFIT (E = C-D)</td>' +
+                            '<td class="col-amount">' + fmt(d.excel.operating_profit_E.cash) + '</td>' +
+                            '<td class="col-amount">' + fmt(d.excel.operating_profit_E.bank) + '</td>' +
+                            '<td class="col-amount">' + fmt(d.excel.operating_profit_E.card) + '</td>' +
+                            '<td class="col-amount">' + fmt(d.excel.operating_profit_E.total) + '</td></tr>';
+                        body += '<tr><td colspan="5" class="small text-muted" style="padding:8px 16px;">' +
+                            'Excel refs: A=Total Turnover, B=Total Cost of Sales, C=Gross Profit (A-B), D=Total Admin, E=Operating Profit (C-D). ' +
+                            'Replicated exactly: B sums 201 only (202-204 shown but excluded); A includes 107 Sales Refund as +.' +
+                            '</td></tr>';
+                    }
+
+                    // Legacy dynamic grouping (kept for reference below Excel sections)
                     // Income
                     var incomeResult = buildSection('TRADING INCOME', d.income, 'bg-success');
                     body += incomeResult.html;
@@ -297,12 +381,45 @@
                         '<td class="col-amount">' + fmt(d.net_profit.total) + '</td></tr>';
 
                     $('#reportBody').html(body);
-                    $('#reportMeta').text(d.business_name + '  |  ' + d.from + ' – ' + d.to);
+                    $('#reportMeta').text(d.business_name + '  |  ' + d.from + ' – ' + d.to + '  |  Click a row for breakdown');
                     $('#reportOutput').fadeIn();
                 }).always(function() {
                     $('#generateBtn').prop('disabled', false).html('<i class="fa fa-refresh"></i> Run');
                 });
             }
+
+            // Drill-down: click any head row → expandable breakdown of its transactions.
+            $('#reportBody').on('click', 'tr.report-row', function() {
+                var $row = $(this);
+                if ($row.next().hasClass('breakdown-row')) {
+                    $row.next().toggle();
+                    return;
+                }
+                var headId = $row.data('head-id');
+                var code = $row.data('code');
+                if (!headId && !code) return;
+                var $detail = $('<tr class="breakdown-row"><td colspan="5" style="background:#f8fafc; padding:8px 16px 12px 28px;"><span class="small text-muted"><i class="fa fa-spinner fa-spin"></i> Loading breakdown…</span></td></tr>');
+                $row.after($detail);
+                $.get("{{ url('/admin/accounting/head-transactions') }}", $.extend({ mode: 'pl', head_id: headId || '', code: code || '' }, currentFilters), function(res) {
+                    var html = '<div class="small font-weight-bold mb-1">Breakdown: ' + (res.heads.length ? res.heads.map(function(h) { return h.code + ' - ' + h.name; }).join(', ') : '') + ' (' + res.count + ' transactions, Total £' + parseFloat(res.total || 0).toFixed(2) + ')</div>';
+                    if (!res.rows.length) {
+                        html += '<div class="small text-muted">No transactions in this period.</div>';
+                    } else {
+                        html += '<table class="table table-sm mb-0"><thead><tr><th>Date</th><th>Receipt</th><th>Business</th><th>Method</th><th class="text-right">Amount</th></tr></thead><tbody>';
+                        $.each(res.rows, function(i, r) {
+                            html += '<tr><td>' + (r.date || '-') + '</td>' +
+                                '<td><a href="{{ url('/admin/receipts') }}/' + r.receipt_id + '" target="_blank">' + (r.receipt_number || ('#' + r.receipt_id)) + '</a></td>' +
+                                '<td>' + (r.business || '-') + '</td>' +
+                                '<td>' + (r.payment_method || '-') + '</td>' +
+                                '<td class="text-right">£' + parseFloat(r.amount || 0).toFixed(2) + '</td></tr>';
+                        });
+                        html += '</tbody></table>';
+                    }
+                    $detail.find('td').html(html);
+                }).fail(function() {
+                    $detail.find('td').html('<span class="small text-danger">Failed to load breakdown.</span>');
+                });
+            });
         });
     </script>
 @endsection

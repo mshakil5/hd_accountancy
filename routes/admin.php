@@ -759,14 +759,17 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
 
     Route::get('/accounting/profit-loss',            [AccountingController::class, 'profitLoss'])->name('accounting.profitLoss');
     Route::get('/accounting/profit-loss/data',       [AccountingController::class, 'profitLossData'])->name('accounting.profitLoss.data');
+    Route::get('/accounting/profit-loss/export',     [AccountingController::class, 'profitLossExport'])->name('accounting.profitLoss.export');
 
     Route::get('/accounting/trial-balance',          [AccountingController::class, 'trialBalance'])->name('accounting.trialBalance');
     Route::get('/accounting/trial-balance/data',     [AccountingController::class, 'trialBalanceData'])->name('accounting.trialBalance.data');
 
     Route::get('/accounting/balance-sheet',          [AccountingController::class, 'balanceSheet'])->name('accounting.balanceSheet');
     Route::get('/accounting/balance-sheet/data',     [AccountingController::class, 'balanceSheetData'])->name('accounting.balanceSheet.data');
+    Route::get('/accounting/balance-sheet/export',   [AccountingController::class, 'balanceSheetExport'])->name('accounting.balanceSheet.export');
 
     Route::get('/accounting/get-businesses',         [AccountingController::class, 'getBusinesses'])->name('accounting.getBusinesses');
+    Route::get('/accounting/head-transactions',      [AccountingController::class, 'headTransactions'])->name('accounting.headTransactions');
 });
 
 Route::get('/get-active-jobs', [AdminController::class, 'getActiveJobs'])->name('get.active.jobs');

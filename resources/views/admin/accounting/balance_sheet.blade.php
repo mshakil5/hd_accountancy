@@ -163,8 +163,14 @@
 
             <div class="d-flex align-items-center justify-content-between mb-3 no-print">
                 <h4 class="mb-0"><i class="fa fa-columns mr-2"></i> Balance Sheet</h4>
-                <button class="btn btn-sm btn-outline-secondary" onclick="window.print()"><i class="fa fa-print"></i>
+                <div>
+                    <button class="btn btn-sm btn-outline-success" id="exportCsvBtn"><i class="fa fa-file-csv"></i>
+                        CSV</button>
+                    <button class="btn btn-sm btn-outline-success" id="exportXlsxBtn"><i class="fa fa-file-excel"></i>
+                        Excel</button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="window.print()"><i class="fa fa-print"></i>
                     Print</button>
+                </div>
             </div>
 
             <div class="filter-section no-print">
@@ -254,6 +260,37 @@
                 return '£' + parseFloat(n || 0).toFixed(2);
             }
 
+            function xRows(rows) {
+                var html = '';
+                $.each(rows || [], function(i, row) {
+                    var clickable = row.head_id || row.code ? ' data-head-id="' + (row.head_id || '') + '" data-code="' + (row.code || '') + '" title="Click for breakdown" style="cursor:pointer;"' : '';
+                    html += '<tr class="bs-row"' + clickable + '><td>' + row.name +
+                        '</td><td class="col-amount">' + fmt(row.balance) +
+                        '</td></tr>';
+                });
+                return html;
+            }
+
+            function xSection(label) {
+                return '<tr><td colspan="2" class="bs-section-header">EXCEL: ' + label + '</td></tr>';
+            }
+
+            function xTotal(label, val, cls) {
+                return '<tr class="' + (cls || 'bs-total') + '"><td>' + label +
+                    '</td><td class="col-amount">' + fmt(val) + '</td></tr>';
+            }
+
+            function bsExportUrl(format) {
+                return "{{ url('/admin/accounting/balance-sheet/export') }}?format=" + format + '&' + $.param({
+                    as_of: $('#asOf').val(),
+                    client_credential_id: $('#clientSelect').val(),
+                    client_id: $('#businessSelect').val()
+                });
+            }
+
+            $('#exportCsvBtn').click(function() { window.location = bsExportUrl('csv'); });
+            $('#exportXlsxBtn').click(function() { window.location = bsExportUrl('xlsx'); });
+
             $('#generateBtn').click(function() {
                 $(this).prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
                 $.get("{{ url('/admin/accounting/balance-sheet/data') }}", {
@@ -265,7 +302,7 @@
                     var aBody = '';
                     aBody += '<tr><td colspan="2" class="bs-section-header">ASSETS</td></tr>';
                     $.each(d.assets, function(i, row) {
-                        aBody += '<tr class="bs-row"><td>' + row.name +
+                        aBody += '<tr class="bs-row" data-head-id="' + (row.head_id || '') + '" data-code="' + (row.code || '') + '" title="Click for breakdown" style="cursor:pointer;"><td>' + row.name +
                             '</td><td class="col-amount">' + fmt(row.balance) +
                             '</td></tr>';
                     });
@@ -275,13 +312,25 @@
                     }
                     aBody += '<tr class="bs-grand"><td>TOTAL ASSETS</td><td class="col-amount">' +
                         fmt(d.total_assets) + '</td></tr>';
+                    if (d.excel) {
+                        aBody += xSection('FIXED ASSETS (401-407)');
+                        aBody += xRows(d.excel.fixed_heads);
+                        aBody += xTotal('Total Fixed Assets (A)', d.excel.total_fixed_A);
+                        aBody += xSection('CURRENT ASSETS (451-454 + Inventory row)');
+                        aBody += xRows(d.excel.current_heads);
+                        aBody += '<tr class="bs-row"><td>' + d.excel.inventory_head_455.name +
+                            ' (true 455 balance)</td><td class="col-amount">' + fmt(d.excel.inventory_head_455.balance) + '</td></tr>';
+                        aBody += '<tr class="bs-row"><td>Inventory row display (B25 = 451+452+453+454 per Excel)</td><td class="col-amount">' +
+                            fmt(d.excel.inventory_row_display) + '</td></tr>';
+                        aBody += xTotal('Total Current Asset (B, double-counts 451-454 per Excel)', d.excel.total_current_B_excel);
+                    }
                     $('#assetsTable tbody').html(aBody);
 
                     // Liabilities + Equity table
                     var leBody = '';
                     leBody += '<tr><td colspan="2" class="bs-section-header">LIABILITIES</td></tr>';
                     $.each(d.liabilities, function(i, row) {
-                        leBody += '<tr class="bs-row"><td>' + row.name +
+                        leBody += '<tr class="bs-row" data-head-id="' + (row.head_id || '') + '" data-code="' + (row.code || '') + '" title="Click for breakdown" style="cursor:pointer;"><td>' + row.name +
                             '</td><td class="col-amount">' + fmt(row.balance) +
                             '</td></tr>';
                     });
@@ -296,7 +345,7 @@
                     leBody +=
                         '<tr><td colspan="2" class="bs-section-header" style="margin-top:8px;">EQUITY</td></tr>';
                     $.each(d.equity, function(i, row) {
-                        leBody += '<tr class="bs-row"><td>' + row.name +
+                        leBody += '<tr class="bs-row" data-head-id="' + (row.head_id || '') + '" data-code="' + (row.code || '') + '" title="Click for breakdown" style="cursor:pointer;"><td>' + row.name +
                             '</td><td class="col-amount">' + fmt(row.balance) +
                             '</td></tr>';
                     });
@@ -313,6 +362,25 @@
                     leBody +=
                         '<tr class="bs-grand"><td>TOTAL LIABILITIES + EQUITY</td><td class="col-amount">' +
                         fmt(d.total_liab_equity) + '</td></tr>';
+                    if (d.excel) {
+                        leBody += xSection('CURRENT LIABILITIES (501-513)');
+                        leBody += xRows(d.excel.current_liab_heads);
+                        leBody += xTotal('Total Current Liabilities (C)', d.excel.total_current_C);
+                        leBody += xTotal('Net Current Assets (B-C)', d.excel.net_current_BC);
+                        leBody += xTotal('Total Assets less Current Liabilities (A+B-C = 0+B45 per Excel R47)', d.excel.total_assets_less_current_excel);
+                        leBody += '<tr class="bs-row"><td class="small text-muted">Correct A+Net (fixed included, for reference)</td><td class="col-amount">' +
+                            fmt(d.excel.total_assets_less_current_correct) + '</td></tr>';
+                        leBody += xSection('NON-CURRENT LIABILITIES (551-554)');
+                        leBody += xRows(d.excel.noncurrent_heads);
+                        leBody += xTotal('Total Non-Current Liabilities (D)', d.excel.total_noncurrent_D);
+                        leBody += xTotal('Net Assets (A+B-C-D)', d.excel.net_assets_excel, 'bs-grand');
+                        leBody += xSection('CAPITAL AND RESERVES (601-604)');
+                        leBody += xRows(d.excel.capital_heads);
+                        leBody += xTotal('Total Capital and Reserves (601+602 only per Excel R65)', d.excel.total_capital_excel);
+                        leBody += '<tr class="bs-row"><td class="small text-muted">Full capital incl. 603 + 604 (reference)</td><td class="col-amount">' +
+                            fmt(d.excel.total_capital_all) + '</td></tr>';
+                        leBody += '<tr class="bs-row"><td colspan="2" class="small text-muted">Excel refs: A=Fixed, B=Current, C=Current Liab, B-C=Net Current, A+B-C=Assets less Current, D=Non-current, A+B-C-D=Net Assets. Replicated exactly incl. B25 double-count, R47 empty-B17, R65 2-line capital sum.</td></tr>';
+                    }
                     $('#liabEquityTable tbody').html(leBody);
 
                     // Balance check badge
@@ -320,12 +388,51 @@
                         '<span class="balanced-badge"><i class="fa fa-info-circle"></i> Single Entry System</span>'
                     );
 
-                    $('#reportMeta').text(d.business_name + '  |  As of ' + d.as_of);
+                    $('#reportMeta').text(d.business_name + '  |  As of ' + d.as_of + '  |  Click a row for breakdown');
                     $('#reportOutput').fadeIn();
 
                 }).always(function() {
                     $('#generateBtn').prop('disabled', false).html(
                         '<i class="fa fa-refresh"></i> Generate');
+                });
+            });
+
+            // Drill-down: click any head row → expandable breakdown of its transactions (as-of basis).
+            $('#assetsTable, #liabEquityTable').on('click', 'tr.bs-row[data-head-id], tr.bs-row[data-code]', function() {
+                var $row = $(this);
+                if ($row.next().hasClass('breakdown-row')) {
+                    $row.next().toggle();
+                    return;
+                }
+                var headId = $row.data('head-id');
+                var code = $row.data('code');
+                if (!headId && !code) return;
+                var $detail = $('<tr class="breakdown-row"><td colspan="2" style="background:#f8fafc; padding:8px 16px 12px 28px;"><span class="small text-muted"><i class="fa fa-spinner fa-spin"></i> Loading breakdown…</span></td></tr>');
+                $row.after($detail);
+                $.get("{{ url('/admin/accounting/head-transactions') }}", {
+                    mode: 'bs',
+                    head_id: headId || '',
+                    code: code || '',
+                    as_of: $('#asOf').val(),
+                    client_credential_id: $('#clientSelect').val(),
+                    client_id: $('#businessSelect').val()
+                }, function(res) {
+                    var html = '<div class="small font-weight-bold mb-1">Breakdown: ' + (res.heads.length ? res.heads.map(function(h) { return h.code + ' - ' + h.name; }).join(', ') : '') + ' (' + res.count + ' transactions, Total £' + parseFloat(res.total || 0).toFixed(2) + ')</div>';
+                    if (!res.rows.length) {
+                        html += '<div class="small text-muted">No transactions as of this date.</div>';
+                    } else {
+                        html += '<table class="table table-sm mb-0"><thead><tr><th>Date</th><th>Receipt</th><th>Business</th><th class="text-right">Amount</th></tr></thead><tbody>';
+                        $.each(res.rows, function(i, r) {
+                            html += '<tr><td>' + (r.date || '-') + '</td>' +
+                                '<td><a href="{{ url('/admin/receipts') }}/' + r.receipt_id + '" target="_blank">' + (r.receipt_number || ('#' + r.receipt_id)) + '</a></td>' +
+                                '<td>' + (r.business || '-') + '</td>' +
+                                '<td class="text-right">£' + parseFloat(r.amount || 0).toFixed(2) + '</td></tr>';
+                        });
+                        html += '</tbody></table>';
+                    }
+                    $detail.find('td').html(html);
+                }).fail(function() {
+                    $detail.find('td').html('<span class="small text-danger">Failed to load breakdown.</span>');
                 });
             });
         });

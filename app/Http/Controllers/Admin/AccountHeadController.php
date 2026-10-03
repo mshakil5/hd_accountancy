@@ -10,6 +10,28 @@ use DataTables;
 
 class AccountHeadController extends Controller
 {
+    /**
+     * Excel chart code ranges per account type (global chart discipline).
+     * Per-client overrides (client_credential_id set) are free-form.
+     */
+    public const CODE_RANGES = [
+        6 => [101, 107], // Turnover
+        7 => [108, 109], // Other Income
+        8 => [201, 204], // Direct Expenses
+        9 => [301, 329], // Expenses
+        2 => [401, 407], // Fixed Assets
+        1 => [451, 455], // Current Assets
+        3 => [501, 513], // Current Liability
+        4 => [551, 554], // Non-current Liability
+        5 => [601, 604], // Capital and reserves
+    ];
+
+    private function codeInRange($typeId, $code): bool
+    {
+        if (!isset(self::CODE_RANGES[$typeId]) || !is_numeric($code)) return true;
+        [$min, $max] = self::CODE_RANGES[$typeId];
+        return ((int) $code) >= $min && ((int) $code) <= $max;
+    }
     public function index()
     {
         $accountTypes = AccountType::where('is_active', 1)->select('id', 'name')->get();
@@ -79,11 +101,19 @@ class AccountHeadController extends Controller
 
         $credId = $request->client_credential_id ?: null;
 
+        if(!$credId && !$this->codeInRange($request->account_type_id, $request->code)){
+            [$min, $max] = self::CODE_RANGES[$request->account_type_id];
+            return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>Global codes for this type must be between $min and $max (Excel chart). Use a per-client head for custom codes.</div>"]);
+        }
+
         if(AccountHead::where('code', $request->code)->where('client_credential_id', $credId)->exists()){
             return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>This code already exists for this client scope.</div>"]);
         }
-        if(AccountHead::where('name', $request->name)->where('client_credential_id', $credId)->exists()){
-            return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>This account head already exists for this client scope.</div>"]);
+        // Excel chart intentionally reuses "Director Loan Account" in two types
+        // (509 Current Liability + 554 Non-current Liability), so name uniqueness
+        // is scoped by type + client scope, not scope alone.
+        if(AccountHead::where('name', $request->name)->where('account_type_id', $request->account_type_id)->where('client_credential_id', $credId)->exists()){
+            return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>This account head already exists for this type and client scope.</div>"]);
         }
 
         AccountHead::create([
@@ -140,11 +170,16 @@ class AccountHeadController extends Controller
 
         $credId = $request->client_credential_id ?: null;
 
+        if(!$credId && !$this->codeInRange($request->account_type_id, $request->code)){
+            [$min, $max] = self::CODE_RANGES[$request->account_type_id];
+            return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>Global codes for this type must be between $min and $max (Excel chart). Use a per-client head for custom codes.</div>"]);
+        }
+
         if(AccountHead::where('code', $request->code)->where('client_credential_id', $credId)->where('id','!=',$request->codeid)->exists()){
             return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>This code already exists for this client scope.</div>"]);
         }
-        if(AccountHead::where('name', $request->name)->where('client_credential_id', $credId)->where('id','!=',$request->codeid)->exists()){
-            return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>This account head already exists for this client scope.</div>"]);
+        if(AccountHead::where('name', $request->name)->where('account_type_id', $request->account_type_id)->where('client_credential_id', $credId)->where('id','!=',$request->codeid)->exists()){
+            return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>This account head already exists for this type and client scope.</div>"]);
         }
 
         AccountHead::find($request->codeid)->update([
