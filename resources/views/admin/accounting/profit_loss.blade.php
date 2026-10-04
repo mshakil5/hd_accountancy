@@ -243,9 +243,10 @@
                 return '<tr><td colspan="5" class="section-subhead">EXCEL: ' + label + '</td></tr>';
             }
 
-            function excelRows(heads) {
+            function excelRows(heads, collect) {
                 var html = '';
                 $.each(heads || [], function(i, head) {
+                    if (collect && head.head_id) collect.push(head.head_id);
                     var label = (head.code ? head.code + ' - ' : '') + head.head_name;
                     html += '<tr class="report-row" data-head-id="' + (head.head_id || '') + '" data-code="' + (head.code || '') + '" title="Click for breakdown">' +
                         '<td style="padding-left:28px;">' + label + '</td>' +
@@ -258,16 +259,18 @@
                 return html;
             }
 
-            function excelTotalRow(label, t) {
-                return '<tr class="total-row"><td>' + label + '</td>' +
+            function excelTotalRow(label, t, ids) {
+                var clickable = (ids && ids.length) ? ' data-head-ids="' + ids.join(',') + '" title="Click for breakdown" style="cursor:pointer;"' : '';
+                return '<tr class="total-row report-row"' + clickable + '><td>' + label + '</td>' +
                     '<td class="col-amount">' + fmt(t.cash) + '</td>' +
                     '<td class="col-amount">' + fmt(t.bank) + '</td>' +
                     '<td class="col-amount">' + fmt(t.card) + '</td>' +
                     '<td class="col-amount">' + fmt(t.total) + '</td></tr>';
             }
 
-            function excelEmphRow(label, t, cls) {
-                return '<tr class="' + cls + '"><td>' + label + '</td>' +
+            function excelEmphRow(label, t, cls, ids) {
+                var clickable = (ids && ids.length) ? ' data-head-ids="' + ids.join(',') + '" title="Click for breakdown" style="cursor:pointer;"' : '';
+                return '<tr class="' + cls + ' report-row"' + clickable + '><td>' + label + '</td>' +
                     '<td class="col-amount">' + fmt(t.cash) + '</td>' +
                     '<td class="col-amount">' + fmt(t.bank) + '</td>' +
                     '<td class="col-amount">' + fmt(t.card) + '</td>' +
@@ -285,11 +288,17 @@
                     card: 0,
                     total: 0
                 };
+                var sectionIds = [];
 
                 $.each(sections, function(i, section) {
                     html += '<tr><td colspan="5" class="section-subhead">' + section.type_name +
                         '</td></tr>';
+                    var typeIds = [];
                     $.each(section.heads, function(j, head) {
+                        if (head.head_id) {
+                            typeIds.push(head.head_id);
+                            sectionIds.push(head.head_id);
+                        }
                         html += '<tr class="report-row" data-head-id="' + head.head_id + '" title="Click for breakdown">' +
                             '<td style="padding-left:28px;">' + head.head_name + '</td>' +
                             '<td class="col-amount">' + fmt(head.cash) + '</td>' +
@@ -298,7 +307,7 @@
                             '<td class="col-amount">' + fmt(head.total) + '</td>' +
                             '</tr>';
                     });
-                    html += '<tr class="total-row">' +
+                    html += '<tr class="total-row report-row" data-head-ids="' + typeIds.join(',') + '" title="Click for breakdown" style="cursor:pointer;">' +
                         '<td>Total ' + section.type_name + '</td>' +
                         '<td class="col-amount">' + fmt(section.type_total.cash) + '</td>' +
                         '<td class="col-amount">' + fmt(section.type_total.bank) + '</td>' +
@@ -313,7 +322,8 @@
 
                 return {
                     html: html,
-                    totals: sectionTotals
+                    totals: sectionTotals,
+                    ids: sectionIds
                 };
             }
 
@@ -325,24 +335,25 @@
                     // Dynamic chart sections (rows come from the heads table). Cash/Bank/Card kept.
                     if (d.excel) {
                         var st = d.excel.section_titles || {};
+                        var toIds = [], oiIds = [], drIds = [], adIds = [];
                         body += excelHeadRow((st.turnover || 'TURNOVER').toUpperCase());
-                        body += excelRows(d.excel.turnover_heads);
+                        body += excelRows(d.excel.turnover_heads, toIds);
                         body += excelHeadRow((st.other || 'OTHER INCOME').toUpperCase());
-                        body += excelRows(d.excel.other_income_heads);
-                        body += excelTotalRow('Total Turnover (A)', d.excel.total_turnover_A);
+                        body += excelRows(d.excel.other_income_heads, oiIds);
+                        body += excelTotalRow('Total Turnover (A)', d.excel.total_turnover_A, toIds.concat(oiIds));
 
                         body += excelHeadRow((st.direct || 'DIRECT EXPENSES').toUpperCase());
-                        body += excelRows(d.excel.direct_heads);
-                        body += excelTotalRow('Total Cost of Sales (B)', d.excel.total_cost_B_excel);
+                        body += excelRows(d.excel.direct_heads, drIds);
+                        body += excelTotalRow('Total Cost of Sales (B)', d.excel.total_cost_B_excel, drIds);
 
-                        body += excelEmphRow('GROSS PROFIT (C = A-B)', d.excel.gross_profit_C, 'grand-row');
+                        body += excelEmphRow('GROSS PROFIT (C = A-B)', d.excel.gross_profit_C, 'grand-row', toIds.concat(oiIds, drIds));
 
                         body += excelHeadRow((st.admin || 'ADMINISTRATIVE COSTS').toUpperCase());
-                        body += excelRows(d.excel.admin_heads);
-                        body += excelTotalRow('Total Administrative Costs (D)', d.excel.total_admin_D);
+                        body += excelRows(d.excel.admin_heads, adIds);
+                        body += excelTotalRow('Total Administrative Costs (D)', d.excel.total_admin_D, adIds);
 
                         var eCls = d.excel.operating_profit_E.total >= 0 ? 'profit-row' : 'loss-row';
-                        body += '<tr class="' + eCls + '"><td>OPERATING PROFIT (E = C-D)</td>' +
+                        body += '<tr class="' + eCls + ' report-row" data-head-ids="' + toIds.concat(oiIds, drIds, adIds).join(',') + '" title="Click for breakdown" style="cursor:pointer;"><td>OPERATING PROFIT (E = C-D)</td>' +
                             '<td class="col-amount">' + fmt(d.excel.operating_profit_E.cash) + '</td>' +
                             '<td class="col-amount">' + fmt(d.excel.operating_profit_E.bank) + '</td>' +
                             '<td class="col-amount">' + fmt(d.excel.operating_profit_E.card) + '</td>' +
@@ -357,7 +368,7 @@
                     // Income
                     var incomeResult = buildSection('TRADING INCOME', d.income, 'bg-success');
                     body += incomeResult.html;
-                    body += '<tr class="grand-row"><td>Total Trading Income</td>' +
+                    body += '<tr class="grand-row report-row" data-head-ids="' + incomeResult.ids.join(',') + '" title="Click for breakdown" style="cursor:pointer;"><td>Total Trading Income</td>' +
                         '<td class="col-amount">' + fmt(d.total_income.cash) + '</td>' +
                         '<td class="col-amount">' + fmt(d.total_income.bank) + '</td>' +
                         '<td class="col-amount">' + fmt(d.total_income.card) + '</td>' +
@@ -366,7 +377,7 @@
                     // Expenses
                     var expResult = buildSection('OPERATING EXPENSES', d.expenses, 'bg-danger');
                     body += expResult.html;
-                    body += '<tr class="grand-row"><td>Total Expenses</td>' +
+                    body += '<tr class="grand-row report-row" data-head-ids="' + expResult.ids.join(',') + '" title="Click for breakdown" style="cursor:pointer;"><td>Total Expenses</td>' +
                         '<td class="col-amount">' + fmt(d.total_expense.cash) + '</td>' +
                         '<td class="col-amount">' + fmt(d.total_expense.bank) + '</td>' +
                         '<td class="col-amount">' + fmt(d.total_expense.card) + '</td>' +
@@ -375,7 +386,7 @@
                     // Net Profit/Loss
                     var netClass = d.net_profit.total >= 0 ? 'profit-row' : 'loss-row';
                     var netLabel = d.net_profit.total >= 0 ? 'NET PROFIT' : 'NET LOSS';
-                    body += '<tr class="' + netClass + '"><td>' + netLabel + '</td>' +
+                    body += '<tr class="' + netClass + ' report-row" data-head-ids="' + incomeResult.ids.concat(expResult.ids).join(',') + '" title="Click for breakdown" style="cursor:pointer;"><td>' + netLabel + '</td>' +
                         '<td class="col-amount">' + fmt(d.net_profit.cash) + '</td>' +
                         '<td class="col-amount">' + fmt(d.net_profit.bank) + '</td>' +
                         '<td class="col-amount">' + fmt(d.net_profit.card) + '</td>' +
@@ -389,19 +400,20 @@
                 });
             }
 
-            // Drill-down: click any head row → expandable breakdown of its transactions.
-            $('#reportBody').on('click', 'tr.report-row', function() {
+            // Drill-down: click any head or total row → expandable breakdown of its transactions.
+            $('#reportBody').on('click', 'tr.report-row[data-head-id], tr.report-row[data-code], tr.report-row[data-head-ids]', function() {
                 var $row = $(this);
                 if ($row.next().hasClass('breakdown-row')) {
                     $row.next().toggle();
                     return;
                 }
                 var headId = $row.data('head-id');
+                var headIds = $row.data('head-ids');
                 var code = $row.data('code');
-                if (!headId && !code) return;
+                if (!headId && !headIds && !code) return;
                 var $detail = $('<tr class="breakdown-row"><td colspan="5" style="background:#f8fafc; padding:8px 16px 12px 28px;"><span class="small text-muted"><i class="fa fa-spinner fa-spin"></i> Loading breakdown…</span></td></tr>');
                 $row.after($detail);
-                $.get("{{ url('/admin/accounting/head-transactions') }}", $.extend({ mode: 'pl', head_id: headId || '', code: code || '' }, currentFilters), function(res) {
+                $.get("{{ url('/admin/accounting/head-transactions') }}", $.extend({ mode: 'pl', head_id: headId || '', head_ids: headIds || '', code: code || '' }, currentFilters), function(res) {
                     var html = '<div class="small font-weight-bold mb-1">Breakdown: ' + (res.heads.length ? res.heads.map(function(h) { return h.code + ' - ' + h.name; }).join(', ') : '') + ' (' + res.count + ' transactions, Total £' + parseFloat(res.total || 0).toFixed(2) + ')</div>';
                     if (!res.rows.length) {
                         html += '<div class="small text-muted">No transactions in this period.</div>';

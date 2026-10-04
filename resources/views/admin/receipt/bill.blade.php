@@ -85,7 +85,9 @@
 .inv-totals td { padding: 3px 0 3px 8px; font-size: 13px; }
 .inv-totals td:last-child { text-align: right; white-space: nowrap; }
 .inv-grand td { font-weight: bold; font-size: 15px; border-top: 3px double #000; padding-top: 6px; }
-.inv-words { font-size: 12px; font-style: italic; margin-top: 6px; }
+.inv-totalrow { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin-top: 10px; }
+.inv-totalrow .inv-totals { margin-top: 0; }
+.inv-words { font-size: 12px; font-style: italic; max-width: 55%; padding-bottom: 6px; margin-bottom: 14px; }
 .inv-note-h { font-weight: bold; margin: 0 0 2px; font-size: 13px; }
 .inv-stamp {
     display: inline-block; border: 2px solid #000; padding: 2px 14px;
@@ -205,17 +207,19 @@
         </tbody>
     </table>
 
-    <table class="inv-totals">
-        <tr><td>Subtotal</td><td>£{{ number_format($detail?->net_amount ?? 0, 2) }}</td></tr>
-        @if(($detail?->tax_amount ?? 0) > 0)
-        <tr><td>Tax</td><td>£{{ number_format($detail->tax_amount, 2) }}</td></tr>
-        @endif
-        @if(($detail?->vat_amount ?? 0) > 0)
-        <tr><td>VAT</td><td>£{{ number_format($detail->vat_amount, 2) }}</td></tr>
-        @endif
-        <tr class="inv-grand"><td>Total</td><td>£{{ number_format($detail?->total_amount ?? 0, 2) }}</td></tr>
-    </table>
-    <div class="inv-words">Amount in words: {{ $invWords($detail?->total_amount ?? 0) }}</div>
+    <div class="inv-totalrow">
+        <div class="inv-words">Amount in words: {{ $invWords($detail?->total_amount ?? 0) }}</div>
+        <table class="inv-totals">
+            <tr><td>Subtotal</td><td>£{{ number_format($detail?->net_amount ?? 0, 2) }}</td></tr>
+            @if(($detail?->tax_amount ?? 0) > 0)
+            <tr><td>Tax</td><td>£{{ number_format($detail->tax_amount, 2) }}</td></tr>
+            @endif
+            @if(($detail?->vat_amount ?? 0) > 0)
+            <tr><td>VAT</td><td>£{{ number_format($detail->vat_amount, 2) }}</td></tr>
+            @endif
+            <tr class="inv-grand"><td>Total</td><td>£{{ number_format($detail?->total_amount ?? 0, 2) }}</td></tr>
+        </table>
+    </div>
 
     @if($receipt->supplier)
         <hr class="inv-rule-thin">

@@ -622,6 +622,38 @@ class AccountingModulesTest extends TestCase
         $this->assertTrue(\Illuminate\Support\Facades\Route::has('admin.receipt.bill'));
     }
 
+    public function test_drill_accepts_multiple_head_ids(): void
+    {
+        // Total rows drill with head_ids: P&L sums unsigned, BS signs them.
+        $this->pair('451', '101', 100);
+        $this->pair('301', '452', 40);
+        $w = ['from' => '2020-06-01', 'to' => '2020-06-30'];
+        $ids = [$this->headIds['101'], $this->headIds['301']];
+
+        $arr = $this->ac->headTransactions(new Request(['head_ids' => $ids] + $w))->getData(true);
+        $this->assertEquals(2, $arr['count']);
+        $this->assertEqualsWithDelta(140, $arr['total'], 0.01);
+
+        $str = $this->ac->headTransactions(new Request(['head_ids' => implode(',', $ids)] + $w))->getData(true);
+        $this->assertEquals(2, $str['count']);
+        $this->assertEqualsWithDelta(140, $str['total'], 0.01);
+
+        // BS mode signs legs: 101 receivable on credit-normal head stays +100
+        $bs = $this->ac->headTransactions(new Request(['mode' => 'bs', 'head_ids' => $ids, 'as_of' => '2020-06-30']))->getData(true);
+        $this->assertEquals(2, $bs['count']);
+        $this->assertEqualsWithDelta(140, $bs['total'], 0.01);
+        $this->assertCount(2, $bs['heads']);
+    }
+
+    public function test_total_rows_carry_drill_ids_in_blades(): void
+    {
+        $pl = file_get_contents(resource_path('views/admin/accounting/profit_loss.blade.php'));
+        $this->assertStringContainsString('data-head-ids', $pl);
+        $bs = file_get_contents(resource_path('views/admin/accounting/balance_sheet.blade.php'));
+        $this->assertStringContainsString('data-head-ids', $bs);
+        $this->assertStringContainsString('head_ids: headIds', $bs);
+    }
+
     public function test_drill_caps_at_200_rows(): void
     {
         $r = $this->receipt($this->clientA, '2020-06-15');

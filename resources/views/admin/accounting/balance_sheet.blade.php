@@ -260,9 +260,10 @@
                 return '£' + parseFloat(n || 0).toFixed(2);
             }
 
-            function xRows(rows) {
+            function xRows(rows, collect) {
                 var html = '';
                 $.each(rows || [], function(i, row) {
+                    if (collect && row.head_id) collect.push(row.head_id);
                     var clickable = row.head_id || row.code ? ' data-head-id="' + (row.head_id || '') + '" data-code="' + (row.code || '') + '" title="Click for breakdown" style="cursor:pointer;"' : '';
                     html += '<tr class="bs-row"' + clickable + '><td>' + row.name +
                         '</td><td class="col-amount">' + fmt(row.balance) +
@@ -275,8 +276,9 @@
                 return '<tr><td colspan="2" class="bs-section-header">EXCEL: ' + label + '</td></tr>';
             }
 
-            function xTotal(label, val, cls) {
-                return '<tr class="' + (cls || 'bs-total') + '"><td>' + label +
+            function xTotal(label, val, cls, ids) {
+                var clickable = (ids && ids.length) ? ' data-head-ids="' + ids.join(',') + '" title="Click for breakdown" style="cursor:pointer;"' : '';
+                return '<tr class="bs-row ' + (cls || 'bs-total') + '"' + clickable + '><td>' + label +
                     '</td><td class="col-amount">' + fmt(val) + '</td></tr>';
             }
 
@@ -301,7 +303,9 @@
                     // Assets table
                     var aBody = '';
                     aBody += '<tr><td colspan="2" class="bs-section-header">ASSETS</td></tr>';
+                    var assetIds = [];
                     $.each(d.assets, function(i, row) {
+                        if (row.head_id) assetIds.push(row.head_id);
                         aBody += '<tr class="bs-row" data-head-id="' + (row.head_id || '') + '" data-code="' + (row.code || '') + '" title="Click for breakdown" style="cursor:pointer;"><td>' + row.name +
                             '</td><td class="col-amount">' + fmt(row.balance) +
                             '</td></tr>';
@@ -310,23 +314,26 @@
                         aBody +=
                             '<tr class="bs-row"><td colspan="2" class="text-muted" style="padding-left:28px;">No asset accounts</td></tr>';
                     }
-                    aBody += '<tr class="bs-grand"><td>TOTAL ASSETS</td><td class="col-amount">' +
+                    aBody += '<tr class="bs-row bs-grand" data-head-ids="' + assetIds.join(',') + '" title="Click for breakdown" style="cursor:pointer;"><td>TOTAL ASSETS</td><td class="col-amount">' +
                         fmt(d.total_assets) + '</td></tr>';
                     if (d.excel) {
                         var st = d.excel.section_titles || {};
+                        var fixedIds = [], currentIds = [];
                         aBody += xSection(((st.fixed || 'FIXED ASSETS')).toUpperCase());
-                        aBody += xRows(d.excel.fixed_heads);
-                        aBody += xTotal('Total Fixed Assets (A)', d.excel.total_fixed_A);
+                        aBody += xRows(d.excel.fixed_heads, fixedIds);
+                        aBody += xTotal('Total Fixed Assets (A)', d.excel.total_fixed_A, 'bs-total', fixedIds);
                         aBody += xSection(((st.current || 'CURRENT ASSETS')).toUpperCase());
-                        aBody += xRows(d.excel.current_heads);
-                        aBody += xTotal('Total Current Assets (B)', d.excel.total_current_B_excel);
+                        aBody += xRows(d.excel.current_heads, currentIds);
+                        aBody += xTotal('Total Current Assets (B)', d.excel.total_current_B_excel, 'bs-total', currentIds);
                     }
                     $('#assetsTable tbody').html(aBody);
 
                     // Liabilities + Equity table
                     var leBody = '';
                     leBody += '<tr><td colspan="2" class="bs-section-header">LIABILITIES</td></tr>';
+                    var liabIds = [];
                     $.each(d.liabilities, function(i, row) {
+                        if (row.head_id) liabIds.push(row.head_id);
                         leBody += '<tr class="bs-row" data-head-id="' + (row.head_id || '') + '" data-code="' + (row.code || '') + '" title="Click for breakdown" style="cursor:pointer;"><td>' + row.name +
                             '</td><td class="col-amount">' + fmt(row.balance) +
                             '</td></tr>';
@@ -336,12 +343,14 @@
                             '<tr class="bs-row"><td colspan="2" class="text-muted" style="padding-left:28px;">No liability accounts</td></tr>';
                     }
                     leBody +=
-                        '<tr class="bs-total"><td>Total Liabilities</td><td class="col-amount">' +
+                        '<tr class="bs-row bs-total" data-head-ids="' + liabIds.join(',') + '" title="Click for breakdown" style="cursor:pointer;"><td>Total Liabilities</td><td class="col-amount">' +
                         fmt(d.total_liabilities) + '</td></tr>';
 
                     leBody +=
                         '<tr><td colspan="2" class="bs-section-header" style="margin-top:8px;">EQUITY</td></tr>';
+                    var equityIds = [];
                     $.each(d.equity, function(i, row) {
+                        if (row.head_id) equityIds.push(row.head_id);
                         leBody += '<tr class="bs-row" data-head-id="' + (row.head_id || '') + '" data-code="' + (row.code || '') + '" title="Click for breakdown" style="cursor:pointer;"><td>' + row.name +
                             '</td><td class="col-amount">' + fmt(row.balance) +
                             '</td></tr>';
@@ -353,26 +362,27 @@
                         'Retained Earnings (Net Loss)';
                     leBody += '<tr class="' + netClass + '"><td>' + netLabel +
                         '</td><td class="col-amount">' + fmt(d.net_profit) + '</td></tr>';
-                    leBody += '<tr class="bs-total"><td>Total Equity</td><td class="col-amount">' +
+                    leBody += '<tr class="bs-row bs-total" data-head-ids="' + equityIds.join(',') + '" title="Click for breakdown" style="cursor:pointer;"><td>Total Equity</td><td class="col-amount">' +
                         fmt(d.total_equity) + '</td></tr>';
 
                     leBody +=
-                        '<tr class="bs-grand"><td>TOTAL LIABILITIES + EQUITY</td><td class="col-amount">' +
+                        '<tr class="bs-row bs-grand" data-head-ids="' + liabIds.concat(equityIds).join(',') + '" title="Click for breakdown" style="cursor:pointer;"><td>TOTAL LIABILITIES + EQUITY</td><td class="col-amount">' +
                         fmt(d.total_liab_equity) + '</td></tr>';
                     if (d.excel) {
                         var st2 = d.excel.section_titles || {};
+                        var clIds = [], ncIds = [], capIds = [];
                         leBody += xSection(((st2.curr_liab || 'CURRENT LIABILITIES')).toUpperCase());
-                        leBody += xRows(d.excel.current_liab_heads);
-                        leBody += xTotal('Total Current Liabilities (C)', d.excel.total_current_C);
-                        leBody += xTotal('Net Current Assets (B-C)', d.excel.net_current_BC);
-                        leBody += xTotal('Total Assets less Current Liabilities (A+B-C)', d.excel.total_assets_less_current_excel);
+                        leBody += xRows(d.excel.current_liab_heads, clIds);
+                        leBody += xTotal('Total Current Liabilities (C)', d.excel.total_current_C, 'bs-total', clIds);
+                        leBody += xTotal('Net Current Assets (B-C)', d.excel.net_current_BC, 'bs-total', currentIds.concat(clIds));
+                        leBody += xTotal('Total Assets less Current Liabilities (A+B-C)', d.excel.total_assets_less_current_excel, 'bs-total', fixedIds.concat(currentIds, clIds));
                         leBody += xSection(((st2.noncurrent || 'NON-CURRENT LIABILITIES')).toUpperCase());
-                        leBody += xRows(d.excel.noncurrent_heads);
-                        leBody += xTotal('Total Non-Current Liabilities (D)', d.excel.total_noncurrent_D);
-                        leBody += xTotal('Net Assets (A+B-C-D)', d.excel.net_assets_excel, 'bs-grand');
+                        leBody += xRows(d.excel.noncurrent_heads, ncIds);
+                        leBody += xTotal('Total Non-Current Liabilities (D)', d.excel.total_noncurrent_D, 'bs-total', ncIds);
+                        leBody += xTotal('Net Assets (A+B-C-D)', d.excel.net_assets_excel, 'bs-grand', fixedIds.concat(currentIds, clIds, ncIds));
                         leBody += xSection(((st2.capital || 'CAPITAL AND RESERVES')).toUpperCase());
-                        leBody += xRows(d.excel.capital_heads);
-                        leBody += xTotal('Total Capital and Reserves', d.excel.total_capital_excel);
+                        leBody += xRows(d.excel.capital_heads, capIds);
+                        leBody += xTotal('Total Capital and Reserves', d.excel.total_capital_excel, 'bs-total', capIds);
                         leBody += '<tr class="bs-row"><td colspan="2" class="small text-muted">Refs: A=Fixed, B=Current, C=Current Liab, B-C=Net Current, A+B-C=Assets less Current, D=Non-current, A+B-C-D=Net Assets. Rows follow the live chart of accounts; totals are straight sums.</td></tr>';
                     }
                     $('#liabEquityTable tbody').html(leBody);
@@ -391,21 +401,23 @@
                 });
             });
 
-            // Drill-down: click any head row → expandable breakdown of its transactions (as-of basis).
-            $('#assetsTable, #liabEquityTable').on('click', 'tr.bs-row[data-head-id], tr.bs-row[data-code]', function() {
+            // Drill-down: click any head or total row → expandable breakdown (as-of basis).
+            $('#assetsTable, #liabEquityTable').on('click', 'tr.bs-row[data-head-id], tr.bs-row[data-code], tr.bs-row[data-head-ids]', function() {
                 var $row = $(this);
                 if ($row.next().hasClass('breakdown-row')) {
                     $row.next().toggle();
                     return;
                 }
                 var headId = $row.data('head-id');
+                var headIds = $row.data('head-ids');
                 var code = $row.data('code');
-                if (!headId && !code) return;
+                if (!headId && !headIds && !code) return;
                 var $detail = $('<tr class="breakdown-row"><td colspan="2" style="background:#f8fafc; padding:8px 16px 12px 28px;"><span class="small text-muted"><i class="fa fa-spinner fa-spin"></i> Loading breakdown…</span></td></tr>');
                 $row.after($detail);
                 $.get("{{ url('/admin/accounting/head-transactions') }}", {
                     mode: 'bs',
                     head_id: headId || '',
+                    head_ids: headIds || '',
                     code: code || '',
                     as_of: $('#asOf').val(),
                     client_credential_id: $('#clientSelect').val(),

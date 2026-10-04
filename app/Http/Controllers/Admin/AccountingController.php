@@ -931,6 +931,9 @@ class AccountingController extends Controller
     {
         $headId = $request->head_id;
         $code = $request->code;
+        // head_ids (array or comma-separated) drills a total row: every head behind it.
+        $headIdsParam = $request->input('head_ids');
+        if (is_string($headIdsParam)) $headIdsParam = array_filter(explode(',', $headIdsParam));
         $credentialId = $request->client_credential_id;
         $businessId = $request->client_id;
         $paymentMethod = $request->payment_method;
@@ -942,10 +945,12 @@ class AccountingController extends Controller
         $headQuery = \App\Models\AccountHead::with('accountType');
         if ($headId) {
             $heads = $headQuery->where('id', $headId)->get();
+        } elseif (!empty($headIdsParam)) {
+            $heads = $headQuery->whereIn('id', array_map('intval', (array) $headIdsParam))->get();
         } elseif ($code) {
             $heads = $headQuery->where('code', $code)->get();
         } else {
-            return response()->json(['message' => 'head_id or code required'], 422);
+            return response()->json(['message' => 'head_id, head_ids or code required'], 422);
         }
         if ($heads->isEmpty()) {
             return response()->json(['message' => 'Account head not found'], 404);
