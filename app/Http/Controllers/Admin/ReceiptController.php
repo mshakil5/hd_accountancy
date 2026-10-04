@@ -152,6 +152,7 @@ class ReceiptController extends Controller
     {
         $receipt = Receipt::with(['files', 'detail.accountHead.accountType', 'client.credential'])->findOrFail($id);
         $accountTypes = AccountType::where('is_active', true)->get();
+        $taxRates = \App\Models\TaxRate::where('is_active', true)->select('id', 'name', 'rate')->get();
 
         $credentialId = $receipt->client?->client_credential_id;
 
@@ -189,7 +190,7 @@ class ReceiptController extends Controller
         $businesses = \App\Models\Client::where('client_credential_id', $credentialId)
             ->where('status', 1)->get();
 
-        return view('admin.receipt.show', compact('receipt', 'accountTypes', 'heads', 'prev', 'next', 'credentialId', 'businesses', 'pendingPosition', 'pendingTotal', 'totalCount'));
+        return view('admin.receipt.show', compact('receipt', 'accountTypes', 'taxRates', 'heads', 'prev', 'next', 'credentialId', 'businesses', 'pendingPosition', 'pendingTotal', 'totalCount'));
     }
 
     public function getAccountHeads(Request $request)
@@ -484,7 +485,8 @@ class ReceiptController extends Controller
     public function create()
     {
         $accountTypes = AccountType::where('is_active', true)->get();
-        return view('admin.receipt.create', compact('accountTypes'));
+        $taxRates = \App\Models\TaxRate::where('is_active', true)->select('id', 'name', 'rate')->get();
+        return view('admin.receipt.create', compact('accountTypes', 'taxRates'));
     }
 
     public function store(Request $request)

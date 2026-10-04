@@ -127,7 +127,7 @@ class AccountHeadController extends Controller
             return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>This account head already exists for this type and client scope.</div>"]);
         }
 
-        AccountHead::create([
+        $head = AccountHead::create([
             'account_type_id'        => $request->account_type_id,
             'tax_rate_id'            => $request->tax_rate_id ?: null,
             'client_credential_id'   => $request->client_credential_id ?: null,
@@ -136,7 +136,7 @@ class AccountHeadController extends Controller
             'description'            => $request->description,
             'is_active'              => 1,
         ]);
-        return response()->json(['status'=>300,'message'=>'Account head created successfully.']);
+        return response()->json(['status'=>300,'message'=>'Account head created successfully.', 'id'=>$head->id]);
     }
 
     public function byType($typeId)

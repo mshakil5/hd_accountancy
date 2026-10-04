@@ -123,7 +123,9 @@
                                             </select>
                                         </div>
                                         <div class="col-md-6 detail-field">
-                                            <label class="detail-label">Account Head</label>
+                                            <label class="detail-label d-flex align-items-center justify-content-between">Account Head
+                                                <button type="button" class="btn btn-xs btn-link p-0" style="font-size:12px;" onclick="openQuickHeadModal()" title="Quickly create a missing head for this client (same fields as global making)">+ Quick Add</button>
+                                            </label>
                                             <select class="form-control select2" id="account_head_id" name="account_head_id" style="width:100%;">
                                                 <option value="">First Select Account Type</option>
                                             </select>
@@ -433,4 +435,5 @@ $(function () {
     });
 });
 </script>
+@include('admin.receipt._quick_head_modal')
 @endsection
