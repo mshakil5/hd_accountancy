@@ -11,6 +11,13 @@ use Illuminate\Http\Request;
 
 class AccountingController extends Controller
 {
+    /**
+     * Receipts feed the reports only once completed. Completed = anything but
+     * cancelled / pending / to_review (i.e. ready + archived), matching the
+     * receipt workflow's own completed count.
+     */
+    private const EXCLUDED_RECEIPT_STATUSES = ['cancelled', 'pending', 'to_review'];
+
     public function profitLoss()
     {
         $clients = ClientCredential::select('id', 'first_name', 'last_name')->latest()->get();
@@ -44,7 +51,7 @@ class AccountingController extends Controller
     {
         $base = Transaction::with(['accountHead.accountType', 'receipt.detail'])
             ->whereHas('receipt', function ($q) use ($credentialId, $businessId, $from, $to) {
-                $q->whereNotIn('status', ['cancelled']);
+                $q->whereNotIn('status', self::EXCLUDED_RECEIPT_STATUSES);
                 if ($businessId) {
                     $q->where('client_id', $businessId);
                 } elseif ($credentialId) {
@@ -142,86 +149,137 @@ class AccountingController extends Controller
             'total' => $totalIncome['total'] - $totalExpense['total'],
         ];
 
-        // Excel "P&L" sheet layout (Chart of account, P&L, BS.xlsx, sheet1).
-        // Row order + refs replicated exactly per request (bugs included, see notes).
-        // Kept alongside the existing dynamic grouping above; Cash/Bank/Card kept.
-        $excelPerHead = []; // code => [code, head_name, type_name, cash, bank, card, total]
+        // Dynamic chart sections: rows come from the heads actually stored in the DB
+        // (account types resolved by name, ordered by code) — never hardcoded codes.
+        // Totals are straight sums; Cash/Bank/Card kept.
+        $scopeCredId = null;
+        if ($businessId) {
+            $scopeCredId = Client::where('id', $businessId)->value('client_credential_id') ?: null;
+        } elseif ($credentialId) {
+            $scopeCredId = $credentialId;
+        }
+        $typeIdByName = \App\Models\AccountType::pluck('id', 'name')->all(); // name => id
+        $idsOf = function (string $name) use ($typeIdByName) {
+            return isset($typeIdByName[$name]) ? [$typeIdByName[$name]] : [];
+        };
+        $excelPerHeadId = []; // head_id => [code, head_id, head_name, type_name, cash, bank, card, total]
         foreach ($transactions as $txn) {
             $head = $txn->accountHead;
             if (!$head || !$head->accountType) continue;
-            $code = (string) $head->code;
             $method = $txn->receipt?->detail?->payment_method ?? 'cash';
             if (!in_array($method, $methods)) $method = 'cash';
             $amount = (float) $txn->total_amount;
-            if (!isset($excelPerHead[$code])) {
-                $excelPerHead[$code] = [
-                    'code' => $code,
+            if (!isset($excelPerHeadId[$head->id])) {
+                $excelPerHeadId[$head->id] = [
+                    'code' => $head->code,
                     'head_id' => $head->id,
                     'head_name' => $head->name,
+                    'type_id' => $head->account_type_id,
                     'type_name' => $head->accountType->name,
                     'cash' => 0, 'bank' => 0, 'card' => 0, 'total' => 0,
                 ];
             }
-            $excelPerHead[$code][$method] += $amount;
-            $excelPerHead[$code]['total'] += $amount;
+            $excelPerHeadId[$head->id][$method] += $amount;
+            $excelPerHeadId[$head->id]['total'] += $amount;
         }
-        // Global chart fallback so every Excel row shows its label even with zero transactions.
-        $chartHeads = \App\Models\AccountHead::with('accountType')
-            ->whereNull('client_credential_id')
-            ->where('is_active', 1)
-            ->get()
-            ->keyBy(fn($h) => (string) $h->code);
-        $excelRow = function ($code) use ($excelPerHead, $chartHeads) {
-            if (isset($excelPerHead[$code])) return $excelPerHead[$code];
-            $ch = $chartHeads[$code] ?? null;
-            return ['code' => $code, 'head_id' => $ch?->id, 'head_name' => $ch?->name ?? '', 'type_name' => $ch?->accountType?->name ?? '', 'cash' => 0, 'bank' => 0, 'card' => 0, 'total' => 0];
+        // Every active head of the section's types shows as a row (global chart plus
+        // in-scope per-client heads), so labels always come from the heads table.
+        $excelRowsForTypes = function (array $typeIds) use ($excelPerHeadId, $scopeCredId) {
+            if (empty($typeIds)) return [];
+            $heads = \App\Models\AccountHead::with('accountType')
+                ->where('is_active', 1)
+                ->whereIn('account_type_id', $typeIds)
+                ->where(function ($q) use ($scopeCredId) {
+                    $q->whereNull('client_credential_id');
+                    if ($scopeCredId) $q->orWhere('client_credential_id', $scopeCredId);
+                    else $q->orWhereNotNull('client_credential_id');
+                })
+                ->get()
+                ->keyBy('id');
+            // Plus any transacted head of these types (retired heads keep their history visible,
+            // otherwise section totals would silently drop posted balances).
+            $missing = [];
+            foreach ($excelPerHeadId as $hid => $agg) {
+                if (in_array($agg['type_id'], $typeIds) && !isset($heads[$hid])) $missing[] = $hid;
+            }
+            if ($missing) {
+                foreach (\App\Models\AccountHead::with('accountType')->whereIn('id', $missing)->get() as $h) {
+                    $heads[$h->id] = $h;
+                }
+            }
+            $rows = [];
+            foreach ($heads as $h) {
+                $agg = $excelPerHeadId[$h->id] ?? null;
+                $rows[] = [
+                    'code' => $h->code,
+                    'head_id' => $h->id,
+                    'head_name' => $h->name . ($h->is_active ? '' : ' (inactive)'),
+                    'type_name' => $h->accountType?->name ?? '',
+                    'cash' => $agg['cash'] ?? 0,
+                    'bank' => $agg['bank'] ?? 0,
+                    'card' => $agg['card'] ?? 0,
+                    'total' => $agg['total'] ?? 0,
+                ];
+            }
+            usort($rows, fn($a, $b) => strcmp((string) $a['code'], (string) $b['code']) ?: strcmp($a['head_name'], $b['head_name']));
+            return $rows;
         };
-        $excelSum = function ($codes) use ($excelPerHead) {
+        $excelSumRows = function (array $rows) {
             $s = ['cash' => 0, 'bank' => 0, 'card' => 0, 'total' => 0];
-            foreach ($codes as $c) {
-                if (!isset($excelPerHead[$c])) continue;
-                foreach (['cash', 'bank', 'card', 'total'] as $m) $s[$m] += $excelPerHead[$c][$m];
+            foreach ($rows as $r) {
+                foreach (['cash', 'bank', 'card', 'total'] as $m) $s[$m] += $r[$m];
             }
             return $s;
         };
         $sub = function ($a, $b) {
             return ['cash' => $a['cash'] - $b['cash'], 'bank' => $a['bank'] - $b['bank'], 'card' => $a['card'] - $b['card'], 'total' => $a['total'] - $b['total']];
         };
-        $turnoverCodes = ['101','102','103','104','105','106','107'];
-        $otherIncomeCodes = ['108','109'];
-        $directCodes = ['201','202','203','204'];
-        $adminCodes = array_map(fn($i) => (string) $i, range(301, 329));
-        // A = SUM(B8:B16): all turnover + other-income heads (107 Sales Refund included as + per Excel).
-        $excelA = $excelSum(array_merge($turnoverCodes, $otherIncomeCodes));
-        // B = B20 only (Cost of Good Sold/Purchase 201). 202-204 displayed but excluded per Excel formula.
-        $excelB = $excelSum(['201']);
-        // C = (A-B): Gross Profit.
-        $excelC = $sub($excelA, $excelB);
-        // D = SUM(B30:B58): all 301-329 admin heads.
-        $excelD = $excelSum($adminCodes);
-        // E = ((B27+0)-(0+B59)): Operating Profit = C - D.
-        $excelE = $sub($excelC, $excelD);
-        $excelHeads = function ($codes) use ($excelRow) {
-            $rows = array_map($excelRow, $codes);
-            usort($rows, fn($a, $b) => strcmp($a['code'], $b['code']));
-            return $rows;
+        $typeNamesOf = function (array $ids) {
+            if (empty($ids)) return '';
+            $names = \App\Models\AccountType::whereIn('id', $ids)->orderBy('id')->pluck('name')->all();
+            return implode(' + ', $names);
         };
+        $turnoverIds = $idsOf('Turnover');
+        $otherIds = $idsOf('Other Income');
+        $directIds = $idsOf('Direct Expenses');
+        $adminIds = $idsOf('Expenses');
+        if (empty($turnoverIds) && empty($otherIds)) {
+            $turnoverIds = \App\Models\AccountType::where('category', 'revenue')->pluck('id')->all();
+        }
+        if (empty($directIds) && empty($adminIds)) {
+            $adminIds = \App\Models\AccountType::where('category', 'expense')->pluck('id')->all();
+        }
+        $turnoverRows = $excelRowsForTypes($turnoverIds);
+        $otherRows = $excelRowsForTypes($otherIds);
+        $directRows = $excelRowsForTypes($directIds);
+        $adminRows = $excelRowsForTypes($adminIds);
+        // A = all turnover + other-income heads. B = ALL direct heads (true sum).
+        // C = A-B (Gross Profit). D = all admin heads. E = C-D (Operating Profit).
+        $excelA = $excelSumRows(array_merge($turnoverRows, $otherRows));
+        $excelB = $excelSumRows($directRows);
+        $excelC = $sub($excelA, $excelB);
+        $excelD = $excelSumRows($adminRows);
+        $excelE = $sub($excelC, $excelD);
         $excel = [
             'refs' => ['A' => 'Total Turnover', 'B' => 'Total Cost of Sales', 'C' => 'Gross Profit C=(A-B)', 'D' => 'Total Administrative Costs', 'E' => 'Operating Profit E=(C-D)'],
-            'turnover_heads' => $excelHeads($turnoverCodes),
-            'other_income_heads' => $excelHeads($otherIncomeCodes),
+            'section_titles' => [
+                'turnover' => $typeNamesOf($turnoverIds) ?: 'Turnover',
+                'other' => $typeNamesOf($otherIds) ?: 'Other Income',
+                'direct' => $typeNamesOf($directIds) ?: 'Direct Expenses',
+                'admin' => $typeNamesOf($adminIds) ?: 'Administrative Costs',
+            ],
+            'turnover_heads' => $turnoverRows,
+            'other_income_heads' => $otherRows,
             'total_turnover_A' => $excelA,
-            'direct_heads' => $excelHeads($directCodes),
-            // Excel R25 total pulls B20 only; full direct sum provided for reference.
+            'direct_heads' => $directRows,
             'total_cost_B_excel' => $excelB,
-            'total_cost_direct_all' => $excelSum($directCodes),
+            'total_cost_direct_all' => $excelB,
             'gross_profit_C' => $excelC,
-            'admin_heads' => $excelHeads($adminCodes),
+            'admin_heads' => $adminRows,
             'total_admin_D' => $excelD,
             'operating_profit_E' => $excelE,
             'notes' => [
-                'B excludes 202-204 per Excel R25 formula (B25=B20).',
-                'A includes 107 Sales Refund as + per Excel SUM(B8:B16); 107 is debit-natured contra-revenue.',
+                'Rows follow the live chart of accounts (heads in the database), grouped by account type; totals are straight sums.',
             ],
         ];
 
@@ -274,7 +332,7 @@ class AccountingController extends Controller
 
         $transactions = Transaction::with(['accountHead.accountType'])
             ->whereHas('receipt', function ($q) use ($credentialId, $businessId, $from, $to) {
-                $q->whereNotIn('status', ['cancelled']);
+                $q->whereNotIn('status', self::EXCLUDED_RECEIPT_STATUSES);
                 if ($businessId) {
                     $q->where('client_id', $businessId);
                 } elseif ($credentialId) {
@@ -391,7 +449,7 @@ class AccountingController extends Controller
     {
         $transactions = Transaction::with(['accountHead.accountType'])
             ->whereHas('receipt', function ($q) use ($credentialId, $businessId, $asOf) {
-                $q->whereNotIn('status', ['cancelled']);
+                $q->whereNotIn('status', self::EXCLUDED_RECEIPT_STATUSES);
                 if ($businessId) {
                     $q->where('client_id', $businessId);
                 } elseif ($credentialId) {
@@ -464,98 +522,131 @@ class AccountingController extends Controller
         $totalEquity     = array_sum(array_column($equity, 'balance')) + $netProfit;
         $totalLiabEquity = $totalLiab + $totalEquity;
 
-        // Excel "BS" sheet layout (sheet2), replicated exactly per request (bugs included).
+        // Dynamic chart sections: rows come from the heads actually stored in the DB
+        // (account types resolved by name, ordered by code) — never hardcoded codes.
         // Signed per-head balances reuse the same normal-balance logic as above.
-        $excelByCode = []; // code => balance
-        $excelHeadName = []; // code => "code - name"
-        $excelHeadId = []; // code => head id (first seen; disambiguates duplicate names like Director Loan Account)
+        $bsScopeCredId = null;
+        if ($businessId) {
+            $bsScopeCredId = Client::where('id', $businessId)->value('client_credential_id') ?: null;
+        } elseif ($credentialId) {
+            $bsScopeCredId = $credentialId;
+        }
+        $bsTypeIdByName = \App\Models\AccountType::pluck('id', 'name')->all(); // name => id
+        $bsIdsOf = function (string $name) use ($bsTypeIdByName) {
+            return isset($bsTypeIdByName[$name]) ? [$bsTypeIdByName[$name]] : [];
+        };
+        $bsTypeNamesOf = function (array $ids) {
+            if (empty($ids)) return '';
+            return implode(' + ', \App\Models\AccountType::whereIn('id', $ids)->orderBy('id')->pluck('name')->all());
+        };
+        $balByHeadId = []; // head_id => signed balance
+        $bsTypeByHeadId = []; // head_id => account_type_id
         foreach ($transactions as $txn) {
             $head = $txn->accountHead;
             if (!$head || !$head->accountType) continue;
-            $code = (string) $head->code;
             $normalBalance = $head->accountType->normal_balance;
             $isDebit = in_array($txn->type, ['payable', 'paid']);
             $amount = (float) $txn->total_amount;
             $balance = ($normalBalance === 'debit')
                 ? ($isDebit ? $amount : -$amount)
                 : ($isDebit ? -$amount : $amount);
-            $excelByCode[$code] = ($excelByCode[$code] ?? 0) + $balance;
-            $excelHeadName[$code] = $head->code . ' - ' . $head->name;
-            $excelHeadId[$code] = $excelHeadId[$code] ?? $head->id;
+            $balByHeadId[$head->id] = ($balByHeadId[$head->id] ?? 0) + $balance;
+            $bsTypeByHeadId[$head->id] = $head->account_type_id;
         }
-        $x = fn($code) => $excelByCode[$code] ?? 0;        $xSum = function ($codes) use ($x) {
-            $s = 0;
-            foreach ($codes as $c) $s += $x($c);
-            return $s;
-        };
-        $fixedCodes = ['401','402','403','404','405','406','407'];
-        $currentCodes = ['451','452','453','454'];
-        $currLiabCodes = ['501','502','503','504','505','506','507','508','509','510','511','512','513'];
-        $nonCurrCodes = ['551','552','553','554'];
-        $capitalCodes = ['601','602','603','604'];
-        // A = SUM(B9:B15): fixed assets.
-        $excelFixedA = $xSum($fixedCodes);
-        // Excel R25: Inventory row (B25) = SUM(B21:B24), i.e. Bank+Cash+Receivable+Prepayment — not 455.
-        $excelInventoryRow = $xSum($currentCodes);
-        // Excel R26 (B): Total Current Asset = SUM(B21:B25) = 451+452+453+454+inventoryRow → double counts.
-        $excelCurrentB = $xSum($currentCodes) + $excelInventoryRow;
-        // C = SUM(B30:B42): current liabilities.
-        $excelCurrentC = $xSum($currLiabCodes);
-        // B-C: Net Current Assets (Liabilities).
-        $excelNetCurrent = $excelCurrentB - $excelCurrentC;
-        // Excel R47: Total Assets less Current Liabilities = (B17+B45); B17 is the empty R17 → 0. Replicated.
-        $excelAssetsLessCurrent = 0 + $excelNetCurrent;
-        $excelAssetsLessCurrentCorrect = $excelFixedA + $excelNetCurrent; // reference only
-        // D = SUM(B51:B54): non-current liabilities.
-        $excelNonCurrentD = $xSum($nonCurrCodes);
-        // Excel R57: Net Assets = (B47-(B55+0)).
-        $excelNetAssets = $excelAssetsLessCurrent - $excelNonCurrentD;
-        // Excel R65: Total Capital and Reserves = SUM(B61:B62): Share Capital + Retained Earning only.
-        $excelCapital = $xSum(['601','602']);
-        $excelCapitalAll = $xSum($capitalCodes); // reference only (incl. 603 Fund + 604 Drawing)
-        // Global chart fallback so every Excel row shows its label even with zero transactions.
-        $chartHeadsBs = \App\Models\AccountHead::with('accountType')
-            ->whereNull('client_credential_id')
-            ->where('is_active', 1)
-            ->get()
-            ->keyBy(fn($h) => (string) $h->code);
-        $excelRows = function ($codes) use ($x, $excelHeadName, $excelHeadId, $chartHeadsBs) {
+        // Every active head of the section's types shows as a row (global chart plus
+        // in-scope per-client heads), so labels always come from the heads table.
+        // Transacted heads of these types are included even when retired, otherwise
+        // section totals would silently drop posted balances.
+        $bsRowsForTypes = function (array $typeIds) use ($balByHeadId, $bsTypeByHeadId, $bsScopeCredId) {
+            if (empty($typeIds)) return [];
+            $heads = \App\Models\AccountHead::with('accountType')
+                ->where('is_active', 1)
+                ->whereIn('account_type_id', $typeIds)
+                ->where(function ($q) use ($bsScopeCredId) {
+                    $q->whereNull('client_credential_id');
+                    if ($bsScopeCredId) $q->orWhere('client_credential_id', $bsScopeCredId);
+                    else $q->orWhereNotNull('client_credential_id');
+                })
+                ->get()
+                ->keyBy('id');
+            $missing = [];
+            foreach ($balByHeadId as $hid => $bal) {
+                if (in_array($bsTypeByHeadId[$hid] ?? null, $typeIds) && !isset($heads[$hid])) $missing[] = $hid;
+            }
+            if ($missing) {
+                foreach (\App\Models\AccountHead::with('accountType')->whereIn('id', $missing)->get() as $h) {
+                    $heads[$h->id] = $h;
+                }
+            }
             $rows = [];
-            foreach ($codes as $c) {
-                $ch = $chartHeadsBs[$c] ?? null;
+            foreach ($heads as $h) {
                 $rows[] = [
-                    'code' => $c,
-                    'head_id' => $excelHeadId[$c] ?? $ch?->id,
-                    'name' => $excelHeadName[$c] ?? ($ch ? ($ch->code . ' - ' . $ch->name) : ($c . ' - (no transactions)')),
-                    'balance' => $x($c),
+                    'code' => $h->code,
+                    'head_id' => $h->id,
+                    'name' => $h->code . ' - ' . $h->name . ($h->is_active ? '' : ' (inactive)'),
+                    'balance' => $balByHeadId[$h->id] ?? 0,
                 ];
             }
+            usort($rows, fn($a, $b) => strcmp((string) $a['code'], (string) $b['code']) ?: strcmp($a['name'], $b['name']));
             return $rows;
         };
+        $bsSumRows = fn($rows) => array_sum(array_column($rows, 'balance'));
+        $fixedIds = $bsIdsOf('Fixed Assets');
+        $currentIds = $bsIdsOf('Current Assets');
+        $currLiabIds = $bsIdsOf('Current Liability');
+        $nonCurrIds = $bsIdsOf('Non-current Liability');
+        $capitalIds = $bsIdsOf('Capital and reserves');
+        if (empty($fixedIds) && empty($currentIds)) {
+            $fixedIds = \App\Models\AccountType::where('category', 'asset')->pluck('id')->all();
+        }
+        if (empty($currLiabIds) && empty($nonCurrIds)) {
+            $currLiabIds = \App\Models\AccountType::where('category', 'liability')->pluck('id')->all();
+        }
+        if (empty($capitalIds)) {
+            $capitalIds = \App\Models\AccountType::where('category', 'equity')->pluck('id')->all();
+        }
+        $fixedRows = $bsRowsForTypes($fixedIds);
+        $currentRows = $bsRowsForTypes($currentIds);
+        $currLiabRows = $bsRowsForTypes($currLiabIds);
+        $nonCurrRows = $bsRowsForTypes($nonCurrIds);
+        $capitalRows = $bsRowsForTypes($capitalIds);
+        // A = fixed assets. B = current assets (true sum). C = current liabilities.
+        // B-C = net current. A+B-C = assets less current. D = non-current.
+        // Net assets = A+B-C-D. Capital = ALL capital heads.
+        $excelFixedA = $bsSumRows($fixedRows);
+        $excelCurrentB = $bsSumRows($currentRows);
+        $excelCurrentC = $bsSumRows($currLiabRows);
+        $excelNetCurrent = $excelCurrentB - $excelCurrentC;
+        $excelAssetsLessCurrent = $excelFixedA + $excelNetCurrent;
+        $excelNonCurrentD = $bsSumRows($nonCurrRows);
+        $excelNetAssets = $excelAssetsLessCurrent - $excelNonCurrentD;
+        $excelCapitalAll = $bsSumRows($capitalRows);
         $excelBs = [
             'refs' => ['A' => 'Total Fixed Assets', 'B' => 'Total Current Asset', 'C' => 'Total Current Liabilities', 'B-C' => 'Net Current Assets (Liabilities)', 'A+B-C' => 'Total Assets less Current Liabilities', 'D' => 'Total Non-Current Liabilities', 'A+B-C-D' => 'Net Assets'],
-            'fixed_heads' => $excelRows($fixedCodes),
+            'section_titles' => [
+                'fixed' => $bsTypeNamesOf($fixedIds) ?: 'Fixed Assets',
+                'current' => $bsTypeNamesOf($currentIds) ?: 'Current Assets',
+                'curr_liab' => $bsTypeNamesOf($currLiabIds) ?: 'Current Liabilities',
+                'noncurrent' => $bsTypeNamesOf($nonCurrIds) ?: 'Non-Current Liabilities',
+                'capital' => $bsTypeNamesOf($capitalIds) ?: 'Capital and Reserves',
+            ],
+            'fixed_heads' => $fixedRows,
             'total_fixed_A' => $excelFixedA,
-            'current_heads' => $excelRows($currentCodes),
-            // True 455 head balance + Excel's displayed Inventory-row value (B25) + doubled total (B).
-            'inventory_head_455' => ['code' => '455', 'head_id' => $excelHeadId['455'] ?? $chartHeadsBs['455']?->id, 'name' => $excelHeadName['455'] ?? ($chartHeadsBs['455'] ? ('455 - ' . $chartHeadsBs['455']->name) : '455 - Inventory'), 'balance' => $x('455')],
-            'inventory_row_display' => $excelInventoryRow,
+            'current_heads' => $currentRows,
             'total_current_B_excel' => $excelCurrentB,
-            'current_liab_heads' => $excelRows($currLiabCodes),
+            'current_liab_heads' => $currLiabRows,
             'total_current_C' => $excelCurrentC,
             'net_current_BC' => $excelNetCurrent,
             'total_assets_less_current_excel' => $excelAssetsLessCurrent,
-            'total_assets_less_current_correct' => $excelAssetsLessCurrentCorrect,
-            'noncurrent_heads' => $excelRows($nonCurrCodes),
+            'total_assets_less_current_correct' => $excelAssetsLessCurrent,
+            'noncurrent_heads' => $nonCurrRows,
             'total_noncurrent_D' => $excelNonCurrentD,
             'net_assets_excel' => $excelNetAssets,
-            'capital_heads' => $excelRows($capitalCodes),
-            'total_capital_excel' => $excelCapital,
+            'capital_heads' => $capitalRows,
+            'total_capital_excel' => $excelCapitalAll,
             'total_capital_all' => $excelCapitalAll,
             'notes' => [
-                'Inventory row (B25) = SUM(B21:B24) per Excel; Total Current (B) = SUM(B21:B25) double-counts 451-454.',
-                'Total Assets less Current Liabilities = B17(empty 0)+B45 per Excel R47; fixed assets excluded. Correct value provided separately.',
-                'Total Capital and Reserves = SUM(B61:B62) per Excel R65; 603/604 excluded. Full sum provided separately.',
+                'Rows follow the live chart of accounts (heads in the database), grouped by account type; totals are straight sums.',
             ],
         ];
 
@@ -601,23 +692,25 @@ class AccountingController extends Controller
         $stamp = Carbon::parse($from)->format('Ymd') . '-' . Carbon::parse($to)->format('Ymd');
         $e = $report['excel'];
         $m = fn($t, $k) => round((float) ($t[$k] ?? 0), 2);
+        $st = $e['section_titles'];
+        $headLabel = fn($h) => trim(($h['code'] ? $h['code'] . ' - ' : '') . $h['head_name']);
         $rows = [];
         $rows[] = ['HD Accountancy — Profit & Loss (' . $report['business_name'] . ' | ' . $from . ' to ' . $to . ')', '', '', '', '', 'title'];
         $rows[] = ['Account', 'Cash', 'Bank', 'Card', 'Total', 'header'];
-        $rows[] = ['TURNOVER', '', '', '', '', 'section'];
-        foreach ($e['turnover_heads'] as $h) $rows[] = [$h['code'] . ' - ' . $h['head_name'], $m($h, 'cash'), $m($h, 'bank'), $m($h, 'card'), $m($h, 'total'), 'row'];
-        $rows[] = ['OTHER INCOME (Investment + Non-Trading)', '', '', '', '', 'section'];
-        foreach ($e['other_income_heads'] as $h) $rows[] = [$h['code'] . ' - ' . $h['head_name'], $m($h, 'cash'), $m($h, 'bank'), $m($h, 'card'), $m($h, 'total'), 'row'];
+        $rows[] = [strtoupper($st['turnover']), '', '', '', '', 'section'];
+        foreach ($e['turnover_heads'] as $h) $rows[] = [$headLabel($h), $m($h, 'cash'), $m($h, 'bank'), $m($h, 'card'), $m($h, 'total'), 'row'];
+        $rows[] = [strtoupper($st['other']), '', '', '', '', 'section'];
+        foreach ($e['other_income_heads'] as $h) $rows[] = [$headLabel($h), $m($h, 'cash'), $m($h, 'bank'), $m($h, 'card'), $m($h, 'total'), 'row'];
         $rows[] = ['Total Turnover (A)', $m($e['total_turnover_A'], 'cash'), $m($e['total_turnover_A'], 'bank'), $m($e['total_turnover_A'], 'card'), $m($e['total_turnover_A'], 'total'), 'total'];
-        $rows[] = ['COST OF SALES / DIRECT EXPENSES', '', '', '', '', 'section'];
-        foreach ($e['direct_heads'] as $h) $rows[] = [$h['code'] . ' - ' . $h['head_name'], $m($h, 'cash'), $m($h, 'bank'), $m($h, 'card'), $m($h, 'total'), 'row'];
-        $rows[] = ['Total Cost of Sales (B = 201 only per Excel R25)', $m($e['total_cost_B_excel'], 'cash'), $m($e['total_cost_B_excel'], 'bank'), $m($e['total_cost_B_excel'], 'card'), $m($e['total_cost_B_excel'], 'total'), 'total'];
+        $rows[] = [strtoupper($st['direct']), '', '', '', '', 'section'];
+        foreach ($e['direct_heads'] as $h) $rows[] = [$headLabel($h), $m($h, 'cash'), $m($h, 'bank'), $m($h, 'card'), $m($h, 'total'), 'row'];
+        $rows[] = ['Total Cost of Sales (B)', $m($e['total_cost_B_excel'], 'cash'), $m($e['total_cost_B_excel'], 'bank'), $m($e['total_cost_B_excel'], 'card'), $m($e['total_cost_B_excel'], 'total'), 'total'];
         $rows[] = ['GROSS PROFIT (C = A-B)', $m($e['gross_profit_C'], 'cash'), $m($e['gross_profit_C'], 'bank'), $m($e['gross_profit_C'], 'card'), $m($e['gross_profit_C'], 'total'), 'grand'];
-        $rows[] = ['ADMINISTRATIVE COSTS (301-329)', '', '', '', '', 'section'];
-        foreach ($e['admin_heads'] as $h) $rows[] = [$h['code'] . ' - ' . $h['head_name'], $m($h, 'cash'), $m($h, 'bank'), $m($h, 'card'), $m($h, 'total'), 'row'];
+        $rows[] = [strtoupper($st['admin']), '', '', '', '', 'section'];
+        foreach ($e['admin_heads'] as $h) $rows[] = [$headLabel($h), $m($h, 'cash'), $m($h, 'bank'), $m($h, 'card'), $m($h, 'total'), 'row'];
         $rows[] = ['Total Administrative Costs (D)', $m($e['total_admin_D'], 'cash'), $m($e['total_admin_D'], 'bank'), $m($e['total_admin_D'], 'card'), $m($e['total_admin_D'], 'total'), 'total'];
         $rows[] = ['OPERATING PROFIT (E = C-D)', $m($e['operating_profit_E'], 'cash'), $m($e['operating_profit_E'], 'bank'), $m($e['operating_profit_E'], 'card'), $m($e['operating_profit_E'], 'total'), 'grand'];
-        $rows[] = ['Note: B sums 201 only (202-204 shown but excluded); A includes 107 Sales Refund as + — replicated exactly from the Excel sheet.', '', '', '', '', 'note'];
+        $rows[] = ['Note: rows follow the live chart of accounts; totals are straight sums (A=turnover, B=direct, C=A-B, D=admin, E=C-D).', '', '', '', '', 'note'];
 
         if ($format === 'xlsx') {
             return $this->streamXlsx('profit-loss-' . $stamp, 'P&L', $rows);
@@ -633,31 +726,29 @@ class AccountingController extends Controller
         $stamp = Carbon::parse($asOf)->format('Ymd');
         $e = $report['excel'];
         $v = fn($n) => round((float) $n, 2);
+        $st = $e['section_titles'];
         $rows = [];
         $rows[] = ['HD Accountancy — Balance Sheet (' . $report['business_name'] . ' | As at ' . $asOf . ')', '', 'title'];
         $rows[] = ['Account', 'Amount', 'header'];
-        $rows[] = ['FIXED ASSETS (401-407)', '', 'section'];
+        $rows[] = [strtoupper($st['fixed']), '', 'section'];
         foreach ($e['fixed_heads'] as $r) $rows[] = [$r['name'], $v($r['balance']), 'row'];
         $rows[] = ['Total Fixed Assets (A)', $v($e['total_fixed_A']), 'total'];
-        $rows[] = ['CURRENT ASSETS', '', 'section'];
+        $rows[] = [strtoupper($st['current']), '', 'section'];
         foreach ($e['current_heads'] as $r) $rows[] = [$r['name'], $v($r['balance']), 'row'];
-        $rows[] = ['Inventory row display (B25 = 451+452+453+454 per Excel)', $v($e['inventory_row_display']), 'row'];
-        $rows[] = ['Inventory head 455 true balance (reference)', $v($e['inventory_head_455']['balance']), 'row'];
-        $rows[] = ['Total Current Asset (B, double-counts per Excel)', $v($e['total_current_B_excel']), 'total'];
-        $rows[] = ['CURRENT LIABILITIES (501-513)', '', 'section'];
+        $rows[] = ['Total Current Assets (B)', $v($e['total_current_B_excel']), 'total'];
+        $rows[] = [strtoupper($st['curr_liab']), '', 'section'];
         foreach ($e['current_liab_heads'] as $r) $rows[] = [$r['name'], $v($r['balance']), 'row'];
         $rows[] = ['Total Current Liabilities (C)', $v($e['total_current_C']), 'total'];
         $rows[] = ['Net Current Assets (B-C)', $v($e['net_current_BC']), 'total'];
-        $rows[] = ['Total Assets less Current Liabilities (A+B-C = 0+B45 per Excel R47)', $v($e['total_assets_less_current_excel']), 'grand'];
-        $rows[] = ['Correct A+Net incl. fixed assets (reference)', $v($e['total_assets_less_current_correct']), 'row'];
-        $rows[] = ['NON-CURRENT LIABILITIES (551-554)', '', 'section'];
+        $rows[] = ['Total Assets less Current Liabilities (A+B-C)', $v($e['total_assets_less_current_excel']), 'grand'];
+        $rows[] = [strtoupper($st['noncurrent']), '', 'section'];
         foreach ($e['noncurrent_heads'] as $r) $rows[] = [$r['name'], $v($r['balance']), 'row'];
         $rows[] = ['Total Non-Current Liabilities (D)', $v($e['total_noncurrent_D']), 'total'];
         $rows[] = ['Net Assets (A+B-C-D)', $v($e['net_assets_excel']), 'grand'];
-        $rows[] = ['CAPITAL AND RESERVES (601-604)', '', 'section'];
+        $rows[] = [strtoupper($st['capital']), '', 'section'];
         foreach ($e['capital_heads'] as $r) $rows[] = [$r['name'], $v($r['balance']), 'row'];
-        $rows[] = ['Total Capital and Reserves (601+602 only per Excel R65)', $v($e['total_capital_excel']), 'total'];
-        $rows[] = ['Full capital incl. 603 + 604 (reference)', $v($e['total_capital_all']), 'row'];
+        $rows[] = ['Total Capital and Reserves', $v($e['total_capital_excel']), 'total'];
+        $rows[] = ['Note: rows follow the live chart of accounts; totals are straight sums.', '', 'note'];
 
         if ($format === 'xlsx') {
             return $this->streamXlsx('balance-sheet-' . $stamp, 'Balance Sheet', $rows);
@@ -756,7 +847,7 @@ class AccountingController extends Controller
         $query = Transaction::with(['accountHead.accountType', 'receipt.client', 'receipt.detail'])
             ->whereIn('account_head_id', $headIds)
             ->whereHas('receipt', function ($q) use ($credentialId, $businessId, $from, $to, $asOf, $mode) {
-                $q->whereNotIn('status', ['cancelled']);
+                $q->whereNotIn('status', self::EXCLUDED_RECEIPT_STATUSES);
                 if ($businessId) {
                     $q->where('client_id', $businessId);
                 } elseif ($credentialId) {
@@ -775,22 +866,35 @@ class AccountingController extends Controller
         }
 
         $txns = $query->orderBy('id', 'desc')->limit(200)->get();
-        $rows = $txns->map(fn($t) => [
-            'id' => $t->id,
-            'date' => $t->receipt?->detail?->invoice_date,
-            'receipt_id' => $t->receipt_id,
-            'receipt_number' => $t->receipt?->receipt_number,
-            'business' => trim(($t->receipt?->client?->name ?? '') . ' ' . ($t->receipt?->client?->last_name ?? '')),
-            'head' => $t->accountHead ? ($t->accountHead->code . ' - ' . $t->accountHead->name) : '',
-            'type' => $t->type,
-            'payment_method' => $t->receipt?->detail?->payment_method,
-            'amount' => (float) $t->total_amount,
-        ]);
+        $rows = $txns->map(function ($t) use ($mode) {
+            $amount = (float) $t->total_amount;
+            // In BS mode the breakdown total must equal the signed report-row
+            // balance, so each leg carries its sign (P&L rows are plain sums).
+            $signed = $amount;
+            if ($mode === 'bs' && $t->accountHead?->accountType) {
+                $nb = $t->accountHead->accountType->normal_balance;
+                $isDebit = in_array($t->type, ['payable', 'paid']);
+                $signed = ($nb === 'debit') ? ($isDebit ? $amount : -$amount) : ($isDebit ? -$amount : $amount);
+            }
+            return [
+                'id' => $t->id,
+                'date' => $t->receipt?->detail?->invoice_date,
+                'receipt_id' => $t->receipt_id,
+                'receipt_number' => $t->receipt?->receipt_number,
+                'bill_url' => $t->receipt_id ? url('/admin/receipts/' . $t->receipt_id . '/bill') : null,
+                'business' => trim(($t->receipt?->client?->name ?? '') . ' ' . ($t->receipt?->client?->last_name ?? '')),
+                'head' => $t->accountHead ? ($t->accountHead->code . ' - ' . $t->accountHead->name) : '',
+                'type' => $t->type,
+                'payment_method' => $t->receipt?->detail?->payment_method,
+                'amount' => $amount,
+                'signed_amount' => $signed,
+            ];
+        });
 
         return response()->json([
             'heads' => $heads->map(fn($h) => ['id' => $h->id, 'code' => $h->code, 'name' => $h->name, 'type' => $h->accountType?->name])->values(),
             'count' => $rows->count(),
-            'total' => $rows->sum('amount'),
+            'total' => $mode === 'bs' ? $rows->sum('signed_amount') : $rows->sum('amount'),
             'rows' => $rows,
         ]);
     }

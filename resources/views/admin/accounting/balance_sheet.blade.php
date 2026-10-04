@@ -313,16 +313,13 @@
                     aBody += '<tr class="bs-grand"><td>TOTAL ASSETS</td><td class="col-amount">' +
                         fmt(d.total_assets) + '</td></tr>';
                     if (d.excel) {
-                        aBody += xSection('FIXED ASSETS (401-407)');
+                        var st = d.excel.section_titles || {};
+                        aBody += xSection(((st.fixed || 'FIXED ASSETS')).toUpperCase());
                         aBody += xRows(d.excel.fixed_heads);
                         aBody += xTotal('Total Fixed Assets (A)', d.excel.total_fixed_A);
-                        aBody += xSection('CURRENT ASSETS (451-454 + Inventory row)');
+                        aBody += xSection(((st.current || 'CURRENT ASSETS')).toUpperCase());
                         aBody += xRows(d.excel.current_heads);
-                        aBody += '<tr class="bs-row"><td>' + d.excel.inventory_head_455.name +
-                            ' (true 455 balance)</td><td class="col-amount">' + fmt(d.excel.inventory_head_455.balance) + '</td></tr>';
-                        aBody += '<tr class="bs-row"><td>Inventory row display (B25 = 451+452+453+454 per Excel)</td><td class="col-amount">' +
-                            fmt(d.excel.inventory_row_display) + '</td></tr>';
-                        aBody += xTotal('Total Current Asset (B, double-counts 451-454 per Excel)', d.excel.total_current_B_excel);
+                        aBody += xTotal('Total Current Assets (B)', d.excel.total_current_B_excel);
                     }
                     $('#assetsTable tbody').html(aBody);
 
@@ -363,23 +360,20 @@
                         '<tr class="bs-grand"><td>TOTAL LIABILITIES + EQUITY</td><td class="col-amount">' +
                         fmt(d.total_liab_equity) + '</td></tr>';
                     if (d.excel) {
-                        leBody += xSection('CURRENT LIABILITIES (501-513)');
+                        var st2 = d.excel.section_titles || {};
+                        leBody += xSection(((st2.curr_liab || 'CURRENT LIABILITIES')).toUpperCase());
                         leBody += xRows(d.excel.current_liab_heads);
                         leBody += xTotal('Total Current Liabilities (C)', d.excel.total_current_C);
                         leBody += xTotal('Net Current Assets (B-C)', d.excel.net_current_BC);
-                        leBody += xTotal('Total Assets less Current Liabilities (A+B-C = 0+B45 per Excel R47)', d.excel.total_assets_less_current_excel);
-                        leBody += '<tr class="bs-row"><td class="small text-muted">Correct A+Net (fixed included, for reference)</td><td class="col-amount">' +
-                            fmt(d.excel.total_assets_less_current_correct) + '</td></tr>';
-                        leBody += xSection('NON-CURRENT LIABILITIES (551-554)');
+                        leBody += xTotal('Total Assets less Current Liabilities (A+B-C)', d.excel.total_assets_less_current_excel);
+                        leBody += xSection(((st2.noncurrent || 'NON-CURRENT LIABILITIES')).toUpperCase());
                         leBody += xRows(d.excel.noncurrent_heads);
                         leBody += xTotal('Total Non-Current Liabilities (D)', d.excel.total_noncurrent_D);
                         leBody += xTotal('Net Assets (A+B-C-D)', d.excel.net_assets_excel, 'bs-grand');
-                        leBody += xSection('CAPITAL AND RESERVES (601-604)');
+                        leBody += xSection(((st2.capital || 'CAPITAL AND RESERVES')).toUpperCase());
                         leBody += xRows(d.excel.capital_heads);
-                        leBody += xTotal('Total Capital and Reserves (601+602 only per Excel R65)', d.excel.total_capital_excel);
-                        leBody += '<tr class="bs-row"><td class="small text-muted">Full capital incl. 603 + 604 (reference)</td><td class="col-amount">' +
-                            fmt(d.excel.total_capital_all) + '</td></tr>';
-                        leBody += '<tr class="bs-row"><td colspan="2" class="small text-muted">Excel refs: A=Fixed, B=Current, C=Current Liab, B-C=Net Current, A+B-C=Assets less Current, D=Non-current, A+B-C-D=Net Assets. Replicated exactly incl. B25 double-count, R47 empty-B17, R65 2-line capital sum.</td></tr>';
+                        leBody += xTotal('Total Capital and Reserves', d.excel.total_capital_excel);
+                        leBody += '<tr class="bs-row"><td colspan="2" class="small text-muted">Refs: A=Fixed, B=Current, C=Current Liab, B-C=Net Current, A+B-C=Assets less Current, D=Non-current, A+B-C-D=Net Assets. Rows follow the live chart of accounts; totals are straight sums.</td></tr>';
                     }
                     $('#liabEquityTable tbody').html(leBody);
 
@@ -421,12 +415,15 @@
                     if (!res.rows.length) {
                         html += '<div class="small text-muted">No transactions as of this date.</div>';
                     } else {
-                        html += '<table class="table table-sm mb-0"><thead><tr><th>Date</th><th>Receipt</th><th>Business</th><th class="text-right">Amount</th></tr></thead><tbody>';
+                        html += '<table class="table table-sm mb-0"><thead><tr><th>Date</th><th>Receipt</th><th>Business</th><th>Method</th><th>Side</th><th class="text-right">Amount</th></tr></thead><tbody>';
                         $.each(res.rows, function(i, r) {
+                            var link = r.bill_url ? '<a href="' + r.bill_url + '" target="_blank">' + (r.receipt_number || ('#' + r.receipt_id)) + '</a>' : (r.receipt_number || ('#' + r.receipt_id));
                             html += '<tr><td>' + (r.date || '-') + '</td>' +
-                                '<td><a href="{{ url('/admin/receipts') }}/' + r.receipt_id + '" target="_blank">' + (r.receipt_number || ('#' + r.receipt_id)) + '</a></td>' +
+                                '<td>' + link + '</td>' +
                                 '<td>' + (r.business || '-') + '</td>' +
-                                '<td class="text-right">£' + parseFloat(r.amount || 0).toFixed(2) + '</td></tr>';
+                                '<td>' + (r.payment_method || '-') + '</td>' +
+                                '<td>' + (r.type || '-') + '</td>' +
+                                '<td class="text-right">£' + parseFloat(r.signed_amount ?? r.amount ?? 0).toFixed(2) + '</td></tr>';
                         });
                         html += '</tbody></table>';
                     }

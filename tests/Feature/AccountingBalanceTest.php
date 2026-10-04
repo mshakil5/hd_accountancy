@@ -128,15 +128,16 @@ class AccountingBalanceTest extends TestCase
             0.01,
             'P&L net profit must equal income minus expenses'
         );
-        // Excel replica formula chain: E = C - D
+        // Dynamic section formula chain: E = C - D
         $e = $pl['excel'];
         $this->assertEqualsWithDelta(1000, $e['total_turnover_A']['total'], 0.01);
+        $this->assertEqualsWithDelta(300, $e['total_cost_B_excel']['total'], 0.01);
         $this->assertEqualsWithDelta(700, $e['gross_profit_C']['total'], 0.01);
         $this->assertEqualsWithDelta(
             $e['gross_profit_C']['total'] - $e['total_admin_D']['total'],
             $e['operating_profit_E']['total'],
             0.01,
-            'Excel replica must hold E = C - D'
+            'Dynamic sections must hold E = C - D'
         );
     }
 
@@ -163,38 +164,42 @@ class AccountingBalanceTest extends TestCase
 
         $e = $this->c->balanceSheetData(new Request(['as_of' => '2020-06-30']))->getData(true)['excel'];
 
-        // Count every current-asset head exactly once (undoes the B25/B26 double-count)
-        $currentTrue = array_sum(array_column($e['current_heads'], 'balance'))
-            + $e['inventory_head_455']['balance'];
+        // Current section rows now carry every current-asset head exactly once (incl. 455)
+        $currentTrue = array_sum(array_column($e['current_heads'], 'balance'));
         $this->assertEqualsWithDelta(6100, $currentTrue, 0.01);
 
-        // Correct accounting identity: A + B_true - C - D == full capital (601-604)
+        // Accounting identity: A + B - C - D == full capital (601-604)
         $netAssetsCorrect = $e['total_fixed_A'] + $currentTrue - $e['total_current_C'] - $e['total_noncurrent_D'];
         $this->assertEqualsWithDelta(4800, $netAssetsCorrect, 0.01);
         $this->assertEqualsWithDelta(
             $netAssetsCorrect,
             $e['total_capital_all'],
             0.01,
-            'Correct reference values must balance: A + B - C - D == capital'
+            'Reference values must balance: A + B - C - D == capital'
         );
     }
 
-    public function test_excel_replica_mismatch_is_documented_not_hidden(): void
+    public function test_dynamic_section_totals_balance(): void
     {
         $this->seedPureBalanceSheet();
 
         $e = $this->c->balanceSheetData(new Request(['as_of' => '2020-06-30']))->getData(true)['excel'];
 
-        // The replica preserves the workbook's quirks, so it must NOT balance here:
-        // net assets 7300 (doubled B, dropped A) vs capital 0 (603/604 excluded).
-        $this->assertEqualsWithDelta(7300, $e['net_assets_excel'], 0.01);
-        $this->assertEqualsWithDelta(0, $e['total_capital_excel'], 0.01);
-        $this->assertNotEqualsWithDelta(
+        // Dynamic sections use straight sums, so the sheet must balance here:
+        // A=2000, B=6100 (true, 455 included once), C=800, D=2500, net=4800, capital=4800.
+        $this->assertEqualsWithDelta(2000, $e['total_fixed_A'], 0.01);
+        $this->assertEqualsWithDelta(6100, $e['total_current_B_excel'], 0.01);
+        $this->assertEqualsWithDelta(800, $e['total_current_C'], 0.01);
+        $this->assertEqualsWithDelta(2500, $e['total_noncurrent_D'], 0.01);
+        $this->assertEqualsWithDelta(4800, $e['net_assets_excel'], 0.01);
+        $this->assertEqualsWithDelta(4800, $e['total_capital_excel'], 0.01);
+        $this->assertEqualsWithDelta(
             $e['net_assets_excel'],
             $e['total_capital_excel'],
             0.01,
-            'Excel replica mismatch must stay visible (source-formula quirks), with correct values alongside'
+            'Dynamic sections must balance: net assets == capital'
         );
-        $this->assertNotEmpty($e['notes'], 'Replica quirks must be footnoted on the report');
+        $this->assertNotEmpty($e['notes']);
+        $this->assertNotEmpty($e['section_titles']['fixed']);
     }
 }

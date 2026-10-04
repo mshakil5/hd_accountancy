@@ -322,21 +322,22 @@
                 $.get("{{ url('/admin/accounting/profit-loss/data') }}", filters, function(d) {
                     var body = '';
 
-                    // Excel-layout sections (Chart of account, P&L, BS.xlsx). Cash/Bank/Card kept.
+                    // Dynamic chart sections (rows come from the heads table). Cash/Bank/Card kept.
                     if (d.excel) {
-                        body += excelHeadRow('TURNOVER');
+                        var st = d.excel.section_titles || {};
+                        body += excelHeadRow((st.turnover || 'TURNOVER').toUpperCase());
                         body += excelRows(d.excel.turnover_heads);
-                        body += excelHeadRow('OTHER INCOME (Investment + Non-Trading)');
+                        body += excelHeadRow((st.other || 'OTHER INCOME').toUpperCase());
                         body += excelRows(d.excel.other_income_heads);
                         body += excelTotalRow('Total Turnover (A)', d.excel.total_turnover_A);
 
-                        body += excelHeadRow('COST OF SALES / DIRECT EXPENSES');
+                        body += excelHeadRow((st.direct || 'DIRECT EXPENSES').toUpperCase());
                         body += excelRows(d.excel.direct_heads);
-                        body += excelTotalRow('Total Cost of Sales (B = 201 only per Excel R25)', d.excel.total_cost_B_excel);
+                        body += excelTotalRow('Total Cost of Sales (B)', d.excel.total_cost_B_excel);
 
                         body += excelEmphRow('GROSS PROFIT (C = A-B)', d.excel.gross_profit_C, 'grand-row');
 
-                        body += excelHeadRow('ADMINISTRATIVE COSTS (301-329)');
+                        body += excelHeadRow((st.admin || 'ADMINISTRATIVE COSTS').toUpperCase());
                         body += excelRows(d.excel.admin_heads);
                         body += excelTotalRow('Total Administrative Costs (D)', d.excel.total_admin_D);
 
@@ -347,8 +348,8 @@
                             '<td class="col-amount">' + fmt(d.excel.operating_profit_E.card) + '</td>' +
                             '<td class="col-amount">' + fmt(d.excel.operating_profit_E.total) + '</td></tr>';
                         body += '<tr><td colspan="5" class="small text-muted" style="padding:8px 16px;">' +
-                            'Excel refs: A=Total Turnover, B=Total Cost of Sales, C=Gross Profit (A-B), D=Total Admin, E=Operating Profit (C-D). ' +
-                            'Replicated exactly: B sums 201 only (202-204 shown but excluded); A includes 107 Sales Refund as +.' +
+                            'Refs: A=Total Turnover, B=Total Cost of Sales, C=Gross Profit (A-B), D=Total Admin, E=Operating Profit (C-D). ' +
+                            'Rows follow the live chart of accounts; totals are straight sums.' +
                             '</td></tr>';
                     }
 
@@ -405,12 +406,14 @@
                     if (!res.rows.length) {
                         html += '<div class="small text-muted">No transactions in this period.</div>';
                     } else {
-                        html += '<table class="table table-sm mb-0"><thead><tr><th>Date</th><th>Receipt</th><th>Business</th><th>Method</th><th class="text-right">Amount</th></tr></thead><tbody>';
+                        html += '<table class="table table-sm mb-0"><thead><tr><th>Date</th><th>Receipt</th><th>Business</th><th>Method</th><th>Side</th><th class="text-right">Amount</th></tr></thead><tbody>';
                         $.each(res.rows, function(i, r) {
+                            var link = r.bill_url ? '<a href="' + r.bill_url + '" target="_blank">' + (r.receipt_number || ('#' + r.receipt_id)) + '</a>' : (r.receipt_number || ('#' + r.receipt_id));
                             html += '<tr><td>' + (r.date || '-') + '</td>' +
-                                '<td><a href="{{ url('/admin/receipts') }}/' + r.receipt_id + '" target="_blank">' + (r.receipt_number || ('#' + r.receipt_id)) + '</a></td>' +
+                                '<td>' + link + '</td>' +
                                 '<td>' + (r.business || '-') + '</td>' +
                                 '<td>' + (r.payment_method || '-') + '</td>' +
+                                '<td>' + (r.type || '-') + '</td>' +
                                 '<td class="text-right">£' + parseFloat(r.amount || 0).toFixed(2) + '</td></tr>';
                         });
                         html += '</tbody></table>';

@@ -100,8 +100,7 @@ class AccountingDeepTest extends TestCase
             $e = $pl['excel'];
             $sumRows = fn($rows) => array_sum(array_column($rows, 'total'));
             $this->assertEqualsWithDelta($sumRows(array_merge($e['turnover_heads'], $e['other_income_heads'])), $e['total_turnover_A']['total'], 0.01, "round $round: A");
-            $b201 = array_values(array_filter($e['direct_heads'], fn($h) => $h['code'] === '201'))[0]['total'];
-            $this->assertEqualsWithDelta($b201, $e['total_cost_B_excel']['total'], 0.01, "round $round: B=201");
+            $this->assertEqualsWithDelta($sumRows($e['direct_heads']), $e['total_cost_B_excel']['total'], 0.01, "round $round: B=all direct");
             $this->assertEqualsWithDelta($e['total_turnover_A']['total'] - $e['total_cost_B_excel']['total'], $e['gross_profit_C']['total'], 0.01, "round $round: C");
             $this->assertEqualsWithDelta($sumRows($e['admin_heads']), $e['total_admin_D']['total'], 0.01, "round $round: D");
             $this->assertEqualsWithDelta($e['gross_profit_C']['total'] - $e['total_admin_D']['total'], $e['operating_profit_E']['total'], 0.01, "round $round: E");
@@ -110,16 +109,21 @@ class AccountingDeepTest extends TestCase
             }
             $this->assertEqualsWithDelta($pl['total_income']['total'] - $pl['total_expense']['total'], $pl['net_profit']['total'], 0.01, "round $round: legacy net");
 
-            $x = $this->ac->balanceSheetData(new Request(['as_of' => '2020-06-30']))->getData(true)['excel'];
-            $inv = array_sum(array_column($x['current_heads'], 'balance'));
-            $this->assertEqualsWithDelta($inv, $x['inventory_row_display'], 0.01, "round $round: B25");
-            $this->assertEqualsWithDelta($inv + $inv, $x['total_current_B_excel'], 0.01, "round $round: doubled B");
+            $bsF = $this->ac->balanceSheetData(new Request(['as_of' => '2020-06-30']))->getData(true);
+            $x = $bsF['excel'];
+            $balRows = fn($rows) => array_sum(array_column($rows, 'balance'));
+            $this->assertEqualsWithDelta($balRows($x['current_heads']), $x['total_current_B_excel'], 0.01, "round $round: B=true sum");
             $this->assertEqualsWithDelta($x['total_current_B_excel'] - $x['total_current_C'], $x['net_current_BC'], 0.01, "round $round: B-C");
-            $this->assertEqualsWithDelta(0 + $x['net_current_BC'], $x['total_assets_less_current_excel'], 0.01, "round $round: B17=0");
+            $this->assertEqualsWithDelta($x['total_fixed_A'] + $x['net_current_BC'], $x['total_assets_less_current_excel'], 0.01, "round $round: A+B-C");
             $this->assertEqualsWithDelta($x['total_assets_less_current_excel'] - $x['total_noncurrent_D'], $x['net_assets_excel'], 0.01, "round $round: net assets");
-            $caps = [];
-            foreach ($x['capital_heads'] as $h) $caps[$h['code']] = $h['balance'];
-            $this->assertEqualsWithDelta(($caps['601'] ?? 0) + ($caps['602'] ?? 0), $x['total_capital_excel'], 0.01, "round $round: cap 61+62");
+            $this->assertEqualsWithDelta($balRows($x['capital_heads']), $x['total_capital_excel'], 0.01, "round $round: capital=all");
+            // dynamic sections must tie exactly to the legacy section math
+            $this->assertEqualsWithDelta(
+                $x['net_assets_excel'] - $x['total_capital_excel'] - $bsF['net_profit'],
+                $bsF['total_assets'] - $bsF['total_liab_equity'],
+                0.01,
+                "round $round: sections tie to legacy"
+            );
 
             $tb = $this->ac->trialBalanceData(new Request($this->W()))->getData(true);
             $this->assertEqualsWithDelta(array_sum(array_column($tb['rows'], 'debit')), $tb['total_debit'], 0.01, "round $round: TB debits");
@@ -181,7 +185,7 @@ class AccountingDeepTest extends TestCase
         $bs = $this->ac->balanceSheetData(new Request(['as_of' => '2020-06-30']))->getData(true)['excel'];
         $bcsv = $cap($this->ac->balanceSheetExport(new Request(['format' => 'csv', 'as_of' => '2020-06-30'])));
         $this->assertStringContainsString('"Total Fixed Assets (A)",0', $bcsv);
-        $this->assertStringContainsString('"Total Current Asset (B, double-counts per Excel)",' . (int) $bs['total_current_B_excel'], $bcsv);
+        $this->assertStringContainsString('"Total Current Assets (B)",' . (int) $bs['total_current_B_excel'], $bcsv);
 
         // XLSX reload: values survive the round trip
         $bin = $cap($this->ac->profitLossExport(new Request(['format' => 'xlsx'] + $this->W())));

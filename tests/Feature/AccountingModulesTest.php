@@ -82,9 +82,9 @@ class AccountingModulesTest extends TestCase
     }
 
     // One balanced event: debit leg (payable) + credit leg (receivable).
-    protected function pair(string $debit, string $credit, float $amount, int $client = 1, string $date = '2020-06-15', string $method = 'bank'): int
+    protected function pair(string $debit, string $credit, float $amount, int $client = 1, string $date = '2020-06-15', string $method = 'bank', string $status = 'ready'): int
     {
-        $r = $this->receipt($client, $date, $method);
+        $r = $this->receipt($client, $date, $method, $status);
         $this->leg($r, $debit, 'payable', $amount);
         $this->leg($r, $credit, 'receivable', $amount);
         return $r;
@@ -288,6 +288,60 @@ class AccountingModulesTest extends TestCase
         $this->assertEqualsWithDelta(0, $e['total_turnover_A']['total'], 0.01);
     }
 
+    public function test_only_completed_receipts_feed_reports(): void
+    {
+        // ready + archived count; pending + to_review + cancelled do not.
+        $this->pair('451', '101', 100, $this->clientA, '2020-06-15', 'bank', 'ready');
+        $this->pair('451', '101', 200, $this->clientA, '2020-06-15', 'bank', 'archived');
+        $this->pair('451', '101', 400, $this->clientA, '2020-06-15', 'bank', 'pending');
+        $this->pair('451', '101', 800, $this->clientA, '2020-06-15', 'bank', 'to_review');
+        $this->pair('451', '101', 1600, $this->clientA, '2020-06-15', 'bank', 'cancelled');
+        $w = ['from' => '2020-06-01', 'to' => '2020-06-30'];
+
+        $e = $this->ac->profitLossData(new Request($w))->getData(true)['excel'];
+        $this->assertEqualsWithDelta(300, $e['total_turnover_A']['total'], 0.01);
+
+        $tb = $this->ac->trialBalanceData(new Request($w))->getData(true);
+        $this->assertEqualsWithDelta(300, $tb['total_credit'], 0.01);
+        $this->assertEqualsWithDelta(300, $tb['total_debit'], 0.01);
+        $this->assertTrue($tb['balanced']);
+
+        $bs = $this->ac->balanceSheetData(new Request(['as_of' => '2020-06-30']))->getData(true);
+        $this->assertEqualsWithDelta(300, $bs['total_assets'], 0.01);
+        $this->assertEqualsWithDelta($bs['total_assets'], $bs['total_liabilities'] + $bs['total_equity'], 0.01);
+
+        $d = $this->ac->headTransactions(new Request(['code' => '101'] + $w))->getData(true);
+        $this->assertEquals(2, $d['count']);
+        $this->assertEqualsWithDelta(300, $d['total'], 0.01);
+    }
+
+    public function test_client_head_shows_as_zero_row_in_its_report(): void
+    {
+        // Client-specific head with no postings: shows with its label and zeros
+        // in that credential's report (all heads come, 0 if unused).
+        $this->hc->store(new Request(['account_type_id' => 9, 'code' => '997', 'name' => 'Cred A Marketing', 'client_credential_id' => $this->credA]));
+        $w = ['from' => '2020-06-01', 'to' => '2020-06-30', 'client_credential_id' => $this->credA];
+        $e = $this->ac->profitLossData(new Request($w))->getData(true)['excel'];
+        $found = array_values(array_filter($e['admin_heads'], fn($h) => $h['code'] === '997'));
+        $this->assertCount(1, $found);
+        $this->assertEquals('Cred A Marketing', $found[0]['head_name']);
+        $this->assertEqualsWithDelta(0, $found[0]['total'], 0.01);
+
+        // ...and carries the amount once posted to from that credential's receipt.
+        $r = $this->receipt($this->clientA, '2020-06-15');
+        $copyId = DB::table('account_heads')->where('code', '997')->value('id');
+        DB::table('transactions')->insert([
+            'transaction_uid' => $this->uid('T997'), 'receipt_id' => $r,
+            'account_head_id' => $copyId, 'type' => 'payable',
+            'amount' => 65, 'total_amount' => 65, 'parent_id' => null,
+            'created_by' => $this->userId, 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        $e2 = $this->ac->profitLossData(new Request($w))->getData(true)['excel'];
+        $found2 = array_values(array_filter($e2['admin_heads'], fn($h) => $h['code'] === '997'));
+        $this->assertEqualsWithDelta(65, $found2[0]['total'], 0.01);
+        $this->assertEqualsWithDelta(65, $e2['total_admin_D']['total'], 0.01);
+    }
+
     public function test_pl_business_and_credential_scoping(): void
     {
         $this->pair('451', '101', 700, $this->clientB);
@@ -317,6 +371,25 @@ class AccountingModulesTest extends TestCase
 
     // ---------------- E. Balance sheet ----------------
 
+    public function test_retired_heads_keep_history_visible(): void
+    {
+        // Post a balanced pair touching the head, then retire it: its balance
+        // must still appear (marked inactive) and sections must still tie.
+        $this->pair('301', '451', 250);
+        $headId = $this->headIds['301'];
+        DB::table('account_heads')->where('id', $headId)->update(['is_active' => 0]);
+        $w = ['from' => '2020-06-01', 'to' => '2020-06-30'];
+        $e = $this->ac->profitLossData(new Request($w))->getData(true)['excel'];
+        $found = array_values(array_filter($e['admin_heads'], fn($h) => $h['head_id'] === $headId));
+        $this->assertCount(1, $found);
+        $this->assertEqualsWithDelta(250, $found[0]['total'], 0.01);
+        $this->assertStringContainsString('(inactive)', $found[0]['head_name']);
+        $this->assertEqualsWithDelta(250, $e['total_admin_D']['total'], 0.01);
+
+        $bs = $this->ac->balanceSheetData(new Request(['as_of' => '2020-06-30']))->getData(true);
+        $this->assertEqualsWithDelta($bs['total_assets'], $bs['total_liabilities'] + $bs['total_equity'], 0.01);
+    }
+
     public function test_bs_as_of_cutoff(): void
     {
         $this->pair('402', '451', 2000, $this->clientA, '2020-06-15');
@@ -326,19 +399,31 @@ class AccountingModulesTest extends TestCase
         $this->assertEqualsWithDelta(2000, $late['total_fixed_A'], 0.01);
     }
 
-    public function test_bs_excel_replica_and_legacy_sections(): void
+    public function test_bs_dynamic_sections_and_legacy_sections(): void
     {
         $this->pair('452', '603', 5000);
         $this->pair('402', '451', 2000);
         $this->pair('455', '501', 800);
         $bs = $this->ac->balanceSheetData(new Request(['as_of' => '2020-06-30']))->getData(true);
 
+        // Straight sums over live heads: A=2000, B=-2000+5000+0+0+800=3800,
+        // C=800, net=3000, A+net=5000, D=0, net assets=5000, capital=5000.
         $e = $bs['excel'];
         $this->assertEqualsWithDelta(2000, $e['total_fixed_A'], 0.01);
-        $this->assertEqualsWithDelta(3000, $e['inventory_row_display'], 0.01); // 451(-2000)+452(+5000)+453+454
-        $this->assertEqualsWithDelta(800, $e['inventory_head_455']['balance'], 0.01);
-        $this->assertEqualsWithDelta(6000, $e['total_current_B_excel'], 0.01); // doubled
+        $this->assertEqualsWithDelta(3800, $e['total_current_B_excel'], 0.01);
+        $this->assertEqualsWithDelta(800, $e['total_current_C'], 0.01);
+        $this->assertEqualsWithDelta(3000, $e['net_current_BC'], 0.01);
+        $this->assertEqualsWithDelta(5000, $e['total_assets_less_current_excel'], 0.01);
+        $this->assertEqualsWithDelta(5000, $e['net_assets_excel'], 0.01);
+        $this->assertEqualsWithDelta(5000, $e['total_capital_excel'], 0.01);
+        $this->assertEqualsWithDelta($e['net_assets_excel'], $e['total_capital_excel'], 0.01);
         $this->assertNotEmpty($e['notes']);
+        $this->assertNotEmpty($e['section_titles']['capital']);
+        // every row carries a real head label from the heads table
+        foreach (array_merge($e['fixed_heads'], $e['current_heads'], $e['capital_heads']) as $row) {
+            $this->assertNotEmpty($row['head_id']);
+            $this->assertStringContainsString(' - ', $row['name']);
+        }
 
         foreach (['assets', 'liabilities', 'equity', 'net_profit', 'total_assets', 'total_liabilities', 'total_equity', 'total_liab_equity'] as $k) {
             $this->assertArrayHasKey($k, $bs, "BS missing key $k");
@@ -433,6 +518,42 @@ class AccountingModulesTest extends TestCase
         $this->assertEquals(404, $this->ac->headTransactions(new Request(['head_id' => 999999999]))->getStatusCode());
     }
 
+    public function test_breakdown_matches_row_and_links_bill(): void
+    {
+        // Mixed sides on one head: BS breakdown total must equal the signed
+        // row balance (300), while P&L breakdown stays a plain sum (700).
+        $r = $this->receipt($this->clientA, '2020-06-15', 'bank', 'ready');
+        $this->leg($r, '451', 'payable', 500);
+        $r2 = $this->receipt($this->clientA, '2020-06-16', 'cash', 'ready');
+        $this->leg($r2, '451', 'receivable', 200);
+        $w = ['from' => '2020-06-01', 'to' => '2020-06-30'];
+
+        $bs = $this->ac->headTransactions(new Request(['mode' => 'bs', 'code' => '451', 'as_of' => '2020-06-30']))->getData(true);
+        $this->assertEquals(2, $bs['count']);
+        $this->assertEqualsWithDelta(300, $bs['total'], 0.01);
+        $report = $this->ac->balanceSheetData(new Request(['as_of' => '2020-06-30']))->getData(true)['excel'];
+        // current_heads may hold several rows; find 451 specifically
+        $bal451 = null;
+        foreach ($report['current_heads'] as $h) {
+            if ($h['code'] === '451') $bal451 = $h['balance'];
+        }
+        $this->assertEqualsWithDelta(300, $bal451, 0.01);
+        $this->assertEqualsWithDelta($bal451, $bs['total'], 0.01, 'BS breakdown total must equal the row balance');
+
+        $pl = $this->ac->headTransactions(new Request(['code' => '451'] + $w))->getData(true);
+        $this->assertEqualsWithDelta(700, $pl['total'], 0.01);
+
+        // every breakdown row carries display fields incl. the printable bill link
+        foreach ($bs['rows'] as $row) {
+            $this->assertArrayHasKey('signed_amount', $row);
+            $this->assertArrayHasKey('payment_method', $row);
+            $this->assertArrayHasKey('type', $row);
+            $this->assertStringContainsString('/bill', $row['bill_url']);
+            $this->assertStringContainsString((string) $row['receipt_id'], $row['bill_url']);
+        }
+        $this->assertTrue(\Illuminate\Support\Facades\Route::has('admin.receipt.bill'));
+    }
+
     public function test_drill_caps_at_200_rows(): void
     {
         $r = $this->receipt($this->clientA, '2020-06-15');
@@ -454,7 +575,7 @@ class AccountingModulesTest extends TestCase
         $this->assertStringStartsWith("\xEF\xBB\xBF", $csv, 'CSV needs BOM for Excel');
         $this->assertMatchesRegularExpression('/"OPERATING PROFIT \(E = C-D\)",0,750,0,750/', $csv);
         $this->assertStringContainsString('"107 - Sales Refund"', $csv);
-        $this->assertStringContainsString('"Total Cost of Sales (B = 201 only per Excel R25)"', $csv);
+        $this->assertStringContainsString('"Total Cost of Sales (B)",0,300,0,300', $csv);
     }
 
     public function test_pl_xlsx_export(): void
@@ -481,7 +602,7 @@ class AccountingModulesTest extends TestCase
         $this->pair('402', '451', 2000);
         $csv = $this->capture($this->ac->balanceSheetExport(new Request(['format' => 'csv', 'as_of' => '2020-06-30'])));
         $this->assertStringContainsString('"Total Fixed Assets (A)",2000', $csv);
-        $this->assertStringContainsString('"Full capital incl. 603 + 604 (reference)",5000', $csv);
+        $this->assertStringContainsString('"Total Capital and Reserves",5000', $csv);
         $bin = $this->capture($this->ac->balanceSheetExport(new Request(['format' => 'xlsx', 'as_of' => '2020-06-30'])));
         $this->assertSame('PK', substr($bin, 0, 2));
         $this->assertGreaterThan(4000, strlen($bin));
