@@ -342,6 +342,37 @@ class AccountingModulesTest extends TestCase
         $this->assertEqualsWithDelta(65, $e2['total_admin_D']['total'], 0.01);
     }
 
+    public function test_pl_legacy_grouping_shows_unused_types_and_heads(): void
+    {
+        // Only 101 posted: every other revenue/expense type and head must
+        // still appear with zeros in the legacy grouping.
+        $this->pair('451', '101', 500);
+        $w = ['from' => '2020-06-01', 'to' => '2020-06-30'];
+        $pl = $this->ac->profitLossData(new Request($w))->getData(true);
+
+        $typeNames = array_column($pl['income'], 'type_name');
+        $this->assertContains('Turnover', $typeNames);
+        $this->assertContains('Other Income', $typeNames);
+        $expNames = array_column($pl['expenses'], 'type_name');
+        $this->assertContains('Direct Expenses', $expNames);
+        $this->assertContains('Expenses', $expNames);
+
+        $turnover = array_values(array_filter($pl['income'], fn($s) => $s['type_name'] === 'Turnover'))[0]['heads'];
+        $this->assertCount(7, $turnover);
+        $names = array_column($turnover, 'head_name');
+        $this->assertContains('Sales revenue', $names);
+        $this->assertContains('Rental income', $names);
+        foreach ($turnover as $h) {
+            if ($h['head_name'] !== 'Sales revenue') {
+                $this->assertEqualsWithDelta(0, $h['total'], 0.01);
+            }
+        }
+        // totals unaffected by zero rows
+        $this->assertEqualsWithDelta(500, $pl['total_income']['total'], 0.01);
+        $this->assertEqualsWithDelta(0, $pl['total_expense']['total'], 0.01);
+        $this->assertEqualsWithDelta(500, $pl['net_profit']['total'], 0.01);
+    }
+
     public function test_pl_business_and_credential_scoping(): void
     {
         $this->pair('451', '101', 700, $this->clientB);
@@ -442,6 +473,36 @@ class AccountingModulesTest extends TestCase
 
     // ---------------- F. Trial balance ----------------
 
+    public function test_tb_and_bs_show_unused_heads_as_zero(): void
+    {
+        // Nothing posted: P&L already shows every head; TB and the BS main
+        // tables must too (zero rows with real labels, sorted by code).
+        $w = ['from' => '2020-06-01', 'to' => '2020-06-30'];
+        $tb = $this->ac->trialBalanceData(new Request($w))->getData(true);
+        $byCode = [];
+        foreach ($tb['rows'] as $row) $byCode[$row['code']] = $row;
+        $this->assertArrayHasKey('101', $byCode);
+        $this->assertEquals('Sales revenue', $byCode['101']['name']);
+        $this->assertEqualsWithDelta(0, $byCode['101']['debit'], 0.01);
+        $codes = array_keys($byCode);
+        $sorted = $codes;
+        sort($sorted, SORT_STRING);
+        $this->assertSame($sorted, $codes);
+
+        $bs = $this->ac->balanceSheetData(new Request(['as_of' => '2020-06-30']))->getData(true);
+        $assetNames = array_column($bs['assets'], 'name');
+        $this->assertContains('402 - Office Equipment', $assetNames);
+        $liabNames = array_column($bs['liabilities'], 'name');
+        $this->assertContains('501 - Accounts Payable', $liabNames);
+        $equityNames = array_column($bs['equity'], 'name');
+        $this->assertContains('601 - Share Capital', $equityNames);
+        foreach (array_merge($bs['assets'], $bs['liabilities'], $bs['equity']) as $row) {
+            $this->assertEqualsWithDelta(0, $row['balance'], 0.01);
+        }
+        // revenue/expense heads belong to P&L, not the BS buckets
+        $this->assertNotContains('101 - Sales revenue', $assetNames);
+    }
+
     public function test_tb_sorted_rows_and_side_rules(): void
     {
         $this->pair('451', '101', 1000);
@@ -461,7 +522,14 @@ class AccountingModulesTest extends TestCase
     {
         $w = ['from' => '2020-06-01', 'to' => '2020-06-30'];
         $empty = $this->ac->trialBalanceData(new Request($w))->getData(true);
-        $this->assertSame([], $empty['rows']);
+        // every head shows with zeros when nothing is posted
+        $this->assertNotEmpty($empty['rows']);
+        foreach ($empty['rows'] as $row) {
+            $this->assertEqualsWithDelta(0, $row['debit'], 0.01);
+            $this->assertEqualsWithDelta(0, $row['credit'], 0.01);
+        }
+        $this->assertEqualsWithDelta(0, $empty['total_debit'], 0.01);
+        $this->assertEqualsWithDelta(0, $empty['total_credit'], 0.01);
         $this->assertTrue($empty['balanced']);
 
         $r = $this->receipt($this->clientA, '2020-06-15');

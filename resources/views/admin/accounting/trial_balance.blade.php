@@ -202,10 +202,10 @@
                             '<td><span class="badge badge-secondary">' + r.category +
                             '</span></td>' +
                             '<td>' + r.normal_balance + '</td>' +
-                            '<td class="col-amount">' + (r.debit > 0 ? '£' + r.debit
-                                .toFixed(2) : '—') + '</td>' +
-                            '<td class="col-amount">' + (r.credit > 0 ? '£' + r.credit
-                                .toFixed(2) : '—') + '</td>' +
+                            '<td class="col-amount">£' + parseFloat(r.debit || 0)
+                                .toFixed(2) + '</td>' +
+                            '<td class="col-amount">£' + parseFloat(r.credit || 0)
+                                .toFixed(2) + '</td>' +
                             '</tr>';
                     });
                     if (!rows) rows =

@@ -101,10 +101,48 @@ class AccountingController extends Controller
 
             if ($category === 'revenue') {
                 $income[$typeName][$headName]['head_id']  = $headId;
+                $income[$typeName][$headName]['code']     = $accountHead->code;
                 $income[$typeName][$headName]['rows'][]   = $entry;
             } elseif ($category === 'expense') {
                 $expenses[$typeName][$headName]['head_id'] = $headId;
+                $expenses[$typeName][$headName]['code']    = $accountHead->code;
                 $expenses[$typeName][$headName]['rows'][]  = $entry;
+            }
+        }
+
+        // Every head shows, even with no postings (zero row): pre-seed all
+        // active revenue/expense types, then all their in-scope active heads.
+        $legacyScopeCredId = null;
+        if ($businessId) {
+            $legacyScopeCredId = Client::where('id', $businessId)->value('client_credential_id') ?: null;
+        } elseif ($credentialId) {
+            $legacyScopeCredId = $credentialId;
+        }
+        $legacyTypes = \App\Models\AccountType::where('is_active', 1)
+            ->whereIn('category', ['revenue', 'expense'])
+            ->orderBy('id')->get();
+        foreach ($legacyTypes as $lt) {
+            if ($lt->category === 'revenue' && !isset($income[$lt->name])) $income[$lt->name] = [];
+            if ($lt->category === 'expense' && !isset($expenses[$lt->name])) $expenses[$lt->name] = [];
+        }
+        $legacyHeads = \App\Models\AccountHead::where('is_active', 1)
+            ->whereIn('account_type_id', $legacyTypes->pluck('id'))
+            ->where(function ($q) use ($legacyScopeCredId) {
+                $q->whereNull('client_credential_id');
+                if ($legacyScopeCredId) $q->orWhere('client_credential_id', $legacyScopeCredId);
+                else $q->orWhereNotNull('client_credential_id');
+            })
+            ->with('accountType')->get();
+        foreach ($legacyHeads as $lh) {
+            if (!$lh->accountType) continue;
+            if ($lh->accountType->category === 'revenue') {
+                if (!isset($income[$lh->accountType->name][$lh->name])) {
+                    $income[$lh->accountType->name][$lh->name] = ['head_id' => $lh->id, 'code' => $lh->code, 'rows' => []];
+                }
+            } elseif ($lh->accountType->category === 'expense') {
+                if (!isset($expenses[$lh->accountType->name][$lh->name])) {
+                    $expenses[$lh->accountType->name][$lh->name] = ['head_id' => $lh->id, 'code' => $lh->code, 'rows' => []];
+                }
             }
         }
 
@@ -114,7 +152,7 @@ class AccountingController extends Controller
                 $typeTotal = ['cash' => 0, 'bank' => 0, 'card' => 0, 'total' => 0];
                 $headRows  = [];
                 foreach ($heads as $headName => $data) {
-                    $row = ['head_name' => $headName, 'head_id' => $data['head_id'], 'cash' => 0, 'bank' => 0, 'card' => 0, 'total' => 0];
+                    $row = ['head_name' => $headName, 'head_id' => $data['head_id'], 'code' => $data['code'] ?? '', 'cash' => 0, 'bank' => 0, 'card' => 0, 'total' => 0];
                     foreach ($data['rows'] as $entry) {
                         $m = in_array($entry['method'], $methods) ? $entry['method'] : 'cash';
                         $row[$m]              += $entry['amount'];
@@ -124,6 +162,7 @@ class AccountingController extends Controller
                     }
                     $headRows[] = $row;
                 }
+                usort($headRows, fn($a, $b) => strcmp((string) $a['code'], (string) $b['code']) ?: strcmp($a['head_name'], $b['head_name']));
                 $result[] = ['type_name' => $typeName, 'heads' => $headRows, 'type_total' => $typeTotal];
             }
             return $result;
@@ -398,6 +437,33 @@ class AccountingController extends Controller
 
         \Log::info('TB Grouped', ['rows' => count($grouped), 'total_debit' => $totalDebit, 'total_credit' => $totalCredit]);
 
+        // Every head shows, even with no postings (zero row) — like P&L.
+        $tbScopeCredId = null;
+        if ($businessId) {
+            $tbScopeCredId = Client::where('id', $businessId)->value('client_credential_id') ?: null;
+        } elseif ($credentialId) {
+            $tbScopeCredId = $credentialId;
+        }
+        $tbHeads = \App\Models\AccountHead::with('accountType')
+            ->where('is_active', 1)
+            ->where(function ($q) use ($tbScopeCredId) {
+                $q->whereNull('client_credential_id');
+                if ($tbScopeCredId) $q->orWhere('client_credential_id', $tbScopeCredId);
+                else $q->orWhereNotNull('client_credential_id');
+            })
+            ->get();
+        foreach ($tbHeads as $h) {
+            if (isset($grouped[$h->id]) || !$h->accountType) continue;
+            $grouped[$h->id] = [
+                'code'           => $h->code,
+                'name'           => $h->name,
+                'category'       => ucfirst($h->accountType->category),
+                'normal_balance' => $h->accountType->normal_balance,
+                'debit'          => 0,
+                'credit'         => 0,
+            ];
+        }
+
         usort($grouped, fn($a, $b) => strcmp($a['code'], $b['code']));
 
         $businessName = 'All Businesses';
@@ -517,6 +583,43 @@ class AccountingController extends Controller
         }
 
         $netProfit       = $revenue - $expenses;
+        $totalAssets     = array_sum(array_column($assets, 'balance'));
+        $totalLiab       = array_sum(array_column($liabilities, 'balance'));
+        $totalEquity     = array_sum(array_column($equity, 'balance')) + $netProfit;
+        $totalLiabEquity = $totalLiab + $totalEquity;
+
+        // Every head shows in its bucket, even with no balance (zero row).
+        // Revenue/expense heads flow through net profit, so only asset /
+        // liability / equity heads get zero rows here.
+        $legacyScopeCredId = null;
+        if ($businessId) {
+            $legacyScopeCredId = Client::where('id', $businessId)->value('client_credential_id') ?: null;
+        } elseif ($credentialId) {
+            $legacyScopeCredId = $credentialId;
+        }
+        $legacyHeads = \App\Models\AccountHead::with('accountType')
+            ->where('is_active', 1)
+            ->where(function ($q) use ($legacyScopeCredId) {
+                $q->whereNull('client_credential_id');
+                if ($legacyScopeCredId) $q->orWhere('client_credential_id', $legacyScopeCredId);
+                else $q->orWhereNotNull('client_credential_id');
+            })
+            ->get();
+        foreach ($legacyHeads as $lh) {
+            if (!$lh->accountType) continue;
+            $lcat = $lh->accountType->category;
+            if (!in_array($lcat, ['asset', 'liability', 'equity'])) continue;
+            $lkey = $lh->id;
+            $llabel = $lh->code . ' - ' . $lh->name;
+            if ($lcat === 'asset' && !isset($assets[$lkey])) {
+                $assets[$lkey] = ['head_id' => $lkey, 'code' => $lh->code, 'name' => $llabel, 'balance' => 0];
+            } elseif ($lcat === 'liability' && !isset($liabilities[$lkey])) {
+                $liabilities[$lkey] = ['head_id' => $lkey, 'code' => $lh->code, 'name' => $llabel, 'balance' => 0];
+            } elseif ($lcat === 'equity' && !isset($equity[$lkey])) {
+                $equity[$lkey] = ['head_id' => $lkey, 'code' => $lh->code, 'name' => $llabel, 'balance' => 0];
+            }
+        }
+        // Totals are unaffected by zero rows, but recompute for clarity.
         $totalAssets     = array_sum(array_column($assets, 'balance'));
         $totalLiab       = array_sum(array_column($liabilities, 'balance'));
         $totalEquity     = array_sum(array_column($equity, 'balance')) + $netProfit;
@@ -669,11 +772,16 @@ class AccountingController extends Controller
             $businessName = $cred ? trim(($cred->first_name ?? '') . ' ' . ($cred->last_name ?? '')) : 'Unknown';
         }
 
+        $sortByCode = function ($rows) {
+            usort($rows, fn($a, $b) => strcmp((string) $a['code'], (string) $b['code']));
+            return array_values($rows);
+        };
+
         return [
             'business_name'     => $businessName,
-            'assets'            => array_values($assets),
-            'liabilities'       => array_values($liabilities),
-            'equity'            => array_values($equity),
+            'assets'            => $sortByCode($assets),
+            'liabilities'       => $sortByCode($liabilities),
+            'equity'            => $sortByCode($equity),
             'net_profit'        => $netProfit,
             'total_assets'      => $totalAssets,
             'total_liabilities' => $totalLiab,
