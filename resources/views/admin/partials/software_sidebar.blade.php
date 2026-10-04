@@ -294,7 +294,7 @@
                 @endif
 
                 @if (in_array('26', array_map('strval', (array) $sidebarPerms)))
-                <li class="nav-item {{ request()->routeIs('accounting.trialBalance') ? 'active' : '' }}">
+                <li class="nav-item {{ request()->routeIs('accounting.trialBalance') ? 'active' : '' }}" style="display:none;">
                     <a class="nav-link" href="{{ route('accounting.trialBalance') }}">
                         <i class="bi bi-journal-check"></i>
                         <span>Trial Balance</span>
