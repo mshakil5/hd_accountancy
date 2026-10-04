@@ -52,7 +52,8 @@ class AccountingController extends Controller
                 }
                 $q->whereHas('detail', fn($q3) => $q3->whereBetween('invoice_date', [$from, $to]));
             })
-            ->whereIn('type', ['payable', 'receivable']);
+            ->whereIn('type', ['payable', 'receivable'])
+            ->whereNull('parent_id'); // first leg only, like TB/BS (child legs excluded)
 
         if ($paymentMethod) {
             $base->whereHas('receipt.detail', fn($q) => $q->where('payment_method', $paymentMethod));
@@ -767,10 +768,8 @@ class AccountingController extends Controller
                     $q->whereHas('detail', fn($q3) => $q3->whereBetween('invoice_date', [$from, $to]));
                 }
             })
-            ->whereIn('type', ['payable', 'receivable']);
-        if ($mode === 'bs') {
-            $query->whereNull('parent_id');
-        }
+            ->whereIn('type', ['payable', 'receivable'])
+            ->whereNull('parent_id'); // first leg only, matching P&L/TB/BS
         if ($paymentMethod) {
             $query->whereHas('receipt.detail', fn($q) => $q->where('payment_method', $paymentMethod));
         }
