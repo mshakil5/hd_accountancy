@@ -124,7 +124,7 @@
                                         </div>
                                         <div class="col-md-6 detail-field">
                                             <label class="detail-label d-flex align-items-center justify-content-between">Account Head
-                                                <button type="button" class="btn btn-xs btn-link p-0" style="font-size:12px;" onclick="openQuickHeadModal()" title="Quickly create a missing head for this client (same fields as global making)">+ Quick Add</button>
+                                                <button type="button" class="btn btn-sm btn-success ml-2" style="font-size:12px;border-radius:20px;padding:2px 12px;background:linear-gradient(45deg,#28a745,#20c997);border:none;box-shadow:0 2px 6px rgba(40,167,69,.4);" onclick="openQuickHeadModal()" title="Quickly create a missing head for this client (same fields as global making)"><i class="fa fa-plus-circle"></i> Quick Add</button>
                                             </label>
                                             <select class="form-control select2" id="account_head_id" name="account_head_id" style="width:100%;">
                                                 <option value="">First Select Account Type</option>
