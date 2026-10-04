@@ -15,8 +15,9 @@
             return $t[(int)($n / 10)] . ($n % 10 ? '-' . $w[$n % 10] : '');
         };
         $three = function ($n) use ($w, $two, &$three) {
+            if ($n == 0) return $w[0];
             $s = '';
-            if ($n >= 100) { $s .= $w[(int)($n / 100)] . ' hundred'; $n %= 100; if ($n) $s .= ' '; }
+            if ($n >= 100) { $s .= $w[(int)($n / 100)] . ' hundred'; $n %= 100; if ($n) $s .= ' and '; }
             if ($n > 0) $s .= $two($n);
             return $s;
         };
@@ -149,6 +150,7 @@
             <strong>{{ $clientName }}</strong>
             @if($client?->business_name)<br>{{ $client->business_name }}@endif
             @if($client?->company_name)<br>{{ $client->company_name }}@endif
+            @if($client?->company_name && $client?->company_number) (No. {{ $client->company_number }})@endif
             @foreach($cAddr as $line)<br>{{ $line }}@endforeach
             @if($client?->email)<br>{{ $client->email }}@endif
             @if($client?->phone)<br>Tel: {{ $client->phone }}@endif
