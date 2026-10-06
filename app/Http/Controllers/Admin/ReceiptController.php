@@ -16,6 +16,7 @@ use Carbon\Carbon;
 use DataTables;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage; 
 
 class ReceiptController extends Controller
 {
@@ -342,10 +343,12 @@ class ReceiptController extends Controller
 
         $receiptDir = $this->getReceiptDirectory($receipt->client, $receipt->id);
         $filename = time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
-        $file->move(public_path($receiptDir), $filename);
+
+        // Upload file to DigitalOcean Spaces (S3)
+        $path = Storage::disk('s3')->putFileAs($receiptDir, $file, $filename, 'public');
 
         $receipt->files()->create([
-            'file_path'  => $receiptDir . '/' . $filename,
+            'file_path'  => $path, // Store the S3 path
             'file_name'  => $file->getClientOriginalName(),
             'file_type'  => 'pdf',
             'mime_type'  => $mime,
@@ -376,15 +379,16 @@ class ReceiptController extends Controller
     public function downloadFile($id, $fileId)
     {
         $file = ReceiptFile::where('id', $fileId)->where('receipt_id', $id)->firstOrFail();
-        $fullPath = public_path($file->file_path);
 
-        if (!file_exists($fullPath)) {
-            abort(404, 'File not found on server.');
+        // Check if file exists in DigitalOcean Spaces
+        if (!Storage::disk('s3')->exists($file->file_path)) {
+            abort(404, 'File not found in cloud storage.');
         }
 
-        $downloadName = $file->file_name ?: basename($fullPath);
+        $downloadName = $file->file_name ?: basename($file->file_path);
 
-        return response()->download($fullPath, $downloadName);
+        // Download directly from DigitalOcean Spaces
+        return Storage::disk('s3')->download($file->file_path, $downloadName);
     }
 
     public function downloadAll($id)
@@ -395,15 +399,17 @@ class ReceiptController extends Controller
             abort(404, 'No files attached to this receipt.');
         }
 
+        // If only 1 file, download it directly
         if ($receipt->files->count() === 1) {
             $file = $receipt->files->first();
-            $fullPath = public_path($file->file_path);
-            if (!file_exists($fullPath)) {
-                abort(404, 'File not found on server.');
+            if (!Storage::disk('s3')->exists($file->file_path)) {
+                abort(404, 'File not found in cloud storage.');
             }
-            return response()->download($fullPath, $file->file_name ?: basename($fullPath));
+            $downloadName = $file->file_name ?: basename($file->file_path);
+            return Storage::disk('s3')->download($file->file_path, $downloadName);
         }
 
+        // Create a temporary ZIP file
         $zipName = ($receipt->receipt_number ?: 'receipt-' . $receipt->id) . '.zip';
         $zipName = preg_replace('/[^a-zA-Z0-9_.-]/', '_', $zipName);
         $tmpPath = tempnam(sys_get_temp_dir(), 'receipt_') . '.zip';
@@ -415,18 +421,24 @@ class ReceiptController extends Controller
 
         $usedNames = [];
         foreach ($receipt->files as $index => $file) {
-            $fullPath = public_path($file->file_path);
-            if (!file_exists($fullPath)) {
+            // Check existence in S3
+            if (!Storage::disk('s3')->exists($file->file_path)) {
                 continue;
             }
-            $name = $file->file_name ?: basename($fullPath);
+
+            // Get file content from S3
+            $fileContent = Storage::disk('s3')->get($file->file_path);
+
+            $name = $file->file_name ?: basename($file->file_path);
             $name = preg_replace('/[\\\\\\/\\:*?"<>|]/', '_', $name);
             if (isset($usedNames[$name])) {
                 $info = pathinfo($name);
                 $name = ($info['filename'] ?? 'file') . '_' . ($index + 1) . '.' . ($info['extension'] ?? 'pdf');
             }
             $usedNames[$name] = true;
-            $zip->addFile($fullPath, $name);
+            
+            // Add file content to ZIP directly from string
+            $zip->addFromString($name, $fileContent);
         }
         $zip->close();
 
@@ -435,6 +447,7 @@ class ReceiptController extends Controller
             abort(404, 'No files available for download.');
         }
 
+        // Send ZIP to browser and delete from temp directory after sending
         return response()->download($tmpPath, $zipName)->deleteFileAfterSend(true);
     }
 
