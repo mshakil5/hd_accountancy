@@ -9,7 +9,6 @@ use App\Models\Receipt;
 use App\Models\ReceiptFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Storage;
 
 class ReceiptController extends Controller
 {
@@ -142,11 +141,11 @@ class ReceiptController extends Controller
             $fileType = $file->extension() === 'pdf' ? 'pdf' : 'image';
             $filename = time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
 
-            $path = Storage::disk('s3')->putFileAs($receiptDir, $file, $filename, 'public');
+            $file->move(public_path($receiptDir), $filename);
 
             ReceiptFile::create([
                 'receipt_id' => $receipt->id,
-                'file_path'  => $path,
+                'file_path'  => $receiptDir . '/' . $filename,
                 'file_name'  => $file->getClientOriginalName(),
                 'file_type'  => $fileType,
                 'mime_type'  => $mime,
@@ -160,8 +159,6 @@ class ReceiptController extends Controller
                 'id'             => $receipt->id,
                 'receipt_number' => $receipt->receipt_number,
                 'status'         => $receipt->status,
-                'receipt'        => $receipt,
-                'receiptFile'    => $receipt->files,
             ],
         ], 201);
     }
@@ -171,6 +168,12 @@ class ReceiptController extends Controller
         $clientName = $this->sanitizeDirName($client->name);
         $businessName = $this->sanitizeDirName($client->business_name ?? $client->name);
         $year = now()->format('Y');
+
+        $path = public_path("images/receipts/{$clientName}/{$businessName}/{$year}/{$receiptId}");
+
+        if (!is_dir($path)) {
+            mkdir($path, 0755, true);
+        }
 
         return "images/receipts/{$clientName}/{$businessName}/{$year}/{$receiptId}";
     }
@@ -236,7 +239,10 @@ class ReceiptController extends Controller
         }
 
         foreach ($receipt->files as $file) {
-            Storage::disk('s3')->delete($file->file_path);
+            $fullPath = public_path($file->file_path);
+            if (file_exists($fullPath)) {
+                unlink($fullPath);
+            }
             $file->delete();
         }
 
@@ -247,8 +253,6 @@ class ReceiptController extends Controller
 
     public function deleteFile(Request $request, $receiptId, $fileId)
     {
-
-
         $receipt = Receipt::with(['files', 'client'])->findOrFail($receiptId);
 
         if ($receipt->status !== 'pending') {
@@ -262,13 +266,16 @@ class ReceiptController extends Controller
             }
         }
 
-        if ($receipt->files()->count() < 1) {
+        if ($receipt->files()->count() <= 1) {
             return response()->json(['message' => 'Receipt must have at least one file. Delete the receipt instead.'], 422);
         }
 
         $file = ReceiptFile::where('receipt_id', $receiptId)->where('id', $fileId)->firstOrFail();
 
-        Storage::disk('s3')->delete($file->file_path);
+        $fullPath = public_path($file->file_path);
+        if (file_exists($fullPath)) {
+            unlink($fullPath);
+        }
 
         $file->delete();
 
@@ -314,11 +321,11 @@ class ReceiptController extends Controller
             $fileType = $file->extension() === 'pdf' ? 'pdf' : 'image';
             $filename = time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
 
-            $path = Storage::disk('s3')->putFileAs($receiptDir, $file, $filename, 'public');
+            $file->move(public_path($receiptDir), $filename);
 
             ReceiptFile::create([
                 'receipt_id' => $receipt->id,
-                'file_path'  => $path, 
+                'file_path'  => $receiptDir . '/' . $filename,
                 'file_name'  => $file->getClientOriginalName(),
                 'file_type'  => $fileType,
                 'mime_type'  => $mime,
