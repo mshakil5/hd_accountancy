@@ -27,6 +27,7 @@ use App\Http\Controllers\Admin\HolidayTypeController;
 use App\Http\Controllers\Admin\HomepageController;
 use App\Http\Controllers\Admin\InvoiceExtractionController;
 use App\Http\Controllers\Admin\LatestInsightController;
+use App\Http\Controllers\Admin\LeadController;
 use App\Http\Controllers\Admin\LogController;
 use App\Http\Controllers\Admin\LogoutController;
 use App\Http\Controllers\Admin\MailContentController;
@@ -70,6 +71,18 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/clean', [HomeController::class, 'clean']);
 
     Route::get('/home', [HomeController::class, 'adminHome'])->name('admin.home');
+
+    // Meta / WhatsApp lead qualification
+    Route::get('/leads', [LeadController::class, 'index'])->name('admin.leads.index');
+    Route::get('/leads/health', [LeadController::class, 'health'])->name('admin.leads.health');
+    Route::get('/leads/{lead}', [LeadController::class, 'show'])->name('admin.leads.show');
+    Route::post('/leads/{lead}/take-over', [LeadController::class, 'takeOver'])->name('admin.leads.takeover');
+    Route::post('/leads/{lead}/release', [LeadController::class, 'release'])->name('admin.leads.release');
+    Route::post('/leads/{lead}/send', [LeadController::class, 'send'])->name('admin.leads.send');
+    Route::post('/leads/{lead}/send-template', [LeadController::class, 'sendReengagementTemplate'])->name('admin.leads.send-template');
+    Route::put('/leads/{lead}', [LeadController::class, 'update'])->name('admin.leads.update');
+    Route::post('/leads/{lead}/notify', [LeadController::class, 'notifyAgain'])->name('admin.leads.notify');
+
 
     //Admin crud
     Route::get('/new-admin', [AdminController::class, 'getAdmin'])->name('allAdmin');

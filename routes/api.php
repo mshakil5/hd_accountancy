@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\WhatsAppWebhookController;
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\PassportAuthController;
 use App\Http\Controllers\Api\BusinessController;
@@ -12,6 +14,12 @@ Route::post('reset-password', [PassportAuthController::class, 'resetPassword']);
 
 Route::middleware('auth:api,api_client')->group(function () {
     Route::get('me', [PassportAuthController::class, 'me']);
+    Route::get('businesses/{businessId}/bank-imports', [\App\Http\Controllers\Api\BankReconciliationController::class, 'imports']);
+    Route::post('businesses/{businessId}/bank-imports', [\App\Http\Controllers\Api\BankReconciliationController::class, 'upload']);
+    Route::get('businesses/{businessId}/bank-entries', [\App\Http\Controllers\Api\BankReconciliationController::class, 'entries']);
+    Route::get('businesses/{businessId}/bank-entries/{entryId}/suggestions', [\App\Http\Controllers\Api\BankReconciliationController::class, 'suggestions']);
+    Route::post('businesses/{businessId}/bank-entries/{entryId}/match', [\App\Http\Controllers\Api\BankReconciliationController::class, 'match']);
+    Route::post('businesses/{businessId}/bank-entries/{entryId}/unmatch', [\App\Http\Controllers\Api\BankReconciliationController::class, 'unmatch']);
     Route::post('logout', [PassportAuthController::class, 'logout']);
     Route::post('change-password', [PassportAuthController::class, 'changePassword']);
 
@@ -29,3 +37,7 @@ Route::delete('receipts/{id}', [ReceiptController::class, 'destroy']);
 Route::post('receipts/{receiptId}/files', [ReceiptController::class, 'addFile']);
 Route::delete('receipts/{receiptId}/files/{fileId}', [ReceiptController::class, 'deleteFile']);
 });
+
+// Meta WhatsApp Cloud API webhook
+Route::get('/webhooks/whatsapp', [WhatsAppWebhookController::class, 'verify']);
+Route::post('/webhooks/whatsapp', [WhatsAppWebhookController::class, 'receive'])->middleware('throttle:120,1');
