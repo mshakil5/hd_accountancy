@@ -19,6 +19,10 @@ Route::middleware('auth:api,api_client')->group(function () {
     Route::get('businesses/{businessId}/bank-entries', [\App\Http\Controllers\Api\BankReconciliationController::class, 'entries']);
     Route::get('businesses/{businessId}/bank-entries/{entryId}/suggestions', [\App\Http\Controllers\Api\BankReconciliationController::class, 'suggestions']);
     Route::post('businesses/{businessId}/bank-entries/{entryId}/match', [\App\Http\Controllers\Api\BankReconciliationController::class, 'match']);
+    Route::get('businesses/{businessId}/missing-receipt-requests', [\App\Http\Controllers\Api\BankReconciliationController::class, 'missingReceipts']);
+    Route::get('businesses/{businessId}/account-heads', [\App\Http\Controllers\Api\BankReconciliationController::class, 'accountHeads']);
+    Route::post('businesses/{businessId}/bank-entries/{entryId}/review', [\App\Http\Controllers\Api\BankReconciliationController::class, 'review']);
+    Route::post('businesses/{businessId}/bank-entries/{entryId}/categorize', [\App\Http\Controllers\Api\BankReconciliationController::class, 'categorize']);
     Route::post('businesses/{businessId}/bank-entries/{entryId}/unmatch', [\App\Http\Controllers\Api\BankReconciliationController::class, 'unmatch']);
     Route::post('logout', [PassportAuthController::class, 'logout']);
     Route::post('change-password', [PassportAuthController::class, 'changePassword']);
@@ -28,14 +32,14 @@ Route::middleware('auth:api,api_client')->group(function () {
     Route::get('client-credentials', [BusinessController::class, 'clientCredentials']);
     Route::get('client-credentials/{id}/businesses', [BusinessController::class, 'businessesByCredential']);
 
-    Route::get('receipts', [ReceiptController::class, 'all']);
-    Route::get('businesses/{businessId}/receipts', [ReceiptController::class, 'index']);
-    Route::post('businesses/{businessId}/receipts', [ReceiptController::class, 'store']);
-    Route::get('receipts/{id}', [ReceiptController::class, 'show']);
-    Route::put('receipts/{id}', [ReceiptController::class, 'update']);
-    Route::delete('receipts/{id}', [ReceiptController::class, 'destroy']);
-    Route::post('receipts/{receiptId}/files', [ReceiptController::class, 'addFile']);
-    Route::delete('receipts/{receiptId}/files/{fileId}', [ReceiptController::class, 'deleteFile']);
+Route::get('receipts', [ReceiptController::class, 'all']);
+Route::get('businesses/{businessId}/receipts', [ReceiptController::class, 'index']);
+Route::post('businesses/{businessId}/receipts', [ReceiptController::class, 'store']);
+Route::get('receipts/{id}', [ReceiptController::class, 'show']);
+Route::put('receipts/{id}', [ReceiptController::class, 'update']);
+Route::delete('receipts/{id}', [ReceiptController::class, 'destroy']);
+Route::post('receipts/{receiptId}/files', [ReceiptController::class, 'addFile']);
+Route::delete('receipts/{receiptId}/files/{fileId}', [ReceiptController::class, 'deleteFile']);
 });
 
 // Meta WhatsApp Cloud API webhook

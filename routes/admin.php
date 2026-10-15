@@ -84,6 +84,11 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::post('/leads/{lead}/notify', [LeadController::class, 'notifyAgain'])->name('admin.leads.notify');
 
 
+    // Bank reconciliation — authenticated accountant workspace
+    Route::get('/bank-reconciliation', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'index'])->name('admin.bank-reconciliation.index');
+    Route::post('/bank-reconciliation/{entryId}/action', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'action'])->name('admin.bank-reconciliation.action');
+    Route::get('/bank-reconciliation/import/{importId}/download', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'statement'])->name('admin.bank-reconciliation.statement');
+
     //Admin crud
     Route::get('/new-admin', [AdminController::class, 'getAdmin'])->name('allAdmin');
     Route::post('/new-admin', [AdminController::class, 'adminStore']);
