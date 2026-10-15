@@ -6,7 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Services\InvoiceExtractorService;
 use App\Models\ReceiptFile; 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log; // এই লাইনটি অবশ্যই যুক্ত করতে হবে
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage; // Make sure to import Storage
 
 class InvoiceExtractionController extends Controller
 {
@@ -29,18 +30,39 @@ class InvoiceExtractionController extends Controller
             return response()->json(['success' => false, 'message' => 'File is not a PDF.']);
         }
 
-        $filePath = public_path($file->file_path); // storage path হলে storage_path() ব্যবহার করবেন
+        // Create a temporary file path in the system temp directory
+        $tempDir = sys_get_temp_dir();
+        $tempFilePath = $tempDir . '/' . uniqid('invoice_pdf_', true) . '.pdf';
 
-        if (!file_exists($filePath)) {
-            return response()->json(['success' => false, 'message' => 'File not found on server.']);
+        try {
+            // Download the file from DigitalOcean Spaces (S3)
+            $fileContent = Storage::disk('s3')->get($file->file_path);
+            
+            // Save the content to the temporary file
+            file_put_contents($tempFilePath, $fileContent);
+
+            if (!file_exists($tempFilePath)) {
+                return response()->json(['success' => false, 'message' => 'Failed to download file from cloud storage.']);
+            }
+
+            // Pass the temporary local file path to the extractor service
+            $extractedData = $this->extractorService->extractInvoiceData($tempFilePath);
+
+        } catch (\Exception $e) {
+            Log::error('File retrieval failed', [
+                'file_id' => $fileId,
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json(['success' => false, 'message' => 'Error fetching file from storage.']);
+        } finally {
+            // Always delete the temporary file after processing
+            if (file_exists($tempFilePath)) {
+                @unlink($tempFilePath);
+            }
         }
 
-        // সার্ভিস থেকে ডাটা এক্সট্র্যাক্ট করে আনা হচ্ছে
-        $extractedData = $this->extractorService->extractInvoiceData($filePath);
-
-        // ── LOG RECORD করার কোড ──
         if (isset($extractedData['error'])) {
-            // যদি কোনো এরর হয়, তবে এরর লগ করবে
             Log::error('PDF Extraction Failed', [
                 'file_id' => $fileId,
                 'file_path' => $file->file_path,
@@ -49,7 +71,6 @@ class InvoiceExtractionController extends Controller
             return response()->json(['success' => false, 'message' => $extractedData['error']]);
         }
 
-        // সফল হলে কি কি ডাটা পাওয়া গেছে তা laravel.log ফাইলে রেকর্ড করবে
         Log::info('PDF Data Extracted Successfully', [
             'file_id' => $fileId,
             'file_path' => $file->file_path,

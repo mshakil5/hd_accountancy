@@ -1,0 +1,338 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\Client;
+use App\Models\ClientCredential;
+use App\Models\Receipt;
+use App\Models\ReceiptFile;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+
+class ReceiptController extends Controller
+{
+    public function all(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user instanceof ClientCredential) {
+            $clientIds = Client::where('client_credential_id', $user->id)
+                ->where('status', true)
+                ->pluck('id');
+        } else {
+            $clientIds = Client::pluck('id');
+        }
+
+        $receipts = Receipt::whereIn('client_id', $clientIds)
+            ->withCount('files')
+            ->latest()
+            ->get()
+            ->map(fn($r) => [
+                'id'             => $r->id,
+                'receipt_number' => $r->receipt_number,
+                'receipt_date'   => $r->receipt_date?->format('d M Y'),
+                'notes'          => $r->notes,
+                'status'         => $r->status,
+                'file_count'     => $r->files_count,
+                'created_at'     => $r->created_at->format('Y-m-d H:i'),
+            ]);
+
+        return response()->json(['data' => $receipts], 200);
+    }
+
+    public function index(Request $request, $businessId)
+    {
+        $client = Client::findOrFail($businessId);
+
+        $receipts = Receipt::where('client_id', $client->id)
+            ->withCount('files')
+            ->latest()
+            ->get()
+            ->map(fn($r) => [
+                'id'             => $r->id,
+                'receipt_number' => $r->receipt_number,
+                'receipt_date'   => $r->receipt_date?->format('d M Y'),
+                'notes'          => $r->notes,
+                'status'         => $r->status,
+                'file_count'     => $r->files_count,
+                'created_at'     => $r->created_at->format('Y-m-d H:i'),
+            ]);
+
+        return response()->json(['data' => $receipts], 200);
+    }
+
+    public function show(Request $request, $id)
+    {
+        $receipt = Receipt::with(['files', 'client'])->findOrFail($id);
+
+        $user = $request->user();
+        if ($user instanceof ClientCredential) {
+            if ($receipt->client->client_credential_id !== $user->id) {
+                return response()->json(['message' => 'Unauthorized.'], 403);
+            }
+        }
+
+        return response()->json([
+            'data' => [
+                'id'             => $receipt->id,
+                'receipt_number' => $receipt->receipt_number,
+                'receipt_date'   => $receipt->receipt_date?->format('d M Y'),
+                'notes'          => $receipt->notes,
+                'status'         => $receipt->status,
+                'client'         => [
+                    'id'            => $receipt->client->id,
+                    'name'          => trim($receipt->client->name . ' ' . $receipt->client->last_name),
+                    'business_name' => $receipt->client->business_name,
+                ],
+                'files' => $receipt->files->map(fn($f) => [
+                    'id'        => $f->id,
+                    'file_name' => $f->file_name,
+                    'file_type' => $f->file_type,
+                    'mime_type' => $f->mime_type,
+                    'file_size' => $f->file_size,
+                    'url'       => $f->url,
+                ]),
+                'created_at' => $receipt->created_at->format('Y-m-d H:i'),
+            ],
+        ], 200);
+    }
+
+    public function store(Request $request, $businessId)
+    {
+        $request->validate([
+            'files'        => 'required|array|min:1|max:10',
+            'files.*'      => 'required|file|mimes:pdf|max:51200',
+            'receipt_date' => 'nullable|date',
+            'notes'        => 'nullable|string|max:500',
+        ]);
+
+        $totalBytes = collect($request->file('files'))->sum(fn($f) => $f->getSize());
+        if ($totalBytes > 50 * 1024 * 1024) {
+            return response()->json(['message' => 'Total file size must not exceed 50MB.'], 422);
+        }
+
+        $user = $request->user();
+
+        if ($user instanceof ClientCredential) {
+            $client = Client::where('id', $businessId)
+                ->where('client_credential_id', $user->id)
+                ->where('status', true)
+                ->firstOrFail();
+        } else {
+            $client = Client::findOrFail($businessId);
+        }
+
+        $receipt = Receipt::create([
+            'client_id'      => $client->id,
+            'receipt_number' => 'RCT-' . now()->format('Ymd') . '-' . strtoupper(Str::random(4)),
+            'receipt_date'   => $request->receipt_date ?? now()->toDateString(),
+            'notes'          => $request->notes,
+            'status'         => 'pending',
+            'created_by'     => $request->user()->id,
+        ]);
+
+        $receiptDir = $this->getReceiptDirectory($client, $receipt->id);
+
+        foreach ($request->file('files') as $file) {
+            $mime = $file->getClientMimeType();
+            $size = $file->getSize();
+
+            $fileType = $file->extension() === 'pdf' ? 'pdf' : 'image';
+            $filename = time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
+
+            $file->move(public_path($receiptDir), $filename);
+
+            ReceiptFile::create([
+                'receipt_id' => $receipt->id,
+                'file_path'  => $receiptDir . '/' . $filename,
+                'file_name'  => $file->getClientOriginalName(),
+                'file_type'  => $fileType,
+                'mime_type'  => $mime,
+                'file_size'  => $size,
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Receipt uploaded successfully.',
+            'data'    => [
+                'id'             => $receipt->id,
+                'receipt_number' => $receipt->receipt_number,
+                'status'         => $receipt->status,
+            ],
+        ], 201);
+    }
+
+    private function getReceiptDirectory($client, $receiptId)
+    {
+        $clientName = $this->sanitizeDirName($client->name);
+        $businessName = $this->sanitizeDirName($client->business_name ?? $client->name);
+        $year = now()->format('Y');
+
+        $path = public_path("images/receipts/{$clientName}/{$businessName}/{$year}/{$receiptId}");
+
+        if (!is_dir($path)) {
+            mkdir($path, 0755, true);
+        }
+
+        return "images/receipts/{$clientName}/{$businessName}/{$year}/{$receiptId}";
+    }
+
+    private function sanitizeDirName($name)
+    {
+        return preg_replace('/[^a-zA-Z0-9_-]/', '_', $name ?? 'unknown');
+    }
+
+    public function update(Request $request, $id)
+    {
+        $receipt = Receipt::with('client')->findOrFail($id);
+
+        if ($receipt->status !== 'pending') {
+            return response()->json(['message' => 'Only pending receipts can be edited.'], 422);
+        }
+
+        $user = $request->user();
+        if ($user instanceof ClientCredential) {
+            if ($receipt->client->client_credential_id !== $user->id) {
+                return response()->json(['message' => 'Unauthorized.'], 403);
+            }
+        }
+
+        $request->validate([
+            'receipt_date' => 'nullable|date',
+            'notes'        => 'nullable|string|max:500',
+            'supplier'     => 'nullable|string',
+            'client_id'    => 'nullable|integer|exists:clients,id',
+        ]);
+
+        $fields = $request->only(['receipt_date', 'notes', 'supplier']);
+        if ($request->filled('client_id')) {
+            $fields['client_id'] = $request->client_id;
+        }
+        $receipt->update($fields);
+
+        return response()->json([
+            'message' => 'Receipt updated successfully.',
+            'data'    => [
+                'id'             => $receipt->id,
+                'receipt_number' => $receipt->receipt_number,
+                'receipt_date'   => $receipt->receipt_date?->format('d M Y'),
+                'notes'          => $receipt->notes,
+                'status'         => $receipt->status,
+            ],
+        ], 200);
+    }
+
+    public function destroy(Request $request, $id)
+    {
+        $receipt = Receipt::with(['files', 'client'])->findOrFail($id);
+
+        if ($receipt->status !== 'pending') {
+            return response()->json(['message' => 'Only pending receipts can be deleted.'], 422);
+        }
+
+        $user = $request->user();
+        if ($user instanceof ClientCredential) {
+            if ($receipt->client->client_credential_id !== $user->id) {
+                return response()->json(['message' => 'Unauthorized.'], 403);
+            }
+        }
+
+        foreach ($receipt->files as $file) {
+            $fullPath = public_path($file->file_path);
+            if (file_exists($fullPath)) {
+                unlink($fullPath);
+            }
+            $file->delete();
+        }
+
+        $receipt->delete();
+
+        return response()->json(['message' => 'Receipt deleted successfully.'], 200);
+    }
+
+    public function deleteFile(Request $request, $receiptId, $fileId)
+    {
+        $receipt = Receipt::with(['files', 'client'])->findOrFail($receiptId);
+
+        if ($receipt->status !== 'pending') {
+            return response()->json(['message' => 'Only pending receipts can have files removed.'], 422);
+        }
+
+        $user = $request->user();
+        if ($user instanceof ClientCredential) {
+            if ($receipt->client->client_credential_id !== $user->id) {
+                return response()->json(['message' => 'Unauthorized.'], 403);
+            }
+        }
+
+        if ($receipt->files()->count() <= 1) {
+            return response()->json(['message' => 'Receipt must have at least one file. Delete the receipt instead.'], 422);
+        }
+
+        $file = ReceiptFile::where('receipt_id', $receiptId)->where('id', $fileId)->firstOrFail();
+
+        $fullPath = public_path($file->file_path);
+        if (file_exists($fullPath)) {
+            unlink($fullPath);
+        }
+
+        $file->delete();
+
+        return response()->json(['message' => 'File deleted successfully.'], 200);
+    }
+
+    public function addFile(Request $request, $receiptId)
+    {
+        $receipt = Receipt::with('client')->findOrFail($receiptId);
+
+        if ($receipt->status !== 'pending') {
+            return response()->json(['message' => 'Only pending receipts can accept new files.'], 422);
+        }
+
+        $user = $request->user();
+        if ($user instanceof ClientCredential) {
+            if ($receipt->client->client_credential_id !== $user->id) {
+                return response()->json(['message' => 'Unauthorized.'], 403);
+            }
+        }
+
+        $request->validate([
+            'files'   => 'required|array|min:1|max:10',
+            'files.*' => 'required|file|mimes:pdf|max:51200',
+        ]);
+
+        $existingCount = $receipt->files()->count();
+        $newCount = count($request->file('files'));
+        if ($existingCount + $newCount > 10) {
+            return response()->json(['message' => 'Cannot exceed 10 PDF files per receipt. You currently have ' . $existingCount . ' file(s).'], 422);
+        }
+
+        $totalBytes = collect($request->file('files'))->sum(fn($f) => $f->getSize());
+        if ($totalBytes > 50 * 1024 * 1024) {
+            return response()->json(['message' => 'Total file size must not exceed 50MB.'], 422);
+        }
+
+        $receiptDir = $this->getReceiptDirectory($receipt->client, $receipt->id);
+
+        foreach ($request->file('files') as $file) {
+            $mime = $file->getClientMimeType();
+            $size = $file->getSize();
+            $fileType = $file->extension() === 'pdf' ? 'pdf' : 'image';
+            $filename = time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
+
+            $file->move(public_path($receiptDir), $filename);
+
+            ReceiptFile::create([
+                'receipt_id' => $receipt->id,
+                'file_path'  => $receiptDir . '/' . $filename,
+                'file_name'  => $file->getClientOriginalName(),
+                'file_type'  => $fileType,
+                'mime_type'  => $mime,
+                'file_size'  => $size,
+            ]);
+        }
+
+        return response()->json(['message' => 'Files added successfully.'], 201);
+    }
+}

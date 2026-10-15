@@ -179,9 +179,9 @@
                                 @if ($receipt->files->count() > 0)
                                     @php $first = $receipt->files->first(); @endphp
                                     @if ($first->file_type == 'image')
-                                        <img src="{{ asset($first->file_path) }}" id="mainImage" alt="Receipt">
+                                        <img src="{{ \Illuminate\Support\Facades\Storage::disk('s3')->url($first->file_path) }}" id="mainImage" alt="Receipt">
                                     @elseif($first->file_type == 'pdf')
-                                        <iframe src="{{ asset($first->file_path) }}" id="mainIframe"></iframe>
+                                        <iframe src="{{ \Illuminate\Support\Facades\Storage::disk('s3')->url($first->file_path) }}" id="mainIframe"></iframe>
                                     @endif
                                 @else
                                     <p class="text-muted py-5" id="noFileMsg">No files attached to this receipt.</p>
@@ -203,9 +203,9 @@
                                 @foreach ($receipt->files as $index => $file)
                                     <div class="file-thumb {{ $index == 0 ? 'active' : '' }}"
                                         data-index="{{ $index }}" data-id="{{ $file->id }}"
-                                        data-path="{{ asset($file->file_path) }}" data-type="{{ $file->file_type }}">
+                                        data-path="{{ \Illuminate\Support\Facades\Storage::disk('s3')->url($file->file_path) }}" data-type="{{ $file->file_type }}">
                                         @if ($file->file_type == 'image')
-                                            <img src="{{ asset($file->file_path) }}" alt="">
+                                            <img src="{{ \Illuminate\Support\Facades\Storage::disk('s3')->url($file->file_path) }}" alt="">
                                         @else
                                             <div class="pdf-icon"><i class="fa fa-file-pdf-o"></i></div>
                                         @endif
