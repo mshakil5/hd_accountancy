@@ -22,13 +22,13 @@
  @foreach($clients as $client)<option value="{{ $client->id }}" {{ $selected==$client->id?'selected':'' }}>Business #{{ $client->id }} — Account #{{ $client->client_credential_id }}</option>@endforeach
  </select></div>
  <div class="col-md-3"><label>Status</label><select class="form-control" name="status"><option value="">All</option>
- @foreach(['unmatched','needs_review','matched','categorized'] as $s)<option value="{{ $s }}" {{ request('status')===$s?'selected':'' }}>{{ ucwords(str_replace('_',' ',$s)) }}</option>@endforeach
+ @foreach(['unmatched','needs_review','matched','split','categorized'] as $s)<option value="{{ $s }}" {{ request('status')===$s?'selected':'' }}>{{ ucwords(str_replace('_',' ',$s)) }}</option>@endforeach
  </select></div>
  <div class="col-md-3"><button class="btn btn-primary">Filter transactions</button></div>
 </form>
 </div>
 <div class="row">
-@foreach(['unmatched','needs_review','matched','categorized'] as $status)
+@foreach(['unmatched','needs_review','matched','split','categorized'] as $status)
 <div class="col-md-3 col-sm-6"><div class="hd-card"><div class="hd-small">{{ ucwords(str_replace('_',' ',$status)) }}</div><h3>{{ (int)($stats[$status]??0) }}</h3></div></div>
 @endforeach
 </div>
@@ -62,7 +62,8 @@
 <input type="text" class="form-control" name="description" value="{{ $entry->description }}" required>
 <button class="btn btn-warning btn-sm" onclick="return confirm('Have you checked this transaction against the original PDF?')">Verify PDF row</button>
 </form>
-@elseif($entry->status==='matched')
+@elseif(in_array($entry->status,['matched','split']))
+@if($entry->status==='split')<div class="hd-small">Split into {{ ($splits[$entry->id]??collect())->count() }} allocation lines</div>@endif
 <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}">
 @csrf<input type="hidden" name="client_id" value="{{ $selected }}"><input type="hidden" name="action" value="unmatch">
 <button class="btn btn-outline-secondary btn-sm" onclick="return confirm('Reverse this match?')">Undo match</button>
@@ -88,7 +89,28 @@
 <button class="btn btn-outline-primary btn-sm">Categorise only</button>
 </form>
 @endif
-@if($entry->status!=='matched')
+@if(in_array($entry->status,['unmatched','categorized']))
+<details class="mt-2"><summary>Split this bank transaction</summary>
+<p class="hd-small">Both lines must add up exactly to the bank amount. For more than two lines, use a further update. This records reconciliation only; it does not post new accounting entries.</p>
+<form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-actions">
+@csrf<input type="hidden" name="client_id" value="{{ $selected }}"><input type="hidden" name="action" value="split">
+@foreach([0,1] as $i)
+<div class="mb-2"><label>Allocation {{ $i+1 }}</label>
+<input class="form-control" type="number" min="0.01" step="0.01" required name="allocations[{{ $i }}][amount]" placeholder="Amount (£)">
+<select class="form-control" name="allocations[{{ $i }}][account_head_id]"><option value="">Select account head</option>
+@foreach($heads as $h)<option value="{{ $h->id }}">{{ $h->code }} — {{ $h->name }}</option>@endforeach</select>
+<input class="form-control" name="allocations[{{ $i }}][memo]" placeholder="Explanation (e.g. previous liability)">
+</div>
+@endforeach
+<button class="btn btn-outline-primary btn-sm" onclick="return confirm('Record split allocations? This does not create P&L entries.')">Save split</button>
+</form></details>
+@endif
+<details class="mt-2"><summary>Add accountant review note</summary>
+<form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-actions">
+@csrf<input type="hidden" name="client_id" value="{{ $selected }}"><input type="hidden" name="action" value="add_note">
+<input class="form-control" required name="review_note" placeholder="Internal clarification or discussion note">
+<button class="btn btn-outline-secondary btn-sm">Save note</button></form></details>
+@if(!in_array($entry->status,['matched','split']))
 <form class="hd-actions mt-2" method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}">
 @csrf<input type="hidden" name="client_id" value="{{ $selected }}"><input type="hidden" name="action" value="request_receipt">
 <input type="text" class="form-control" name="review_note" placeholder="Message to client">
@@ -101,5 +123,11 @@
 </tbody></table></div>
 <div class="mt-3">{{ $entries->links() }}</div>
 </div>
+<div class="hd-card"><h5>Receipts not yet linked to bank transactions (recent sample)</h5>
+<p class="hd-small">These receipts may represent cash purchases, unpaid items, duplicates or bank movements outside the imported period. Review before creating or removing any accounting record.</p>
+<div class="hd-scroll"><table class="hd-table"><thead><tr><th>Receipt</th><th>Supplier</th><th>Amount</th></tr></thead><tbody>
+@forelse($unmatchedReceipts->take(80) as $r)<tr><td>#{{ $r->receipt_number }}</td><td>{{ $r->supplier }}</td><td>£{{ number_format((float)$r->detail->total_amount,2) }}</td></tr>
+@empty<tr><td colspan="3">No unmatched receipts in the recent sample.</td></tr>@endforelse
+</tbody></table></div></div>
 </div>
 @endsection
