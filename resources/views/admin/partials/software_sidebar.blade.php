@@ -229,6 +229,7 @@
                 'accounting.profitLoss',
                 'accounting.trialBalance',
                 'accounting.balanceSheet',
+                'admin.bank-reconciliation.index',
             ];
             $isAccountingOpen = request()->routeIs(...$accountingRoutes);
             $sidebarPerms = json_decode(optional(Auth::user()->role)->permission ?? '[]', true) ?: [];
@@ -283,6 +284,13 @@
                     </a>
                 </li>
                 @endif
+
+                <li class="nav-item {{ request()->routeIs('admin.bank-reconciliation.*') ? 'active' : '' }}">
+                    <a class="nav-link" href="{{ route('admin.bank-reconciliation.index') }}">
+                        <i class="bi bi-bank"></i>
+                        <span>Bank Reconciliation</span>
+                    </a>
+                </li>
 
                 @if (in_array('25', array_map('strval', (array) $sidebarPerms)))
                 <li class="nav-item {{ request()->routeIs('accounting.profitLoss') ? 'active' : '' }}">

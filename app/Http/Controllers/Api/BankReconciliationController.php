@@ -20,11 +20,33 @@ class BankReconciliationController extends Controller
     }
     public function imports(Request $request, int $businessId) {
         $this->client($request,$businessId);
-        return response()->json(['data'=>DB::table('bank_imports')->where('client_id',$businessId)->latest()->get()]);
+        $imports=DB::table('bank_imports')->where('client_id',$businessId)->latest()->limit(100)->get();
+        $counts=DB::table('bank_entries')->where('client_id',$businessId)
+            ->select('bank_import_id','status',DB::raw('count(*) as total'))
+            ->groupBy('bank_import_id','status')->get()->groupBy('bank_import_id');
+        $totals=DB::table('bank_entries')->where('client_id',$businessId)
+            ->selectRaw('bank_import_id, sum(amount) as total')
+            ->groupBy('bank_import_id')->pluck('total','bank_import_id');
+        $approved=DB::table('bank_entries')->where('client_id',$businessId)->where('reconciliation_status','approved')
+            ->selectRaw('bank_import_id, count(*) as total')->groupBy('bank_import_id')->pluck('total','bank_import_id');
+        $imports->each(function($import)use($counts,$totals,$approved){
+            $statusCounts=[];
+            foreach($counts->get($import->id,collect()) as $row)$statusCounts[$row->status]=(int)$row->total;
+            $import->status_counts=$statusCounts;
+            $import->total_amount=round((float)($totals[$import->id]??0),2);
+            $import->approved_count=(int)($approved[$import->id]??0);
+        });
+        return response()->json(['data'=>$imports]);
+    }
+    public function downloadStatement(Request $request,int $businessId,int $importId) {
+        $this->client($request,$businessId);
+        $item=DB::table('bank_imports')->where('client_id',$businessId)->find($importId);
+        abort_unless($item && $item->storage_path && Storage::disk('local')->exists($item->storage_path),404);
+        return Storage::disk('local')->download($item->storage_path,basename($item->filename));
     }
     public function upload(Request $request, int $businessId) {
         $this->client($request,$businessId);
-        $request->validate(['file'=>'required|file|mimes:csv,txt,pdf|max:20480','date_format'=>'nullable|in:d/m/Y,m/d/Y,Y-m-d']);
+        $request->validate(['file'=>'required|file|mimes:csv,txt,pdf|max:20480','date_format'=>'nullable|string|max:10']);
         $file=$request->file('file');
         $hash=hash_file('sha256',$file->getRealPath());
         if(DB::table('bank_imports')->where('client_id',$businessId)->where('sha256',$hash)->exists())
@@ -75,7 +97,22 @@ class BankReconciliationController extends Controller
             'reference'=>mb_substr(trim($reference),0,255),'amount'=>number_format($amount,2,'.',''),
             'created_at'=>now(),'updated_at'=>now()];
     }
+    // Ordered list of CSV date layouts tried when the caller does not force one.
+    // Unambiguous values (e.g. day > 12) resolve themselves; genuinely ambiguous
+    // values such as 01/02/2026 fall back to UK DD/MM/YYYY, the practice default.
+    private const CSV_DATE_FORMATS=['d/m/Y','j/n/Y','m/d/Y','n/j/Y','Y-m-d','d-m-Y','j-n-Y','m-d-Y','n-j-Y','d.m.Y','j.n.Y','m.d.Y','n.j.Y','Y/m/d','Y.m.d','d M Y','j M Y','d/m/y','m/d/y','d-m-y','m-d-y','Ymd'];
+    private function parseCsvDate(string $raw,?string $forced=null):?string {
+        $raw=trim($raw);
+        if($raw==='')return null;
+        foreach($forced?[$forced]:self::CSV_DATE_FORMATS as $fmt){
+            try{$dt=Carbon::createFromFormat('!'.$fmt,$raw);}
+            catch(\Throwable $e){continue;}
+            if($dt && $dt->format($fmt)===$raw)return $dt->format('Y-m-d');
+        }
+        return null;
+    }
     private function readCsv(string $path,int $businessId,?string $format):array {
+        $forced=in_array($format,['d/m/Y','m/d/Y','Y-m-d','d-m-Y','m-d-Y','d.m.Y'],true)?$format:null;
         $handle=fopen($path,'r');$header=fgetcsv($handle);
         if(!$header){fclose($handle);throw ValidationException::withMessages(['file'=>'Empty CSV file.']);}
         $head=array_map(fn($x)=>strtolower(trim(preg_replace('/\\s+/',' ',preg_replace('/^\\xEF\\xBB\\xBF/','',$x)))),$header);
@@ -92,13 +129,13 @@ class BankReconciliationController extends Controller
                 $line++;if(!array_filter($values,fn($v)=>trim((string)$v)!==''))continue;
                 $get=fn($i)=>$i===null?'':trim((string)($values[$i]??''));
                 try{
-                    $raw=$get($date);$fmt=$format?:'Y-m-d';$dt=Carbon::createFromFormat('!'.$fmt,$raw);
-                    if(!$dt||$dt->format($fmt)!==$raw)throw new \RuntimeException('Invalid date');
+                    $dateValue=$this->parseCsvDate($get($date),$forced);
+                    if($dateValue===null)throw new \RuntimeException('Unrecognised date "'.mb_substr($get($date),0,40).'"');
                     $n=$amount!==null?$this->parseMoney($get($amount)):(
                         ($get($credit)===''?0:$this->parseMoney($get($credit)))-
                         ($get($debit)===''?0:$this->parseMoney($get($debit)))
                     );
-                    $rows[]=$this->makeRow($businessId,$dt->format('Y-m-d'),$get($description),$get($ref),$n);
+                    $rows[]=$this->makeRow($businessId,$dateValue,$get($description),$get($ref),$n);
                 }catch(\Throwable $e){throw ValidationException::withMessages(['file'=>"Row {$line}: ".$e->getMessage()]);}
                 if(count($rows)>10000)throw ValidationException::withMessages(['file'=>'Statement exceeds 10,000 transactions.']);
             }
@@ -131,7 +168,9 @@ class BankReconciliationController extends Controller
         $this->client($request,$businessId);
         $query=DB::table('bank_entries as b')->leftJoin('receipts as r','r.id','=','b.receipt_id')->where('b.client_id',$businessId)->select('b.*','r.receipt_number');
         if($request->filled('status'))$query->where('b.status',$request->input('status'));
-        return response()->json($query->orderByDesc('b.transaction_date')->orderByDesc('b.id')->paginate(50));
+        if($request->filled('import_id'))$query->where('b.bank_import_id',$request->integer('import_id'));
+        $perPage=min(max((int)$request->input('per_page',50),1),200);
+        return response()->json($query->orderByDesc('b.transaction_date')->orderByDesc('b.id')->paginate($perPage));
     }
     public function suggestions(Request $request,int $businessId,int $entryId) {
         $client=$this->client($request,$businessId);

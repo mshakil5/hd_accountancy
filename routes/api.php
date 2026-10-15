@@ -16,6 +16,7 @@ Route::middleware('auth:api,api_client')->group(function () {
     Route::get('me', [PassportAuthController::class, 'me']);
     Route::get('businesses/{businessId}/bank-imports', [\App\Http\Controllers\Api\BankReconciliationController::class, 'imports']);
     Route::post('businesses/{businessId}/bank-imports', [\App\Http\Controllers\Api\BankReconciliationController::class, 'upload']);
+    Route::get('businesses/{businessId}/bank-imports/{importId}/download', [\App\Http\Controllers\Api\BankReconciliationController::class, 'downloadStatement']);
     Route::get('businesses/{businessId}/bank-entries', [\App\Http\Controllers\Api\BankReconciliationController::class, 'entries']);
     Route::get('businesses/{businessId}/bank-entries/{entryId}/suggestions', [\App\Http\Controllers\Api\BankReconciliationController::class, 'suggestions']);
     Route::post('businesses/{businessId}/bank-entries/{entryId}/match', [\App\Http\Controllers\Api\BankReconciliationController::class, 'match']);

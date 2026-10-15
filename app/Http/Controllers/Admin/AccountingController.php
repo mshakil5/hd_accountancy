@@ -18,6 +18,41 @@ class AccountingController extends Controller
      */
     private const EXCLUDED_RECEIPT_STATUSES = ['cancelled', 'pending', 'to_review'];
 
+    /**
+     * Restrict a ledger query to the requested credential/business and period,
+     * covering BOTH sources of postings:
+     *  - receipt-sourced rows: scope from receipt.client_id, date from
+     *    receipt.detail.invoice_date (unchanged behaviour);
+     *  - bank-sourced rows (transactions.bank_entry_id): scope from the row's own
+     *    client_id, date from entry_date, so approved bank reconciliations appear
+     *    in the reports without needing a receipt.
+     * $receiptDate / $bankDate receive the scoped builder and apply the period
+     * (between for P&L/TB, <= as-of for the balance sheet).
+     */
+    private function applyLedgerScope($query, $credentialId, $businessId, callable $receiptDate, callable $bankDate)
+    {
+        return $query->where(function ($q) use ($credentialId, $businessId, $receiptDate, $bankDate) {
+            $q->whereHas('receipt', function ($r) use ($credentialId, $businessId, $receiptDate) {
+                $r->whereNotIn('status', self::EXCLUDED_RECEIPT_STATUSES);
+                if ($businessId) {
+                    $r->where('client_id', $businessId);
+                } elseif ($credentialId) {
+                    $r->whereHas('client', fn($c) => $c->where('client_credential_id', $credentialId));
+                }
+                $r->whereHas('detail', fn($d) => $receiptDate($d));
+            });
+            $q->orWhere(function ($b) use ($credentialId, $businessId, $bankDate) {
+                $b->whereNotNull('bank_entry_id');
+                if ($businessId) {
+                    $b->where('client_id', $businessId);
+                } elseif ($credentialId) {
+                    $b->whereHas('client', fn($c) => $c->where('client_credential_id', $credentialId));
+                }
+                $bankDate($b);
+            });
+        });
+    }
+
     public function profitLoss()
     {
         $clients = ClientCredential::select('id', 'first_name', 'last_name')->latest()->get();
@@ -49,21 +84,20 @@ class AccountingController extends Controller
      */
     private function buildProfitLoss($from, $to, $credentialId, $businessId, $paymentMethod)
     {
-        $base = Transaction::with(['accountHead.accountType', 'receipt.detail'])
-            ->whereHas('receipt', function ($q) use ($credentialId, $businessId, $from, $to) {
-                $q->whereNotIn('status', self::EXCLUDED_RECEIPT_STATUSES);
-                if ($businessId) {
-                    $q->where('client_id', $businessId);
-                } elseif ($credentialId) {
-                    $q->whereHas('client', fn($q2) => $q2->where('client_credential_id', $credentialId));
-                }
-                $q->whereHas('detail', fn($q3) => $q3->whereBetween('invoice_date', [$from, $to]));
-            })
-            ->whereIn('type', ['payable', 'receivable'])
+        $base = Transaction::with(['accountHead.accountType', 'receipt.detail']);
+        $this->applyLedgerScope(
+            $base, $credentialId, $businessId,
+            fn($d) => $d->whereBetween('invoice_date', [$from, $to]),
+            fn($b) => $b->whereBetween('entry_date', [$from, $to])
+        );
+        $base->whereIn('type', ['payable', 'receivable'])
             ->whereNull('parent_id'); // first leg only, like TB/BS (child legs excluded)
 
         if ($paymentMethod) {
-            $base->whereHas('receipt.detail', fn($q) => $q->where('payment_method', $paymentMethod));
+            $base->where(function ($q) use ($paymentMethod) {
+                $q->whereHas('receipt.detail', fn($d) => $d->where('payment_method', $paymentMethod));
+                if ($paymentMethod === 'bank') $q->orWhereNotNull('bank_entry_id');
+            });
         }
 
         $transactions = $base->get();
@@ -94,7 +128,7 @@ class AccountingController extends Controller
             $typeName  = $accountType->name;
             $headName  = $accountHead->name;
             $headId    = $accountHead->id;
-            $method    = $txn->receipt?->detail?->payment_method ?? 'cash';
+            $method    = $txn->receipt?->detail?->payment_method ?? $txn->payment_method ?? 'cash';
             $amount    = (float) $txn->total_amount;
 
             $entry = ['amount' => $amount, 'method' => $method];
@@ -205,7 +239,7 @@ class AccountingController extends Controller
         foreach ($transactions as $txn) {
             $head = $txn->accountHead;
             if (!$head || !$head->accountType) continue;
-            $method = $txn->receipt?->detail?->payment_method ?? 'cash';
+            $method = $txn->receipt?->detail?->payment_method ?? $txn->payment_method ?? 'cash';
             if (!in_array($method, $methods)) $method = 'cash';
             $amount = (float) $txn->total_amount;
             if (!isset($excelPerHeadId[$head->id])) {
@@ -369,18 +403,14 @@ class AccountingController extends Controller
 
         \Log::info('TB Request', ['from' => $from, 'to' => $to, 'cred' => $credentialId, 'biz' => $businessId]);
 
-        $transactions = Transaction::with(['accountHead.accountType'])
-            ->whereHas('receipt', function ($q) use ($credentialId, $businessId, $from, $to) {
-                $q->whereNotIn('status', self::EXCLUDED_RECEIPT_STATUSES);
-                if ($businessId) {
-                    $q->where('client_id', $businessId);
-                } elseif ($credentialId) {
-                    $q->whereHas('client', fn($q2) => $q2->where('client_credential_id', $credentialId));
-                }
-                $q->whereHas('detail', fn($q3) => $q3->whereBetween('invoice_date', [$from, $to]));
-            })
-            ->whereIn('type', ['payable', 'receivable']) // শুধু first transaction
-            ->whereNull('parent_id')                     // double sure
+        $tbQuery = Transaction::with(['accountHead.accountType']);
+        $this->applyLedgerScope(
+            $tbQuery, $credentialId, $businessId,
+            fn($d) => $d->whereBetween('invoice_date', [$from, $to]),
+            fn($b) => $b->whereBetween('entry_date', [$from, $to])
+        );
+        $transactions = $tbQuery->whereIn('type', ['payable', 'receivable']) // first leg only
+            ->whereNull('parent_id')                                          // double sure
             ->get();
 
         \Log::info('TB Transactions Count', ['count' => $transactions->count()]);
@@ -513,17 +543,13 @@ class AccountingController extends Controller
      */
     private function buildBalanceSheet($asOf, $credentialId, $businessId)
     {
-        $transactions = Transaction::with(['accountHead.accountType'])
-            ->whereHas('receipt', function ($q) use ($credentialId, $businessId, $asOf) {
-                $q->whereNotIn('status', self::EXCLUDED_RECEIPT_STATUSES);
-                if ($businessId) {
-                    $q->where('client_id', $businessId);
-                } elseif ($credentialId) {
-                    $q->whereHas('client', fn($q2) => $q2->where('client_credential_id', $credentialId));
-                }
-                $q->whereHas('detail', fn($q3) => $q3->where('invoice_date', '<=', $asOf));
-            })
-            ->whereIn('type', ['payable', 'receivable'])
+        $bsQuery = Transaction::with(['accountHead.accountType']);
+        $this->applyLedgerScope(
+            $bsQuery, $credentialId, $businessId,
+            fn($d) => $d->where('invoice_date', '<=', $asOf),
+            fn($b) => $b->where('entry_date', '<=', $asOf)
+        );
+        $transactions = $bsQuery->whereIn('type', ['payable', 'receivable'])
             ->whereNull('parent_id')
             ->get();
 
@@ -957,25 +983,20 @@ class AccountingController extends Controller
         }
         $headIds = $heads->pluck('id')->all();
 
-        $query = Transaction::with(['accountHead.accountType', 'receipt.client', 'receipt.detail'])
-            ->whereIn('account_head_id', $headIds)
-            ->whereHas('receipt', function ($q) use ($credentialId, $businessId, $from, $to, $asOf, $mode) {
-                $q->whereNotIn('status', self::EXCLUDED_RECEIPT_STATUSES);
-                if ($businessId) {
-                    $q->where('client_id', $businessId);
-                } elseif ($credentialId) {
-                    $q->whereHas('client', fn($q2) => $q2->where('client_credential_id', $credentialId));
-                }
-                if ($mode === 'bs') {
-                    $q->whereHas('detail', fn($q3) => $q3->where('invoice_date', '<=', $asOf));
-                } else {
-                    $q->whereHas('detail', fn($q3) => $q3->whereBetween('invoice_date', [$from, $to]));
-                }
-            })
-            ->whereIn('type', ['payable', 'receivable'])
+        $query = Transaction::with(['accountHead.accountType', 'receipt.client', 'receipt.detail', 'client'])
+            ->whereIn('account_head_id', $headIds);
+        $this->applyLedgerScope(
+            $query, $credentialId, $businessId,
+            fn($d) => $mode === 'bs' ? $d->where('invoice_date', '<=', $asOf) : $d->whereBetween('invoice_date', [$from, $to]),
+            fn($b) => $mode === 'bs' ? $b->where('entry_date', '<=', $asOf) : $b->whereBetween('entry_date', [$from, $to])
+        );
+        $query->whereIn('type', ['payable', 'receivable'])
             ->whereNull('parent_id'); // first leg only, matching P&L/TB/BS
         if ($paymentMethod) {
-            $query->whereHas('receipt.detail', fn($q) => $q->where('payment_method', $paymentMethod));
+            $query->where(function ($q) use ($paymentMethod) {
+                $q->whereHas('receipt.detail', fn($d) => $d->where('payment_method', $paymentMethod));
+                if ($paymentMethod === 'bank') $q->orWhereNotNull('bank_entry_id');
+            });
         }
 
         $txns = $query->orderBy('id', 'desc')->limit(200)->get();
@@ -991,14 +1012,14 @@ class AccountingController extends Controller
             }
             return [
                 'id' => $t->id,
-                'date' => $t->receipt?->detail?->invoice_date,
+                'date' => $t->receipt?->detail?->invoice_date ?? optional($t->entry_date)->format('Y-m-d'),
                 'receipt_id' => $t->receipt_id,
-                'receipt_number' => $t->receipt?->receipt_number,
+                'receipt_number' => $t->receipt?->receipt_number ?? ($t->bank_entry_id ? 'Bank entry #' . $t->bank_entry_id : null),
                 'bill_url' => $t->receipt_id ? url('/admin/receipts/' . $t->receipt_id . '/bill') : null,
-                'business' => trim(($t->receipt?->client?->name ?? '') . ' ' . ($t->receipt?->client?->last_name ?? '')),
+                'business' => trim(($t->receipt?->client?->name ?? $t->client?->name ?? '') . ' ' . ($t->receipt?->client?->last_name ?? $t->client?->last_name ?? '')),
                 'head' => $t->accountHead ? ($t->accountHead->code . ' - ' . $t->accountHead->name) : '',
                 'type' => $t->type,
-                'payment_method' => $t->receipt?->detail?->payment_method,
+                'payment_method' => $t->receipt?->detail?->payment_method ?? $t->payment_method,
                 'amount' => $amount,
                 'signed_amount' => $signed,
             ];
