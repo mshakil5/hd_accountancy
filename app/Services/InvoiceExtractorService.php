@@ -70,6 +70,40 @@ class InvoiceExtractorService
     }
 
     /**
+     * OCR every page of a PDF and return the raw text.
+     *
+     * Shares the same Ghostscript + Tesseract toolchain as extractInvoiceData(),
+     * so it works anywhere invoice OCR works (e.g. the production VPS).
+     */
+    public function extractRawText(string $pdfPath): string
+    {
+        try {
+            $tempDir = sys_get_temp_dir();
+            $base = uniqid('pdf_ocr_');
+            $imagePattern = $tempDir . DIRECTORY_SEPARATOR . $base . '-%d.png';
+
+            $gsCmd = "{$this->config['ghostscript']} -dSAFER -dBATCH -dNOPAUSE -sDEVICE=png16m -r300 -sOutputFile=\"{$imagePattern}\" \"{$pdfPath}\" 2>&1";
+            @shell_exec($gsCmd);
+
+            $text = '';
+            foreach (glob($tempDir . DIRECTORY_SEPARATOR . $base . '-*.png') ?: [] as $image) {
+                $outBase = $tempDir . DIRECTORY_SEPARATOR . pathinfo($image, PATHINFO_FILENAME);
+                @shell_exec("{$this->config['tesseract']} \"{$image}\" \"{$outBase}\" -l eng 2>&1");
+                $textFile = $outBase . '.txt';
+                if (file_exists($textFile)) {
+                    $text .= file_get_contents($textFile) . "\n";
+                    @unlink($textFile);
+                }
+                @unlink($image);
+            }
+            return $text;
+        } catch (\Throwable $e) {
+            Log::error('Bank/invoice PDF OCR failed', ['error' => $e->getMessage()]);
+            return '';
+        }
+    }
+
+    /**
      * Parse the raw text to find specific invoice fields
      */
     private function parseExtractedText(string $text): array

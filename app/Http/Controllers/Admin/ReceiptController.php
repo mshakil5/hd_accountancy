@@ -157,19 +157,15 @@ class ReceiptController extends Controller
 
         $credentialId = $receipt->client?->client_credential_id;
 
-        $currentAccountTypeId = $receipt->detail?->accountHead?->account_type_id;
-        $heads = $currentAccountTypeId
-            ? AccountHead::with('taxRate')
-                ->where('account_type_id', $currentAccountTypeId)
-                ->where('is_active', true)
-                ->where(function ($q) use ($credentialId) {
-                    $q->whereNull('client_credential_id');
-                    if ($credentialId) {
-                        $q->orWhere('client_credential_id', $credentialId);
-                    }
-                })
-                ->orderBy('code')->get()
-            : collect();
+        $heads = AccountHead::with('taxRate')
+            ->where('is_active', true)
+            ->where(function ($q) use ($credentialId) {
+                $q->whereNull('client_credential_id');
+                if ($credentialId) {
+                    $q->orWhere('client_credential_id', $credentialId);
+                }
+            })
+            ->orderBy('code')->get();
 
         $baseQuery = Receipt::whereHas('client', fn($q) => $q->where('client_credential_id', $credentialId));
 
@@ -197,7 +193,9 @@ class ReceiptController extends Controller
     public function getAccountHeads(Request $request)
     {
         $heads = AccountHead::with('taxRate')
-            ->where('account_type_id', $request->account_type_id)
+            ->when($request->filled('account_type_id'), function ($q) use ($request) {
+                $q->where('account_type_id', $request->account_type_id);
+            })
             ->where('is_active', true)
             ->where(function ($q) use ($request) {
                 $q->whereNull('client_credential_id');

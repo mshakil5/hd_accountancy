@@ -117,23 +117,22 @@
     });
 
     window.reloadHeadDropdown = function(selectId) {
-        var typeId = $('#account_type_id').val() || $('#quick_head_type_id').val();
-        if (!typeId) return $.Deferred().reject();
         var headDrop = $('#account_head_id');
         headDrop.html('<option value="">Loading...</option>').trigger('change');
         return $.get(baseReceiptUrl + '/get-account-heads', {
-            account_type_id: typeId,
             client_credential_id: currentCredId()
         }, function(data) {
-            var options = '<option value="">Select Account Head</option>';
+            var options = $('<select>').append($('<option>', {value: '', text: 'Select Account Head'}));
             $.each(data, function(i, head) {
                 var rate = head.tax_rate ? head.tax_rate.rate : 0;
-                options += '<option value="' + head.id + '" data-rate="' + rate + '">' + head.code + ' - ' + head.name + '</option>';
+                options.append($('<option>', {
+                    value: head.id,
+                    text: head.code + ' - ' + head.name
+                }).attr('data-rate', rate).attr('data-type-id', head.account_type_id));
             });
-            headDrop.html(options).trigger('change');
-            if (selectId) {
-                headDrop.val(String(selectId)).trigger('change');
-            }
+            headDrop.html(options.html());
+            if (selectId) headDrop.val(String(selectId));
+            headDrop.trigger('change');
         });
     };
 
@@ -153,8 +152,6 @@
             if (d.status == 303) {
                 $('.ermsg-quick').html(d.message);
             } else {
-                // Keep main type in sync with the created head's type
-                $('#account_type_id').val(payload.account_type_id);
                 $('#quickHeadModal').modal('hide');
                 toastr.success(d.message, 'Success!');
                 window.reloadHeadDropdown(d.id);

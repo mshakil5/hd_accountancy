@@ -319,30 +319,30 @@
                                 </div>
 
                                 <div class="detail-field">
-                                    <label class="detail-label">Account Type</label>
-                                    <select class="form-control" id="account_type_id" name="account_type_id">
-                                        <option value="">Select Account Type</option>
-                                        @foreach ($accountTypes as $type)
-                                            <option value="{{ $type->id }}"
-                                                {{ $receipt->detail?->accountHead?->account_type_id == $type->id ? 'selected' : '' }}>
-                                                {{ $type->name }} ({{ ucfirst($type->category) }})
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-
-                                <div class="detail-field">
                                     <label class="detail-label d-flex align-items-center justify-content-between">Account Head
                                         <button type="button" class="btn btn-sm btn-success ml-2" style="font-size:12px;border-radius:20px;padding:2px 12px;background:linear-gradient(45deg,#28a745,#20c997);border:none;box-shadow:0 2px 6px rgba(40,167,69,.4);" onclick="openQuickHeadModal()" title="Quickly create a missing head for this client (same fields as global making)"><i class="fa fa-plus-circle"></i> Quick Add</button>
                                     </label>
                                     <select class="form-control select2" id="account_head_id" name="account_head_id"
                                         style="width:100%;">
-                                        <option value="">First Select Account Type</option>
+                                        <option value="">Select Account Head</option>
                                         @foreach ($heads as $h)
-                                            <option value="{{ $h->id }}" data-rate="{{ $h->taxRate?->rate ?? 0 }}"
+                                            <option value="{{ $h->id }}" data-rate="{{ $h->taxRate?->rate ?? 0 }}" data-type-id="{{ $h->account_type_id }}"
                                                 {{ $receipt->detail?->account_head_id == $h->id ? 'selected' : '' }}>
-                                                {{ $h->code }} - {{ $h->name }}
-                                            </option>
+                                            {{ $h->code }} - {{ $h->name }}
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="detail-field">
+                                    <label class="detail-label">Account Type</label>
+                                    <select class="form-control" id="account_type_id" name="account_type_id" disabled>
+                                        <option value="">Auto-filled from Account Head</option>
+                                        @foreach ($accountTypes as $type)
+                                            <option value="{{ $type->id }}"
+                                                {{ $receipt->detail?->accountHead?->account_type_id == $type->id ? 'selected' : '' }}>
+                                            {{ $type->name }} ({{ ucfirst($type->category) }})
+                                        </option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -620,37 +620,19 @@
                 $(this).val('');
             });
 
-            // ── Account Type → Head ──
-            $('#account_type_id').change(function() {
-                let typeId = $(this).val();
-                let headDropdown = $('#account_head_id');
-                headDropdown.html('<option value="">Loading...</option>').trigger('change');
-                if (!typeId) {
-                    headDropdown.html('<option value="">First Select Account Type</option>').trigger(
-                        'change');
-                    $('#tax_percent').val(0);
-                    calculateAmounts();
-                    return;
-                }
-                $.get(baseUrl + '/get-account-heads', {
-                    account_type_id: typeId,
-                    client_credential_id: $('#client_credential_id').val() || '{{ $credentialId }}'
-                }, function(data) {
-                    let options = '<option value="">Select Account Head</option>';
-                    $.each(data, function(i, head) {
-                        let rate = head.tax_rate ? head.tax_rate.rate : 0;
-                        options +=
-                            `<option value="${head.id}" data-rate="${rate}">${head.code} - ${head.name}</option>`;
-                    });
-                    headDropdown.html(options).trigger('change');
-                });
-            });
-
+            // -- Account Head -> Account Type + Tax (auto-fill from head) --
             $('#account_head_id').change(function() {
-                let rate = parseFloat($(this).find('option:selected').data('rate')) || 0;
+                const selected = $(this).find('option:selected');
+                $('#account_type_id').val(selected.attr('data-type-id') || '');
+                const rate = parseFloat(selected.data('rate')) || 0;
                 $('#tax_percent').val(rate);
                 calculateAmounts();
             });
+
+            // Auto-fill type for the pre-selected head on page load
+            if ($('#account_head_id').val()) {
+                $('#account_head_id').trigger('change');
+            }
 
             function calculateAmounts() {
                 let netStr = $('#net_amount').val();

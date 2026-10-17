@@ -49,24 +49,12 @@ class BankStatementRecognitionService
 
     private function ocrViaTesseract(string $path): string
     {
-        if (!@exec('which tesseract 2>/dev/null')) return '';
-        $tmpDir=sys_get_temp_dir().'/hd_ocr_'.uniqid();
-        @mkdir($tmpDir,0777,true);
-        $prefix=$tmpDir.'/page';
+        // Reuse the invoice/receipt OCR toolchain (Ghostscript + Tesseract) so
+        // scanned bank statements work wherever receipt OCR already works.
         try {
-            // Convert PDF pages to images at 200 dpi.
-            @exec(sprintf('pdftoppm -r 200 -png %s %s 2>/dev/null', escapeshellarg($path), escapeshellarg($prefix)));
-            $images=glob($prefix.'*.png');
-            $text='';
-            foreach($images as $img){
-                $out=$prefix.'.txt';
-                @exec(sprintf('tesseract %s %s -l eng 2>/dev/null', escapeshellarg($img), escapeshellarg($out)));
-                if (file_exists($out)) $text.=file_get_contents($out)."\n";
-            }
-            return $text;
-        } finally {
-            foreach(glob($prefix.'*') as $f){ @unlink($f); }
-            @rmdir($tmpDir);
+            return app(InvoiceExtractorService::class)->extractRawText($path);
+        } catch (\Throwable $e) {
+            return '';
         }
     }
 
