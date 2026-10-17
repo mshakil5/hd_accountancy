@@ -37,17 +37,19 @@ class BankLedgerPostingService
     public function postEntry(object $entry, int $actorId): int
     {
         if (!empty($entry->journal_posted_at)) return 0;
-        if (!in_array($entry->status, ['matched', 'categorized', 'split'], true)) return 0;
+        $transfer = ($entry->transfer_type ?? null) === 'internal_transfer';
+        if (!$transfer && !in_array($entry->status, ['matched', 'categorized', 'split'], true)) return 0;
 
         $this->assertReadyForApproval($entry);
-        $receiptPosted = $this->postLinkedReceipts($entry, $actorId);
+        $receiptPosted = $transfer ? 0 : $this->postLinkedReceipts($entry, $actorId);
         $legs = $this->legsFor($entry);
         $type = ((float) $entry->amount < 0) ? 'payable' : 'receivable';
 
         $posted = $receiptPosted;
         foreach ($legs as $leg) {
             $amount = round((float) $leg['amount'], 2);
-            if ($amount <= 0) continue;
+            $taxAmount = round((float) ($leg['tax_amount'] ?? 0), 2);
+            if ($amount <= 0 && $taxAmount <= 0) continue;
 
             Transaction::create([
                 'transaction_uid' => 'TXN-' . strtoupper(Str::random(10)),
@@ -58,9 +60,10 @@ class BankLedgerPostingService
                 'account_head_id' => $leg['account_head_id'],
                 'type'            => $type,
                 'amount'          => $amount,
-                'tax_percent'     => 0,
-                'tax_amount'      => 0,
-                'total_amount'    => $amount,
+                'tax_percent'     => (float) ($leg['tax_percent'] ?? 0),
+                'tax_amount'      => $taxAmount,
+                'vat_amount'      => (float) ($leg['vat_amount'] ?? 0),
+                'total_amount'    => $amount + $taxAmount,
                 'payment_method'  => 'bank',
                 'parent_id'       => null,
                 'created_by'      => $actorId,
@@ -83,11 +86,29 @@ class BankLedgerPostingService
      */
     public function assertReadyForApproval(object $entry): void
     {
-        if (!in_array($entry->status, ['matched', 'categorized', 'split'], true)) {
+        $transfer = ($entry->transfer_type ?? null) === 'internal_transfer';
+        if (!$transfer && !in_array($entry->status, ['matched', 'categorized', 'split'], true)) {
             throw ValidationException::withMessages(['reconciliation' => 'Match, categorise or split this transaction first.']);
         }
         if (round(abs((float) $entry->amount), 2) <= 0) {
             throw ValidationException::withMessages(['reconciliation' => 'Zero-amount bank entries cannot be approved.']);
+        }
+        if ($transfer) {
+            if (empty($entry->linked_bank_entry_id)) {
+                throw ValidationException::withMessages(['reconciliation' => 'Internal transfer must be linked to its counterparty bank entry.']);
+            }
+            $counter = DB::table('bank_entries')->where('id', (int) $entry->linked_bank_entry_id)
+                ->where('client_id', $entry->client_id)->first();
+            abort_unless($counter, 404, 'Linked bank entry not found.');
+            if (!empty($counter->transfer_type) && $counter->transfer_type === 'internal_transfer'
+                && empty($counter->linked_bank_entry_id)) {
+                throw ValidationException::withMessages(['reconciliation' => 'Counterparty entry is not linked back to this transfer.']);
+            }
+            if (!$entry->account_head_id) {
+                throw ValidationException::withMessages(['reconciliation' => 'Choose the bank account head for this side of the transfer.']);
+            }
+            $this->assertAccountHeadOwned((int) $entry->account_head_id, (int) $entry->client_id);
+            return;
         }
         if ($entry->status === 'matched') {
             $this->assertReceiptPosted($entry->receipt_id, $entry->client_id);
@@ -109,6 +130,9 @@ class BankLedgerPostingService
                 }
                 if ($line->account_head_id) $this->assertAccountHeadOwned((int) $line->account_head_id, (int) $entry->client_id);
                 if ($line->receipt_id) $this->assertReceiptPosted($line->receipt_id, $entry->client_id);
+                if ($line->account_head_id && isset($line->tax_percent) && ($line->tax_percent < 0 || $line->tax_percent > 100)) {
+                    throw ValidationException::withMessages(['reconciliation' => 'Tax percent must be between 0 and 100.']);
+                }
                 if ($line->receipt_id && config('reconciliation.bank_led', false) && !Transaction::where('receipt_id', $line->receipt_id)->exists()) {
                     // Never post a full receipt journal from a partial allocation.
                     $full = (float) DB::table('receipt_details')->where('receipt_id',$line->receipt_id)->value('total_amount');
@@ -206,6 +230,14 @@ class BankLedgerPostingService
         DB::table('bank_entries')->where('id', $entry->id)
             ->update(['journal_posted_at' => null, 'updated_at' => now()]);
 
+        // If this was one side of an internal transfer, reverse the counterparty too.
+        if (!empty($entry->linked_bank_entry_id) && ($entry->transfer_type ?? null) === 'internal_transfer') {
+            $counter = DB::table('bank_entries')->where('id', (int) $entry->linked_bank_entry_id)->first();
+            if ($counter && !empty($counter->journal_posted_at)) {
+                $this->reverseEntry((object) $counter);
+            }
+        }
+
         return $deleted;
     }
 
@@ -228,7 +260,13 @@ class BankLedgerPostingService
             foreach ($lines as $line) {
                 if ($line->receipt_id) continue;       // receipt owns its own posting
                 if (!$line->account_head_id) continue; // nothing to post against
-                $legs[] = ['account_head_id' => (int) $line->account_head_id, 'amount' => (float) $line->amount];
+                $legs[] = [
+                    'account_head_id' => (int) $line->account_head_id,
+                    'amount'          => (float) $line->amount,
+                    'tax_percent'     => (float) ($line->tax_percent ?? 0),
+                    'tax_amount'      => (float) ($line->tax_amount ?? 0),
+                    'vat_amount'      => (float) ($line->vat_amount ?? 0),
+                ];
             }
             return $legs;
         }

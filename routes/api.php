@@ -27,6 +27,9 @@ Route::middleware('auth:api,api_client')->group(function () {
     Route::post('businesses/{businessId}/bank-entries/{entryId}/review', [\App\Http\Controllers\Api\BankReconciliationController::class, 'review']);
     Route::post('businesses/{businessId}/bank-entries/{entryId}/categorize', [\App\Http\Controllers\Api\BankReconciliationController::class, 'categorize']);
     Route::post('businesses/{businessId}/bank-entries/{entryId}/unmatch', [\App\Http\Controllers\Api\BankReconciliationController::class, 'unmatch']);
+    Route::post('businesses/{businessId}/bank-entries/{entryId}/transfer', [\App\Http\Controllers\Api\BankReconciliationController::class, 'transfer']);
+    Route::post('businesses/{businessId}/bank-entries/{entryId}/settle', [\App\Http\Controllers\Api\BankReconciliationController::class, 'settle']);
+    Route::get('businesses/{businessId}/bank-settlements', [\App\Http\Controllers\Api\BankReconciliationController::class, 'settlements']);
     Route::post('logout', [PassportAuthController::class, 'logout']);
     Route::post('change-password', [PassportAuthController::class, 'changePassword']);
 

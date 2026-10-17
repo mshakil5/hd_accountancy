@@ -162,6 +162,14 @@ $rejected = $reconStatus==='rejected';
   @if($entry->reference)<div class="hd-small">Reference: {{ $entry->reference }}</div>@endif
   <div class="hd-amounts"><div><span class="hd-small">Spent</span><strong>{{ (float)$entry->amount<0?'£'.number_format(abs((float)$entry->amount),2):'—' }}</strong></div><div><span class="hd-small">Received</span><strong>{{ (float)$entry->amount>=0?'£'.number_format((float)$entry->amount,2):'—' }}</strong></div></div>
   <details><summary class="hd-small">More details</summary><div class="hd-small">Bank transaction #{{ $entry->id }} @if($entry->receipt_id) · Linked receipt #{{ $entry->receipt_id }}@endif</div></details>
+  @php $entrySettlements=$settlements[$entry->id]??collect(); @endphp
+  @if($entrySettlements->isNotEmpty())
+  <div class="hd-small mt-2">Settlements:
+   @foreach($entrySettlements as $st)
+   <span class="hd-pill" style="background:{{ $st->status==='cleared'?'#dcfce7':'#fef9c3' }}">{{ ucwords(str_replace('_',' ',$st->settlement_type)) }} · £{{ number_format((float)$st->settled_amount,2) }} settled@if((float)$st->remaining_amount>0) · £{{ number_format((float)$st->remaining_amount,2) }} remaining@endif</span>
+   @endforeach
+  </div>
+  @endif
  </div>
  <div class="hd-action-side">
   @if($approved)
@@ -197,6 +205,7 @@ $rejected = $reconStatus==='rejected';
    <button type="button" class="hd-tab active" data-hd-tab="match" aria-selected="true">Match</button>
    <button type="button" class="hd-tab" data-hd-tab="create" aria-selected="false">Create</button>
    <button type="button" class="hd-tab" data-hd-tab="split" aria-selected="false">Split</button>
+   <button type="button" class="hd-tab" data-hd-tab="settle" aria-selected="false">Settle</button>
    <button type="button" class="hd-tab" data-hd-tab="discuss" aria-selected="false">Discuss</button>
    <button type="button" class="hd-tab" data-hd-tab="find" aria-selected="false">Find &amp; Match</button>
    <button type="button" class="hd-tab" data-hd-tab="transfer" aria-selected="false">Transfer</button>
@@ -209,6 +218,20 @@ $rejected = $reconStatus==='rejected';
     <label>What / account head<select class="form-control" name="account_head_id"><option value="">Use receipt account head</option>@foreach($heads as $h)<option value="{{ $h->id }}">{{ $h->code }} — {{ $h->name }}</option>@endforeach</select></label>
     <button class="btn btn-primary btn-sm" {{ $exact->isEmpty()?'disabled':'' }} onclick="return confirm('Approve exact receipt match?')">OK · Match</button>
    </form>
+   @php $fuzzy=$fuzzyMatches[(int)$entry->id]??[]; @endphp
+   @if(!empty($fuzzy))
+   <p class="hd-small mt-3 mb-1">Close matches (amount within 10%, scored on amount, date, reference and supplier). Review before settling.</p>
+   <div class="hd-scroll"><table class="hd-table"><thead><tr><th>Receipt</th><th>Supplier</th><th>Amount</th><th>Score</th><th></th></tr></thead><tbody>
+    @foreach($fuzzy as $f)
+    <tr><td>#{{ $f['receipt_number'] }}</td><td>{{ $f['supplier']?:'Unknown' }}</td><td>£{{ number_format($f['amount'],2) }}</td><td>{{ $f['score'] }}</td>
+     <td><form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}">@csrf
+      <input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="settle">
+      <input type="hidden" name="receipt_id" value="{{ $f['id'] }}"><input type="hidden" name="settlement_type" value="partial">
+      <button class="btn btn-outline-primary btn-sm" onclick="return confirm('Record this receipt as a partial settlement against the bank line?')">Settle</button>
+     </form></td></tr>
+    @endforeach
+   </tbody></table></div>
+   @endif
   </section>
   <section class="hd-tab-panel" data-hd-panel="create" hidden>
    <p class="hd-small">Categorise a bank movement without a linked receipt. Approving the row posts it to the chosen account head, so it appears in the P&amp;L / balance sheet.</p>
@@ -220,11 +243,13 @@ $rejected = $reconStatus==='rejected';
    </form>
   </section>
   <section class="hd-tab-panel" data-hd-panel="split" hidden>
-   <p class="hd-small">Allocate one bank payment to two account heads; both allocations must total £{{ number_format(abs((float)$entry->amount),2) }}. Approving posts each line to its account head.</p>
+   <p class="hd-small">Allocate one bank payment to two account heads; both allocations must total £{{ number_format(abs((float)$entry->amount),2) }}. Approving posts each line to its account head, including any VAT recorded here.</p>
    <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}">@csrf
     <input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="split">
     @foreach([0,1] as $i)<div class="hd-form-grid mb-2"><label>Line {{ $i+1 }} amount (£)<input class="form-control" type="number" name="allocations[{{ $i }}][amount]" min="0.01" step="0.01" required></label>
      <label>Account head<select class="form-control" name="allocations[{{ $i }}][account_head_id]" required><option value="">Choose account</option>@foreach($heads as $h)<option value="{{ $h->id }}">{{ $h->code }} — {{ $h->name }}</option>@endforeach</select></label>
+     <label>VAT %<input class="form-control" type="number" name="allocations[{{ $i }}][tax_percent]" min="0" max="100" step="0.01" value="0"></label>
+     <label>VAT amount (£)<input class="form-control" type="number" name="allocations[{{ $i }}][tax_amount]" min="0" step="0.01" value="0"></label>
      <label>Explanation<input class="form-control" name="allocations[{{ $i }}][memo]" placeholder="e.g. outstanding payment"></label></div>@endforeach
     <button class="btn btn-primary btn-sm" onclick="return confirm('Confirm split totals and save allocations?')">Save split</button>
    </form>
@@ -243,7 +268,25 @@ $rejected = $reconStatus==='rejected';
     <button class="btn btn-primary btn-sm" onclick="return confirm('Confirm this selected receipt matches the exact bank amount?')">Match selected receipt</button>
    </form>
   </section>
-  <section class="hd-tab-panel" data-hd-panel="transfer" hidden><div class="alert alert-info mb-0">Internal bank transfer reconciliation is not yet implemented. Do not categorise a transfer as income or an expense. Leave it unmatched for review.</div></section>
+  <section class="hd-tab-panel" data-hd-panel="settle" hidden>
+   <p class="hd-small">Record a partial or over/under settlement when a receipt does not exactly equal the bank amount. A settlement record tracks the outstanding remainder; the row stays in draft until approved.</p>
+   <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-form-grid">@csrf
+    <input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="settle">
+    <label>Receipt<select class="form-control" name="receipt_id"><option value="">No receipt (write-off / unlinked)</option>@foreach($receipts as $r)<option value="{{ $r->id }}">#{{ $r->receipt_number }} · {{ $r->supplier?:'Unknown supplier' }} · £{{ number_format((float)$r->detail->total_amount,2) }}</option>@endforeach</select></label>
+    <label>Type<select class="form-control" name="settlement_type"><option value="partial">Partial</option><option value="over_payment">Over payment</option><option value="under_payment">Under payment</option></select></label>
+    <label>Account head (required when no receipt)<select class="form-control" name="account_head_id"><option value="">Use receipt account head</option>@foreach($heads as $h)<option value="{{ $h->id }}">{{ $h->code }} — {{ $h->name }}</option>@endforeach</select></label>
+    <button class="btn btn-primary btn-sm" onclick="return confirm('Record this settlement?')">Save settlement</button>
+   </form>
+  </section>
+  <section class="hd-tab-panel" data-hd-panel="transfer" hidden>
+   <p class="hd-small">Link this movement to its counterparty in another of the client's bank accounts. Amounts must be equal and opposite. Transfers post net-zero to the P&amp;L.</p>
+   <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-form-grid">@csrf
+    <input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="transfer">
+    <label>Counterparty entry<select class="form-control" name="linked_entry_id" required><option value="">Choose the other side</option>@foreach($transferCandidates as $c)@if((int)$c->id!==(int)$entry->id)<option value="{{ $c->id }}">#{{ $c->id }} · {{ $c->transaction_date }} · {{ \Illuminate\Support\Str::limit($c->description,40) }} · £{{ number_format((float)$c->amount,2) }}</option>@endif @endforeach</select></label>
+    <label>Bank account head<select class="form-control" name="account_head_id"><option value="">Choose the bank account head</option>@foreach($heads as $h)<option value="{{ $h->id }}">{{ $h->code }} — {{ $h->name }}</option>@endforeach</select></label>
+    <button class="btn btn-primary btn-sm" onclick="return confirm('Link these two entries as an internal transfer?')">Save transfer</button>
+   </form>
+  </section>
   @endif
  </div>
 </div>

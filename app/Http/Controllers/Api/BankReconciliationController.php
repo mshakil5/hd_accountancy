@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Carbon\Carbon;
-use Smalot\PdfParser\Parser;
 use Illuminate\Support\Facades\Storage;
 use App\Services\BankStatementRecognitionService;
 
@@ -54,12 +53,12 @@ class BankReconciliationController extends Controller
         $this->client($request,$businessId);
         $request->validate(['file'=>'required|file|mimes:pdf|max:20480']);
         $accounts=DB::table('reconciliation_bank_accounts')->where('client_id',$businessId)->get()->all();
-        $text=$recognizer->extractPdfText($request->file('file')->getRealPath());
+        $text=$recognizer->extractPdfTextWithOcr($request->file('file')->getRealPath());
         if (mb_strlen(trim($text)) < 35) {
             return response()->json(['detected_bank'=>null,'detected_account_last_four'=>null,
                 'confidence'=>'unknown','suggested_bank_account_id'=>null,'candidates'=>[],
                 'requires_confirmation'=>true,'ocr_required'=>true,
-                'note'=>'This PDF has insufficient selectable text. Scanned statements need a separately configured OCR service. Select and verify the bank manually.']);
+                'note'=>'This PDF has no extractable text even after OCR. Select and verify the bank manually.']);
         }
         return response()->json($recognizer->detect($text,$accounts));
     }
@@ -82,7 +81,7 @@ class BankReconciliationController extends Controller
         $isPdf=strtolower($file->getClientOriginalExtension())==='pdf';
         if ($isPdf) {
             $recognizer=app(BankStatementRecognitionService::class);
-            $text=$recognizer->extractPdfText($file->getRealPath());
+            $text=$recognizer->extractPdfTextWithOcr($file->getRealPath());
             $accounts=DB::table('reconciliation_bank_accounts')->where('client_id',$businessId)->get()->all();
             $detection=$recognizer->detect($text,$accounts);
             $chosen=$request->input('bank_account_id');
@@ -189,7 +188,8 @@ class BankReconciliationController extends Controller
         return $rows;
     }
     private function readPdf(string $path,int $businessId):array {
-        try{$text=(new Parser())->parseFile($path)->getText();}
+        $recognizer=app(BankStatementRecognitionService::class);
+        try{$text=$recognizer->extractPdfTextWithOcr($path);}
         catch(\Throwable $e){throw ValidationException::withMessages(['file'=>'Unable to read this PDF. Export a text-based PDF or CSV from your bank.']);}
         if(mb_strlen(trim($text))<35)return []; // scanned PDF: retained for accountant review
         $rows=[];$unparsed=0;$candidateRows=0;
@@ -321,6 +321,64 @@ class BankReconciliationController extends Controller
         $client=$this->client($request,$businessId);
         return response()->json(['data'=>AccountHead::where('client_credential_id',$client->client_credential_id)
              ->where('is_active',1)->orderBy('code')->get(['id','code','name'])]);
+    }
+    public function transfer(Request $request,int $businessId,int $entryId){
+        $client=$this->client($request,$businessId);
+        if($request->user() instanceof ClientCredential)abort(403,'Accountant approval required.');
+        $data=$request->validate(['linked_entry_id'=>'required|integer','account_head_id'=>'nullable|integer']);
+        return DB::transaction(function()use($request,$businessId,$entryId,$data,$client){
+            $entry=DB::table('bank_entries')->where('client_id',$businessId)->lockForUpdate()->find($entryId);abort_unless($entry,404);
+            $linkedId=(int)$data['linked_entry_id'];
+            abort_if($linkedId===$entryId,422,'Choose a different counterparty entry.');
+            $counter=DB::table('bank_entries')->where('id',$linkedId)->where('client_id',$businessId)->lockForUpdate()->first();
+            abort_unless($counter,404,'Counterparty bank entry not found.');
+            abort_unless(abs(round((float)$entry->amount*100)+round((float)$counter->amount*100))<1,409,'Transfer entries must have equal and opposite amounts.');
+            abort_unless(($entry->bank_account_id??0)!==($counter->bank_account_id??0),409,'Transfer must be between two different bank accounts.');
+            $head=$data['account_head_id']??null;
+            if($head!==null && !AccountHead::whereKey($head)->where('client_credential_id',$client->client_credential_id)->exists())abort(422,'Invalid account head.');
+            $change=['transfer_type'=>'internal_transfer','linked_bank_entry_id'=>$linkedId,'status'=>'categorized','account_head_id'=>$head,'updated_at'=>now()];
+            DB::table('bank_entries')->where('id',$entryId)->update($change);
+            DB::table('bank_entries')->where('id',$linkedId)->update(['transfer_type'=>'internal_transfer','linked_bank_entry_id'=>$entryId,'status'=>'categorized','updated_at'=>now()]);
+            $this->audit($entry,$request->user()->id,'transfer',$change);
+            return response()->json(['message'=>'Internal transfer linked. Both sides post net-zero to the P&L on approval.']);
+        });
+    }
+    public function settle(Request $request,int $businessId,int $entryId){
+        $this->client($request,$businessId);
+        if($request->user() instanceof ClientCredential)abort(403,'Accountant approval required.');
+        $data=$request->validate(['receipt_id'=>'nullable|integer','account_head_id'=>'nullable|integer',
+            'settlement_type'=>'nullable|in:exact,partial,over_payment,under_payment']);
+        return DB::transaction(function()use($request,$businessId,$entryId,$data){
+            $entry=DB::table('bank_entries')->where('client_id',$businessId)->lockForUpdate()->find($entryId);abort_unless($entry,404);
+            $type=$data['settlement_type']??'partial';
+            $bankAmt=abs((float)$entry->amount);
+            if(!empty($data['receipt_id'])){
+                $receipt=Receipt::with('detail')->where('client_id',$businessId)->findOrFail($data['receipt_id']);
+                $receiptAmt=(float)($receipt->detail?->total_amount??0);
+                $settled=min($bankAmt,$receiptAmt);$remaining=abs($bankAmt-$receiptAmt);
+                DB::table('bank_settlements')->insert(['client_id'=>$businessId,'bank_entry_id'=>$entryId,
+                    'receipt_id'=>$receipt->id,'bank_amount'=>$bankAmt,'receipt_amount'=>$receiptAmt,
+                    'settled_amount'=>$settled,'remaining_amount'=>$remaining,'settlement_type'=>$type,
+                    'status'=>'open','created_at'=>now(),'updated_at'=>now()]);
+                $new=['receipt_id'=>$receipt->id,'status'=>'categorized',
+                    'account_head_id'=>$data['account_head_id']??$receipt->detail?->account_head_id,'updated_at'=>now()];
+            } else {
+                abort_unless(!empty($data['account_head_id']),422,'Choose an account head for the settlement.');
+                $new=['status'=>'categorized','account_head_id'=>$data['account_head_id'],'updated_at'=>now()];
+            }
+            DB::table('bank_entries')->where('id',$entryId)->update($new);
+            $this->audit($entry,$request->user()->id,'settle',$new);
+            return response()->json(['message'=>'Settlement recorded. Approve the row to post it.']);
+        });
+    }
+    public function settlements(Request $request,int $businessId){
+        $this->client($request,$businessId);
+        $rows=DB::table('bank_settlements as s')->leftJoin('receipts as r','r.id','=','s.receipt_id')
+            ->where('s.client_id',$businessId)
+            ->when($request->filled('status'),fn($q)=>$q->where('s.status',$request->input('status')))
+            ->select('s.*','r.receipt_number','r.supplier')
+            ->orderByDesc('s.id')->limit(200)->get();
+        return response()->json(['data'=>$rows]);
     }
     private function audit($entry,int $actor,string $action,array $new):void {
         DB::table('bank_match_audits')->insert(['bank_entry_id'=>$entry->id,'actor_id'=>$actor,'action'=>$action,'old_values'=>json_encode($entry),'new_values'=>json_encode($new),'created_at'=>now(),'updated_at'=>now()]);

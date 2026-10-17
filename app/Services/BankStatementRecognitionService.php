@@ -29,6 +29,47 @@ class BankStatementRecognitionService
         catch (\Throwable $e) { return ''; }
     }
 
+    /**
+     * Extract text from a PDF, falling back to OCR when embedded text is missing
+     * (scanned / image-based statements). Tesseract must be installed on the
+     * server for the OCR path to work; otherwise returns whatever embedded text
+     * is available (possibly empty).
+     */
+    public function extractPdfTextWithOcr(string $path): string
+    {
+        $embedded=$this->extractPdfText($path);
+        if (mb_strlen(trim($embedded))>50) return $embedded;
+
+        $ocrText=$this->ocrViaTesseract($path);
+        if (mb_strlen(trim($ocrText))>mb_strlen(trim($embedded))) {
+            return $ocrText;
+        }
+        return $embedded;
+    }
+
+    private function ocrViaTesseract(string $path): string
+    {
+        if (!@exec('which tesseract 2>/dev/null')) return '';
+        $tmpDir=sys_get_temp_dir().'/hd_ocr_'.uniqid();
+        @mkdir($tmpDir,0777,true);
+        $prefix=$tmpDir.'/page';
+        try {
+            // Convert PDF pages to images at 200 dpi.
+            @exec(sprintf('pdftoppm -r 200 -png %s %s 2>/dev/null', escapeshellarg($path), escapeshellarg($prefix)));
+            $images=glob($prefix.'*.png');
+            $text='';
+            foreach($images as $img){
+                $out=$prefix.'.txt';
+                @exec(sprintf('tesseract %s %s -l eng 2>/dev/null', escapeshellarg($img), escapeshellarg($out)));
+                if (file_exists($out)) $text.=file_get_contents($out)."\n";
+            }
+            return $text;
+        } finally {
+            foreach(glob($prefix.'*') as $f){ @unlink($f); }
+            @rmdir($tmpDir);
+        }
+    }
+
     public function detect(string $text, array $accounts): array
     {
         // Prefer the statement header; whole-document scanning can confuse payees with issuer.

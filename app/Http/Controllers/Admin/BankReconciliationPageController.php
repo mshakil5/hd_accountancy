@@ -3,6 +3,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AccountHead;
+use App\Models\BankImport;
 use App\Models\Client;
 use App\Models\Receipt;
 use App\Services\BankLedgerPostingService;
@@ -84,12 +85,70 @@ class BankReconciliationPageController extends Controller
         $receipts=Receipt::whereIn('client_id',$businessIds)->with('detail')->latest('id')->limit(400)->get()
             ->filter(fn($r)=>$r->detail && $r->detail->total_amount!==null);
         $splits=DB::table('bank_allocation_lines')->whereIn('bank_entry_id',$entries->getCollection()->pluck('id'))->get()->groupBy('bank_entry_id');
+        $settlements=DB::table('bank_settlements')->whereIn('bank_entry_id',$entries->getCollection()->pluck('id'))->orderByDesc('id')->get()->groupBy('bank_entry_id');
         $unmatchedReceipts=$receipts->filter(function($r)use($businessIds){
             return !DB::table('bank_entries')->whereIn('client_id',$businessIds)->where('receipt_id',$r->id)->where('status','matched')->exists()
                 && !DB::table('bank_allocation_lines as l')->join('bank_entries as b','b.id','=','l.bank_entry_id')
                    ->whereIn('b.client_id',$businessIds)->where('l.receipt_id',$r->id)->exists();
         });
-        return view('admin.accounting.bank_reconciliation',compact('credentialId','businessId','bankAccountId','bankAccounts','bankOverview','entries','heads','stats','approvalStats','imports','receipts','splits','unmatchedReceipts'));
+        $fuzzyMatches=[];
+        foreach($entries as $entry){
+            $fuzzyMatches[(int)$entry->id]=$this->scoreReceipts($entry,$receipts);
+        }
+        // Open entries available to link as the other side of an internal transfer.
+        $transferCandidates=DB::table('bank_entries')->whereIn('client_id',$businessIds)
+            ->whereIn('status',['unmatched','needs_review'])
+            ->orderByDesc('transaction_date')->limit(300)
+            ->get(['id','transaction_date','description','amount','bank_account_id']);
+        return view('admin.accounting.bank_reconciliation',compact('credentialId','businessId','bankAccountId','bankAccounts','bankOverview','entries','heads','stats','approvalStats','imports','receipts','splits','settlements','unmatchedReceipts','fuzzyMatches','transferCandidates'));
+    }
+
+    /**
+     * Score uploaded receipts against a bank entry for fuzzy matching suggestions.
+     * Weights: amount 40%, date 30%, reference 15%, supplier 15%.
+     *
+     * @return array<int,array{id:int,receipt_number:string|null,supplier:string|null,amount:float,score:float,reasons:array}>
+     */
+    private function scoreReceipts(object $entry, \Illuminate\Support\Collection $receipts): array {
+        $bankAmt=abs((float)$entry->amount);
+        $bankDate=\Illuminate\Support\Carbon::parse($entry->transaction_date);
+        $desc=strtolower((string)($entry->description??''));
+        $ref=strtolower((string)($entry->reference??''));
+        $out=[];
+        foreach($receipts as $r){
+            $detail=$r->detail??null;
+            $receiptAmt=(float)($detail?->total_amount ?? 0);
+            if($receiptAmt<=0) continue;
+            // Amount score (0-1), only within 10% tolerance.
+            $amtDiff=abs($bankAmt-$receiptAmt);
+            $amtScore=$amtDiff<=max($bankAmt,$receiptAmt)*0.10 ? max(0,1-$amtDiff/max($bankAmt,$receiptAmt)) : 0;
+            if($amtScore===0) continue;
+            // Date score.
+            $rDate=$detail?->invoice_date ? \Illuminate\Support\Carbon::parse($detail->invoice_date) : null;
+            if($rDate){
+                $days=abs($bankDate->diffInDays($rDate));
+                $dateScore=$days===0 ? 1 : ($days<=3 ? 0.7 : ($days<=7 ? 0.4 : 0));
+            } else {
+                $dateScore=0.5;
+            }
+            // Reference score.
+            $rNum=strtolower((string)($r->receipt_number??''));
+            $refScore=0;
+            if($rNum && ($ref && (str_contains($ref,$rNum) || str_contains($rNum,$ref)))) $refScore=1;
+            elseif($rNum && str_contains($desc,$rNum)) $refScore=0.5;
+            // Supplier score.
+            $sup=strtolower((string)($r->supplier??''));
+            $supScore=0;
+            if($sup && str_contains($desc,$sup)) $supScore=1;
+            elseif($sup && similar_text($desc,$sup)/max(strlen($desc),strlen($sup),1)>0.6) $supScore=0.5;
+            $score=round($amtScore*0.40+$dateScore*0.30+$refScore*0.15+$supScore*0.15,2);
+            if($score>=0.50){
+                $out[]=['id'=>(int)$r->id,'receipt_number'=>$r->receipt_number,'supplier'=>$r->supplier,'amount'=>$receiptAmt,'score'=>$score,
+                    'reasons'=>array_filter(['amt'=>round($amtScore,2),'date'=>round($dateScore,2),'ref'=>round($refScore,2),'sup'=>round($supScore,2)])];
+            }
+        }
+        usort($out,fn($a,$b)=>$b['score']<=>$a['score']);
+        return array_slice($out,0,10);
     }
     public function createBankAccount(Request $request) {
         $data=$request->validate([
@@ -111,18 +170,23 @@ class BankReconciliationPageController extends Controller
     public function action(Request $request,int $entryId) {
         $data=$request->validate([
             'client_id'=>'required|integer|exists:clients,id',
-            'action'=>'required|in:match,unmatch,verify,categorize,request_receipt,split,add_note,approve,reject,reopen',
+            'action'=>'required|in:match,unmatch,verify,categorize,request_receipt,split,add_note,approve,reject,reopen,transfer,settle',
             'receipt_id'=>'nullable|integer',
             'account_head_id'=>'nullable|integer',
             'review_note'=>'nullable|string|max:2000',
             'amount'=>'nullable|numeric|between:-999999999,999999999',
             'transaction_date'=>'nullable|date_format:Y-m-d',
             'description'=>'nullable|string|max:500',
+            'linked_entry_id'=>'nullable|integer',
+            'settlement_type'=>'nullable|in:exact,partial,over_payment,under_payment',
             'allocations'=>'required_if:action,split|array|min:2|max:30',
             'allocations.*.amount'=>'required_if:action,split|numeric|gt:0',
             'allocations.*.account_head_id'=>'nullable|integer',
             'allocations.*.receipt_id'=>'nullable|integer',
             'allocations.*.memo'=>'nullable|string|max:500',
+            'allocations.*.tax_percent'=>'nullable|numeric|between:0,100',
+            'allocations.*.tax_amount'=>'nullable|numeric|min:0',
+            'allocations.*.vat_amount'=>'nullable|numeric|min:0',
         ]);
         $client=Client::findOrFail($data['client_id']);
         $posted=0;$reversed=0;
@@ -188,6 +252,9 @@ class BankReconciliationPageController extends Controller
                     $allocated+=$pence;
                     $normalized[]=['bank_entry_id'=>$entryId,'account_head_id'=>$head,'receipt_id'=>$receiptId,
                         'amount'=>number_format($pence/100,2,'.',''),'memo'=>$line['memo']??null,
+                        'tax_percent'=>(float)($line['tax_percent']??0),
+                        'tax_amount'=>(float)($line['tax_amount']??0),
+                        'vat_amount'=>(float)($line['vat_amount']??0),
                         'created_by'=>auth()->id(),'created_at'=>now(),'updated_at'=>now()];
                 }
                 if($allocated!==$expected)throw ValidationException::withMessages(['allocations'=>'Split total must exactly equal bank amount.']);
@@ -220,6 +287,35 @@ class BankReconciliationPageController extends Controller
                 abort_unless(in_array($entry->status,['matched','split','categorized']),409,'Nothing to undo.');
                 DB::table('bank_allocation_lines')->where('bank_entry_id',$entryId)->delete();
                 $change+=['status'=>'unmatched','receipt_id'=>null,'account_head_id'=>null,'matched_by'=>null,'matched_at'=>null];
+            } elseif($action==='transfer'){
+                $linkedId=(int)($data['linked_entry_id']??0);
+                abort_unless($linkedId && $linkedId!==$entryId,422,'Choose a different bank entry to link as the transfer counterparty.');
+                $counter=DB::table('bank_entries')->where('id',$linkedId)->where('client_id',$client->id)->first();
+                abort_unless($counter,404,'Counterparty bank entry not found.');
+                abort_unless(abs(round((float)$entry->amount*100)+round((float)$counter->amount*100))<1,409,'Transfer entries must have equal and opposite amounts.');
+                abort_unless(($entry->bank_account_id??0)!==($counter->bank_account_id??0),409,'Transfer must be between two different bank accounts.');
+                $change+=['transfer_type'=>'internal_transfer','linked_bank_entry_id'=>$linkedId,'status'=>'categorized','account_head_id'=>$data['account_head_id']??null,'review_note'=>'Internal transfer · linked to bank entry #'.$linkedId];
+                DB::table('bank_entries')->where('id',$linkedId)->update(['transfer_type'=>'internal_transfer','linked_bank_entry_id'=>$entryId,'status'=>'categorized','review_note'=>'Internal transfer · linked to bank entry #'.$entryId]);
+            } elseif($action==='settle'){
+                $settleType=$data['settlement_type']??'partial';
+                $receiptId=$data['receipt_id']??null;
+                if($receiptId){
+                    $receipt=Receipt::with('detail')->where('client_id',$client->id)->findOrFail($receiptId);
+                    $bankAmt=abs((float)$entry->amount);
+                    $receiptAmt=(float)($receipt->detail?->total_amount ?? 0);
+                    $settled=min($bankAmt,$receiptAmt);
+                    $remaining=abs($bankAmt-$receiptAmt);
+                    DB::table('bank_settlements')->insert([
+                        'client_id'=>$client->id,'bank_entry_id'=>$entryId,'receipt_id'=>$receiptId,
+                        'bank_amount'=>$bankAmt,'receipt_amount'=>$receiptAmt,'settled_amount'=>$settled,
+                        'remaining_amount'=>$remaining,'settlement_type'=>$settleType,'status'=>'open',
+                        'created_at'=>now(),'updated_at'=>now(),
+                    ]);
+                    $change+=['receipt_id'=>$receiptId,'status'=>'categorized','account_head_id'=>$data['account_head_id']??$receipt->detail?->account_head_id,'review_note'=>'Partial settlement · settled £'.number_format($settled,2).' of £'.number_format($bankAmt,2)];
+                } else {
+                    abort_unless($data['account_head_id'],422,'Choose an account head for the settlement.');
+                    $change+=['status'=>'categorized','account_head_id'=>$data['account_head_id'],'review_note'=>'Unmatched settlement · no receipt linked'];
+                }
             } elseif(in_array($action,['approve','reject','reopen'])){
                 // Approval state already prepared above; nothing further to reconcile.
             } else {
@@ -243,7 +339,7 @@ class BankReconciliationPageController extends Controller
                 }
             }
             // Any change to a reconciled row returns it to draft for fresh sign-off.
-            if(!in_array($action,['approve','reject','reopen','add_note']))
+            if(!in_array($action,['approve','reject','reopen','add_note','transfer','settle']))
                 $change=['reconciliation_status'=>'draft','approved_by'=>null,'approved_at'=>null]+$change;
             DB::table('bank_entries')->where('id',$entryId)->update($change);
             // Approval is the single source of truth for bank postings; reopening
@@ -306,8 +402,7 @@ class BankReconciliationPageController extends Controller
             ->with('success',$approved.' transaction(s) approved'.($posted?' and '.$posted.' ledger entr'.($posted===1?'y':'ies').' posted':'').'.'.($skipped?' '.$skipped.' skipped (unreconciled or already approved).':''));
     }
     public function statement(int $importId){
-        $item=DB::table('bank_imports')->where('id',$importId)->first();
-        abort_unless($item,404);
+        $item=BankImport::findOrFail($importId);
         abort_unless($item->storage_path && Storage::disk('local')->exists($item->storage_path),404);
         return Storage::disk('local')->download($item->storage_path,basename($item->filename));
     }
