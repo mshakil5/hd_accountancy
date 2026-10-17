@@ -306,7 +306,8 @@ class BankReconciliationPageController extends Controller
             ->with('success',$approved.' transaction(s) approved'.($posted?' and '.$posted.' ledger entr'.($posted===1?'y':'ies').' posted':'').'.'.($skipped?' '.$skipped.' skipped (unreconciled or already approved).':''));
     }
     public function statement(int $importId){
-        $item=DB::table('bank_imports')->findOrFail($importId);
+        $item=DB::table('bank_imports')->where('id',$importId)->first();
+        abort_unless($item,404);
         abort_unless($item->storage_path && Storage::disk('local')->exists($item->storage_path),404);
         return Storage::disk('local')->download($item->storage_path,basename($item->filename));
     }
