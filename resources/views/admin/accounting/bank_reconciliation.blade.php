@@ -19,6 +19,13 @@
 .select2-container .select2-selection--single{height:38px!important;border:1px solid #ced4da!important;border-radius:.25rem!important}
 .select2-container--default .select2-selection--single .select2-selection__rendered{line-height:36px!important}
 .select2-container--default .select2-selection--single .select2-selection__arrow{height:36px!important}
+ .hd-bank-overview{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.hd-bank-overview-card{display:block;border:1px solid #d9e4ee;border-radius:12px;padding:16px;background:#fff;color:#233247;text-decoration:none!important;transition:border-color .15s,box-shadow .15s}
+.hd-bank-overview-card:hover,.hd-bank-overview-card:focus{border-color:#0284c7;box-shadow:0 2px 9px rgba(2,132,199,.10);color:#233247}
+.hd-bank-overview-card.is-selected{border:2px solid #0284c7;padding:15px}
+.hd-bank-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0}
+.hd-bank-metrics strong{display:block;font-size:20px}.hd-bank-metrics small{font-size:11px;color:#64748b}
+.hd-bank-progress{background:#e2e8f0;height:8px;border-radius:8px;overflow:hidden}.hd-bank-progress span{display:block;height:100%;background:#16a34a}
 @media(max-width:850px){.hd-reconcile-row{grid-template-columns:1fr}.hd-bank-side{border-right:0;border-bottom:1px solid #dae4ef}.hd-form-grid{grid-template-columns:1fr}}
 </style>
 <div class="d-flex align-items-center justify-content-between flex-wrap mb-3">
@@ -51,7 +58,11 @@
  <form method="GET" action="{{ route('admin.bank-reconciliation.index') }}" class="row align-items-end">
   <input type="hidden" name="client_credential_id" value="{{ $presetId }}">
   <div class="col-md-3"><label>Business</label><select class="form-control" name="client_id" id="bankFilterBusiness" style="width:100%"><option value="">All businesses</option></select></div>
-  <div class="col-md-3"><label>Status</label><select class="form-control" name="status"><option value="">All</option>
+  <div class="col-md-3"><label>Bank Account</label><select class="form-control" name="bank_account_id">
+<option value="">All bank accounts</option>
+@foreach($bankAccounts as $bank)<option value="{{ $bank->id }}" {{ (int)$bankAccountId===(int)$bank->id?'selected':'' }}>{{ $bank->bank_name }} — {{ $bank->account_label }} {{ $bank->account_last_four?'••'.$bank->account_last_four:'' }}{{ !$bank->active?' (Legacy)':'' }}</option>@endforeach
+</select></div>
+<div class="col-md-3"><label>Status</label><select class="form-control" name="status"><option value="">All</option>
   @foreach(['unmatched','needs_review','matched','split','categorized'] as $s)<option value="{{ $s }}" {{ request('status')===$s?'selected':'' }}>{{ ucwords(str_replace('_',' ',$s)) }}</option>@endforeach
   </select></div>
   <div class="col-md-3"><label>Approval</label><select class="form-control" name="approval"><option value="">All</option>
@@ -60,6 +71,60 @@
   <div class="col-md-2"><button class="btn btn-primary">Filter transactions</button></div>
  </form>
 </div>
+@if($businessId)
+<div class="hd-card" id="hd-bank-account-overview">
+  <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
+    <div><h4 class="mb-1">Bank accounts overview</h4><p class="hd-small mb-0">Choose an account to reconcile only its transactions. Figures are for the selected business and include all imported statement periods.</p></div>
+    @if($bankAccountId)<a class="btn btn-outline-secondary btn-sm" href="{{ route('admin.bank-reconciliation.index', ['client_credential_id'=>$credentialId,'client_id'=>$businessId]) }}#hd-bank-account-overview">All bank accounts</a>@endif
+  </div>
+  @if(($bankOverview??collect())->isEmpty())
+    <div class="alert alert-info mb-0">No bank accounts registered yet. Use the Add account form below to register HSBC, Barclays, Halifax, or another bank.</div>
+  @else
+    @php
+      $overallTotal=$bankOverview->sum('total');
+      $overallApproved=$bankOverview->sum('approved');
+      $overallUnmatched=$bankOverview->sum('unmatched');
+      $overallReview=$bankOverview->sum('needs_review');
+    @endphp
+    <p class="hd-small mb-3"><strong>All banks:</strong> {{ number_format($overallTotal) }} imported transactions · {{ number_format($overallApproved) }} approved · {{ number_format($overallUnmatched) }} unmatched · {{ number_format($overallReview) }} need review</p>
+    <div class="hd-bank-overview">
+      @foreach($bankOverview as $overview)
+        @php $b=$overview->bank; $progress=$overview->total ? round(100*$overview->approved/$overview->total) : 0; @endphp
+        <a class="hd-bank-overview-card {{ (int)$bankAccountId===(int)$b->id ? 'is-selected' : '' }}" href="{{ route('admin.bank-reconciliation.index', ['client_credential_id'=>$credentialId,'client_id'=>$businessId,'bank_account_id'=>$b->id]) }}#hd-reconciliation-workspace" aria-label="Open reconciliation for {{ $b->bank_name }} {{ $b->account_label }}">
+          <div class="d-flex justify-content-between align-items-start">
+            <div><strong>{{ $b->bank_name }}</strong><div class="hd-small">{{ $b->account_label }} @if($b->account_last_four) · ending {{ $b->account_last_four }} @endif · {{ $b->currency }}</div></div>
+            <span class="hd-pill">{{ $b->active ? 'Active' : 'Legacy / inactive' }}</span>
+          </div>
+          <div class="hd-bank-metrics">
+            <div><small>Total transactions</small><strong>{{ number_format($overview->total) }}</strong></div>
+            <div><small>Matched receipts</small><strong>{{ number_format($overview->matched) }}</strong></div>
+            <div><small>Unmatched</small><strong>{{ number_format($overview->unmatched) }}</strong></div>
+            <div><small>Approved</small><strong>{{ number_format($overview->approved) }}</strong></div>
+            <div><small>Needs review</small><strong>{{ number_format($overview->needs_review) }}</strong></div>
+            <div><small>Pending approval</small><strong>{{ number_format($overview->pending) }}</strong></div>
+          </div>
+          <div class="hd-bank-progress"><span style="width:{{ $progress }}%"></span></div>
+          <div class="d-flex justify-content-between mt-2 hd-small"><span>{{ $progress }}% approved</span><span>Open reconciliation →</span></div>
+          <div class="hd-small mt-2">{{ $overview->statement_count }} statement(s) uploaded @if($overview->last_upload) · latest {{ \Illuminate\Support\Carbon::parse($overview->last_upload)->format('d M Y') }}@endif</div>
+        </a>
+      @endforeach
+    </div>
+    <p class="hd-small mt-3 mb-0">Matched counts reflect linked receipts; approved counts reflect accountant sign-off. The figures are different stages and should not be added together. Bank balances are not shown until statement balance verification is supported.</p>
+  @endif
+</div>
+@endif
+@if($businessId)
+<div class="hd-card"><h5>Bank accounts for this business</h5>
+<p class="hd-small">Register each bank separately (e.g. HSBC, Barclays, Halifax). Select a bank in the filter above. Never upload statements for different accounts into one bank record.</p>
+<form method="POST" action="{{ route('admin.bank-reconciliation.accounts.create') }}" class="row align-items-end">@csrf
+<input type="hidden" name="client_id" value="{{ $businessId }}"><input type="hidden" name="client_credential_id" value="{{ $credentialId }}">
+<div class="col-md-3"><label>Bank</label><input name="bank_name" class="form-control" maxlength="100" placeholder="HSBC" required></div>
+<div class="col-md-3"><label>Account nickname</label><input name="account_label" class="form-control" maxlength="100" placeholder="Business Current" required></div>
+<div class="col-md-2"><label>Last 4 digits</label><input name="account_last_four" class="form-control" maxlength="4" pattern="[0-9]{4}" placeholder="1234"></div>
+<div class="col-md-2"><label>Currency</label><select class="form-control" name="currency"><option>GBP</option><option>EUR</option><option>USD</option></select></div>
+<div class="col-md-2"><button class="btn btn-outline-primary">Add account</button></div>
+</form></div>
+@endif
 <div class="row">
 @foreach(['unmatched','needs_review','matched','split','categorized'] as $status)
 <div class="col-6 col-md-2"><div class="hd-card"><div class="hd-small">{{ ucwords(str_replace('_',' ',$status)) }}</div><h3>{{ (int)($stats[$status]??0) }}</h3></div></div>
@@ -68,18 +133,18 @@
 </div>
 <div class="hd-card">
 <h5>Imported statements</h5>
-<div class="hd-scroll"><table class="hd-table"><thead><tr><th>Uploaded</th><th>File</th><th>Type</th><th>Processing</th><th>Imported rows</th><th></th></tr></thead><tbody>
+<div class="hd-scroll"><table class="hd-table"><thead><tr><th>Uploaded</th><th>File</th><th>Bank</th><th>Type</th><th>Processing</th><th>Imported rows</th><th></th></tr></thead><tbody>
 @forelse($imports as $imp)
-<tr><td>{{ $imp->created_at }}</td><td>{{ $imp->filename }}</td><td>{{ strtoupper($imp->file_type??'csv') }}</td><td>{{ str_replace('_',' ', $imp->processing_status??'parsed') }}</td><td>{{ $imp->transaction_count }}</td>
+<tr><td>{{ $imp->created_at }}</td><td>{{ $imp->filename }}</td><td>{{ optional($bankAccounts->firstWhere('id',$imp->bank_account_id))->bank_name ?? 'Unassigned' }}</td><td>{{ strtoupper($imp->file_type??'csv') }}</td><td>{{ str_replace('_',' ', $imp->processing_status??'parsed') }}</td><td>{{ $imp->transaction_count }}</td>
 <td>@if($imp->storage_path)<a href="{{ route('admin.bank-reconciliation.statement',$imp->id) }}">View original statement</a>@endif
 <form method="POST" action="{{ route('admin.bank-reconciliation.approve-import',$imp->id) }}" class="mt-1">@csrf
  <input type="hidden" name="client_id" value="{{ $imp->client_id }}">
  <button class="btn btn-outline-success btn-sm" onclick="return confirm('Approve every reconciled transaction (matched, categorised or split) in this statement?')">Approve reconciled rows</button>
 </form></td></tr>
-@empty <tr><td colspan="6">No statements imported yet. Clients can upload from the mobile app.</td></tr>@endforelse
+@empty <tr><td colspan="7">No statements imported yet. Clients can upload from the mobile app.</td></tr>@endforelse
 </tbody></table></div>
 </div>
-<div class="hd-card hd-workspace">
+<div class="hd-card hd-workspace" id="hd-reconciliation-workspace">
 <div class="d-flex justify-content-between align-items-center flex-wrap"><div><h4>Reconcile bank transactions</h4><p class="hd-small">Bank details on the left; accountant actions and uploaded receipts on the right. Reconcile each row, then <strong>approve</strong> it. Approval locks the row and posts it to the existing account heads, so the P&amp;L and balance sheet reflect it without duplication.</p></div><span class="hd-small">{{ $entries->total() }} bank transactions in this view</span></div>
 @forelse($entries as $entry)
 @php
@@ -93,7 +158,7 @@ $rejected = $reconStatus==='rejected';
 <div class="hd-reconcile-row" id="bank-entry-{{ $entry->id }}">
  <div class="hd-bank-side">
   <div class="d-flex justify-content-between"><span class="hd-small">{{ $entry->transaction_date }}</span><span>@if($approved)<span class="hd-pill" style="background:#dcfce7;color:#15803d">Approved</span>@if($entry->journal_posted_at)<span class="hd-pill" style="background:#dbeafe;color:#1d4ed8">Posted to ledger</span>@endif @elseif($rejected)<span class="hd-pill" style="background:#fee2e2;color:#b91c1c">Rejected</span>@endif <span class="hd-pill">{{ ucwords(str_replace('_',' ',$entry->status)) }}</span></span></div>
-  <div class="hd-bank-description">{{ $entry->description }}</div>
+  <div class="hd-bank-description">{{ $entry->description }}</div><div class="hd-small">Bank: {{ optional($bankAccounts->firstWhere('id',$entry->bank_account_id))->bank_name ?? 'Unassigned' }}</div>
   @if($entry->reference)<div class="hd-small">Reference: {{ $entry->reference }}</div>@endif
   <div class="hd-amounts"><div><span class="hd-small">Spent</span><strong>{{ (float)$entry->amount<0?'£'.number_format(abs((float)$entry->amount),2):'—' }}</strong></div><div><span class="hd-small">Received</span><strong>{{ (float)$entry->amount>=0?'£'.number_format((float)$entry->amount,2):'—' }}</strong></div></div>
   <details><summary class="hd-small">More details</summary><div class="hd-small">Bank transaction #{{ $entry->id }} @if($entry->receipt_id) · Linked receipt #{{ $entry->receipt_id }}@endif</div></details>

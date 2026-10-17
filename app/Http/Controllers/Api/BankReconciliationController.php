@@ -10,6 +10,7 @@ use Illuminate\Validation\ValidationException;
 use Carbon\Carbon;
 use Smalot\PdfParser\Parser;
 use Illuminate\Support\Facades\Storage;
+use App\Services\BankStatementRecognitionService;
 
 class BankReconciliationController extends Controller
 {
@@ -20,7 +21,7 @@ class BankReconciliationController extends Controller
     }
     public function imports(Request $request, int $businessId) {
         $this->client($request,$businessId);
-        $imports=DB::table('bank_imports')->where('client_id',$businessId)->latest()->limit(100)->get();
+        $imports=DB::table('bank_imports')->where('client_id',$businessId)->when($request->filled('bank_account_id'),fn($q)=>$q->where('bank_account_id',$request->input('bank_account_id')))->latest()->limit(100)->get();
         $counts=DB::table('bank_entries')->where('client_id',$businessId)
             ->select('bank_import_id','status',DB::raw('count(*) as total'))
             ->groupBy('bank_import_id','status')->get()->groupBy('bank_import_id');
@@ -44,12 +45,57 @@ class BankReconciliationController extends Controller
         abort_unless($item && $item->storage_path && Storage::disk('local')->exists($item->storage_path),404);
         return Storage::disk('local')->download($item->storage_path,basename($item->filename));
     }
+    public function accounts(Request $request,int $businessId) {
+        $this->client($request,$businessId);
+        return response()->json(DB::table('reconciliation_bank_accounts')
+            ->where('client_id',$businessId)->orderBy('bank_name')->get());
+    }
+    public function recogniseStatement(Request $request,int $businessId, BankStatementRecognitionService $recognizer) {
+        $this->client($request,$businessId);
+        $request->validate(['file'=>'required|file|mimes:pdf|max:20480']);
+        $accounts=DB::table('reconciliation_bank_accounts')->where('client_id',$businessId)->get()->all();
+        $text=$recognizer->extractPdfText($request->file('file')->getRealPath());
+        if (mb_strlen(trim($text)) < 35) {
+            return response()->json(['detected_bank'=>null,'detected_account_last_four'=>null,
+                'confidence'=>'unknown','suggested_bank_account_id'=>null,'candidates'=>[],
+                'requires_confirmation'=>true,'ocr_required'=>true,
+                'note'=>'This PDF has insufficient selectable text. Scanned statements need a separately configured OCR service. Select and verify the bank manually.']);
+        }
+        return response()->json($recognizer->detect($text,$accounts));
+    }
+    private function resolveBankAccount(Request $request,int $businessId): int {
+        $accounts=DB::table('reconciliation_bank_accounts')->where('client_id',$businessId)->where('active',true)->get();
+        $selected=$request->input('bank_account_id');
+        if($selected!==null && $selected!=='') {
+            $match=$accounts->first(fn($a)=>(string)$a->id===(string)$selected);
+            if(!$match) throw ValidationException::withMessages(['bank_account_id'=>'Select a valid active bank account for this business.']);
+            return (int)$match->id;
+        }
+        // Backwards-compatible for a business with just one known bank account.
+        if($accounts->count()===1) return (int)$accounts->first()->id;
+        throw ValidationException::withMessages(['bank_account_id'=>'Select a bank account before uploading. Contact your accountant to register the account if necessary.']);
+    }
     public function upload(Request $request, int $businessId) {
         $this->client($request,$businessId);
-        $request->validate(['file'=>'required|file|mimes:csv,txt,pdf|max:20480','date_format'=>'nullable|string|max:10']);
+        $request->validate(['file'=>'required|file|mimes:csv,txt,pdf|max:20480','date_format'=>'nullable|string|max:10','bank_account_id'=>'nullable|integer']);
         $file=$request->file('file');
+        $isPdf=strtolower($file->getClientOriginalExtension())==='pdf';
+        if ($isPdf) {
+            $recognizer=app(BankStatementRecognitionService::class);
+            $text=$recognizer->extractPdfText($file->getRealPath());
+            $accounts=DB::table('reconciliation_bank_accounts')->where('client_id',$businessId)->get()->all();
+            $detection=$recognizer->detect($text,$accounts);
+            $chosen=$request->input('bank_account_id');
+            if (($chosen===null || $chosen==='') && count(array_filter($accounts,fn($a)=>(bool)$a->active)) > 1) {
+                throw ValidationException::withMessages(['bank_account_id'=>'Confirm the bank account before uploading this PDF. Use the statement recognition preview for a suggestion.']);
+            }
+            if ($detection['confidence']==='high' && $chosen && (int)$chosen !== (int)$detection['suggested_bank_account_id']) {
+                throw ValidationException::withMessages(['bank_account_id'=>'Statement account details appear to conflict with the selected bank account. Verify both before importing.']);
+            }
+        }
+        $bankAccountId=$this->resolveBankAccount($request,$businessId);
         $hash=hash_file('sha256',$file->getRealPath());
-        if(DB::table('bank_imports')->where('client_id',$businessId)->where('sha256',$hash)->exists())
+        if(DB::table('bank_imports')->where('client_id',$businessId)->where('bank_account_id',$bankAccountId)->where('sha256',$hash)->exists())
             throw ValidationException::withMessages(['file'=>'This bank statement was already imported.']);
         $pdf=strtolower($file->getClientOriginalExtension())==='pdf';
         $rows=$pdf ? $this->readPdf($file->getRealPath(),$businessId) : $this->readCsv($file->getRealPath(),$businessId,$request->input('date_format'));
@@ -57,9 +103,9 @@ class BankReconciliationController extends Controller
         if(!$rows && !$pdf)throw ValidationException::withMessages(['file'=>'No bank transactions found.']);
         $storagePath=$file->storeAs('bank-statements/'.$businessId,bin2hex(random_bytes(16)).'.'.($pdf?'pdf':'csv'),'local');
         try {
-            $result=DB::transaction(function()use($rows,$businessId,$hash,$file,$request,$storagePath,$pdf){
+            $result=DB::transaction(function()use($rows,$businessId,$bankAccountId,$hash,$file,$request,$storagePath,$pdf){
                 $id=DB::table('bank_imports')->insertGetId([
-                    'client_id'=>$businessId,'filename'=>mb_substr($file->getClientOriginalName(),0,255),
+                    'client_id'=>$businessId,'bank_account_id'=>$bankAccountId,'filename'=>mb_substr($file->getClientOriginalName(),0,255),
                     'sha256'=>$hash,'storage_path'=>$storagePath,'file_type'=>$pdf?'pdf':'csv',
                     'created_by'=>$request->user()->id,'transaction_count'=>count($rows),
                     'processing_status'=>$pdf?($rows?'awaiting_verification':'manual_extraction_required'):'parsed',
@@ -71,15 +117,15 @@ class BankReconciliationController extends Controller
                 foreach($rows as $row) {
                     $key=hash('sha256',implode('|',[$row['transaction_date'],$row['description'],$row['reference'],$row['amount']]));
                     $occurrence=($seen[$key]??0)+1;$seen[$key]=$occurrence;
-                    $already=DB::table('bank_entries')->where('client_id',$businessId)
+                    $already=DB::table('bank_entries')->where('client_id',$businessId)->where('bank_account_id',$bankAccountId)
                         ->where('line_fingerprint',$key)->where('line_occurrence',$occurrence)->exists();
                     if($already){$skipped++;continue;}
-                    $row['bank_import_id']=$id;$row['line_fingerprint']=$key;$row['line_occurrence']=$occurrence;
+                    $row['bank_import_id']=$id;$row['bank_account_id']=$bankAccountId;$row['line_fingerprint']=$key;$row['line_occurrence']=$occurrence;
                     $row['status']=$pdf?'needs_review':'unmatched';
                     DB::table('bank_entries')->insert($row);$added++;
                 }
                 DB::table('bank_imports')->where('id',$id)->update(['transaction_count'=>$added]);
-                return ['import_id'=>$id,'count'=>$added,'duplicates_skipped'=>$skipped,'requires_review'=>$pdf,
+                return ['import_id'=>$id,'bank_account_id'=>$bankAccountId,'count'=>$added,'duplicates_skipped'=>$skipped,'requires_review'=>$pdf,
                     'message'=>$pdf && !$rows?'PDF uploaded safely, but the bank layout could not be extracted reliably. Please provide a CSV or ask your accountant to review the original.':'Bank statement imported.'];
             });
         } catch(\Throwable $e) {Storage::disk('local')->delete($storagePath);throw $e;}
@@ -146,21 +192,25 @@ class BankReconciliationController extends Controller
         try{$text=(new Parser())->parseFile($path)->getText();}
         catch(\Throwable $e){throw ValidationException::withMessages(['file'=>'Unable to read this PDF. Export a text-based PDF or CSV from your bank.']);}
         if(mb_strlen(trim($text))<35)return []; // scanned PDF: retained for accountant review
-        $rows=[];$unparsed=0;
+        $rows=[];$unparsed=0;$candidateRows=0;
         // Conservative generic UK bank statement layout: date + payee/description +
         // signed final amount. Ambiguous tables, debit/credit/balance layouts and
         // documents requiring OCR are rejected rather than silently misclassified.
         foreach(preg_split('/\\R/u',$text) as $line){
             $line=trim(preg_replace('/\\s+/u',' ',$line));
-            if(!preg_match('/^(\\d{2}[\\/\\-]\\d{2}[\\/\\-]\\d{4})\\s+(.+?)\\s+([+-]?[£]?\\s*[\\d,]+\\.\\d{2}|\\([£]?[\\d,]+\\.\\d{2}\\))$/u',$line,$m))continue;
-            try{$dt=Carbon::createFromFormat('!d/m/Y',str_replace('-','/',$m[1]));}catch(\Throwable $e){continue;}
-            if(!$dt || $dt->format('d/m/Y')!==str_replace('-','/',$m[1]))continue;
+            // Accept only unambiguous signed amounts and recognised UK date styles.
+            if(!preg_match('/^(\d{2}[\/\-]\d{2}[\/\-]\d{4}|\d{1,2}\s+[A-Za-z]{3}\s+\d{4})\s+(.+?)\s+([+-]\s*£?\s*[\d,]+\.\d{2}|\(£?[\d,]+\.\d{2}\))$/u',$line,$m))continue;
+            $dateInput=preg_replace('/\s+/',' ',trim($m[1]));
+            $fmt=preg_match('/[A-Za-z]/',$dateInput)?'!j M Y':'!d/m/Y';
+            if($fmt==='!d/m/Y')$dateInput=str_replace('-','/',$dateInput);
+            try{$dt=Carbon::createFromFormat($fmt,$dateInput);}catch(\Throwable $e){continue;}
+            if(!$dt || $dt->format(substr($fmt,1))!==$dateInput)continue;
             $desc=trim($m[2]);$amountString=trim(str_replace('£','',$m[3]));
             // Do not invent debit/credit direction: PDF must show an explicit + or -.
             if(!preg_match('/^[+-]|^\\(/',$amountString)){$unparsed++;continue;}
             $rows[]=$this->makeRow($businessId,$dt->format('Y-m-d'),$desc,'',$this->parseMoney($amountString));
         }
-        if(!$rows || $unparsed>0)return []; // preserve original file, never guess totals
+        if(!$rows || $unparsed>0 || $candidateRows!==count($rows))return []; // preserve original file, never guess totals
 
         return $rows;
     }
@@ -168,6 +218,7 @@ class BankReconciliationController extends Controller
         $this->client($request,$businessId);
         $query=DB::table('bank_entries as b')->leftJoin('receipts as r','r.id','=','b.receipt_id')->where('b.client_id',$businessId)->select('b.*','r.receipt_number');
         if($request->filled('status'))$query->where('b.status',$request->input('status'));
+        if($request->filled('bank_account_id'))$query->where('b.bank_account_id',$request->input('bank_account_id'));
         if($request->filled('import_id'))$query->where('b.bank_import_id',$request->integer('import_id'));
         $perPage=min(max((int)$request->input('per_page',50),1),200);
         return response()->json($query->orderByDesc('b.transaction_date')->orderByDesc('b.id')->paginate($perPage));

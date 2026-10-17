@@ -3,8 +3,11 @@
 namespace App\Services;
 
 use App\Models\Transaction;
+use App\Models\AccountHead;
+use App\Models\Receipt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Posts approved bank reconciliations to the accounting ledger.
@@ -36,10 +39,12 @@ class BankLedgerPostingService
         if (!empty($entry->journal_posted_at)) return 0;
         if (!in_array($entry->status, ['matched', 'categorized', 'split'], true)) return 0;
 
+        $this->assertReadyForApproval($entry);
+        $receiptPosted = $this->postLinkedReceipts($entry, $actorId);
         $legs = $this->legsFor($entry);
         $type = ((float) $entry->amount < 0) ? 'payable' : 'receivable';
 
-        $posted = 0;
+        $posted = $receiptPosted;
         foreach ($legs as $leg) {
             $amount = round((float) $leg['amount'], 2);
             if ($amount <= 0) continue;
@@ -69,6 +74,124 @@ class BankLedgerPostingService
             ->update(['journal_posted_at' => now(), 'updated_at' => now()]);
 
         return $posted;
+    }
+
+    /**
+     * Reject accounting approval when a linked receipt has no recognised journal.
+     * Financial reports must never indicate an approved match that has not posted.
+     * This is a guard, NOT the forthcoming receipt-to-bank-led posting conversion.
+     */
+    public function assertReadyForApproval(object $entry): void
+    {
+        if (!in_array($entry->status, ['matched', 'categorized', 'split'], true)) {
+            throw ValidationException::withMessages(['reconciliation' => 'Match, categorise or split this transaction first.']);
+        }
+        if (round(abs((float) $entry->amount), 2) <= 0) {
+            throw ValidationException::withMessages(['reconciliation' => 'Zero-amount bank entries cannot be approved.']);
+        }
+        if ($entry->status === 'matched') {
+            $this->assertReceiptPosted($entry->receipt_id, $entry->client_id);
+        } elseif ($entry->status === 'categorized') {
+            if (!$entry->account_head_id) {
+                throw ValidationException::withMessages(['reconciliation' => 'Choose an account head before approval.']);
+            }
+            $this->assertAccountHeadOwned((int) $entry->account_head_id, (int) $entry->client_id);
+        } else {
+            $lines = DB::table('bank_allocation_lines')->where('bank_entry_id', $entry->id)->get();
+            if ($lines->count() < 2) {
+                throw ValidationException::withMessages(['reconciliation' => 'Split needs two or more allocation lines.']);
+            }
+            $sum = 0;
+            foreach ($lines as $line) {
+                $sum += (int) round((float) $line->amount * 100);
+                if (!$line->receipt_id && !$line->account_head_id) {
+                    throw ValidationException::withMessages(['reconciliation' => 'Every split line needs a receipt or an account head.']);
+                }
+                if ($line->account_head_id) $this->assertAccountHeadOwned((int) $line->account_head_id, (int) $entry->client_id);
+                if ($line->receipt_id) $this->assertReceiptPosted($line->receipt_id, $entry->client_id);
+                if ($line->receipt_id && config('reconciliation.bank_led', false) && !Transaction::where('receipt_id', $line->receipt_id)->exists()) {
+                    // Never post a full receipt journal from a partial allocation.
+                    $full = (float) DB::table('receipt_details')->where('receipt_id',$line->receipt_id)->value('total_amount');
+                    if (abs(round($full*100)-round((float)$line->amount*100)) > 0) {
+                        throw ValidationException::withMessages(['reconciliation'=>'Partial receipt settlement requires manual liability treatment; cannot create a full receipt journal.']);
+                    }
+                }
+            }
+            if ($sum !== (int) round(abs((float) $entry->amount) * 100)) {
+                throw ValidationException::withMessages(['reconciliation' => 'Split allocations do not equal the bank amount.']);
+            }
+        }
+    }
+
+    private function assertAccountHeadOwned(int $headId, int $clientId): void
+    {
+        $credentialId = DB::table('clients')->where('id', $clientId)->value('client_credential_id');
+        if (!$credentialId || !DB::table('account_heads')->where('id', $headId)
+            ->where('client_credential_id', $credentialId)->exists()) {
+            throw ValidationException::withMessages(['reconciliation' => 'Allocation account head does not belong to this client.']);
+        }
+    }
+
+    private function assertReceiptPosted(?int $receiptId, int $clientId): void
+    {
+        if (!$receiptId || !DB::table('receipts')->where('id', $receiptId)->where('client_id', $clientId)->exists()) {
+            throw ValidationException::withMessages(['reconciliation' => 'Linked receipt is missing or belongs to another client.']);
+        }
+        if (!Transaction::where('receipt_id', $receiptId)->exists()) {
+            if (!config('reconciliation.bank_led', false)) {
+                throw ValidationException::withMessages(['reconciliation' => 'This receipt has not yet produced an accounting entry. Review receipt approval before bank approval.']);
+            }
+            $receipt = Receipt::with('detail')->find($receiptId);
+            if (!$receipt || !in_array($receipt->status, ['ready','archived'], true) || !$receipt->detail || !$receipt->detail->account_head_id || (float)$receipt->detail->total_amount <= 0) {
+                throw ValidationException::withMessages(['reconciliation' => 'Validate the receipt details and account head before reconciling.']);
+            }
+            $this->assertAccountHeadOwned((int)$receipt->detail->account_head_id, $clientId);
+        }
+    }
+
+    /** Post receipt recognition on bank approval only when no historical journal exists. */
+    private function postLinkedReceipts(object $entry, int $actorId): int
+    {
+        if (!config('reconciliation.bank_led', false)) return 0;
+        $ids = $entry->status === 'matched' ? [(int)$entry->receipt_id] : [];
+        if ($entry->status === 'split') {
+            $ids = DB::table('bank_allocation_lines')->where('bank_entry_id',$entry->id)
+                ->whereNotNull('receipt_id')->pluck('receipt_id')->map(fn($id)=>(int)$id)->all();
+        }
+        $count=0;
+        foreach(array_unique($ids) as $id) {
+            if (Transaction::where('receipt_id',$id)->exists()) continue;
+            $receipt=Receipt::with('detail')->where('client_id',$entry->client_id)->findOrFail($id);
+            $detail=$receipt->detail;
+            $head=AccountHead::with('accountType')->findOrFail($detail->account_head_id);
+            $type=($head->accountType?->normal_balance === 'debit') ? 'payable' : 'receivable';
+            $net=(float)($detail->net_amount ?? 0);
+            $tax=(float)($detail->tax_amount ?? 0);
+            $vat=(float)($detail->vat_amount ?? 0);
+            $gross=(float)$detail->total_amount;
+            // Existing reports use the same transaction conventions as receipt validation.
+            $base=Transaction::create([
+                'transaction_uid'=>'TXN-'.strtoupper(Str::random(10)),
+                'receipt_id'=>$id,'bank_entry_id'=>$entry->id,
+                'client_id'=>$entry->client_id,'entry_date'=>$entry->transaction_date,
+                'account_head_id'=>$head->id,'type'=>$type,
+                'amount'=>$net,'tax_percent'=>0,'tax_amount'=>$tax,'vat_amount'=>$vat,
+                'total_amount'=>$gross,'payment_method'=>'bank','parent_id'=>null,'created_by'=>$actorId,
+            ]);
+            $count++;
+            if ((bool)$detail->paid) {
+                Transaction::create([
+                    'transaction_uid'=>'TXN-'.strtoupper(Str::random(10)),
+                    'receipt_id'=>$id,'bank_entry_id'=>$entry->id,'client_id'=>$entry->client_id,
+                    'entry_date'=>$entry->transaction_date,'account_head_id'=>$head->id,
+                    'type'=>$type==='payable'?'paid':'received',
+                    'amount'=>$gross,'tax_percent'=>0,'tax_amount'=>0,'vat_amount'=>0,
+                    'total_amount'=>$gross,'payment_method'=>'bank','parent_id'=>$base->id,'created_by'=>$actorId,
+                ]);
+                $count++;
+            }
+        }
+        return $count;
     }
 
     /**

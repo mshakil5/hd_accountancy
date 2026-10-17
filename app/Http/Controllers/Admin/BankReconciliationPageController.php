@@ -19,6 +19,11 @@ class BankReconciliationPageController extends Controller
         // Same entry point as the receipts page: pick a client credential first, then a business under it.
         $credentialId=(int)$request->query('client_credential_id',0);
         $businessId=(int)$request->query('client_id',0);
+        $bankAccountId=(int)$request->query('bank_account_id',0);
+        $bankAccounts=$businessId ? DB::table('reconciliation_bank_accounts')->where('client_id',$businessId)->orderBy('bank_name')->get() : collect();
+        if($bankAccountId && (!$businessId || !$bankAccounts->contains('id',$bankAccountId))) {
+            abort(422,'Choose a bank account belonging to the selected business.');
+        }
         $businessIds=$credentialId
             ? Client::where('client_credential_id',$credentialId)->where('status',1)->pluck('id')->all()
             : [];
@@ -27,20 +32,55 @@ class BankReconciliationPageController extends Controller
         if(!$credentialId||!$businessIds){
             // Nothing selected yet — render the picker with an empty workspace.
             return view('admin.accounting.bank_reconciliation',[
-                'credentialId'=>$credentialId,'businessId'=>$businessId,
+                'credentialId'=>$credentialId,'businessId'=>$businessId,'bankAccounts'=>$bankAccounts,'bankAccountId'=>$bankAccountId,'bankOverview'=>collect(),
                 'entries'=>DB::table('bank_entries')->whereRaw('1 = 0')->paginate(30),
                 'heads'=>collect(),'stats'=>collect(),'approvalStats'=>collect(),
                 'imports'=>collect(),'receipts'=>collect(),'splits'=>collect(),'unmatchedReceipts'=>collect(),
             ]);
         }
-        $entries=DB::table('bank_entries')->whereIn('client_id',$businessIds)
+        // Overview is calculated across ALL bank accounts for this business, regardless of
+        // the current account/status filter. One row per bank; no cross-business totals.
+        $bankOverview=collect();
+        if ($businessId && count($businessIds) === 1) {
+            $entryTotals=DB::table('bank_entries')->where('client_id',$businessId)
+                ->whereNotNull('bank_account_id')
+                ->select('bank_account_id')
+                ->selectRaw('COUNT(*) AS total')
+                ->selectRaw("SUM(CASE WHEN reconciliation_status = 'approved' THEN 1 ELSE 0 END) AS approved")
+                ->selectRaw("SUM(CASE WHEN status = 'matched' THEN 1 ELSE 0 END) AS matched")
+                ->selectRaw("SUM(CASE WHEN status = 'unmatched' THEN 1 ELSE 0 END) AS unmatched")
+                ->selectRaw("SUM(CASE WHEN status = 'needs_review' THEN 1 ELSE 0 END) AS needs_review")
+                ->selectRaw("SUM(CASE WHEN reconciliation_status IS NULL OR reconciliation_status <> 'approved' THEN 1 ELSE 0 END) AS pending")
+                ->groupBy('bank_account_id')->get()->keyBy('bank_account_id');
+            $importTotals=DB::table('bank_imports')->where('client_id',$businessId)
+                ->whereNotNull('bank_account_id')->select('bank_account_id')
+                ->selectRaw('COUNT(*) AS statement_count')
+                ->selectRaw('MAX(created_at) AS last_upload')
+                ->groupBy('bank_account_id')->get()->keyBy('bank_account_id');
+            $bankOverview=$bankAccounts->map(function($bank)use($entryTotals,$importTotals){
+                $counts=$entryTotals->get($bank->id);
+                $imports=$importTotals->get($bank->id);
+                return (object)[
+                    'bank'=>$bank,'total'=>(int)($counts->total??0),
+                    'approved'=>(int)($counts->approved??0),
+                    'matched'=>(int)($counts->matched??0),
+                    'unmatched'=>(int)($counts->unmatched??0),
+                    'needs_review'=>(int)($counts->needs_review??0),
+                    'pending'=>(int)($counts->pending??0),
+                    'statement_count'=>(int)($imports->statement_count??0),
+                    'last_upload'=>$imports->last_upload??null,
+                ];
+            });
+        }
+        $scopeEntries=fn()=>DB::table('bank_entries')->whereIn('client_id',$businessIds)->when($bankAccountId,fn($q)=>$q->where('bank_account_id',$bankAccountId));
+        $entries=$scopeEntries()
             ->when($request->filled('status'),fn($q)=>$q->where('status',$request->input('status')))
             ->when($request->filled('approval'),fn($q)=>$q->where('reconciliation_status',$request->input('approval')))
             ->orderByDesc('transaction_date')->orderByDesc('id')->paginate(30)->withQueryString();
         $heads=AccountHead::where('client_credential_id',$credentialId)->orderBy('code')->get(['id','code','name']);
-        $stats=DB::table('bank_entries')->whereIn('client_id',$businessIds)->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total','status');
-        $approvalStats=DB::table('bank_entries')->whereIn('client_id',$businessIds)->selectRaw('reconciliation_status, count(*) as total')->groupBy('reconciliation_status')->pluck('total','reconciliation_status');
-        $imports=DB::table('bank_imports')->whereIn('client_id',$businessIds)->latest()->limit(10)->get();
+        $stats=$scopeEntries()->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total','status');
+        $approvalStats=$scopeEntries()->selectRaw('reconciliation_status, count(*) as total')->groupBy('reconciliation_status')->pluck('total','reconciliation_status');
+        $imports=DB::table('bank_imports')->whereIn('client_id',$businessIds)->when($bankAccountId,fn($q)=>$q->where('bank_account_id',$bankAccountId))->latest()->limit(10)->get();
         $receipts=Receipt::whereIn('client_id',$businessIds)->with('detail')->latest('id')->limit(400)->get()
             ->filter(fn($r)=>$r->detail && $r->detail->total_amount!==null);
         $splits=DB::table('bank_allocation_lines')->whereIn('bank_entry_id',$entries->getCollection()->pluck('id'))->get()->groupBy('bank_entry_id');
@@ -49,7 +89,24 @@ class BankReconciliationPageController extends Controller
                 && !DB::table('bank_allocation_lines as l')->join('bank_entries as b','b.id','=','l.bank_entry_id')
                    ->whereIn('b.client_id',$businessIds)->where('l.receipt_id',$r->id)->exists();
         });
-        return view('admin.accounting.bank_reconciliation',compact('credentialId','businessId','entries','heads','stats','approvalStats','imports','receipts','splits','unmatchedReceipts'));
+        return view('admin.accounting.bank_reconciliation',compact('credentialId','businessId','bankAccountId','bankAccounts','bankOverview','entries','heads','stats','approvalStats','imports','receipts','splits','unmatchedReceipts'));
+    }
+    public function createBankAccount(Request $request) {
+        $data=$request->validate([
+            'client_id'=>'required|integer|exists:clients,id',
+            'bank_name'=>'required|string|max:100',
+            'account_label'=>'required|string|max:100',
+            'account_last_four'=>'nullable|digits:4',
+            'currency'=>'required|in:GBP,EUR,USD',
+        ]);
+        $client=Client::findOrFail($data['client_id']);
+        // Only allow account management within the selected credential/business.
+        abort_unless((int)$client->client_credential_id===(int)$request->input('client_credential_id'),403);
+        $data['created_at']=now();$data['updated_at']=now();
+        DB::table('reconciliation_bank_accounts')->insert($data);
+        return redirect()->route('admin.bank-reconciliation.index',[
+            'client_credential_id'=>$client->client_credential_id,'client_id'=>$client->id,
+        ])->with('success','Bank account added. Select it when uploading statements.');
     }
     public function action(Request $request,int $entryId) {
         $data=$request->validate([
@@ -80,6 +137,7 @@ class BankReconciliationPageController extends Controller
                     abort_if($isApproved,409,'Reconciliation is already approved.');
                     abort_unless(in_array($entry->status,['matched','categorized','split']),409,'Match, categorise or split the transaction before approving.');
                     if($entry->status==='split')abort_unless($this->splitBalances($entry),409,'Split does not balance; review the allocations before approving.');
+                    $this->posting->assertReadyForApproval($entry);
                     $change+=['reconciliation_status'=>'approved','approved_by'=>auth()->id(),'approved_at'=>now()];
                 }elseif($action==='reject'){
                     abort_if($isApproved,409,'Reopen the approved reconciliation before rejecting it.');
@@ -232,6 +290,8 @@ class BankReconciliationPageController extends Controller
                 if($entry->status==='split' && !$this->splitBalances($entry)){
                     $skipped++;continue;
                 }
+                try { $this->posting->assertReadyForApproval($entry); }
+                catch (ValidationException $exception) { $skipped++;continue; }
                 $change=['reconciliation_status'=>'approved','approved_by'=>auth()->id(),
                     'approved_at'=>now(),'updated_at'=>now()];
                 DB::table('bank_entries')->where('id',$entry->id)->update($change);
