@@ -281,6 +281,7 @@ $(function(){
             } else {
                 toastr.success(d.message, "Success!");
                 closeForm();
+            }
         });
     });
 
