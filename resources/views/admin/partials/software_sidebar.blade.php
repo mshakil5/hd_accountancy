@@ -258,20 +258,20 @@
                 </li>
                 @endif
 
-                @if (in_array('23', array_map('strval', (array) $sidebarPerms)))
-                <li class="nav-item {{ request()->routeIs('accountTypes') ? 'active' : '' }}">
-                    <a class="nav-link" href="{{ route('accountTypes') }}">
-                        <i class="bi bi-diagram-3"></i>
-                        <span>Account Types</span>
-                    </a>
-                </li>
-                @endif
-
                 @if (in_array('24', array_map('strval', (array) $sidebarPerms)))
                 <li class="nav-item {{ request()->routeIs('accountHeads') ? 'active' : '' }}">
                     <a class="nav-link" href="{{ route('accountHeads') }}">
                         <i class="bi bi-cash-stack"></i>
                         <span>Chart of Accounts</span>
+                    </a>
+                </li>
+                @endif
+
+                @if (in_array('23', array_map('strval', (array) $sidebarPerms)))
+                <li class="nav-item {{ request()->routeIs('accountTypes') ? 'active' : '' }}">
+                    <a class="nav-link" href="{{ route('accountTypes') }}">
+                        <i class="bi bi-diagram-3"></i>
+                        <span>Account Types</span>
                     </a>
                 </li>
                 @endif
