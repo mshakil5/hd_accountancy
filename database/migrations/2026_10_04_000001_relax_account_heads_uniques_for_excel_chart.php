@@ -4,14 +4,18 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * Excel chart (codes 101-604) needs:
+ *  - duplicate head names across types/scopes (Director Loan Account 509 + 554)
+ *  - the same head name as the legacy chart during the transition
+ *    (Sales Revenue 4001 vs 101)
+ * Uniqueness is enforced per scope in the AccountHeadController, so the
+ * DB-level single-column uniques are relaxed to plain indexes.
+ */
 return new class extends Migration
 {
     /**
-     * Excel chart (101-604) needs:
-     *  - duplicate head name across types/scopes (Director Loan Account 509 + 554)
-     *  - same head name as legacy chart (Sales Revenue 4001 vs 101) during transition
-     * Controller already scopes uniqueness by client_credential_id in app code,
-     * so DB-level single-column uniques are relaxed to plain indexes.
+     * Run the migrations.
      */
     public function up(): void
     {
@@ -26,6 +30,9 @@ return new class extends Migration
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::table('account_heads', function (Blueprint $table) {
@@ -34,9 +41,8 @@ return new class extends Migration
         });
 
         Schema::table('account_heads', function (Blueprint $table) {
-            // Note: will fail if duplicates exist; that is intentional.
-            $table->unique('code', 'account_heads_code_unique');
-            $table->unique('name', 'account_heads_name_unique');
+            $table->unique('code');
+            $table->unique('name');
         });
     }
 };

@@ -258,7 +258,7 @@ class BankReconciliationController extends Controller
             $receiptTotal=(float)($receipt->detail?->total_amount??0);
             abort_unless($receiptTotal>0 && abs($receiptTotal-abs((float)$entry->amount))<0.01,409,'Receipt and bank transaction amounts do not match. Partial payments require manual review.');
             $head=$data['account_head_id']??$receipt->detail?->account_head_id;
-            if($head!==null && !AccountHead::whereKey($head)->where('client_credential_id',$client->client_credential_id)->exists())abort(422,'Invalid account head.');
+            if($head!==null && !AccountHead::whereKey($head)->where('client_credential_id',$client->client_credential_id)->whereNotNull('account_type_id')->exists())abort(422,'Invalid account head.');
             $new=['status'=>'matched','receipt_id'=>$receipt->id,'account_head_id'=>$head,'matched_by'=>$request->user()->id,'matched_at'=>now(),'updated_at'=>now()];
             DB::table('bank_entries')->where('id',$entryId)->update($new);
             $this->audit($entry,$request->user()->id,'match',$new);
@@ -298,7 +298,7 @@ class BankReconciliationController extends Controller
         $client=$this->client($request,$businessId);
         if($request->user() instanceof ClientCredential)abort(403,'Accountant approval required.');
         $data=$request->validate(['account_head_id'=>'required|integer','review_note'=>'nullable|string|max:2000']);
-        abort_unless(AccountHead::whereKey($data['account_head_id'])->where('client_credential_id',$client->client_credential_id)->exists(),422,'Invalid account head.');
+        abort_unless(AccountHead::whereKey($data['account_head_id'])->where('client_credential_id',$client->client_credential_id)->whereNotNull('account_type_id')->exists(),422,'Invalid account head.');
         return DB::transaction(function()use($request,$businessId,$entryId,$data) {
             $entry=DB::table('bank_entries')->where('client_id',$businessId)->lockForUpdate()->find($entryId);abort_unless($entry,404);
             abort_if(in_array($entry->status,['matched','needs_review']),409,'Verify or unmatch the transaction first.');
@@ -320,7 +320,7 @@ class BankReconciliationController extends Controller
     public function accountHeads(Request $request,int $businessId){
         $client=$this->client($request,$businessId);
         return response()->json(['data'=>AccountHead::where('client_credential_id',$client->client_credential_id)
-             ->where('is_active',1)->orderBy('code')->get(['id','code','name'])]);
+             ->where('is_active',1)->whereNotNull('account_type_id')->orderBy('code')->get(['id','code','name'])]);
     }
     public function transfer(Request $request,int $businessId,int $entryId){
         $client=$this->client($request,$businessId);
@@ -335,7 +335,7 @@ class BankReconciliationController extends Controller
             abort_unless(abs(round((float)$entry->amount*100)+round((float)$counter->amount*100))<1,409,'Transfer entries must have equal and opposite amounts.');
             abort_unless(($entry->bank_account_id??0)!==($counter->bank_account_id??0),409,'Transfer must be between two different bank accounts.');
             $head=$data['account_head_id']??null;
-            if($head!==null && !AccountHead::whereKey($head)->where('client_credential_id',$client->client_credential_id)->exists())abort(422,'Invalid account head.');
+            if($head!==null && !AccountHead::whereKey($head)->where('client_credential_id',$client->client_credential_id)->whereNotNull('account_type_id')->exists())abort(422,'Invalid account head.');
             $change=['transfer_type'=>'internal_transfer','linked_bank_entry_id'=>$linkedId,'status'=>'categorized','account_head_id'=>$head,'updated_at'=>now()];
             DB::table('bank_entries')->where('id',$entryId)->update($change);
             DB::table('bank_entries')->where('id',$linkedId)->update(['transfer_type'=>'internal_transfer','linked_bank_entry_id'=>$entryId,'status'=>'categorized','updated_at'=>now()]);

@@ -322,10 +322,17 @@ class AccountingController extends Controller
         if (empty($directIds) && empty($adminIds)) {
             $adminIds = \App\Models\AccountType::where('category', 'expense')->pluck('id')->all();
         }
-        $turnoverRows = $excelRowsForTypes($turnoverIds);
+        // Head-first flow allows new types under heads; make sure they still
+        // land in the Excel sections (grouped by category) instead of vanishing.
+        // Titles keep the canonical type names above.
+        $revenueTypeIds = \App\Models\AccountType::where('is_active', 1)->where('category', 'revenue')->pluck('id')->all();
+        $expenseTypeIds = \App\Models\AccountType::where('is_active', 1)->where('category', 'expense')->pluck('id')->all();
+        $excelTurnoverTypeIds = array_values(array_unique(array_merge($turnoverIds, array_diff($revenueTypeIds, $otherIds))));
+        $excelAdminTypeIds    = array_values(array_unique(array_merge($adminIds, array_diff($expenseTypeIds, $directIds))));
+        $turnoverRows = $excelRowsForTypes($excelTurnoverTypeIds);
         $otherRows = $excelRowsForTypes($otherIds);
         $directRows = $excelRowsForTypes($directIds);
-        $adminRows = $excelRowsForTypes($adminIds);
+        $adminRows = $excelRowsForTypes($excelAdminTypeIds);
         // A = all turnover + other-income heads. B = ALL direct heads (true sum).
         // C = A-B (Gross Profit). D = all admin heads. E = C-D (Operating Profit).
         $excelA = $excelSumRows(array_merge($turnoverRows, $otherRows));
@@ -734,11 +741,21 @@ class AccountingController extends Controller
         if (empty($capitalIds)) {
             $capitalIds = \App\Models\AccountType::where('category', 'equity')->pluck('id')->all();
         }
+        // Head-first flow allows new types under heads — unmatched asset,
+        // liability and equity types still land in the Excel sections
+        // (current assets / current liabilities / capital) instead of vanishing.
+        // Titles keep the canonical type names above.
+        $assetTypeIds  = \App\Models\AccountType::where('is_active', 1)->where('category', 'asset')->pluck('id')->all();
+        $liabTypeIds   = \App\Models\AccountType::where('is_active', 1)->where('category', 'liability')->pluck('id')->all();
+        $equityTypeIds = \App\Models\AccountType::where('is_active', 1)->where('category', 'equity')->pluck('id')->all();
+        $excelCurrentIds   = array_values(array_unique(array_merge($currentIds, array_diff($assetTypeIds, $fixedIds))));
+        $excelCurrLiabIds  = array_values(array_unique(array_merge($currLiabIds, array_diff($liabTypeIds, $currLiabIds, $nonCurrIds))));
+        $excelCapitalIds   = array_values(array_unique(array_merge($capitalIds, array_diff($equityTypeIds, $capitalIds))));
         $fixedRows = $bsRowsForTypes($fixedIds);
-        $currentRows = $bsRowsForTypes($currentIds);
-        $currLiabRows = $bsRowsForTypes($currLiabIds);
+        $currentRows = $bsRowsForTypes($excelCurrentIds);
+        $currLiabRows = $bsRowsForTypes($excelCurrLiabIds);
         $nonCurrRows = $bsRowsForTypes($nonCurrIds);
-        $capitalRows = $bsRowsForTypes($capitalIds);
+        $capitalRows = $bsRowsForTypes($excelCapitalIds);
         // A = fixed assets. B = current assets (true sum). C = current liabilities.
         // B-C = net current. A+B-C = assets less current. D = non-current.
         // Net assets = A+B-C-D. Capital = ALL capital heads.

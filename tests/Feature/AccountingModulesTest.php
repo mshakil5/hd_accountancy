@@ -133,11 +133,16 @@ class AccountingModulesTest extends TestCase
 
     public function test_type_store_update_delete_toggle(): void
     {
+        // Head-first: new types must be made under an Account Head.
+        $headId = $this->headIds['301'] ?? DB::table('account_heads')->whereNull('client_credential_id')->value('id');
         $this->assertEquals(303, $this->tc->store(new Request(['name' => 'Turnover', 'category' => 'revenue', 'normal_balance' => 'credit']))->getData(true)['status']);
-        $this->assertEquals(300, $this->tc->store(new Request(['name' => 'Mod Test Type', 'category' => 'expense', 'normal_balance' => 'debit']))->getData(true)['status']);
+        $this->assertEquals(303, $this->tc->store(new Request(['name' => 'Turnover', 'category' => 'revenue', 'normal_balance' => 'credit', 'account_head_id' => $headId]))->getData(true)['status']);
+        $this->assertEquals(300, $this->tc->store(new Request(['name' => 'Mod Test Type', 'category' => 'expense', 'normal_balance' => 'debit', 'account_head_id' => $headId]))->getData(true)['status']);
         $id = DB::table('account_types')->where('name', 'Mod Test Type')->value('id');
 
         $this->assertEquals('Mod Test Type', $this->tc->edit($id)->getData(true)['name']);
+        // linked to the head it was created under
+        $this->assertEquals($headId, DB::table('account_types')->where('id', $id)->value('account_head_id'));
         // update to existing name blocked; self-update allowed
         $this->assertEquals(303, $this->tc->update(new Request(['codeid' => $id, 'name' => 'Turnover', 'category' => 'expense', 'normal_balance' => 'debit']))->getData(true)['status']);
         $this->assertEquals(300, $this->tc->update(new Request(['codeid' => $id, 'name' => 'Mod Test Type', 'category' => 'expense', 'normal_balance' => 'debit']))->getData(true)['status']);

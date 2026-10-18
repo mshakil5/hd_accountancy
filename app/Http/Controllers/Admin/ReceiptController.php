@@ -159,6 +159,7 @@ class ReceiptController extends Controller
 
         $heads = AccountHead::with('taxRate')
             ->where('is_active', true)
+            ->whereNotNull('account_type_id') // head-first flow: untyped heads are not usable yet
             ->where(function ($q) use ($credentialId) {
                 $q->whereNull('client_credential_id');
                 if ($credentialId) {
@@ -197,6 +198,7 @@ class ReceiptController extends Controller
                 $q->where('account_type_id', $request->account_type_id);
             })
             ->where('is_active', true)
+            ->whereNotNull('account_type_id') // head-first flow: untyped heads are not usable yet
             ->where(function ($q) use ($request) {
                 $q->whereNull('client_credential_id');
                 if ($request->client_credential_id) {

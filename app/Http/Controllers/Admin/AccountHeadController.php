@@ -65,7 +65,7 @@ class AccountHeadController extends Controller
 
         return DataTables::of($query)
             ->addIndexColumn()
-            ->addColumn('account_type_name', fn($row) => $row->accountType?->name)
+            ->addColumn('account_type_name', fn($row) => $row->accountType?->name ?? '<em class="text-warning">No type yet</em>')
             ->addColumn('tax_rate_name', fn($row) => $row->taxRate ? $row->taxRate->name.' ('.$row->taxRate->rate.'%)' : '-')
             ->addColumn('client_name', fn($row) => $row->clientCredential ? trim($row->clientCredential->first_name . ' ' . $row->clientCredential->last_name) : '<span class="text-muted">Global</span>')
             ->addColumn('status', function($row){
@@ -83,7 +83,7 @@ class AccountHeadController extends Controller
                             <i class="fa fa-trash" style="font-size:20px;color:red"></i>
                         </a>';
             })
-            ->rawColumns(['status', 'action', 'client_name'])
+            ->rawColumns(['status', 'action', 'client_name', 'account_type_name'])
             ->make(true);
     }
 
@@ -97,11 +97,87 @@ class AccountHeadController extends Controller
         return response()->json(['available' => !$exists]);
     }
 
+    /**
+     * Types a head may be given: shared types (no head), types already made
+     * under this head, and — for a head that exists yet — its current one.
+     * Scope: global heads see shared types; per-client heads also see that
+     * client's types.
+     */
+    public function assignableTypes(Request $request)
+    {
+        $head = $request->head_id ? AccountHead::find($request->head_id) : null;
+        $credId = $head ? $head->client_credential_id : ($request->client_credential_id ?: null);
+
+        $types = AccountType::with('accountHead:id,code,name')
+            ->where('is_active', 1)
+            ->where(function ($q) use ($head) {
+                $q->whereNull('account_head_id');
+                if ($head) {
+                    $q->orWhere('account_head_id', $head->id)
+                      ->orWhere('id', (int) $head->account_type_id);
+                }
+            })
+            ->where(function ($q) use ($credId) {
+                $q->whereNull('client_credential_id');
+                if ($credId) $q->orWhere('client_credential_id', $credId);
+            })
+            ->orderBy('name')
+            ->get()
+            ->map(fn($t) => [
+                'id'         => $t->id,
+                'name'       => $t->name,
+                'category'   => $t->category,
+                'under_head' => $t->accountHead ? $t->accountHead->code . ' &mdash; ' . $t->accountHead->name : null,
+                'selected'   => $head && $head->account_type_id == $t->id,
+            ]);
+
+        return response()->json($types);
+    }
+
+    /**
+     * Step 2 of the head-first flow: attach the chosen type to the head.
+     */
+    public function assignType(Request $request, $id)
+    {
+        $head = AccountHead::find($id);
+        if (!$head) {
+            return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>Account head not found.</div>"]);
+        }
+        if (empty($request->account_type_id)) {
+            return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>Please select an Account Type.</div>"]);
+        }
+        $type = AccountType::find($request->account_type_id);
+        if (!$type || !$type->is_active) {
+            return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>Selected account type not found.</div>"]);
+        }
+        if ($type->account_head_id && $type->account_head_id != $head->id) {
+            return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>This type was made under a different Account Head. Select a shared type or create a new one under this head.</div>"]);
+        }
+        if ($type->client_credential_id && $type->client_credential_id != $head->client_credential_id) {
+            return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>This type belongs to a different client scope.</div>"]);
+        }
+        if (!$head->client_credential_id && !$this->codeInRange($type->id, $head->code)) {
+            [$min, $max] = $this->rangeForType($type->id) ?? [null, null];
+            $hint = ($min !== null) ? "Global codes for this type must be between $min and $max (Excel chart). " : "";
+            return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>{$hint}Use a per-client head for custom codes.</div>"]);
+        }
+        $dup = AccountHead::where('name', $head->name)
+            ->where('account_type_id', $type->id)
+            ->where('client_credential_id', $head->client_credential_id)
+            ->where('id', '!=', $head->id)
+            ->exists();
+        if ($dup) {
+            return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>This account head already exists for this type and client scope.</div>"]);
+        }
+
+        $head->update(['account_type_id' => $type->id]);
+        return response()->json(['status'=>300,'message'=>'Account type assigned successfully.']);
+    }
+
     public function store(Request $request)
     {
-        if(empty($request->account_type_id)){
-            return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>Please select Account Type.</div>"]);
-        }
+        // Head-first: the head is created first; its type can be assigned
+        // afterwards (or pre-selected here when it is a shared type).
         if(empty($request->code)){
             return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>Please fill Code field.</div>"]);
         }
@@ -110,9 +186,23 @@ class AccountHeadController extends Controller
         }
 
         $credId = $request->client_credential_id ?: null;
+        $typeId = $request->account_type_id ?: null;
 
-        if(!$credId && !$this->codeInRange($request->account_type_id, $request->code)){
-            [$min, $max] = $this->rangeForType($request->account_type_id) ?? [null, null];
+        if ($typeId) {
+            $type = AccountType::find($typeId);
+            if (!$type || !$type->is_active) {
+                return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>Selected account type not found.</div>"]);
+            }
+            if ($type->account_head_id) {
+                return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>That type was made under another Account Head. Save this head first, then create or pick its type.</div>"]);
+            }
+            if ($type->client_credential_id && $type->client_credential_id != (int) $credId) {
+                return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>This type belongs to a different client scope.</div>"]);
+            }
+        }
+
+        if($typeId && !$credId && !$this->codeInRange($typeId, $request->code)){
+            [$min, $max] = $this->rangeForType($typeId) ?? [null, null];
             $hint = ($min !== null) ? "Global codes for this type must be between $min and $max (Excel chart). " : "";
             return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>{$hint}Use a per-client head for custom codes.</div>"]);
         }
@@ -122,13 +212,14 @@ class AccountHeadController extends Controller
         }
         // Excel chart intentionally reuses "Director Loan Account" in two types
         // (509 Current Liability + 554 Non-current Liability), so name uniqueness
-        // is scoped by type + client scope, not scope alone.
-        if(AccountHead::where('name', $request->name)->where('account_type_id', $request->account_type_id)->where('client_credential_id', $credId)->exists()){
+        // is scoped by type + client scope, not scope alone. Without a type yet
+        // the check is deferred to type assignment.
+        if($typeId && AccountHead::where('name', $request->name)->where('account_type_id', $typeId)->where('client_credential_id', $credId)->exists()){
             return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>This account head already exists for this type and client scope.</div>"]);
         }
 
         $head = AccountHead::create([
-            'account_type_id'        => $request->account_type_id,
+            'account_type_id'        => $typeId,
             'tax_rate_id'            => $request->tax_rate_id ?: null,
             'client_credential_id'   => $request->client_credential_id ?: null,
             'code'                   => $request->code,
@@ -169,9 +260,6 @@ class AccountHeadController extends Controller
 
     public function update(Request $request)
     {
-        if(empty($request->account_type_id)){
-            return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>Please select Account Type.</div>"]);
-        }
         if(empty($request->code)){
             return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>Please fill Code field.</div>"]);
         }
@@ -179,10 +267,32 @@ class AccountHeadController extends Controller
             return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>Please fill Account Head field.</div>"]);
         }
 
+        $head = AccountHead::find($request->codeid);
+        if (!$head) {
+            return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>Account head not found.</div>"]);
+        }
+
+        // Absent keeps the current type (head-first forms post step 1 only);
+        // explicit empty un-assigns it.
+        $typeId = $request->has('account_type_id') ? ($request->account_type_id ?: null) : $head->account_type_id;
+
         $credId = $request->client_credential_id ?: null;
 
-        if(!$credId && !$this->codeInRange($request->account_type_id, $request->code)){
-            [$min, $max] = $this->rangeForType($request->account_type_id) ?? [null, null];
+        if ($typeId) {
+            $type = AccountType::find($typeId);
+            if (!$type || !$type->is_active) {
+                return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>Selected account type not found.</div>"]);
+            }
+            if ($type->account_head_id && $type->account_head_id != $head->id) {
+                return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>That type was made under another Account Head.</div>"]);
+            }
+            if ($type->client_credential_id && $type->client_credential_id != (int) $credId) {
+                return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>This type belongs to a different client scope.</div>"]);
+            }
+        }
+
+        if($typeId && !$credId && !$this->codeInRange($typeId, $request->code)){
+            [$min, $max] = $this->rangeForType($typeId) ?? [null, null];
             $hint = ($min !== null) ? "Global codes for this type must be between $min and $max (Excel chart). " : "";
             return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>{$hint}Use a per-client head for custom codes.</div>"]);
         }
@@ -190,18 +300,23 @@ class AccountHeadController extends Controller
         if(AccountHead::where('code', $request->code)->where('client_credential_id', $credId)->where('id','!=',$request->codeid)->exists()){
             return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>This code already exists for this client scope.</div>"]);
         }
-        if(AccountHead::where('name', $request->name)->where('account_type_id', $request->account_type_id)->where('client_credential_id', $credId)->where('id','!=',$request->codeid)->exists()){
+        if($typeId && AccountHead::where('name', $request->name)->where('account_type_id', $typeId)->where('client_credential_id', $credId)->where('id','!=',$request->codeid)->exists()){
             return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>This account head already exists for this type and client scope.</div>"]);
         }
 
-        AccountHead::find($request->codeid)->update([
-            'account_type_id'        => $request->account_type_id,
+        $head->update([
+            'account_type_id'        => $typeId,
             'tax_rate_id'            => $request->tax_rate_id ?: null,
             'client_credential_id'   => $request->client_credential_id ?: null,
             'code'                   => $request->code,
             'name'                   => $request->name,
             'description'            => $request->description,
         ]);
+
+        // Scope changed: types made under this head follow it.
+        AccountType::where('account_head_id', $head->id)
+            ->update(['client_credential_id' => $credId]);
+
         return response()->json(['status'=>300,'message'=>'Account head updated successfully.']);
     }
 

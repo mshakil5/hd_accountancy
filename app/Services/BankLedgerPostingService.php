@@ -154,6 +154,9 @@ class BankLedgerPostingService
             ->where('client_credential_id', $credentialId)->exists()) {
             throw ValidationException::withMessages(['reconciliation' => 'Allocation account head does not belong to this client.']);
         }
+        if (!DB::table('account_heads')->where('id', $headId)->whereNotNull('account_type_id')->exists()) {
+            throw ValidationException::withMessages(['reconciliation' => 'Assign an Account Type to this account head (Chart of Accounts) before using it.']);
+        }
     }
 
     private function assertReceiptPosted(?int $receiptId, int $clientId): void
@@ -188,7 +191,10 @@ class BankLedgerPostingService
             $receipt=Receipt::with('detail')->where('client_id',$entry->client_id)->findOrFail($id);
             $detail=$receipt->detail;
             $head=AccountHead::with('accountType')->findOrFail($detail->account_head_id);
-            $type=($head->accountType?->normal_balance === 'debit') ? 'payable' : 'receivable';
+            if (!$head->accountType) {
+                throw ValidationException::withMessages(['reconciliation' => 'Assign an Account Type to account head "'.$head->name.'" before posting.']);
+            }
+            $type=($head->accountType->normal_balance === 'debit') ? 'payable' : 'receivable';
             $net=(float)($detail->net_amount ?? 0);
             $tax=(float)($detail->tax_amount ?? 0);
             $vat=(float)($detail->vat_amount ?? 0);

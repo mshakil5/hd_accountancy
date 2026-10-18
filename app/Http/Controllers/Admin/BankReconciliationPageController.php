@@ -78,7 +78,7 @@ class BankReconciliationPageController extends Controller
             ->when($request->filled('status'),fn($q)=>$q->where('status',$request->input('status')))
             ->when($request->filled('approval'),fn($q)=>$q->where('reconciliation_status',$request->input('approval')))
             ->orderByDesc('transaction_date')->orderByDesc('id')->paginate(30)->withQueryString();
-        $heads=AccountHead::where('client_credential_id',$credentialId)->orderBy('code')->get(['id','code','name']);
+        $heads=AccountHead::where('client_credential_id',$credentialId)->whereNotNull('account_type_id')->orderBy('code')->get(['id','code','name']);
         $stats=$scopeEntries()->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total','status');
         $approvalStats=$scopeEntries()->selectRaw('reconciliation_status, count(*) as total')->groupBy('reconciliation_status')->pluck('total','reconciliation_status');
         $imports=DB::table('bank_imports')->whereIn('client_id',$businessIds)->when($bankAccountId,fn($q)=>$q->where('bank_account_id',$bankAccountId))->latest()->limit(10)->get();
@@ -239,7 +239,7 @@ class BankReconciliationPageController extends Controller
                         throw ValidationException::withMessages(['allocations'=>'Amounts must be positive with at most two decimals.']);
                     $head=$line['account_head_id']??null;$receiptId=$line['receipt_id']??null;
                     if(!$head && !$receiptId)throw ValidationException::withMessages(['allocations'=>'Each line needs an account head or existing receipt.']);
-                    if($head && !AccountHead::where('client_credential_id',$client->client_credential_id)->whereKey($head)->exists())abort(422,'Invalid account head.');
+                    if($head && !AccountHead::where('client_credential_id',$client->client_credential_id)->whereNotNull('account_type_id')->whereKey($head)->exists())abort(422,'Invalid account head.');
                     if($receiptId){
                         $receipt=Receipt::with('detail')->where('client_id',$client->id)->findOrFail($receiptId);
                         abort_if(in_array($receiptId,$used),422,'Select each receipt only once per split.');
@@ -321,7 +321,7 @@ class BankReconciliationPageController extends Controller
             } else {
                 abort_if($entry->status==='needs_review',409,'Verify PDF transaction first.');
                 $head=$data['account_head_id']??null;
-                if($head!==null)abort_unless(AccountHead::where('client_credential_id',$client->client_credential_id)->whereKey($head)->exists(),422,'Invalid account head');
+                if($head!==null)abort_unless(AccountHead::where('client_credential_id',$client->client_credential_id)->whereNotNull('account_type_id')->whereKey($head)->exists(),422,'Invalid account head');
                 if($action==='categorize'){
                     abort_if($entry->status==='split',409,'Undo the split before categorising.');
                     if(!$head)throw ValidationException::withMessages(['account_head_id'=>'Choose an account head.']);

@@ -10,15 +10,6 @@
                 <div class="ermsg-quick"></div>
                 <div class="alert alert-info py-2" style="font-size:12px;" id="quickHeadScopeNote"></div>
                 <div class="form-group">
-                    <label>Account Type <span class="text-danger">*</span></label>
-                    <select class="form-control" id="quick_head_type_id">
-                        <option value="">Select account type</option>
-                        @foreach($accountTypes as $type)
-                            <option value="{{ $type->id }}">{{ $type->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="form-group">
                     <label>Code <span class="text-danger">*</span></label>
                     <input type="text" class="form-control" id="quick_head_code" placeholder="e.g. 210">
                     <small id="quickHeadCodeMsg"></small>
@@ -39,6 +30,19 @@
                             <option value="{{ $tax->id }}">{{ $tax->name }} ({{ $tax->rate }}%)</option>
                         @endforeach
                     </select>
+                </div>
+                <hr class="my-2">
+                <div class="form-group mb-1">
+                    <label>2 &middot; Account Type <span class="text-danger">*</span></label>
+                    <select class="form-control" id="quick_head_type_id">
+                        <option value="">Select account type</option>
+                        @foreach($accountTypes as $type)
+                            @if(!$type->account_head_id)
+                                <option value="{{ $type->id }}">{{ $type->name }}</option>
+                            @endif
+                        @endforeach
+                    </select>
+                    <small class="text-muted">The head is created first — pick the shared type it will use (a type made under another head cannot be reused here).</small>
                 </div>
             </div>
             <div class="modal-footer">
@@ -72,10 +76,9 @@
     }
 
     window.openQuickHeadModal = function() {
+        // Head-first: the form below creates the head first; the type select
+        // (step 2) is pre-filled from the receipt's currently chosen head when available.
         var typeId = $('#account_type_id').val();
-        if (!typeId) {
-            toastr.warning('Select an Account Type first — the new head will use it.');
-        }
         $('#quick_head_type_id').val(typeId || '');
         $('#quick_head_code').val('');
         $('#quick_head_name').val('');

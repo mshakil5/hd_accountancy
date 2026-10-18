@@ -9,6 +9,11 @@
 .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: .4s; }
 input:checked + .slider { background-color: #28a745; }
 input:checked + .slider:before { transform: translateX(24px); }
+
+.step-title {
+    font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+    color: #6c757d; border-bottom: 1px solid #e9ecef; padding-bottom: 6px; margin-bottom: 14px;
+}
 </style>
 
 <section class="content">
@@ -34,6 +39,32 @@ input:checked + .slider:before { transform: translateX(24px); }
                         <form id="createThisForm">
                             @csrf
                             <input type="hidden" id="codeid" name="codeid">
+
+                            {{-- Head-first: pick the Account Head before the type details --}}
+                            <div class="step-title">1 &middot; Under which Account Head?</div>
+                            <div class="form-group">
+                                <label>Account Head <span class="text-danger">*</span></label>
+                                <select class="form-control select2" id="account_head_id" name="account_head_id" style="width:100%;">
+                                    <option value="">Select account head</option>
+                                    @foreach($heads as $h)
+                                        @php
+                                            $clientName = $h->clientCredential
+                                                ? trim($h->clientCredential->first_name . ' ' . $h->clientCredential->last_name)
+                                                : null;
+                                        @endphp
+                                        <option value="{{ $h->id }}"
+                                            data-scope="{{ $clientName ? 'Client: ' . $clientName : 'Global (all clients)' }}">
+                                            {{ $h->code }} &mdash; {{ $h->name }} ({{ $clientName ? $clientName : 'Global' }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <small class="text-muted d-block mt-1">
+                                    <span id="headScopeNote">The type's scope follows this head: a global head gets a global type, a client head gets that client's type.</span>
+                                </small>
+                            </div>
+
+                            <div class="step-title mt-4">2 &middot; Account Type</div>
+
                             <div class="form-group">
                                 <label>Name <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="name" name="name" placeholder="e.g. Overhead">
@@ -82,7 +113,9 @@ input:checked + .slider:before { transform: translateX(24px); }
                             <thead>
                                 <tr>
                                     <th>#</th>
+                                    <th>Account Head</th>
                                     <th>Name</th>
+                                    <th>Client</th>
                                     <th>Category</th>
                                     <th>Normal Balance</th>
                                     <th>Status</th>
@@ -104,13 +137,27 @@ input:checked + .slider:before { transform: translateX(24px); }
 $(function(){
     var url = "{{ url('/admin/account-types') }}";
 
+    $('#account_head_id').select2({
+        placeholder: 'Select account head',
+        allowClear: true,
+        width: '100%'
+    }).on('change', function(){
+        var opt = $(this).find(':selected');
+        var scope = opt.data('scope');
+        $('#headScopeNote').text(scope
+            ? 'Scope: ' + scope + ' (the type follows the head).'
+            : "The type's scope follows this head: a global head gets a global type, a client head gets that client's type.");
+    });
+
     var table = $('#example1').DataTable({
         processing: true,
         serverSide: true,
         ajax: url + '/datatable',
         columns: [
             {data: 'DT_RowIndex', orderable: false, searchable: false},
+            {data: 'account_head_name', orderable: false, searchable: false},
             {data: 'name'},
+            {data: 'client_name', orderable: false, searchable: false},
             {data: 'category'},
             {data: 'normal_balance'},
             {data: 'status', orderable: false, searchable: false},
@@ -132,8 +179,14 @@ $(function(){
 
     $('#addBtn').click(function(){
         let isUpdate = $(this).val() == 'Update';
+        let headId = $('#account_head_id').val();
+        if(!isUpdate && !headId){
+            $('.ermsg').html("<div class='alert alert-warning'>Select the Account Head this type belongs to.</div>");
+            return;
+        }
         let data = {
             _token: $('meta[name="csrf-token"]').attr('content'),
+            account_head_id: headId,
             name: $('#name').val(),
             category: $('#category').val(),
             normal_balance: $('#normal_balance').val(),
@@ -157,6 +210,7 @@ $(function(){
         let id = $(this).attr('rid');
         $.get(url+'/'+id+'/edit', function(d){
             $('#codeid').val(d.id);
+            $('#account_head_id').val(d.account_head_id ? String(d.account_head_id) : '').trigger('change');
             $('#name').val(d.name);
             $('#category').val(d.category);
             $('#normal_balance').val(d.normal_balance);
@@ -189,6 +243,8 @@ $(function(){
     function clearForm(){
         $('#createThisForm')[0].reset();
         $('#codeid').val('');
+        $('#account_head_id').val('').trigger('change');
+        $('#headScopeNote').text("The type's scope follows this head: a global head gets a global type, a client head gets that client's type.");
         $('#addBtn').val('Create').text('Create');
         $('#formTitle').text('Add Account Type');
         $('.ermsg').html('');
