@@ -90,55 +90,6 @@ input:checked + .slider:before { transform: translateX(24px); }
                                 </select>
                             </div>
 
-                            {{-- Step 2 — its Account Type is chosen/created under the head --}}
-                            <div class="step-title mt-4">2 &middot; Account Type</div>
-
-                            <p id="typeStepPending" class="text-muted small mb-0" style="display:none">
-                                Save the Account Head first — then choose or create the Account Type that lives under it.
-                            </p>
-
-                            <div id="typeStepActive" style="display:none">
-                                <div class="form-group">
-                                    <label>Account Type <span class="text-danger">*</span></label>
-                                    <select class="form-control" id="assign_type_id">
-                                        <option value="">Select account type</option>
-                                    </select>
-                                    <small class="text-muted">Shared (global) types plus any type already made under this head.</small>
-                                </div>
-                                <button type="button" id="assignBtn" class="btn btn-sm btn-outline-primary">Assign Type &amp; Finish</button>
-                                <button type="button" id="skipAssign" class="btn btn-sm btn-outline-secondary">Assign later</button>
-
-                                <div class="mt-3">
-                                    <button type="button" id="newTypeToggle" class="btn btn-sm btn-link p-0">&#43; Create a new Account Type under this head</button>
-                                    <div id="newTypeForm" class="border rounded p-3 mt-2" style="display:none">
-                                        <div class="form-group">
-                                            <label>Type Name <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" id="new_type_name" placeholder="e.g. Bank Charges">
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Category <span class="text-danger">*</span></label>
-                                            <select class="form-control" id="new_type_category">
-                                                <option value="">Select category</option>
-                                                <option value="asset">Asset</option>
-                                                <option value="liability">Liability</option>
-                                                <option value="equity">Equity</option>
-                                                <option value="revenue">Revenue</option>
-                                                <option value="expense">Expense</option>
-                                            </select>
-                                        </div>
-                                        <div class="form-group mb-2">
-                                            <label>Normal Balance <span class="text-danger">*</span></label>
-                                            <select class="form-control" id="new_type_normal_balance">
-                                                <option value="">Select normal balance</option>
-                                                <option value="debit">Debit</option>
-                                                <option value="credit">Credit</option>
-                                            </select>
-                                        </div>
-                                        <small class="text-muted d-block mb-2">Its scope follows this head (Global head &rarr; global type, client head &rarr; that client).</small>
-                                        <button type="button" id="createTypeBtn" class="btn btn-sm btn-success">Create Type</button>
-                                    </div>
-                                </div>
-                            </div>
                         </form>
                     </div>
                     <div class="card-footer">
@@ -174,7 +125,6 @@ input:checked + .slider:before { transform: translateX(24px); }
                             <thead>
                                 <tr>
                                     <th>#</th>
-                                    <th>Account Type</th>
                                     <th>Code</th>
                                     <th>Account Head</th>
                                     <th>Client</th>
@@ -228,7 +178,6 @@ $(function(){
         },
         columns: [
             {data: 'DT_RowIndex', orderable: false, searchable: false},
-            {data: 'account_type_name'},
             {data: 'code'},
             {data: 'name'},
             {data: 'client_name', orderable: false, searchable: false},
@@ -287,33 +236,6 @@ $(function(){
         if(code) $('#code').trigger('input');
     });
 
-    // ---- Step 2 helpers -------------------------------------------------
-
-    function loadAssignableTypes(preselectId) {
-        if(!currentHeadId) return;
-        $('#assign_type_id').html('<option value="">Loading...</option>');
-        $.get(url + '/assignable-types', {head_id: currentHeadId}, function(list){
-            var html = '<option value="">Select account type</option>';
-            $.each(list, function(i, t){
-                var label = t.name + (t.category ? ' (' + t.category + ')' : '') + (t.under_head ? ' — under ' + t.under_head : '');
-                html += '<option value="' + t.id + '">' + label + '</option>';
-            });
-            $('#assign_type_id').html(html);
-            var pre = preselectId;
-            if(!pre) {
-                var sel = list.find(function(t){ return t.selected; });
-                pre = sel ? sel.id : '';
-            }
-            if(pre) $('#assign_type_id').val(String(pre));
-        });
-    }
-
-    function openTypeStep(preselectId) {
-        $('#typeStepPending').hide();
-        $('#typeStepActive').show();
-        loadAssignableTypes(preselectId);
-    }
-
     function closeForm(){
         $('#addThisFormContainer').hide(200);
         $('#newBtn').show();
@@ -327,8 +249,6 @@ $(function(){
         clearForm();
         $('#newBtn').hide();
         $('#addThisFormContainer').show(300);
-        $('#typeStepPending').show();       // head doesn't exist yet
-        $('#typeStepActive').hide();
     });
 
     $('#FormCloseBtn').click(function(){
@@ -350,7 +270,6 @@ $(function(){
         if(isUpdate) {
             data.codeid = $('#codeid').val();
             // include the chosen type so Update can assign it in one go
-            if($('#typeStepActive').is(':visible')) data.account_type_id = $('#assign_type_id').val();
         }
 
         $.post(isUpdate ? url+'/update' : url, data, function(d){
@@ -360,75 +279,8 @@ $(function(){
                 toastr.success(d.message, 'Success!');
                 closeForm();
             } else {
-                // Step 1 done — open Step 2: assign the type under this head
-                currentHeadId = d.id;
-                currentHeadName = data.name;
-                $('#codeid').val(d.id);
-                toastr.success('Account head created — now choose its Account Type.', 'Success!');
-                $('#formTitle').text('Account: ' + currentHeadName);
-                $('#addBtn').hide();
-                openTypeStep();
-                table.ajax.reload(null, false);
-            }
-        });
-    });
-
-    // ---- Step 2: assign or create the type ------------------------------
-
-    $('#assignBtn').click(function(){
-        if(!currentHeadId) return;
-        let typeId = $('#assign_type_id').val();
-        if(!typeId){ toastr.warning('Select an Account Type first.'); return; }
-        $.post(url + '/' + currentHeadId + '/assign-type', {
-            _token: $('meta[name="csrf-token"]').attr('content'),
-            account_type_id: typeId
-        }, function(d){
-            if(d.status == 303){
-                $('.ermsg').html(d.message);
-            } else {
-                toastr.success(d.message, 'Success!');
+                toastr.success(d.message, "Success!");
                 closeForm();
-            }
-        });
-    });
-
-    $('#skipAssign').click(function(){
-        toastr.info('Head saved — you can assign its type later from this list.');
-        closeForm();
-    });
-
-    $('#newTypeToggle').click(function(){
-        $('#newTypeForm').slideToggle(150);
-    });
-
-    $('#createTypeBtn').click(function(){
-        if(!currentHeadId) return;
-        let name = $('#new_type_name').val().trim();
-        let category = $('#new_type_category').val();
-        let normalBalance = $('#new_type_normal_balance').val();
-        if(!name || !category || !normalBalance){
-            toastr.warning('Fill the type name, category and normal balance.');
-            return;
-        }
-        $.post("{{ url('/admin/account-types') }}", {
-            _token: $('meta[name="csrf-token"]').attr('content'),
-            account_head_id: currentHeadId,
-            name: name,
-            category: category,
-            normal_balance: normalBalance
-        }, function(d){
-            if(d.status == 303){
-                $('.ermsg').html(d.message);
-            } else {
-                toastr.success(d.message, 'Success!');
-                $('#newTypeForm').slideUp(150);
-                $('#new_type_name').val('');
-                $('#new_type_category').val('');
-                $('#new_type_normal_balance').val('');
-                // The server auto-assigns a new type to an untyped head.
-                loadAssignableTypes(d.id);
-                table.ajax.reload(null, false);
-            }
         });
     });
 
@@ -458,7 +310,6 @@ $(function(){
             currentHeadName = d.name;
             $('#addBtn').val('Update').text('Update').show();
             $('#formTitle').text('Edit Account: ' + d.name);
-            openTypeStep(d.account_type_id);
             $('#addThisFormContainer').show(300);
             $('#newBtn').hide();
         });
@@ -490,10 +341,6 @@ $(function(){
         $('#codeMsg').text('').removeClass();
         $('#addBtn').val('Create').text('Create').show();
         $('#formTitle').text('Add new Account Head');
-        $('#assign_type_id').html('<option value="">Select account type</option>');
-        $('#typeStepPending').hide();
-        $('#typeStepActive').hide();
-        $('#newTypeForm').hide();
         currentHeadId = null;
         currentHeadName = '';
         $('.ermsg').html('');
