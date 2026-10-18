@@ -133,13 +133,6 @@ class BankLedgerPostingService
                 if ($line->account_head_id && isset($line->tax_percent) && ($line->tax_percent < 0 || $line->tax_percent > 100)) {
                     throw ValidationException::withMessages(['reconciliation' => 'Tax percent must be between 0 and 100.']);
                 }
-                if ($line->receipt_id && config('reconciliation.bank_led', false) && !Transaction::where('receipt_id', $line->receipt_id)->exists()) {
-                    // Never post a full receipt journal from a partial allocation.
-                    $full = (float) DB::table('receipt_details')->where('receipt_id',$line->receipt_id)->value('total_amount');
-                    if (abs(round($full*100)-round((float)$line->amount*100)) > 0) {
-                        throw ValidationException::withMessages(['reconciliation'=>'Partial receipt settlement requires manual liability treatment; cannot create a full receipt journal.']);
-                    }
-                }
             }
             if ($sum !== (int) round(abs((float) $entry->amount) * 100)) {
                 throw ValidationException::withMessages(['reconciliation' => 'Split allocations do not equal the bank amount.']);
@@ -165,9 +158,7 @@ class BankLedgerPostingService
             throw ValidationException::withMessages(['reconciliation' => 'Linked receipt is missing or belongs to another client.']);
         }
         if (!Transaction::where('receipt_id', $receiptId)->exists()) {
-            if (!config('reconciliation.bank_led', false)) {
-                throw ValidationException::withMessages(['reconciliation' => 'This receipt has not yet produced an accounting entry. Review receipt approval before bank approval.']);
-            }
+            throw ValidationException::withMessages(['reconciliation' => 'This receipt has not yet produced an accounting entry. Review receipt approval before bank approval.']);
             $receipt = Receipt::with('detail')->find($receiptId);
             if (!$receipt || !in_array($receipt->status, ['ready','archived'], true) || !$receipt->detail || !$receipt->detail->account_head_id || (float)$receipt->detail->total_amount <= 0) {
                 throw ValidationException::withMessages(['reconciliation' => 'Validate the receipt details and account head before reconciling.']);
@@ -179,7 +170,7 @@ class BankLedgerPostingService
     /** Post receipt recognition on bank approval only when no historical journal exists. */
     private function postLinkedReceipts(object $entry, int $actorId): int
     {
-        if (!config('reconciliation.bank_led', false)) return 0;
+        return 0;
         $ids = $entry->status === 'matched' ? [(int)$entry->receipt_id] : [];
         if ($entry->status === 'split') {
             $ids = DB::table('bank_allocation_lines')->where('bank_entry_id',$entry->id)

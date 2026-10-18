@@ -215,10 +215,6 @@ class ReceiptController extends Controller
     {
         $receipt = Receipt::findOrFail($id);
 
-        if (config('reconciliation.bank_led', false) && $receipt->transactions()->exists()) {
-            return response()->json(['status'=>409,'message'=>'Receipt already has accounting entries. Reopen or adjust the reconciliation before editing.']);
-        }
-
         if (in_array($receipt->status, ['archived', 'cancelled'])) {
             return response()->json([
                 'status'  => 303,
@@ -285,7 +281,7 @@ class ReceiptController extends Controller
 
         $receipt->transactions()->delete();
 
-        if (!config('reconciliation.bank_led', false) && in_array($newStatus, ['ready', 'archived'])) {
+        if (in_array($newStatus, ['ready', 'archived'])) {
             $head = AccountHead::with('accountType')->find($request->account_head_id);
             if ($head && $head->accountType) {
                 $normalBalance = $head->accountType->normal_balance;
@@ -583,7 +579,7 @@ class ReceiptController extends Controller
                 'description'     => $request->description,
             ]);
 
-            if (!config('reconciliation.bank_led', false) && in_array($request->status, ['ready', 'archived'])) {
+            if (in_array($request->status, ['ready', 'archived'])) {
                 $head = AccountHead::with('accountType')->find($request->account_head_id);
                 if ($head && $head->accountType) {
                     $normalBalance = $head->accountType->normal_balance;
