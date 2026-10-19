@@ -246,7 +246,6 @@
                                         <th>Acc Head</th>
                                         <th>Net</th>
                                         <th>VAT</th>
-                                        <th>Tax</th>
                                         <th>Total</th>
                                         <th>Supplier</th>
                                         <th>Method</th>
@@ -374,7 +373,6 @@
                         { data: 'account_type' },
                         { data: 'account_head' },
                         { data: 'net_amount' },
-                        { data: 'vat_amount' },
                         { data: 'tax_amount' },
                         { data: 'total_amount' },
                         { data: 'supplier' },

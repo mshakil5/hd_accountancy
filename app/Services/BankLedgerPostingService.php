@@ -144,7 +144,9 @@ class BankLedgerPostingService
     {
         $credentialId = DB::table('clients')->where('id', $clientId)->value('client_credential_id');
         if (!$credentialId || !DB::table('account_heads')->where('id', $headId)
-            ->where('client_credential_id', $credentialId)->exists()) {
+            ->where(function ($q) use ($credentialId) {
+                $q->whereNull('client_credential_id')->orWhere('client_credential_id', $credentialId);
+            })->exists()) {
             throw ValidationException::withMessages(['reconciliation' => 'Allocation account head does not belong to this client.']);
         }
         if (!DB::table('account_heads')->where('id', $headId)->whereNotNull('account_type_id')->exists()) {

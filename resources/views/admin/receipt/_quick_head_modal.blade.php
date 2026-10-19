@@ -9,41 +9,34 @@
             <div class="modal-body">
                 <div class="ermsg-quick"></div>
                 <div class="alert alert-info py-2" style="font-size:12px;" id="quickHeadScopeNote"></div>
+
                 <div class="form-group">
                     <label>Code <span class="text-danger">*</span></label>
                     <input type="text" class="form-control" id="quick_head_code" placeholder="e.g. 210">
                     <small id="quickHeadCodeMsg"></small>
                 </div>
+
                 <div class="form-group">
                     <label>Account Head <span class="text-danger">*</span></label>
                     <input type="text" class="form-control" id="quick_head_name" placeholder="e.g. Transportation">
                 </div>
+
                 <div class="form-group">
                     <label>Description</label>
                     <input type="text" class="form-control" id="quick_head_description">
                 </div>
+
                 <div class="form-group">
-                    <label>Tax</label>
+                    <label>VAT Rate</label>
                     <select class="form-control" id="quick_head_tax_rate_id">
-                        <option value="">Select tax</option>
+                        <option value="">Select VAT rate</option>
                         @foreach($taxRates ?? [] as $tax)
                             <option value="{{ $tax->id }}">{{ $tax->name }} ({{ $tax->rate }}%)</option>
                         @endforeach
                     </select>
                 </div>
-                <hr class="my-2">
-                <div class="form-group mb-1">
-                    <label>2 &middot; Account Type <span class="text-danger">*</span></label>
-                    <select class="form-control" id="quick_head_type_id">
-                        <option value="">Select account type</option>
-                        @foreach($accountTypes as $type)
-                            @if(!$type->account_head_id)
-                                <option value="{{ $type->id }}">{{ $type->name }}</option>
-                            @endif
-                        @endforeach
-                    </select>
-                    <small class="text-muted">The head is created first — pick the shared type it will use (a type made under another head cannot be reused here).</small>
-                </div>
+
+                <input type="hidden" id="quick_head_client_id">
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal">Cancel</button>
@@ -59,39 +52,41 @@
     var baseReceiptUrl = "{{ url('/admin/receipts') }}";
     var codeTimer = null;
 
+    // Target head dropdown: an explicitly-set element (e.g. a bank-reconciliation row),
+    // else fall back to the receipt page's single #account_head_id.
+    function qaHeadSel() {
+        return (window.quickAddTargetEl && document.contains(window.quickAddTargetEl))
+            ? $(window.quickAddTargetEl) : $('#account_head_id');
+    }
+    window.qaHeadSel = qaHeadSel;
+
     function currentCredId() {
-        var v = $('#client_credential_id').val();
+        var v = $('#quick_head_client_id').val();
+        if (!v) v = $('#client_credential_id').val();
         @isset($credentialId)
             if (!v) v = '{{ $credentialId }}';
         @endisset
         return v || '';
     }
 
-    function currentCredName() {
-        var txt = $('#client_credential_id option:selected').text();
-        if (!txt || txt.indexOf('Search') !== -1 || txt.indexOf('First') !== -1) {
-            txt = "{{ isset($receipt) && $receipt->client && $receipt->client->credential ? trim(($receipt->client->credential->first_name ?? '').' '.($receipt->client->credential->last_name ?? '')) : '' }}";
-        }
-        return (txt || '').trim();
-    }
-
     window.openQuickHeadModal = function() {
-        // Head-first: the form below creates the head first; the type select
-        // (step 2) is pre-filled from the receipt's currently chosen head when available.
-        var typeId = $('#account_type_id').val();
-        $('#quick_head_type_id').val(typeId || '');
         $('#quick_head_code').val('');
         $('#quick_head_name').val('');
         $('#quick_head_description').val('');
         $('#quick_head_tax_rate_id').val('');
+        $('#quick_head_type_id').val('');
         $('#quickHeadCodeMsg').text('').removeClass();
         $('.ermsg-quick').html('');
         var credId = currentCredId();
-        var credName = currentCredName();
+        var credName = '';
+        @isset($receipt)
+            credName = "{{ isset($receipt) && $receipt->client && $receipt->client->credential ? trim(($receipt->client->credential->first_name ?? '').' '.($receipt->client->credential->last_name ?? '')) : '' }}";
+        @endisset
+        $('#quick_head_client_id').val(credId);
         $('#quickHeadScopeNote').html(
             credId
-                ? "This head will be created for <strong>" + $('<div>').text(credName || ('Client #' + credId)).html() + "</strong> only (per-client, free-form code). Same fields as global making."
-                : "No client selected — head will be created as <strong>Global</strong> (must follow Excel chart code range, like global making)."
+                ? "This head will be created for <strong>" + $('<div>').text(credName || ('Client #' + credId)).html() + "</strong> only (per-client, free-form code)."
+                : "No client selected — head will be created as <strong>Global</strong>."
         );
         $('#quickHeadModal').modal('show');
     };
@@ -114,28 +109,22 @@
         }, 400);
     });
 
-    $('#quick_head_type_id').on('change', function() {
-        var c = $('#quick_head_code').val().trim();
-        if (c) $('#quick_head_code').trigger('input');
-    });
-
     window.reloadHeadDropdown = function(selectId) {
-        var headDrop = $('#account_head_id');
+        var headDrop = qaHeadSel();
         headDrop.html('<option value="">Loading...</option>').trigger('change');
         return $.get(baseReceiptUrl + '/get-account-heads', {
             client_credential_id: currentCredId()
         }, function(data) {
-            var options = $('<select>').append($('<option>', {value: '', text: 'Select Account Head'}));
+            var options = '<option value="">Select Account Head</option>';
             $.each(data, function(i, head) {
                 var rate = head.tax_rate ? head.tax_rate.rate : 0;
-                options.append($('<option>', {
-                    value: head.id,
-                    text: head.code + ' - ' + head.name
-                }).attr('data-rate', rate).attr('data-type-id', head.account_type_id));
+                var typeId = head.account_type_id || '';
+                options += '<option value="' + head.id + '" data-rate="' + rate + '" data-type-id="' + typeId + '">' + head.code + ' - ' + head.name + '</option>';
             });
-            headDrop.html(options.html());
+            headDrop.html(options);
             if (selectId) headDrop.val(String(selectId));
             headDrop.trigger('change');
+            if ($.fn.select2) headDrop.trigger('change.select2');
         });
     };
 
@@ -143,7 +132,6 @@
         var $btn = $(this);
         var payload = {
             _token: $('meta[name="csrf-token"]').attr('content'),
-            account_type_id: $('#quick_head_type_id').val(),
             code: $('#quick_head_code').val(),
             name: $('#quick_head_name').val(),
             description: $('#quick_head_description').val(),
@@ -157,10 +145,21 @@
             } else {
                 $('#quickHeadModal').modal('hide');
                 toastr.success(d.message, 'Success!');
-                window.reloadHeadDropdown(d.id);
+                // Head-first: head created without a type — now create its type
+                var newHeadId = d.id;
+                var newHeadName = $('#quick_head_code').val() + ' - ' + $('#quick_head_name').val();
+                $('#quick_type_head_id').val(newHeadId);
+                $('#quick_type_head_name').val(newHeadName);
+                $('#quick_type_name').val('');
+                $('#quick_type_category').val('');
+                $('#quick_type_normal_balance').val('');
+                $('.ermsg-quick-type').html('');
+                $('#quickTypeModal').modal('show');
             }
-        }).fail(function() {
-            toastr.error('Could not create head.');
+        }).fail(function(xhr) {
+            var msg = 'Could not create head.';
+            try { msg = $(xhr.responseText).text() || msg; } catch(e) {}
+            toastr.error(msg);
         }).always(function() {
             $btn.prop('disabled', false).text('Create & Select');
         });

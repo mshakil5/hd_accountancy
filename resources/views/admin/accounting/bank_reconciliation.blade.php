@@ -57,15 +57,15 @@
 <div class="hd-card">
  <form method="GET" action="{{ route('admin.bank-reconciliation.index') }}" class="row align-items-end">
   <input type="hidden" name="client_credential_id" value="{{ $presetId }}">
-  <div class="col-md-3"><label>Business</label><select class="form-control" name="client_id" id="bankFilterBusiness" style="width:100%"><option value="">All businesses</option></select></div>
-  <div class="col-md-3"><label>Bank Account</label><select class="form-control" name="bank_account_id">
+  <div class="col-md-3"><label>Business</label><select class="form-control select2" name="client_id" id="bankFilterBusiness" style="width:100%"><option value="">All businesses</option></select></div>
+  <div class="col-md-3"><label>Bank Account</label><select class="form-control select2" name="bank_account_id" style="width:100%">
 <option value="">All bank accounts</option>
 @foreach($bankAccounts as $bank)<option value="{{ $bank->id }}" {{ (int)$bankAccountId===(int)$bank->id?'selected':'' }}>{{ $bank->bank_name }} — {{ $bank->account_label }} {{ $bank->account_last_four?'••'.$bank->account_last_four:'' }}{{ !$bank->active?' (Legacy)':'' }}</option>@endforeach
 </select></div>
-<div class="col-md-3"><label>Status</label><select class="form-control" name="status"><option value="">All</option>
+<div class="col-md-3"><label>Status</label><select class="form-control select2" name="status" style="width:100%"><option value="">All</option>
   @foreach(['unmatched','needs_review','matched','split','categorized'] as $s)<option value="{{ $s }}" {{ request('status')===$s?'selected':'' }}>{{ ucwords(str_replace('_',' ',$s)) }}</option>@endforeach
   </select></div>
-  <div class="col-md-3"><label>Approval</label><select class="form-control" name="approval"><option value="">All</option>
+  <div class="col-md-3"><label>Approval</label><select class="form-control select2" name="approval" style="width:100%"><option value="">All</option>
   @foreach(['draft'=>'Draft','approved'=>'Approved','rejected'=>'Rejected'] as $val=>$label)<option value="{{ $val }}" {{ request('approval')===$val?'selected':'' }}>{{ $label }}</option>@endforeach
   </select></div>
   <div class="col-md-2"><button class="btn btn-primary">Filter transactions</button></div>
@@ -121,7 +121,7 @@
 <div class="col-md-3"><label>Bank</label><input name="bank_name" class="form-control" maxlength="100" placeholder="HSBC" required></div>
 <div class="col-md-3"><label>Account nickname</label><input name="account_label" class="form-control" maxlength="100" placeholder="Business Current" required></div>
 <div class="col-md-2"><label>Last 4 digits</label><input name="account_last_four" class="form-control" maxlength="4" pattern="[0-9]{4}" placeholder="1234"></div>
-<div class="col-md-2"><label>Currency</label><select class="form-control" name="currency"><option>GBP</option><option>EUR</option><option>USD</option></select></div>
+<div class="col-md-2"><label>Currency</label><select class="form-control select2" name="currency"><option>GBP</option><option>EUR</option><option>USD</option></select></div>
 <div class="col-md-2"><button class="btn btn-outline-primary">Add account</button></div>
 </form></div>
 @endif
@@ -214,8 +214,10 @@ $rejected = $reconStatus==='rejected';
    <p class="hd-small">Suggested uploaded receipts with exactly matching amounts. Confirm the supplier and evidence before matching.</p>
    <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-form-grid">@csrf
     <input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="match">
-    <label>Who / receipt<select class="form-control" name="receipt_id" required><option value="">{{ $exact->isEmpty()?'No exact receipt suggestions':'Select suggested receipt' }}</option>@foreach($exact as $r)<option value="{{ $r->id }}">#{{ $r->receipt_number }} · {{ $r->supplier?:'Unknown supplier' }} · £{{ number_format((float)$r->detail->total_amount,2) }}</option>@endforeach</select></label>
-    <label>What / account head<select class="form-control" name="account_head_id"><option value="">Use receipt account head</option>@foreach($heads as $h)<option value="{{ $h->id }}">{{ $h->code }} — {{ $h->name }}</option>@endforeach</select></label>
+    <label>Who / receipt<select class="form-control select2" name="receipt_id" required><option value="">{{ $exact->isEmpty()?'No exact receipt suggestions':'Select suggested receipt' }}</option>@foreach($exact as $r)<option value="{{ $r->id }}">#{{ $r->receipt_number }} · {{ $r->supplier?:'Unknown supplier' }} · £{{ number_format((float)$r->detail->total_amount,2) }}</option>@endforeach</select></label>
+    <label>What / account head<select class="form-control select2" name="account_head_id"><option value="">Use receipt account head</option>@foreach($heads as $h)<option value="{{ $h->id }}">{{ $h->code }} — {{ $h->name }}</option>@endforeach</select>
+     <button type="button" class="btn btn-sm btn-success mt-1" style="font-size:11px;border-radius:20px;padding:2px 10px;background:linear-gradient(45deg,#28a745,#20c997);border:none;" onclick="openQuickHeadFor(this)" title="Quickly create a missing account head"><i class="fa fa-plus-circle"></i> Quick Add Head</button>
+    </label>
     <button class="btn btn-primary btn-sm" {{ $exact->isEmpty()?'disabled':'' }} onclick="return confirm('Approve exact receipt match?')">OK · Match</button>
    </form>
    @php $fuzzy=$fuzzyMatches[(int)$entry->id]??[]; @endphp
@@ -237,7 +239,12 @@ $rejected = $reconStatus==='rejected';
    <p class="hd-small">Categorise a bank movement without a linked receipt. Approving the row posts it to the chosen account head, so it appears in the P&amp;L / balance sheet.</p>
    <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-form-grid">@csrf
     <input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="categorize">
-    <label>What / account head<select class="form-control" name="account_head_id" required><option value="">Choose account head</option>@foreach($heads as $h)<option value="{{ $h->id }}" {{ $entry->account_head_id==$h->id?'selected':'' }}>{{ $h->code }} — {{ $h->name }}</option>@endforeach</select></label>
+    <label>What / account head
+     <span>
+      <button type="button" class="btn btn-sm btn-success" style="font-size:11px;border-radius:20px;padding:2px 10px;background:linear-gradient(45deg,#28a745,#20c997);border:none;" onclick="openQuickHeadFor(this)" title="Quickly create a missing account head"><i class="fa fa-plus-circle"></i> Quick Add Head</button>
+      <button type="button" class="btn btn-sm btn-info" style="font-size:11px;border-radius:20px;padding:2px 10px;" onclick="openQuickTypeFor(this)" title="Quickly create a type under the selected head"><i class="fa fa-plus-circle"></i> Quick Add Type</button>
+     </span>
+     <select class="form-control select2" name="account_head_id" required><option value="">Choose account head</option>@foreach($heads as $h)<option value="{{ $h->id }}" {{ $entry->account_head_id==$h->id?'selected':'' }}>{{ $h->code }} — {{ $h->name }}</option>@endforeach</select></label>
     <label>Why / description<input class="form-control" type="text" name="review_note" placeholder="Reason for classification"></label>
     <button class="btn btn-primary btn-sm">Save classification</button>
    </form>
@@ -247,7 +254,7 @@ $rejected = $reconStatus==='rejected';
    <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}">@csrf
     <input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="split">
     @foreach([0,1] as $i)<div class="hd-form-grid mb-2"><label>Line {{ $i+1 }} amount (£)<input class="form-control" type="number" name="allocations[{{ $i }}][amount]" min="0.01" step="0.01" required></label>
-     <label>Account head<select class="form-control" name="allocations[{{ $i }}][account_head_id]" required><option value="">Choose account</option>@foreach($heads as $h)<option value="{{ $h->id }}">{{ $h->code }} — {{ $h->name }}</option>@endforeach</select></label>
+     <label>Account head<select class="form-control select2" name="allocations[{{ $i }}][account_head_id]" required><option value="">Choose account</option>@foreach($heads as $h)<option value="{{ $h->id }}">{{ $h->code }} — {{ $h->name }}</option>@endforeach</select></label>
      <label>VAT %<input class="form-control" type="number" name="allocations[{{ $i }}][tax_percent]" min="0" max="100" step="0.01" value="0"></label>
      <label>VAT amount (£)<input class="form-control" type="number" name="allocations[{{ $i }}][tax_amount]" min="0" step="0.01" value="0"></label>
      <label>Explanation<input class="form-control" name="allocations[{{ $i }}][memo]" placeholder="e.g. outstanding payment"></label></div>@endforeach
@@ -264,7 +271,9 @@ $rejected = $reconStatus==='rejected';
    <input type="search" class="form-control mb-2 hd-receipt-search" placeholder="Search receipt number or supplier" aria-label="Search receipts">
    <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-form-grid">@csrf<input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="match">
     <label>Uploaded receipt<select class="form-control hd-receipt-select" name="receipt_id" required><option value="">Choose receipt</option>@foreach($receipts as $r)<option value="{{ $r->id }}" data-search="{{ strtolower(($r->receipt_number??'').' '.($r->supplier??'')) }}">#{{ $r->receipt_number }} · {{ $r->supplier?:'Unknown supplier' }} · £{{ number_format((float)$r->detail->total_amount,2) }}</option>@endforeach</select></label>
-    <label>Account head<select class="form-control" name="account_head_id"><option value="">Use receipt account head</option>@foreach($heads as $h)<option value="{{ $h->id }}">{{ $h->code }} — {{ $h->name }}</option>@endforeach</select></label>
+    <label>Account head<select class="form-control select2" name="account_head_id"><option value="">Use receipt account head</option>@foreach($heads as $h)<option value="{{ $h->id }}">{{ $h->code }} — {{ $h->name }}</option>@endforeach</select>
+     <button type="button" class="btn btn-sm btn-success mt-1" style="font-size:11px;border-radius:20px;padding:2px 10px;background:linear-gradient(45deg,#28a745,#20c997);border:none;" onclick="openQuickHeadFor(this)" title="Quickly create a missing account head"><i class="fa fa-plus-circle"></i> Quick Add Head</button>
+    </label>
     <button class="btn btn-primary btn-sm" onclick="return confirm('Confirm this selected receipt matches the exact bank amount?')">Match selected receipt</button>
    </form>
   </section>
@@ -272,9 +281,11 @@ $rejected = $reconStatus==='rejected';
    <p class="hd-small">Record a partial or over/under settlement when a receipt does not exactly equal the bank amount. A settlement record tracks the outstanding remainder; the row stays in draft until approved.</p>
    <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-form-grid">@csrf
     <input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="settle">
-    <label>Receipt<select class="form-control" name="receipt_id"><option value="">No receipt (write-off / unlinked)</option>@foreach($receipts as $r)<option value="{{ $r->id }}">#{{ $r->receipt_number }} · {{ $r->supplier?:'Unknown supplier' }} · £{{ number_format((float)$r->detail->total_amount,2) }}</option>@endforeach</select></label>
-    <label>Type<select class="form-control" name="settlement_type"><option value="partial">Partial</option><option value="over_payment">Over payment</option><option value="under_payment">Under payment</option></select></label>
-    <label>Account head (required when no receipt)<select class="form-control" name="account_head_id"><option value="">Use receipt account head</option>@foreach($heads as $h)<option value="{{ $h->id }}">{{ $h->code }} — {{ $h->name }}</option>@endforeach</select></label>
+    <label>Receipt<select class="form-control select2" name="receipt_id"><option value="">No receipt (write-off / unlinked)</option>@foreach($receipts as $r)<option value="{{ $r->id }}">#{{ $r->receipt_number }} · {{ $r->supplier?:'Unknown supplier' }} · £{{ number_format((float)$r->detail->total_amount,2) }}</option>@endforeach</select></label>
+    <label>Type<select class="form-control select2" name="settlement_type"><option value="partial">Partial</option><option value="over_payment">Over payment</option><option value="under_payment">Under payment</option></select></label>
+    <label>Account head (required when no receipt)<select class="form-control select2" name="account_head_id"><option value="">Use receipt account head</option>@foreach($heads as $h)<option value="{{ $h->id }}">{{ $h->code }} — {{ $h->name }}</option>@endforeach</select>
+     <button type="button" class="btn btn-sm btn-success mt-1" style="font-size:11px;border-radius:20px;padding:2px 10px;background:linear-gradient(45deg,#28a745,#20c997);border:none;" onclick="openQuickHeadFor(this)" title="Quickly create a missing account head"><i class="fa fa-plus-circle"></i> Quick Add Head</button>
+    </label>
     <button class="btn btn-primary btn-sm" onclick="return confirm('Record this settlement?')">Save settlement</button>
    </form>
   </section>
@@ -282,8 +293,8 @@ $rejected = $reconStatus==='rejected';
    <p class="hd-small">Link this movement to its counterparty in another of the client's bank accounts. Amounts must be equal and opposite. Transfers post net-zero to the P&amp;L.</p>
    <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-form-grid">@csrf
     <input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="transfer">
-    <label>Counterparty entry<select class="form-control" name="linked_entry_id" required><option value="">Choose the other side</option>@foreach($transferCandidates as $c)@if((int)$c->id!==(int)$entry->id)<option value="{{ $c->id }}">#{{ $c->id }} · {{ $c->transaction_date }} · {{ \Illuminate\Support\Str::limit($c->description,40) }} · £{{ number_format((float)$c->amount,2) }}</option>@endif @endforeach</select></label>
-    <label>Bank account head<select class="form-control" name="account_head_id"><option value="">Choose the bank account head</option>@foreach($heads as $h)<option value="{{ $h->id }}">{{ $h->code }} — {{ $h->name }}</option>@endforeach</select></label>
+    <label>Counterparty entry<select class="form-control select2" name="linked_entry_id" required><option value="">Choose the other side</option>@foreach($transferCandidates as $c)@if((int)$c->id!==(int)$entry->id)<option value="{{ $c->id }}">#{{ $c->id }} · {{ $c->transaction_date }} · {{ \Illuminate\Support\Str::limit($c->description,40) }} · £{{ number_format((float)$c->amount,2) }}</option>@endif @endforeach</select></label>
+    <label>Bank account head<select class="form-control select2" name="account_head_id"><option value="">Choose the bank account head</option>@foreach($heads as $h)<option value="{{ $h->id }}">{{ $h->code }} — {{ $h->name }}</option>@endforeach</select></label>
     <button class="btn btn-primary btn-sm" onclick="return confirm('Link these two entries as an internal transfer?')">Save transfer</button>
    </form>
   </section>
@@ -301,6 +312,15 @@ document.addEventListener('click',function(e){
  const row=tab.closest('.hd-action-side'); if(!row)return;
  row.querySelectorAll('[data-hd-tab]').forEach(el=>{el.classList.toggle('active',el===tab);el.setAttribute('aria-selected',el===tab?'true':'false')});
  row.querySelectorAll('[data-hd-panel]').forEach(el=>{el.hidden=el.dataset.hdPanel!==tab.dataset.hdTab});
+ // Re-fit any select2 in the now-visible panel (they init at 0 width while hidden).
+ if(window.jQuery){
+  const panel=row.querySelector('[data-hd-panel="'+tab.dataset.hdTab+'"]');
+  if(panel) panel.querySelectorAll('select.select2').forEach(function(s){
+   const $s=jQuery(s);
+   if($s.data('select2')){$s.select2('destroy');}
+   $s.select2({width:'100%'});
+  });
+ }
 });
 document.addEventListener('input',function(e){
  if(!e.target.classList.contains('hd-receipt-search'))return;
@@ -318,6 +338,26 @@ document.addEventListener('input',function(e){
 </tbody></table></div></div>
 @endif
 </div>
+
+{{-- Quick Add Head / Type modals (shared with the receipt page) --}}
+@include('admin.receipt._quick_head_modal')
+@include('admin.receipt._quick_type_modal')
+<script>
+// Bank-reconciliation wiring: each row/tab has its own account-head dropdown, so
+// remember which one opened the modal and refresh only that one afterwards.
+window.openQuickHeadFor = function(btn){
+    var sel = btn.closest('label') ? btn.closest('label').querySelector('select[name="account_head_id"]') : null;
+    if(!sel) sel = btn.closest('.hd-form-grid, .hd-tab-panel') ? btn.closest('.hd-form-grid, .hd-tab-panel').querySelector('select[name="account_head_id"]') : null;
+    window.quickAddTargetEl = sel;
+    window.openQuickHeadModal();
+};
+window.openQuickTypeFor = function(btn){
+    var sel = btn.closest('label') ? btn.closest('label').querySelector('select[name="account_head_id"]') : null;
+    if(!sel) sel = btn.closest('.hd-form-grid, .hd-tab-panel') ? btn.closest('.hd-form-grid, .hd-tab-panel').querySelector('select[name="account_head_id"]') : null;
+    window.quickAddTargetEl = sel;
+    window.openQuickTypeModal();
+};
+</script>
 @endsection
 @section('script')
 <script>

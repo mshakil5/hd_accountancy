@@ -174,7 +174,7 @@
                 <th style="width:28px;">#</th>
                 <th>Description</th>
                 <th style="width:24%;">Account Head</th>
-                <th style="width:12%;">Tax</th>
+                <th style="width:12%;">VAT</th>
                 <th class="n" style="width:14%;">Amount (£)</th>
             </tr>
         </thead>
@@ -214,11 +214,9 @@
         <table class="inv-totals">
             <tr><td>Subtotal</td><td>£{{ number_format($detail?->net_amount ?? 0, 2) }}</td></tr>
             @if(($detail?->tax_amount ?? 0) > 0)
-            <tr><td>Tax</td><td>£{{ number_format($detail->tax_amount, 2) }}</td></tr>
+            <tr><td>VAT</td><td>£{{ number_format($detail->tax_amount, 2) }}</td></tr>
             @endif
-            @if(($detail?->vat_amount ?? 0) > 0)
-            <tr><td>VAT</td><td>£{{ number_format($detail->vat_amount, 2) }}</td></tr>
-            @endif
+            {{-- dedicated VAT amount hidden --}}
             <tr class="inv-grand"><td>Total</td><td>£{{ number_format($detail?->total_amount ?? 0, 2) }}</td></tr>
         </table>
     </div>

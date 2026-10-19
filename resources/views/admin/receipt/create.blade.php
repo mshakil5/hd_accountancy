@@ -153,17 +153,14 @@
                                             <input type="number" step="0.01" class="form-control" id="net_amount" name="net_amount" placeholder="0.00">
                                         </div>
                                         <div class="col-md-2 detail-field">
-                                            <label class="detail-label">Tax Rate (%)</label>
+                                            <label class="detail-label">VAT Rate (%)</label>
                                             <input type="text" class="form-control" id="tax_percent" name="tax_percent" readonly value="0">
                                         </div>
                                         <div class="col-md-2 detail-field">
-                                            <label class="detail-label">Tax Amt (£)</label>
+                                            <label class="detail-label">VAT Amt (£)</label>
                                             <input type="text" class="form-control" id="tax_amount" name="tax_amount" readonly value="0">
                                         </div>
-                                        <div class="col-md-2 detail-field">
-                                            <label class="detail-label">VAT Amount (£)</label>
-                                            <input type="number" step="0.01" class="form-control" id="vat_amount" name="vat_amount" value="0">
-                                        </div>
+                                        <input type="hidden" id="vat_amount" name="vat_amount" value="0">
                                         <div class="col-md-3 detail-field">
                                             <label class="detail-label">Total Amount (£)</label>
                                             <input type="text" class="form-control" id="total_amount" readonly value="£0.00">
@@ -321,7 +318,7 @@ $(function () {
         goToStep(3);
     });
 
-    // ── Account Head → Account Type (Tax Rate behaviour unchanged) ──
+    // ── Account Head → Account Type (VAT Rate behaviour unchanged) ──
     function loadReceiptHeads(selectId) {
         const headDrop = $('#account_head_id');
         headDrop.html('<option value="">Loading...</option>').trigger('change');

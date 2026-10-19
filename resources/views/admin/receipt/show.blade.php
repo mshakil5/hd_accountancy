@@ -151,6 +151,11 @@
 
             <div class="ermsg"></div>
 
+            <div class="mb-2 px-2" style="font-size:14px;">
+                <strong>Client - Business:</strong>
+                {{ trim(($receipt->client?->credential?->first_name ?? '') . ' ' . ($receipt->client?->credential?->last_name ?? '')) }} - {{ $receipt->client?->name }}{{ $receipt->client?->business_name ? ' (' . $receipt->client?->business_name . ')' : '' }}
+            </div>
+
             <div class="row">
                 <div class="col-md-7">
                     <div class="card card-outline card-primary">
@@ -279,48 +284,37 @@
                             <h3 class="card-title">Audit & Process Details</h3>
                         </div>
                         <div class="card-body">
+                            <input type="hidden" id="client_credential_id" value="{{ $credentialId }}">
+                            <input type="hidden" id="client_id" name="client_id" value="{{ $receipt->client_id }}">
+
+                            {{-- Client / Business shown outside the card (see header) --}}
+
                             <form id="receiptForm">
-                                <div class="detail-field">
-                                    <label class="detail-label">Client (Credential)</label>
-                                    <select class="form-control select2" id="client_credential_id" style="width:100%;">
-                                        <option value="{{ $credentialId }}">{{ $receipt->client?->credential?->first_name }} {{ $receipt->client?->credential?->last_name }}</option>
-                                    </select>
-                                </div>
-
-                                <div class="detail-field">
-                                    <label class="detail-label">Business / Client</label>
-                                    <select class="form-control select2" id="client_id" name="client_id" style="width:100%;">
-                                        @foreach ($businesses as $biz)
-                                            <option value="{{ $biz->id }}" {{ $receipt->client_id == $biz->id ? 'selected' : '' }}>
-                                                {{ $biz->name }}{{ $biz->business_name ? ' (' . $biz->business_name . ')' : '' }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-
-                                <div class="detail-field">
-                                    <label class="detail-label">Status Workflow</label>
-                                    <select class="form-control" id="status" name="status">
-                                        <option value="pending" {{ $receipt->status == 'pending' ? 'selected' : '' }}>Pending
-                                        </option>
-                                        <option value="to_review" {{ $receipt->status == 'to_review' ? 'selected' : '' }}>To
-                                            Review</option>
-                                        <option value="ready" {{ $receipt->status == 'ready' ? 'selected' : '' }}>Ready
-                                        </option>
-                                        <option value="archived" {{ $receipt->status == 'archived' ? 'selected' : '' }}>
-                                            Archived</option>
-                                    </select>
-                                </div>
-
                                 <div class="detail-field">
                                     <label class="detail-label">Supplier</label>
                                     <input type="text" class="form-control" id="supplier"
                                         value="{{ $receipt->supplier }}" placeholder="Supplier name...">
                                 </div>
 
+                                <div class="row">
+                                    <div class="col-md-6 detail-field">
+                                        <label class="detail-label">Invoice Date</label>
+                                        <input type="date" class="form-control" id="invoice_date" name="invoice_date"
+                                            value="{{ $receipt->detail?->invoice_date ?? ($receipt->receipt_date ? $receipt->receipt_date->format('Y-m-d') : '') }}">
+                                    </div>
+                                    <div class="col-md-6 detail-field">
+                                        <label class="detail-label">Due Date</label>
+                                        <input type="date" class="form-control" id="due_date" name="due_date"
+                                            value="{{ $receipt->detail?->due_date }}">
+                                    </div>
+                                </div>
+
                                 <div class="detail-field">
                                     <label class="detail-label d-flex align-items-center justify-content-between">Account Head
-                                        <button type="button" class="btn btn-sm btn-success ml-2" style="font-size:12px;border-radius:20px;padding:2px 12px;background:linear-gradient(45deg,#28a745,#20c997);border:none;box-shadow:0 2px 6px rgba(40,167,69,.4);" onclick="openQuickHeadModal()" title="Quickly create a missing head for this client (same fields as global making)"><i class="fa fa-plus-circle"></i> Quick Add</button>
+                                        <span>
+                                            <button type="button" class="btn btn-sm btn-success ml-2" style="font-size:12px;border-radius:20px;padding:2px 12px;background:linear-gradient(45deg,#28a745,#20c997);border:none;box-shadow:0 2px 6px rgba(40,167,69,.4);" onclick="openQuickHeadModal()" title="Quickly create a missing head for this client"><i class="fa fa-plus-circle"></i> Quick Add Head</button>
+                                            <button type="button" class="btn btn-sm btn-info ml-1" style="font-size:12px;border-radius:20px;padding:2px 12px;" onclick="openQuickTypeModal()" title="Quickly create a type under the selected head"><i class="fa fa-plus-circle"></i> Quick Add Type</button>
+                                        </span>
                                     </label>
                                     <select class="form-control select2" id="account_head_id" name="account_head_id"
                                         style="width:100%;">
@@ -337,9 +331,9 @@
                                 <div class="detail-field">
                                     <label class="detail-label">Account Type</label>
                                     <select class="form-control" id="account_type_id" name="account_type_id" disabled>
-                                        <option value="">Auto-filled from Account Head</option>
+                                        <option value="">Select Account Head first</option>
                                         @foreach ($accountTypes as $type)
-                                            <option value="{{ $type->id }}"
+                                            <option value="{{ $type->id }}" data-head-id="{{ $type->account_head_id }}"
                                                 {{ $receipt->detail?->accountHead?->account_type_id == $type->id ? 'selected' : '' }}>
                                             {{ $type->name }} ({{ ucfirst($type->category) }})
                                         </option>
@@ -349,81 +343,78 @@
 
                                 <div class="row">
                                     <div class="col-md-6 detail-field">
-                                        <label class="detail-label">Invoice Date</label>
-                                        <input type="date" class="form-control" id="invoice_date"
-                                            value="{{ $receipt->detail?->invoice_date ?? ($receipt->receipt_date ? $receipt->receipt_date->format('Y-m-d') : '') }}">
-                                    </div>
-                                    <div class="col-md-6 detail-field">
-                                        <label class="detail-label">Due Date</label>
-                                        <input type="date" class="form-control" id="due_date"
-                                            value="{{ $receipt->detail?->due_date }}">
-                                    </div>
-                                </div>
-
-                                <div class="detail-field">
-                                    <label class="detail-label">Invoice / Reference Number</label>
-                                    <input type="text" class="form-control" id="invoice_number"
-                                        value="{{ $receipt->detail?->invoice_number }}">
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-6 detail-field">
                                         <label class="detail-label">Net Amount (£)</label>
-                                        <input type="number" step="0.01" class="form-control" id="net_amount"
+                                        <input type="number" step="0.01" class="form-control" id="net_amount" name="net_amount"
                                             value="{{ $receipt->detail?->net_amount }}">
                                     </div>
                                     <div class="col-md-3 detail-field">
-                                        <label class="detail-label">Tax Rate (%)</label>
-                                        <input type="text" class="form-control" id="tax_percent" readonly
+                                        <label class="detail-label">VAT Rate (%)</label>
+                                        <input type="text" class="form-control" id="tax_percent" name="tax_percent" readonly
                                             value="{{ $receipt->detail?->accountHead?->taxRate?->rate ?? 0 }}">
                                     </div>
                                     <div class="col-md-3 detail-field">
-                                        <label class="detail-label">Tax Amt (£)</label>
-                                        <input type="text" class="form-control" id="tax_amount" readonly
+                                        <label class="detail-label">VAT Amt (£)</label>
+                                        <input type="text" class="form-control" id="tax_amount" name="tax_amount" readonly
                                             value="{{ $receipt->detail?->tax_amount ?? 0 }}">
                                     </div>
                                 </div>
 
+                                <input type="hidden" id="vat_amount" name="vat_amount"
+                                    value="{{ $receipt->detail?->vat_amount ?? 0 }}">
                                 <div class="row">
                                     <div class="col-md-6 detail-field">
-                                        <label class="detail-label">VAT Amount (£)</label>
-                                        <input type="number" step="0.01" class="form-control" id="vat_amount"
-                                            value="{{ $receipt->detail?->vat_amount ?? 0 }}">
-                                    </div>
-                                    <div class="col-md-6 detail-field">
-                                        <label class="detail-label">Total Amount (£)</label>
-                                        <input type="text" class="form-control" id="total_amount" readonly
+                                        <label class="detail-label">Gross Amount (£)</label>
+                                        <input type="text" class="form-control" id="total_amount" name="total_amount" readonly
                                             value="{{ $receipt->detail?->total_amount }}">
                                     </div>
-                                </div>
-
-                                <div class="row">
                                     <div class="col-md-6 detail-field">
                                         <label class="detail-label">Is Paid?</label>
-                                        <select class="form-control" id="paid">
+                                        <select class="form-control" id="paid" name="paid">
                                             <option value="no" {{ $receipt->detail?->paid == 0 ? 'selected' : '' }}>No
                                             </option>
                                             <option value="yes" {{ $receipt->detail?->paid == 1 ? 'selected' : '' }}>Yes
                                             </option>
                                         </select>
                                     </div>
-                                    <div class="col-md-6 detail-field" id="method_box"
-                                        style="{{ $receipt->detail?->paid == 1 ? '' : 'display:none;' }}">
-                                        <label class="detail-label">Payment Method</label>
-                                        <select class="form-control" id="payment_method">
-                                            <option value="cash"
-                                                {{ $receipt->detail?->payment_method == 'cash' ? 'selected' : '' }}>Cash
+                                </div>
+
+                                <div class="detail-field" id="method_box"
+                                    style="{{ $receipt->detail?->paid == 1 ? '' : 'display:none;' }}">
+                                    <label class="detail-label">Payment Method</label>
+                                    <select class="form-control" id="payment_method" name="payment_method">
+                                        <option value="cash"
+                                            {{ $receipt->detail?->payment_method == 'cash' ? 'selected' : '' }}>Cash
+                                        </option>
+                                        <option value="bank"
+                                            {{ $receipt->detail?->payment_method == 'bank' ? 'selected' : '' }}>Bank
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 detail-field">
+                                        <label class="detail-label">Invoice / Reference Number</label>
+                                        <input type="text" class="form-control" id="invoice_number" name="invoice_number"
+                                            value="{{ $receipt->detail?->invoice_number }}">
+                                    </div>
+                                    <div class="col-md-6 detail-field">
+                                        <label class="detail-label">Status</label>
+                                        <select class="form-control" id="status" name="status">
+                                            <option value="pending" {{ $receipt->status == 'pending' ? 'selected' : '' }}>Pending
                                             </option>
-                                            <option value="bank"
-                                                {{ $receipt->detail?->payment_method == 'bank' ? 'selected' : '' }}>Bank
+                                            <option value="to_review" {{ $receipt->status == 'to_review' ? 'selected' : '' }}>To
+                                                Review</option>
+                                            <option value="ready" {{ $receipt->status == 'ready' ? 'selected' : '' }}>Ready
                                             </option>
+                                            <option value="archived" {{ $receipt->status == 'archived' ? 'selected' : '' }}>
+                                                Archived</option>
                                         </select>
                                     </div>
                                 </div>
 
                                 <div class="detail-field">
-                                    <label class="detail-label">Internal Audit Description</label>
-                                    <textarea class="form-control" id="description" rows="2">{{ $receipt->detail?->description }}</textarea>
+                                    <label class="detail-label">Description</label>
+                                    <textarea class="form-control" id="description" name="description" rows="2">{{ $receipt->detail?->description }}</textarea>
                                 </div>
 
                                 <div class="mt-4">
@@ -620,9 +611,33 @@
                 $(this).val('');
             });
 
-            // -- Account Head -> Account Type + Tax (auto-fill from head) --
+            // -- Account Head -> Account Type (types under this head + shared) + VAT --
+            function filterAccountTypes(headId) {
+                $('#account_type_id option').each(function() {
+                    var optHead = $(this).data('head-id');
+                    if (!$(this).val()) { $(this).show(); return; }
+                    if (!headId) { $(this).hide(); return; }
+                    if (String(optHead) === String(headId) || optHead === '' || optHead === undefined || optHead === null) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            }
             $('#account_head_id').change(function() {
                 const selected = $(this).find('option:selected');
+                const headId = $(this).val();
+                if (!headId) {
+                    $('#account_type_id').prop('disabled', true).val('');
+                    $('#account_type_id option').hide();
+                    $('#account_type_id option:first').show();
+                    return;
+                }
+                $('#account_type_id').prop('disabled', false);
+                if ($.fn.select2 && !$('#account_type_id').hasClass('select2-hidden-accessible')) {
+                    $('#account_type_id').select2({ width: '100%', placeholder: 'Select Account Type' });
+                }
+                filterAccountTypes(headId);
                 $('#account_type_id').val(selected.attr('data-type-id') || '');
                 const rate = parseFloat(selected.data('rate')) || 0;
                 $('#tax_percent').val(rate);
@@ -677,36 +692,11 @@
                 $(this).val() === 'yes' ? $('#method_box').fadeIn() : $('#method_box').fadeOut();
             });
 
-            // ── Credential -> Business Cascade ──
-            $('#client_credential_id').select2({
-                placeholder: 'Search client...',
-                allowClear: true,
-                ajax: {
-                    url: "{{ url('/admin/receipts/search-clients') }}",
-                    dataType: 'json',
-                    delay: 250,
-                    data: function(params) { return { q: params.term }; },
-                    processResults: function(data) { return { results: data }; },
-                    cache: true
-                }
-            }).on('change', function() {
-                var credId = $(this).val();
-                var bizDrop = $('#client_id');
-                bizDrop.html('<option value="">Loading...</option>').trigger('change');
-                if (!credId) {
-                    bizDrop.html('<option value="">First select client</option>').trigger('change');
-                    return;
-                }
-                $.get(baseUrl + '/get-clients-by-credential', { client_credential_id: credId }, function(data) {
-                    var opts = '<option value="">Select Business / Client</option>';
-                    $.each(data, function(i, c) {
-                        opts += '<option value="' + c.id + '">' + c.name + '</option>';
-                    });
-                    bizDrop.html(opts).trigger('change');
-                });
-            });
+            if ($.fn.select2) {
+                $('#account_head_id').select2({ width: '100%', placeholder: 'Select Account Head' });
+            }
 
-            $('#client_id').select2({ placeholder: 'Select Business / Client', allowClear: true });
+            // (Client/Business are fixed for this receipt — no cascade needed)
 
             function getFormData() {
                 return {
@@ -826,4 +816,5 @@
         });
     </script>
     @include('admin.receipt._quick_head_modal')
+    @include('admin.receipt._quick_type_modal')
 @endsection

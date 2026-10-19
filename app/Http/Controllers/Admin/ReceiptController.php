@@ -152,10 +152,15 @@ class ReceiptController extends Controller
     public function show($id)
     {
         $receipt = Receipt::with(['files', 'detail.accountHead.accountType', 'client.credential'])->findOrFail($id);
-        $accountTypes = AccountType::where('is_active', true)->get();
-        $taxRates = \App\Models\TaxRate::where('is_active', true)->select('id', 'name', 'rate')->get();
-
         $credentialId = $receipt->client?->client_credential_id;
+        $accountTypes = AccountType::where('is_active', true)
+            ->where(function ($q) use ($credentialId) {
+                $q->whereNull('client_credential_id');
+                if ($credentialId) {
+                    $q->orWhere('client_credential_id', $credentialId);
+                }
+            })->get();
+        $taxRates = \App\Models\TaxRate::where('is_active', true)->select('id', 'name', 'rate')->get();
 
         $heads = AccountHead::with('taxRate')
             ->where('is_active', true)

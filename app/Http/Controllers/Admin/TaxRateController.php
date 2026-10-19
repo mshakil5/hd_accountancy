@@ -46,11 +46,11 @@ class TaxRateController extends Controller
             return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>Please fill Rate field.</div>"]);
         }
         if(TaxRate::where('name', $request->name)->exists()){
-            return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>This tax rate name already exists.</div>"]);
+            return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>This VAT rate name already exists.</div>"]);
         }
 
         TaxRate::create(['name' => $request->name, 'rate' => $request->rate, 'is_active' => 1]);
-        return response()->json(['status'=>300,'message'=>'Tax rate created successfully.']);
+        return response()->json(['status'=>300,'message'=>'VAT rate created successfully.']);
     }
 
     public function edit($id)
@@ -67,11 +67,11 @@ class TaxRateController extends Controller
             return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>Please fill Rate field.</div>"]);
         }
         if(TaxRate::where('name', $request->name)->where('id','!=',$request->codeid)->exists()){
-            return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>This tax rate name already exists.</div>"]);
+            return response()->json(['status'=>303,'message'=>"<div class='alert alert-warning'>This VAT rate name already exists.</div>"]);
         }
 
         TaxRate::find($request->codeid)->update(['name' => $request->name, 'rate' => $request->rate]);
-        return response()->json(['status'=>300,'message'=>'Tax rate updated successfully.']);
+        return response()->json(['status'=>300,'message'=>'VAT rate updated successfully.']);
     }
 
     public function delete($id)

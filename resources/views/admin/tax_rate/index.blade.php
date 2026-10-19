@@ -27,7 +27,7 @@ input:checked + .slider:before { transform: translateX(24px); }
             <div class="col-md-6">
                 <div class="card card-secondary border-theme border-2">
                     <div class="card-header">
-                        <h3 class="card-title" id="formTitle">Add Tax Rate</h3>
+                        <h3 class="card-title" id="formTitle">Add VAT Rate</h3>
                     </div>
                     <div class="card-body">
                         <div class="ermsg"></div>
@@ -60,7 +60,7 @@ input:checked + .slider:before { transform: translateX(24px); }
             <div class="col-12">
                 <div class="card card-secondary border-theme border-2">
                     <div class="card-header">
-                        <h3 class="card-title">All Tax Rates</h3>
+                        <h3 class="card-title">All VAT Rates</h3>
                     </div>
                     <div class="card-body">
                         <table id="example1" class="table table-striped">
@@ -146,7 +146,7 @@ $(function(){
             $('#name').val(d.name);
             $('#rate').val(d.rate);
             $('#addBtn').val('Update').text('Update');
-            $('#formTitle').text('Edit Tax Rate');
+            $('#formTitle').text('Edit VAT Rate');
             $('#addThisFormContainer').show(300);
             $('#newBtn').hide();
         });
@@ -177,7 +177,7 @@ $(function(){
         $('#createThisForm')[0].reset();
         $('#codeid').val('');
         $('#addBtn').val('Create').text('Create');
-        $('#formTitle').text('Add Tax Rate');
+        $('#formTitle').text('Add VAT Rate');
         $('.ermsg').html('');
     }
 

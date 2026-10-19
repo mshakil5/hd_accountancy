@@ -226,6 +226,8 @@
                 'accountTypes',
                 'accountHeads',
                 'admin.receipt.index',
+                'admin.receipt.show',
+                'admin.receipt.bill',
                 'accounting.profitLoss',
                 'accounting.trialBalance',
                 'accounting.balanceSheet',
@@ -253,7 +255,7 @@
                 <li class="nav-item {{ request()->routeIs('taxRates') ? 'active' : '' }}">
                     <a class="nav-link" href="{{ route('taxRates') }}">
                         <i class="bi bi-percent"></i>
-                        <span>Tax Rates</span>
+                        <span>VAT Rates</span>
                     </a>
                 </li>
                 @endif
@@ -277,7 +279,7 @@
                 @endif
 
                 @if (in_array('21', array_map('strval', (array) $sidebarPerms)))
-                <li class="nav-item {{ request()->routeIs('admin.receipt.index') ? 'active' : '' }}">
+                <li class="nav-item {{ request()->routeIs('admin.receipt.index', 'admin.receipt.show', 'admin.receipt.bill') ? 'active' : '' }}">
                     <a class="nav-link" href="{{ route('admin.receipt.index') }}">
                         <i class="bi bi-receipt-cutoff"></i>
                         <span>Receipts</span>

@@ -74,9 +74,9 @@ input:checked + .slider:before { transform: translateX(24px); }
                             </div>
 
                             <div class="form-group">
-                                <label>Tax</label>
+                                <label>VAT Rate</label>
                                 <select class="form-control" id="tax_rate_id" name="tax_rate_id">
-                                    <option value="">Select tax</option>
+                                    <option value="">Select VAT rate</option>
                                     @foreach($taxRates as $tax)
                                         <option value="{{ $tax->id }}">{{ $tax->name }} ({{ $tax->rate }}%)</option>
                                     @endforeach
@@ -128,7 +128,7 @@ input:checked + .slider:before { transform: translateX(24px); }
                                     <th>Code</th>
                                     <th>Account Head</th>
                                     <th>Client</th>
-                                    <th>Tax</th>
+                                    <th>VAT Rate</th>
                                     <th>Status</th>
                                     <th>Action</th>
                                 </tr>

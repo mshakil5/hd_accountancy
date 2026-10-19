@@ -21,21 +21,23 @@ class BankReconciliationPageController extends Controller
         $credentialId=(int)$request->query('client_credential_id',0);
         $businessId=(int)$request->query('client_id',0);
         $bankAccountId=(int)$request->query('bank_account_id',0);
-        $bankAccounts=$businessId ? DB::table('reconciliation_bank_accounts')->where('client_id',$businessId)->orderBy('bank_name')->get() : collect();
-        if($bankAccountId && (!$businessId || !$bankAccounts->contains('id',$bankAccountId))) {
-            abort(422,'Choose a bank account belonging to the selected business.');
-        }
         $businessIds=$credentialId
             ? Client::where('client_credential_id',$credentialId)->where('status',1)->pluck('id')->all()
             : [];
         if($businessId)
             $businessIds=in_array($businessId,$businessIds,true)?[$businessId]:[];
+        // Load bank accounts across every business in scope so bank names resolve on
+        // each row even when viewing "All businesses" (a single selection narrows this).
+        $bankAccounts=$businessIds ? DB::table('reconciliation_bank_accounts')->whereIn('client_id',$businessIds)->orderBy('bank_name')->get() : collect();
+        if($bankAccountId && !$bankAccounts->contains('id',$bankAccountId)) {
+            abort(422,'Choose a bank account belonging to the selected business.');
+        }
         if(!$credentialId||!$businessIds){
             // Nothing selected yet — render the picker with an empty workspace.
             return view('admin.accounting.bank_reconciliation',[
                 'credentialId'=>$credentialId,'businessId'=>$businessId,'bankAccounts'=>$bankAccounts,'bankAccountId'=>$bankAccountId,'bankOverview'=>collect(),
                 'entries'=>DB::table('bank_entries')->whereRaw('1 = 0')->paginate(30),
-                'heads'=>collect(),'stats'=>collect(),'approvalStats'=>collect(),
+                'heads'=>collect(),'taxRates'=>collect(),'stats'=>collect(),'approvalStats'=>collect(),
                 'imports'=>collect(),'receipts'=>collect(),'splits'=>collect(),'unmatchedReceipts'=>collect(),
             ]);
         }
@@ -78,7 +80,12 @@ class BankReconciliationPageController extends Controller
             ->when($request->filled('status'),fn($q)=>$q->where('status',$request->input('status')))
             ->when($request->filled('approval'),fn($q)=>$q->where('reconciliation_status',$request->input('approval')))
             ->orderByDesc('transaction_date')->orderByDesc('id')->paginate(30)->withQueryString();
-        $heads=AccountHead::where('client_credential_id',$credentialId)->whereNotNull('account_type_id')->orderBy('code')->get(['id','code','name']);
+        // Account heads must be global + this credential's, matching the receipt page.
+        // (Client-only returns nothing for credentials that rely on the global chart.)
+        $heads=AccountHead::where('is_active',1)->whereNotNull('account_type_id')
+            ->where(function($q)use($credentialId){$q->whereNull('client_credential_id');if($credentialId)$q->orWhere('client_credential_id',$credentialId);})
+            ->orderBy('code')->get(['id','code','name']);
+        $taxRates=\App\Models\TaxRate::where('is_active',true)->select('id','name','rate')->get();
         $stats=$scopeEntries()->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total','status');
         $approvalStats=$scopeEntries()->selectRaw('reconciliation_status, count(*) as total')->groupBy('reconciliation_status')->pluck('total','reconciliation_status');
         $imports=DB::table('bank_imports')->whereIn('client_id',$businessIds)->when($bankAccountId,fn($q)=>$q->where('bank_account_id',$bankAccountId))->latest()->limit(10)->get();
@@ -100,7 +107,7 @@ class BankReconciliationPageController extends Controller
             ->whereIn('status',['unmatched','needs_review'])
             ->orderByDesc('transaction_date')->limit(300)
             ->get(['id','transaction_date','description','amount','bank_account_id']);
-        return view('admin.accounting.bank_reconciliation',compact('credentialId','businessId','bankAccountId','bankAccounts','bankOverview','entries','heads','stats','approvalStats','imports','receipts','splits','settlements','unmatchedReceipts','fuzzyMatches','transferCandidates'));
+        return view('admin.accounting.bank_reconciliation',compact('credentialId','businessId','bankAccountId','bankAccounts','bankOverview','entries','heads','taxRates','stats','approvalStats','imports','receipts','splits','settlements','unmatchedReceipts','fuzzyMatches','transferCandidates'));
     }
 
     /**
@@ -239,7 +246,8 @@ class BankReconciliationPageController extends Controller
                         throw ValidationException::withMessages(['allocations'=>'Amounts must be positive with at most two decimals.']);
                     $head=$line['account_head_id']??null;$receiptId=$line['receipt_id']??null;
                     if(!$head && !$receiptId)throw ValidationException::withMessages(['allocations'=>'Each line needs an account head or existing receipt.']);
-                    if($head && !AccountHead::where('client_credential_id',$client->client_credential_id)->whereNotNull('account_type_id')->whereKey($head)->exists())abort(422,'Invalid account head.');
+                    if($head && !AccountHead::where('is_active',1)->whereNotNull('account_type_id')->whereKey($head)
+                        ->where(function($q)use($client){$q->whereNull('client_credential_id')->orWhere('client_credential_id',$client->client_credential_id);})->exists())abort(422,'Invalid account head.');
                     if($receiptId){
                         $receipt=Receipt::with('detail')->where('client_id',$client->id)->findOrFail($receiptId);
                         abort_if(in_array($receiptId,$used),422,'Select each receipt only once per split.');
@@ -321,7 +329,8 @@ class BankReconciliationPageController extends Controller
             } else {
                 abort_if($entry->status==='needs_review',409,'Verify PDF transaction first.');
                 $head=$data['account_head_id']??null;
-                if($head!==null)abort_unless(AccountHead::where('client_credential_id',$client->client_credential_id)->whereNotNull('account_type_id')->whereKey($head)->exists(),422,'Invalid account head');
+                if($head!==null)abort_unless(AccountHead::where('is_active',1)->whereNotNull('account_type_id')->whereKey($head)
+                    ->where(function($q)use($client){$q->whereNull('client_credential_id')->orWhere('client_credential_id',$client->client_credential_id);})->exists(),422,'Invalid account head');
                 if($action==='categorize'){
                     abort_if($entry->status==='split',409,'Undo the split before categorising.');
                     if(!$head)throw ValidationException::withMessages(['account_head_id'=>'Choose an account head.']);

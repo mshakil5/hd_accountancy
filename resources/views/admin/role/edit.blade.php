@@ -150,7 +150,7 @@
                   'Services' => [12 => 'Manage Services'],
                   'Attendance & Leave' => [13 => 'Attendance Records', 14 => 'Holidays', 15 => 'Holiday Types'],
                   'Prorota' => [16 => 'Prorota'],
-                  'Accounting' => [21 => 'Receipts', 22 => 'Tax Rates', 23 => 'Account Types', 24 => 'Chart of Accounts', 25 => 'Profit & Loss', 26 => 'Trial Balance', 27 => 'Balance Sheet'],
+                  'Accounting' => [21 => 'Receipts', 22 => 'VAT Rates', 23 => 'Account Types', 24 => 'Chart of Accounts', 25 => 'Profit & Loss', 26 => 'Trial Balance', 27 => 'Balance Sheet'],
                   'Reports' => [20 => 'Reports'],
                   'System' => [17 => 'Roles & Permissions', 19 => 'Recycle Bin'],
                   'Website' => [18 => 'Frontend Contents'],
