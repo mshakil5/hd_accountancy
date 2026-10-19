@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('confirmation_due_date')->nullable();
             $table->string('authorization_code')->nullable();
             $table->string('company_utr')->nullable();
-            $table->integer('vat_number',30)->nullable();
+            $table->integer('vat_number')->nullable();
             $table->integer('ct_authorization')->default(1);
             $table->string('paye_ref_number')->nullable();
             $table->integer('paye_authorization')->default(1);

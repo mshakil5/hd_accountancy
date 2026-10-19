@@ -90,7 +90,10 @@ class BankReconciliationPageController extends Controller
         $stats=$scopeEntries()->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total','status');
         $approvalStats=$scopeEntries()->selectRaw('reconciliation_status, count(*) as total')->groupBy('reconciliation_status')->pluck('total','reconciliation_status');
         $imports=DB::table('bank_imports')->whereIn('client_id',$businessIds)->when($bankAccountId,fn($q)=>$q->where('bank_account_id',$bankAccountId))->latest()->limit(10)->get();
-        $receipts=Receipt::whereIn('client_id',$businessIds)->with('detail')->latest('id')->limit(400)->get()
+        // Only reviewed receipts may be matched: a pending/to_review receipt has no
+        // confirmed head, so approval would refuse it. Mirrors assertReceiptReady().
+        $receipts=Receipt::whereIn('client_id',$businessIds)->whereIn('status',['ready','archived'])
+            ->with('detail')->latest('id')->limit(400)->get()
             ->filter(fn($r)=>$r->detail && $r->detail->total_amount!==null);
         $splits=DB::table('bank_allocation_lines')->whereIn('bank_entry_id',$entries->getCollection()->pluck('id'))->get()->groupBy('bank_entry_id');
         $settlements=DB::table('bank_settlements')->whereIn('bank_entry_id',$entries->getCollection()->pluck('id'))->orderByDesc('id')->get()->groupBy('bank_entry_id');
@@ -342,7 +345,7 @@ class BankReconciliationPageController extends Controller
                     ]);
                     $change+=['receipt_id'=>$receiptId,'status'=>'categorized','account_head_id'=>$data['account_head_id']??$receipt->detail?->account_head_id,'review_note'=>'Partial settlement · settled £'.number_format($settled,2).' of £'.number_format($bankAmt,2)];
                 } else {
-                    abort_unless($data['account_head_id'],422,'Choose an account head for the settlement.');
+                    abort_unless($data['account_head_id'] ?? null,422,'Choose an account head for the settlement.');
                     $change+=['status'=>'categorized','account_head_id'=>$data['account_head_id'],'review_note'=>'Unmatched settlement · no receipt linked'];
                 }
             } elseif(in_array($action,['approve','reject','reopen'])){

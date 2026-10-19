@@ -204,7 +204,15 @@ class BankReconciliationDemoSeeder extends Seeder
             if ($approval === 'rejected') {
                 $change['review_note'] = 'Demo: could not identify this transfer — returned for review.';
             }
-            DB::table('bank_entries')->insert($change);
+            $entryId = DB::table('bank_entries')->insertGetId($change);
+
+            // Approved demo rows must carry a real journal, exactly as the UI
+            // approval would produce, otherwise the reports would disagree
+            // with the reconciliation screen.
+            if ($approval === 'approved') {
+                $entry = (object) DB::table('bank_entries')->find($entryId);
+                app(\App\Services\BankLedgerPostingService::class)->postEntry($entry, 1);
+            }
         }
 
         $this->command?->info("Demo seeded for client {$clientId}: 2 banks, "

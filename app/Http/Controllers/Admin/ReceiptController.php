@@ -10,11 +10,11 @@ use App\Models\ClientCredential;
 use App\Models\Receipt;
 use App\Models\ReceiptDetail;
 use App\Models\ReceiptFile;
-use App\Models\Transaction;
 use Auth;
 use Carbon\Carbon;
 use DataTables;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage; 
 
@@ -227,6 +227,15 @@ class ReceiptController extends Controller
             ]);
         }
 
+        // Once a bank reconciliation has posted this receipt's journal, the
+        // ledger must be reopened there first or the posting would be orphaned.
+        if (DB::table('transactions')->where('receipt_id', $receipt->id)->whereNotNull('bank_entry_id')->exists()) {
+            return response()->json([
+                'status'  => 303,
+                'message' => "<div class='alert alert-danger'>This receipt is already posted from an approved bank reconciliation. Reopen that reconciliation before editing it.</div>"
+            ]);
+        }
+
         $newStatus = $request->status;
 
         if (in_array($newStatus, ['ready', 'archived'])) {
@@ -284,46 +293,10 @@ class ReceiptController extends Controller
             ]);
         }
 
-        $receipt->transactions()->delete();
+        // Receipts are recognised in the ledger only after the bank statement
+        // confirms them, so saving the receipt writes no journal rows here.
 
-        if (in_array($newStatus, ['ready', 'archived'])) {
-            $head = AccountHead::with('accountType')->find($request->account_head_id);
-            if ($head && $head->accountType) {
-                $normalBalance = $head->accountType->normal_balance;
-                $type          = $normalBalance === 'debit' ? 'payable' : 'receivable';
-
-                $firstTransaction = Transaction::create([
-                    'transaction_uid' => 'TXN-' . strtoupper(Str::random(10)),
-                    'receipt_id'      => $receipt->id,
-                    'account_head_id' => $head->id,
-                    'type'            => $type,
-                    'amount'          => $netAmount,
-                    'tax_percent'     => (float)($request->tax_percent ?? 0),
-                    'tax_amount'      => $taxAmount,
-                    'total_amount'    => $totalAmount,
-                    'created_by'      => Auth::id(),
-                ]);
-
-                if ($request->paid == 'yes') {
-                    $secondType = ($type === 'payable') ? 'paid' : 'received';
-                    Transaction::create([
-                        'transaction_uid' => 'TXN-' . strtoupper(Str::random(10)),
-                        'receipt_id'      => $receipt->id,
-                        'account_head_id' => $head->id,
-                        'type'            => $secondType,
-                        'amount'          => $totalAmount,
-                        'tax_percent'     => 0,
-                        'tax_amount'      => 0,
-                        'total_amount'    => $totalAmount,
-                        'payment_method'  => $request->payment_method,
-                        'parent_id'       => $firstTransaction->id,
-                        'created_by'      => Auth::id(),
-                    ]);
-                }
-            }
-        }
-
-        return response()->json(['status' => 200, 'message' => 'Receipt and accounting transactions processed successfully.']);
+        return response()->json(['status' => 200, 'message' => 'Receipt saved successfully.']);
     }
 
     public function uploadFile(Request $request, $id)
@@ -463,7 +436,10 @@ class ReceiptController extends Controller
             return response()->json(['success' => false, 'message' => 'This receipt is already locked.']);
         }
 
-        $receipt->transactions()->delete();
+        if (DB::table('transactions')->where('receipt_id', $receipt->id)->whereNotNull('bank_entry_id')->exists()) {
+            return response()->json(['success' => false, 'message' => 'This receipt is posted from an approved bank reconciliation. Reopen that reconciliation before cancelling.']);
+        }
+
         $receipt->update(['status' => 'cancelled', 'updated_by' => Auth::id()]);
 
         return response()->json(['success' => true, 'message' => 'Receipt cancelled successfully.']);
@@ -584,42 +560,8 @@ class ReceiptController extends Controller
                 'description'     => $request->description,
             ]);
 
-            if (in_array($request->status, ['ready', 'archived'])) {
-                $head = AccountHead::with('accountType')->find($request->account_head_id);
-                if ($head && $head->accountType) {
-                    $normalBalance = $head->accountType->normal_balance;
-                    $type          = $normalBalance === 'debit' ? 'payable' : 'receivable';
-
-                    $firstTransaction = Transaction::create([
-                        'transaction_uid' => 'TXN-' . strtoupper(Str::random(10)),
-                        'receipt_id'      => $receipt->id,
-                        'account_head_id' => $head->id,
-                        'type'            => $type,
-                        'amount'          => $netAmount,
-                        'tax_percent'     => (float)($request->tax_percent ?? 0),
-                        'tax_amount'      => $taxAmount,
-                        'total_amount'    => $totalAmount,
-                        'created_by'      => Auth::id(),
-                    ]);
-
-                    if ($request->paid == 'yes') {
-                        $secondType = ($type === 'payable') ? 'paid' : 'received';
-                        Transaction::create([
-                            'transaction_uid' => 'TXN-' . strtoupper(Str::random(10)),
-                            'receipt_id'      => $receipt->id,
-                            'account_head_id' => $head->id,
-                            'type'            => $secondType,
-                            'amount'          => $totalAmount,
-                            'tax_percent'     => 0,
-                            'tax_amount'      => 0,
-                            'total_amount'    => $totalAmount,
-                            'payment_method'  => $request->payment_method,
-                            'parent_id'       => $firstTransaction->id,
-                            'created_by'      => Auth::id(),
-                        ]);
-                    }
-                }
-            }
+            // No journal here: a receipt reaches the ledger only once a bank
+            // statement line is matched to it and the reconciliation is approved.
         }
 
         return response()->json([

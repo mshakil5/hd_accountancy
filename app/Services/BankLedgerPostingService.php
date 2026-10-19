@@ -16,11 +16,11 @@ use Illuminate\Validation\ValidationException;
  * entries, so that P&L / Trial Balance / Balance Sheet reflect them without
  * duplication:
  *
- *  - Matched entries: the linked receipt already posts its own journal, so the
- *    bank side links only and posts nothing.
+ *  - Matched entries: post the linked receipt's journal here, because receipts
+ *    are not recognised until the bank statement confirms them.
  *  - Categorised entries: post the entry amount against the chosen account head.
  *  - Split entries: post every allocation line that carries an account head;
- *    receipt-linked lines are skipped (the receipt posts itself).
+ *    receipt-linked lines are posted by the receipt journal below.
  *  - Money out is a debit leg (type "payable"), money in a credit leg
  *    ("receivable") — the same convention the receipt posting uses.
  *
@@ -80,9 +80,9 @@ class BankLedgerPostingService
     }
 
     /**
-     * Reject accounting approval when a linked receipt has no recognised journal.
-     * Financial reports must never indicate an approved match that has not posted.
-     * This is a guard, NOT the forthcoming receipt-to-bank-led posting conversion.
+     * Reject accounting approval unless the row is fully reconciled.
+     * Receipts carry no journal of their own any more, so a matched receipt is
+     * validated on its detail (head + total) and posted by postLinkedReceipts().
      */
     public function assertReadyForApproval(object $entry): void
     {
@@ -111,7 +111,7 @@ class BankLedgerPostingService
             return;
         }
         if ($entry->status === 'matched') {
-            $this->assertReceiptPosted($entry->receipt_id, $entry->client_id);
+            $this->assertReceiptReady($entry->receipt_id, $entry->client_id);
         } elseif ($entry->status === 'categorized') {
             if (!$entry->account_head_id) {
                 throw ValidationException::withMessages(['reconciliation' => 'Choose an account head before approval.']);
@@ -129,7 +129,7 @@ class BankLedgerPostingService
                     throw ValidationException::withMessages(['reconciliation' => 'Every split line needs a receipt or an account head.']);
                 }
                 if ($line->account_head_id) $this->assertAccountHeadOwned((int) $line->account_head_id, (int) $entry->client_id);
-                if ($line->receipt_id) $this->assertReceiptPosted($line->receipt_id, $entry->client_id);
+                if ($line->receipt_id) $this->assertReceiptReady($line->receipt_id, $entry->client_id);
                 if ($line->account_head_id && isset($line->tax_percent) && ($line->tax_percent < 0 || $line->tax_percent > 100)) {
                     throw ValidationException::withMessages(['reconciliation' => 'Tax percent must be between 0 and 100.']);
                 }
@@ -154,25 +154,28 @@ class BankLedgerPostingService
         }
     }
 
-    private function assertReceiptPosted(?int $receiptId, int $clientId): void
+    /**
+     * A receipt is postable once its detail is complete: an owned account head
+     * and a positive total. It deliberately does NOT require an existing
+     * journal — the bank statement is what triggers recognition.
+     */
+    private function assertReceiptReady(?int $receiptId, int $clientId): void
     {
         if (!$receiptId || !DB::table('receipts')->where('id', $receiptId)->where('client_id', $clientId)->exists()) {
             throw ValidationException::withMessages(['reconciliation' => 'Linked receipt is missing or belongs to another client.']);
         }
-        if (!Transaction::where('receipt_id', $receiptId)->exists()) {
-            throw ValidationException::withMessages(['reconciliation' => 'This receipt has not yet produced an accounting entry. Review receipt approval before bank approval.']);
-            $receipt = Receipt::with('detail')->find($receiptId);
-            if (!$receipt || !in_array($receipt->status, ['ready','archived'], true) || !$receipt->detail || !$receipt->detail->account_head_id || (float)$receipt->detail->total_amount <= 0) {
-                throw ValidationException::withMessages(['reconciliation' => 'Validate the receipt details and account head before reconciling.']);
-            }
-            $this->assertAccountHeadOwned((int)$receipt->detail->account_head_id, $clientId);
+        $receipt = Receipt::with('detail')->find($receiptId);
+        if (!$receipt || !in_array($receipt->status, ['ready', 'archived'], true)
+            || !$receipt->detail || !$receipt->detail->account_head_id
+            || (float) $receipt->detail->total_amount <= 0) {
+            throw ValidationException::withMessages(['reconciliation' => 'Validate the receipt details and account head before reconciling.']);
         }
+        $this->assertAccountHeadOwned((int) $receipt->detail->account_head_id, $clientId);
     }
 
-    /** Post receipt recognition on bank approval only when no historical journal exists. */
+    /** Post the linked receipt's journal on bank approval. */
     private function postLinkedReceipts(object $entry, int $actorId): int
     {
-        return 0;
         $ids = $entry->status === 'matched' ? [(int)$entry->receipt_id] : [];
         if ($entry->status === 'split') {
             $ids = DB::table('bank_allocation_lines')->where('bank_entry_id',$entry->id)

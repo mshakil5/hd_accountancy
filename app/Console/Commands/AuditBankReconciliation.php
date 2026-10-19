@@ -28,8 +28,12 @@ class AuditBankReconciliation extends Command
             $bankJournals = DB::table('transactions')->where('bank_entry_id', $entry->id)->get();
             if ($entry->status === 'matched') {
                 if (!$entry->receipt_id || !DB::table('receipts')->where('client_id', $entry->client_id)
-                    ->where('id', $entry->receipt_id)->exists() || !DB::table('transactions')->where('receipt_id', $entry->receipt_id)->exists()) $errors[] = 'receipt journal missing';
-                if ($bankJournals->count()) $errors[] = 'matched receipt also has bank-created journal';
+                    ->where('id', $entry->receipt_id)->exists()) $errors[] = 'linked receipt missing';
+                // Receipts are recognised by the bank approval itself, so the
+                // receipt journal is expected to carry this bank_entry_id.
+                if (!DB::table('transactions')->where('receipt_id', $entry->receipt_id)
+                    ->where('bank_entry_id', $entry->id)->exists()) $errors[] = 'receipt journal missing';
+                if ($bankJournals->count() > 2) $errors[] = 'unexpected extra bank journals';
             } elseif ($entry->status === 'categorized') {
                 if (!$entry->account_head_id) $errors[] = 'account head missing';
                 if ($bankJournals->count() !== 1) $errors[] = 'expected one bank journal';
@@ -40,7 +44,8 @@ class AuditBankReconciliation extends Command
                 $expectedBankLegs = $lines->filter(fn($l) => !$l->receipt_id)->count();
                 if ($bankJournals->count() !== $expectedBankLegs) $errors[] = 'bank journal count differs from split allocations';
                 foreach ($lines as $line) if ($line->receipt_id && !DB::table('transactions')
-                    ->where('receipt_id', $line->receipt_id)->where('client_id', $entry->client_id)->exists()) $errors[] = 'split receipt journal missing';
+                    ->where('receipt_id', $line->receipt_id)->where('bank_entry_id', $entry->id)
+                    ->where('client_id', $entry->client_id)->exists()) $errors[] = 'split receipt journal missing';
             } else $errors[] = 'invalid approved status';
             if ($errors) {
                 ++$issues;

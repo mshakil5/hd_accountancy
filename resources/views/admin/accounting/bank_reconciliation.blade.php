@@ -29,7 +29,7 @@
 @media(max-width:850px){.hd-reconcile-row{grid-template-columns:1fr}.hd-bank-side{border-right:0;border-bottom:1px solid #dae4ef}.hd-form-grid{grid-template-columns:1fr}}
 </style>
 <div class="d-flex align-items-center justify-content-between flex-wrap mb-3">
- <div><h3 class="mb-1">Bank Reconciliation</h3><p class="hd-small mb-0">Review bank transactions, match uploaded receipts, categorise exceptions and <strong>approve the reconciliation</strong>. Approval locks each row; ledger posting (P&amp;L / balance sheet) arrives in the next phase.</p></div>
+ <div><h3 class="mb-1">Bank Reconciliation</h3><p class="hd-small mb-0">Review bank transactions, match uploaded receipts, categorise exceptions and <strong>approve the reconciliation</strong>. Only an approved row posts to the ledger, so a receipt reaches the P&amp;L / balance sheet once its bank line is approved.</p></div>
 </div>
 @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
 @if($errors->any())<div class="alert alert-danger">@foreach($errors->all() as $error)<div>{{ $error }}</div>@endforeach</div>@endif
@@ -177,7 +177,7 @@ $rejected = $reconStatus==='rejected';
  </div>
  <div class="hd-action-side">
   @if($approved)
-    <div class="alert alert-success py-2">Reconciliation <strong>approved</strong>@if($entry->approved_at) on {{ $entry->approved_at }}@endif. @if($entry->journal_posted_at)Posted to the ledger@if($entry->status!=='matched') and reflected in the P&amp;L / balance sheet@endif. @else The linked receipt already carries its own ledger journal; nothing was re-posted. @endif This row is locked.</div>
+    <div class="alert alert-success py-2">Reconciliation <strong>approved</strong>@if($entry->approved_at) on {{ $entry->approved_at }}@endif. @if($entry->journal_posted_at)Posted to the ledger and reflected in the P&amp;L / balance sheet. @else No ledger rows were needed for this entry. @endif This row is locked.</div>
     <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}">@csrf<input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="reopen"><button class="btn btn-outline-secondary btn-sm" onclick="return confirm('Reopen this approved reconciliation for editing?')">Reopen for editing</button></form>
   @elseif($pending)
     <div class="alert alert-warning py-2">PDF row requires verification before it can be reconciled.</div>

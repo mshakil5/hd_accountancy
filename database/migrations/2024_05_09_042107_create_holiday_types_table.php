@@ -21,6 +21,11 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
         });
+
+        // holiday_requests was created before this table; add its FK now.
+        Schema::table('holiday_requests', function (Blueprint $table) {
+            $table->foreign('holiday_type_id')->references('id')->on('holiday_types')->onDelete('cascade');
+        });
     }
 
     /**

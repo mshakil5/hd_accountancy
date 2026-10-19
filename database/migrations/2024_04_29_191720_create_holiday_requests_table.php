@@ -16,7 +16,8 @@ return new class extends Migration
             $table->unsignedBigInteger('staff_id');
             $table->foreign('staff_id')->references('id')->on('users')->whereIn('type', ['2','3'])->onDelete('cascade');
             $table->unsignedBigInteger('holiday_type_id')->nullable();
-            $table->foreign('holiday_type_id')->references('id')->on('holiday_types')->onDelete('cascade'); 
+            // FK to holiday_types is added in 2024_05_09_042107_create_holiday_types_table,
+            // which runs after this migration creates the table.
             $table->string('start_date')->nullable();
             $table->string('end_date')->nullable();
             $table->longText('comment')->nullable();
