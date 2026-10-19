@@ -148,7 +148,11 @@
 <div class="d-flex justify-content-between align-items-center flex-wrap"><div><h4>Reconcile bank transactions</h4><p class="hd-small">Bank details on the left; accountant actions and uploaded receipts on the right. Reconcile each row, then <strong>approve</strong> it. Approval locks the row and posts it to the existing account heads, so the P&amp;L and balance sheet reflect it without duplication.</p></div><span class="hd-small">{{ $entries->total() }} bank transactions in this view</span></div>
 @forelse($entries as $entry)
 @php
-$exact = $receipts->filter(fn($r)=>abs((float)($r->detail->total_amount??0)-abs((float)$entry->amount))<0.01)->take(20);
+// Exact-amount suggestions. A receipt already matched or split elsewhere is refused
+// by the backend, so never offer it here (the Find tab labels it instead).
+$exact = $receipts->filter(fn($r)=>abs((float)($r->detail->total_amount??0)-abs((float)$entry->amount))<0.01)
+    ->filter(fn($r)=>!(isset($claimedReceiptIds[(int)$r->id])))
+    ->take(20);
 $locked = in_array($entry->status,['matched','split']);
 $pending = $entry->status==='needs_review';
 $reconStatus = $entry->reconciliation_status ?? 'draft';
@@ -250,19 +254,40 @@ $rejected = $reconStatus==='rejected';
    </form>
   </section>
   <section class="hd-tab-panel" data-hd-panel="split" hidden>
-   <p class="hd-small">Allocate one bank payment to two account heads; both allocations must total £{{ number_format(abs((float)$entry->amount),2) }}. Approving posts each line to its account head, including any VAT recorded here.</p>
-   <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}">@csrf
+   <p class="hd-small">Allocate this bank movement across two or more heads or receipts. Lines must total £{{ number_format(abs((float)$entry->amount),2) }}. Approving posts each line to its account head, including any VAT recorded here.</p>
+   <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-split-form" data-split-total="{{ number_format(abs((float)$entry->amount),2,'.','') }}">@csrf
     <input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="split">
-    @foreach([0,1] as $i)<div class="hd-form-grid mb-2"><label>Line {{ $i+1 }} amount (£)<input class="form-control" type="number" name="allocations[{{ $i }}][amount]" min="0.01" step="0.01" required></label>
-     <label>Account head<select class="form-control select2" name="allocations[{{ $i }}][account_head_id]" required><option value="">Choose account</option>@foreach($heads as $h)<option value="{{ $h->id }}">{{ $h->code }} — {{ $h->name }}</option>@endforeach</select></label>
-     <label>VAT %<input class="form-control" type="number" name="allocations[{{ $i }}][tax_percent]" min="0" max="100" step="0.01" value="0"></label>
-     <label>VAT amount (£)<input class="form-control" type="number" name="allocations[{{ $i }}][tax_amount]" min="0" step="0.01" value="0"></label>
-     <label>Explanation<input class="form-control" name="allocations[{{ $i }}][memo]" placeholder="e.g. outstanding payment"></label></div>@endforeach
-    <button class="btn btn-primary btn-sm" onclick="return confirm('Confirm split totals and save allocations?')">Save split</button>
+    <div class="hd-split-lines">
+     @foreach([0,1] as $i)<div class="hd-form-grid mb-2 hd-split-line"><label>Line amount (£)<input class="form-control hd-split-amount" type="number" name="allocations[{{ $i }}][amount]" min="0.01" step="0.01" required></label>
+      <label>Account head
+       <span><button type="button" class="btn btn-sm btn-success" style="font-size:11px;border-radius:20px;padding:2px 10px;background:linear-gradient(45deg,#28a745,#20c997);border:none;" onclick="openQuickHeadFor(this)" title="Quickly create a missing account head"><i class="fa fa-plus-circle"></i> Quick Add Head</button></span>
+       <select class="form-control select2" name="allocations[{{ $i }}][account_head_id]"><option value="">Choose account</option>@foreach($heads as $h)<option value="{{ $h->id }}">{{ $h->code }} — {{ $h->name }}</option>@endforeach</select></label>
+      <label>Or existing receipt<select class="form-control select2" name="allocations[{{ $i }}][receipt_id]"><option value="">No receipt (head only)</option>@foreach($receipts as $r)<option value="{{ $r->id }}" {{ isset($claimedReceiptIds[(int)$r->id])?'disabled':'' }}>#{{ $r->receipt_number }} · {{ $r->supplier?:'Unknown supplier' }} · £{{ number_format((float)$r->detail->total_amount,2) }}{{ isset($claimedReceiptIds[(int)$r->id])?' · already used':'' }}</option>@endforeach</select></label>
+      <label>VAT %<input class="form-control" type="number" name="allocations[{{ $i }}][tax_percent]" min="0" max="100" step="0.01" value="0"></label>
+      <label>VAT amount (£)<input class="form-control" type="number" name="allocations[{{ $i }}][tax_amount]" min="0" step="0.01" value="0"></label>
+      <label>Explanation<input class="form-control" name="allocations[{{ $i }}][memo]" placeholder="e.g. outstanding payment"></label></div>@endforeach
+    </div>
+    <div class="d-flex gap-2 align-items-center flex-wrap mt-1">
+     <button type="button" class="btn btn-outline-secondary btn-sm" onclick="hdAddSplitLine(this)"><i class="fa fa-plus"></i> Add line</button>
+     <button type="button" class="btn btn-outline-secondary btn-sm" onclick="hdRemoveSplitLine(this)" disabled><i class="fa fa-minus"></i> Remove line</button>
+     <span class="hd-small hd-split-meter" role="status">Allocated £0.00 of £{{ number_format(abs((float)$entry->amount),2) }}</span>
+    </div>
+    <button class="btn btn-primary btn-sm mt-2" onclick="return hdConfirmSplit(this)">Save split</button>
    </form>
   </section>
   <section class="hd-tab-panel" data-hd-panel="discuss" hidden>
    <p class="hd-small">Add an internal accountant note or create a missing-receipt request. A request record does not guarantee a push notification is sent.</p>
+   @php $entryNotes=$notes[$entry->id]??collect(); $entryRequests=$receiptRequests[$entry->id]??collect(); @endphp
+   @if($entryNotes->isNotEmpty())
+   <div class="hd-small mb-2"><strong>Notes on this row</strong>
+    @foreach($entryNotes as $n)<div class="hd-pill" style="background:#f1f5f9;display:block;text-align:left;white-space:normal;line-height:1.4;margin-top:4px">{{ $n->body }} <span style="opacity:.6">· {{ $n->created_at }}</span></div>@endforeach
+   </div>
+   @endif
+   @if($entryRequests->isNotEmpty())
+   <div class="hd-small mb-2"><strong>Receipt requests</strong>
+    @foreach($entryRequests as $rq)<div class="hd-pill" style="background:{{ $rq->status==='open'?'#fef9c3':'#dcfce7' }};display:block;text-align:left;white-space:normal;line-height:1.4;margin-top:4px">{{ $rq->message }} <span style="opacity:.6">· {{ ucfirst($rq->status) }} · {{ $rq->created_at }}</span></div>@endforeach
+   </div>
+   @endif
    <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="mb-2">@csrf<input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="add_note"><label>Internal note<input class="form-control" name="review_note" required maxlength="2000" placeholder="Clarification for accountant"></label><button class="btn btn-outline-primary btn-sm mt-2">Save note</button></form>
    <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}">@csrf<input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="request_receipt"><label>Message to client<input class="form-control" name="review_note" placeholder="Please upload supporting receipt"></label><button class="btn btn-outline-warning btn-sm mt-2">Request receipt</button></form>
   </section>
@@ -270,7 +295,7 @@ $rejected = $reconStatus==='rejected';
    <p class="hd-small">Search among the most recent 400 uploaded receipts. Only exact-amount receipts can be confirmed; partial/multiple matches are not yet supported.</p>
    <input type="search" class="form-control mb-2 hd-receipt-search" placeholder="Search receipt number or supplier" aria-label="Search receipts">
    <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-form-grid">@csrf<input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="match">
-    <label>Uploaded receipt<select class="form-control hd-receipt-select" name="receipt_id" required><option value="">Choose receipt</option>@foreach($receipts as $r)<option value="{{ $r->id }}" data-search="{{ strtolower(($r->receipt_number??'').' '.($r->supplier??'')) }}">#{{ $r->receipt_number }} · {{ $r->supplier?:'Unknown supplier' }} · £{{ number_format((float)$r->detail->total_amount,2) }}</option>@endforeach</select></label>
+    <label>Uploaded receipt<select class="form-control hd-receipt-select" name="receipt_id" required><option value="">Choose receipt</option>@foreach($receipts as $r)@php $claimed=isset($claimedReceiptIds[(int)$r->id]); $st=$settledTotals[$r->id]??null; @endphp<option value="{{ $r->id }}" data-search="{{ strtolower(($r->receipt_number??'').' '.($r->supplier??'')) }}" {{ $claimed?'disabled':'' }}>#{{ $r->receipt_number }} · {{ $r->supplier?:'Unknown supplier' }} · £{{ number_format((float)$r->detail->total_amount,2) }}{{ $claimed?' · already matched':($st?' · £'.number_format((float)$st->settled,2).' settled':'') }}</option>@endforeach</select></label>
     <label>Account head<select class="form-control select2" name="account_head_id"><option value="">Use receipt account head</option>@foreach($heads as $h)<option value="{{ $h->id }}">{{ $h->code }} — {{ $h->name }}</option>@endforeach</select>
      <button type="button" class="btn btn-sm btn-success mt-1" style="font-size:11px;border-radius:20px;padding:2px 10px;background:linear-gradient(45deg,#28a745,#20c997);border:none;" onclick="openQuickHeadFor(this)" title="Quickly create a missing account head"><i class="fa fa-plus-circle"></i> Quick Add Head</button>
     </label>
@@ -281,7 +306,7 @@ $rejected = $reconStatus==='rejected';
    <p class="hd-small">Record a partial or over/under settlement when a receipt does not exactly equal the bank amount. A settlement record tracks the outstanding remainder; the row stays in draft until approved.</p>
    <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-form-grid">@csrf
     <input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="settle">
-    <label>Receipt<select class="form-control select2" name="receipt_id"><option value="">No receipt (write-off / unlinked)</option>@foreach($receipts as $r)<option value="{{ $r->id }}">#{{ $r->receipt_number }} · {{ $r->supplier?:'Unknown supplier' }} · £{{ number_format((float)$r->detail->total_amount,2) }}</option>@endforeach</select></label>
+    <label>Receipt<select class="form-control select2" name="receipt_id"><option value="">No receipt (write-off / unlinked)</option>@foreach($receipts as $r)@php $st=$settledTotals[$r->id]??null; $claimed=isset($claimedReceiptIds[(int)$r->id]); @endphp<option value="{{ $r->id }}">#{{ $r->receipt_number }} · {{ $r->supplier?:'Unknown supplier' }} · £{{ number_format((float)$r->detail->total_amount,2) }}{{ $st?' · £'.number_format((float)$st->settled,2).' already settled':($claimed?' · matched elsewhere (still settleable)':'') }}</option>@endforeach</select></label>
     <label>Type<select class="form-control select2" name="settlement_type"><option value="partial">Partial</option><option value="over_payment">Over payment</option><option value="under_payment">Under payment</option></select></label>
     <label>Account head (required when no receipt)<select class="form-control select2" name="account_head_id"><option value="">Use receipt account head</option>@foreach($heads as $h)<option value="{{ $h->id }}">{{ $h->code }} — {{ $h->name }}</option>@endforeach</select>
      <button type="button" class="btn btn-sm btn-success mt-1" style="font-size:11px;border-radius:20px;padding:2px 10px;background:linear-gradient(45deg,#28a745,#20c997);border:none;" onclick="openQuickHeadFor(this)" title="Quickly create a missing account head"><i class="fa fa-plus-circle"></i> Quick Add Head</button>
@@ -291,11 +316,21 @@ $rejected = $reconStatus==='rejected';
   </section>
   <section class="hd-tab-panel" data-hd-panel="transfer" hidden>
    <p class="hd-small">Link this movement to its counterparty in another of the client's bank accounts. Amounts must be equal and opposite. Transfers post net-zero to the P&amp;L.</p>
+    @php
+    // Only offer a counterparty the backend will actually accept: equal and opposite
+    // amount, in a different bank account, still open and not already linked.
+    $viable=$transferCandidates->filter(fn($c)=>(int)$c->id!==(int)$entry->id
+        && abs(round((float)$c->amount*100)+round((float)$entry->amount*100))<1
+        && ($c->bank_account_id??null)!==$entry->bank_account_id);
+    @endphp
    <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-form-grid">@csrf
     <input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="transfer">
-    <label>Counterparty entry<select class="form-control select2" name="linked_entry_id" required><option value="">Choose the other side</option>@foreach($transferCandidates as $c)@if((int)$c->id!==(int)$entry->id)<option value="{{ $c->id }}">#{{ $c->id }} · {{ $c->transaction_date }} · {{ \Illuminate\Support\Str::limit($c->description,40) }} · £{{ number_format((float)$c->amount,2) }}</option>@endif @endforeach</select></label>
-    <label>Bank account head<select class="form-control select2" name="account_head_id"><option value="">Choose the bank account head</option>@foreach($heads as $h)<option value="{{ $h->id }}">{{ $h->code }} — {{ $h->name }}</option>@endforeach</select></label>
-    <button class="btn btn-primary btn-sm" onclick="return confirm('Link these two entries as an internal transfer?')">Save transfer</button>
+    <label>Counterparty entry<select class="form-control select2" name="linked_entry_id" required><option value="">{{ $viable->isEmpty()?'No matching counterpart found':'Choose the other side' }}</option>@foreach($viable as $c)<option value="{{ $c->id }}">#{{ $c->id }} · {{ $c->transaction_date }} · {{ \Illuminate\Support\Str::limit($c->description,40) }} · £{{ number_format((float)$c->amount,2) }} · {{ optional($bankAccounts->firstWhere('id',$c->bank_account_id))->bank_name ?? 'Unassigned' }}</option>@endforeach</select></label>
+    <label>Bank account head<select class="form-control select2" name="account_head_id"><option value="">Choose the bank account head</option>@foreach($heads as $h)<option value="{{ $h->id }}">{{ $h->code }} — {{ $h->name }}</option>@endforeach</select>
+     <span><button type="button" class="btn btn-sm btn-success" style="font-size:11px;border-radius:20px;padding:2px 10px;background:linear-gradient(45deg,#28a745,#20c997);border:none;" onclick="openQuickHeadFor(this)" title="Quickly create a missing account head"><i class="fa fa-plus-circle"></i> Quick Add Head</button></span>
+    </label>
+    <button class="btn btn-primary btn-sm" {{ $viable->isEmpty()?'disabled':'' }} onclick="return confirm('Link these two entries as an internal transfer?')">Save transfer</button>
+    @if($viable->isEmpty())<p class="hd-small text-muted mb-2">No open entry with an equal and opposite amount in a different bank account. Import both sides of the transfer first.</p>@endif
    </form>
   </section>
   @endif
@@ -329,6 +364,57 @@ document.addEventListener('input',function(e){
  Array.from(select.options).forEach((option,index)=>{if(index===0)return;option.hidden=!!term && !(option.dataset.search||'').includes(term)});
  if(select.selectedOptions[0]?.hidden) select.value='';
 });
+// ---- Dynamic split lines: add/remove, live total, exact-balance guard ----
+function hdSplitTotals(form){
+ const total=parseFloat(form.dataset.splitTotal||'0');
+ let sum=0;
+ form.querySelectorAll('.hd-split-amount').forEach(i=>{const v=parseFloat(i.value);if(!isNaN(v))sum+=v;});
+ const meter=form.querySelector('.hd-split-meter');
+ if(meter){
+  const ok=Math.abs(sum-total)<0.005&&sum>0;
+  meter.textContent='Allocated £'+sum.toFixed(2)+' of £'+total.toFixed(2)+(Math.abs(sum-total)<0.005?' ✓ balanced':(sum>total?' ✗ over by £'+(sum-total).toFixed(2):' · £'+(total-sum).toFixed(2)+' left'));
+  meter.style.color=ok?'#15803d':(sum>total?'#b91c1c':'');
+ }
+ const lines=form.querySelectorAll('.hd-split-line');
+ const rm=form.querySelector('button[onclick*="hdRemoveSplitLine"]');
+ if(rm) rm.disabled=lines.length<=2;
+}
+function hdAddSplitLine(btn){
+ const form=btn.closest('form'),wrap=form.querySelector('.hd-split-lines'),lines=wrap.querySelectorAll('.hd-split-line');
+ const i=lines.length,tpl=lines[0].cloneNode(true);
+ // Clear values, then re-index every name to the new line number.
+ tpl.querySelectorAll('input,select').forEach(el=>{
+  if(el.tagName==='SELECT'){el.value='';}
+  else if(el.type==='number'){el.value=el.classList.contains('hd-split-amount')?'':'0';}
+  else el.value='';
+  if(el.name)el.name=el.name.replace(/allocations\[\d+\]/,'allocations['+i+']');
+ });
+ tpl.querySelectorAll('.select2-container').forEach(c=>c.remove());
+ tpl.querySelectorAll('select').forEach(s=>{s.removeAttribute('data-select2-id');s.style.display='';});
+ const clone=wrap.appendChild(tpl);
+ if(window.jQuery){const $s=jQuery(clone).find('select.select2');$s.select2({width:'100%'});}
+ hdSplitTotals(form);
+}
+function hdRemoveSplitLine(btn){
+ const form=btn.closest('form'),wrap=form.querySelector('.hd-split-lines'),lines=wrap.querySelectorAll('.hd-split-line');
+ if(lines.length<=2)return;
+ lines[lines.length-1].remove();
+ // Re-index remaining lines so the array stays contiguous.
+ wrap.querySelectorAll('.hd-split-line').forEach((line,idx)=>{
+  line.querySelectorAll('[name]').forEach(el=>{el.name=el.name.replace(/allocations\[\d+\]/,'allocations['+idx+']')});
+  const lbl=line.querySelector('label');if(lbl)lbl.innerHTML=lbl.innerHTML.replace(/Line \d+/,'Line '+(idx+1));
+ });
+ hdSplitTotals(form);
+}
+function hdConfirmSplit(form){
+ const total=parseFloat(form.dataset.splitTotal||'0');let sum=0,n=0;
+ form.querySelectorAll('.hd-split-amount').forEach(i=>{const v=parseFloat(i.value);if(!isNaN(v)&&v>0){sum+=v;n++;}});
+ if(n<2){alert('A split needs at least two lines.');return false;}
+ if(Math.abs(sum-total)>=0.005){alert('Lines total £'+sum.toFixed(2)+' but the bank amount is £'+total.toFixed(2)+'. Adjust the lines before saving.');return false;}
+ return confirm('Save '+n+' allocation lines totalling £'+sum.toFixed(2)+'?');
+}
+document.addEventListener('input',function(e){if(e.target.classList.contains('hd-split-amount'))hdSplitTotals(e.target.closest('form'));});
+document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('.hd-split-form').forEach(hdSplitTotals);});
 </script>
 <div class="hd-card"><h5>Receipts not yet linked to bank transactions (recent sample)</h5>
 <p class="hd-small">These receipts may represent cash purchases, unpaid items, duplicates or bank movements outside the imported period. Review before creating or removing any accounting record.</p>

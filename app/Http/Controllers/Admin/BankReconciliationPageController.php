@@ -39,6 +39,7 @@ class BankReconciliationPageController extends Controller
                 'entries'=>DB::table('bank_entries')->whereRaw('1 = 0')->paginate(30),
                 'heads'=>collect(),'taxRates'=>collect(),'stats'=>collect(),'approvalStats'=>collect(),
                 'imports'=>collect(),'receipts'=>collect(),'splits'=>collect(),'unmatchedReceipts'=>collect(),
+                'claimedReceiptIds'=>collect(),'settledTotals'=>collect(),'notes'=>collect(),'receiptRequests'=>collect(),
             ]);
         }
         // Overview is calculated across ALL bank accounts for this business, regardless of
@@ -98,16 +99,36 @@ class BankReconciliationPageController extends Controller
                 && !DB::table('bank_allocation_lines as l')->join('bank_entries as b','b.id','=','l.bank_entry_id')
                    ->whereIn('b.client_id',$businessIds)->where('l.receipt_id',$r->id)->exists();
         });
+        // Receipts the backend refuses to match or split again (already matched, or
+        // already allocated inside a split). The tabs must not offer them as if free.
+        $claimedReceiptIds=DB::table('bank_entries')->whereIn('client_id',$businessIds)
+            ->whereNotNull('receipt_id')->where('status','matched')->pluck('receipt_id')
+            ->merge(DB::table('bank_allocation_lines as l')->join('bank_entries as b','b.id','=','l.bank_entry_id')
+                ->whereIn('b.client_id',$businessIds)->whereNotNull('l.receipt_id')->pluck('l.receipt_id'))
+            ->map(fn($id)=>(int)$id)->unique()->flip();
+        // Per-receipt settlement totals so the Settle tab can show what is already
+        // covered (one receipt may legitimately settle across several bank rows).
+        $settledTotals=DB::table('bank_settlements')->whereIn('client_id',$businessIds)
+            ->whereNotNull('receipt_id')->selectRaw('receipt_id, SUM(settled_amount) settled, MAX(remaining_amount) remaining')
+            ->groupBy('receipt_id')->get()->keyBy('receipt_id');
+        // Saved accountant notes and client receipt requests, shown on their row.
+        $entryIds=$entries->getCollection()->pluck('id');
+        $notes=DB::table('bank_review_notes')->whereIn('bank_entry_id',$entryIds)
+            ->orderByDesc('id')->get()->groupBy('bank_entry_id');
+        $receiptRequests=DB::table('bank_receipt_requests')->whereIn('bank_entry_id',$entryIds)
+            ->orderByDesc('id')->get()->groupBy('bank_entry_id');
         $fuzzyMatches=[];
         foreach($entries as $entry){
             $fuzzyMatches[(int)$entry->id]=$this->scoreReceipts($entry,$receipts);
         }
         // Open entries available to link as the other side of an internal transfer.
+        // Exclude anything already linked as a transfer so a counterparty can't be reused.
         $transferCandidates=DB::table('bank_entries')->whereIn('client_id',$businessIds)
             ->whereIn('status',['unmatched','needs_review'])
+            ->whereNull('linked_bank_entry_id')->whereNull('transfer_type')
             ->orderByDesc('transaction_date')->limit(300)
             ->get(['id','transaction_date','description','amount','bank_account_id']);
-        return view('admin.accounting.bank_reconciliation',compact('credentialId','businessId','bankAccountId','bankAccounts','bankOverview','entries','heads','taxRates','stats','approvalStats','imports','receipts','splits','settlements','unmatchedReceipts','fuzzyMatches','transferCandidates'));
+        return view('admin.accounting.bank_reconciliation',compact('credentialId','businessId','bankAccountId','bankAccounts','bankOverview','entries','heads','taxRates','stats','approvalStats','imports','receipts','splits','settlements','unmatchedReceipts','fuzzyMatches','transferCandidates','claimedReceiptIds','settledTotals','notes','receiptRequests'));
     }
 
     /**
