@@ -29,7 +29,8 @@ class MetaWhatsAppService
     {
         $secret = (string) config('meta_whatsapp.app_secret');
         if ($secret === '') {
-            return true;
+            // Fail closed: an unsigned webhook must never be trusted.
+            return false;
         }
         if (!$signature || !str_starts_with($signature, 'sha256=')) {
             return false;

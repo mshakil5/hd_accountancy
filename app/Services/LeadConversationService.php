@@ -19,7 +19,17 @@ class LeadConversationService
     public function process(LeadMessage $message): void
     {
         $lead = $message->lead()->firstOrFail();
+        $terminal = config('lead_qualification.terminal_qualification_statuses');
+
         if ($lead->human_takeover) return;
+        // Terminal leads are never re-qualified. Finish again only when the
+        // handover did not complete (e.g. the outbound send failed and the job
+        // is retrying); a completed handover sets human_takeover above.
+        if (in_array($lead->qualification_status, $terminal, true)) {
+            $this->finish($lead);
+            return;
+        }
+
         $this->attribution->enrich($lead);
         $lead->refresh();
 
@@ -32,13 +42,11 @@ class LeadConversationService
 
             $status = $this->qualifier->classify($lead, $analysis);
             if ($status !== 'NEW') {
-                $wasTerminal = in_array($lead->qualification_status, config('lead_qualification.terminal_qualification_statuses'), true);
                 $lead->qualification_status = $status;
                 if (in_array($status, ['GENUINE','REVIEW'], true) && !$lead->qualified_at) $lead->qualified_at = now();
                 $lead->conversation_step = 'complete';
                 if (!empty($analysis['summary'])) $lead->ai_summary = $analysis['summary'];
                 $lead->save();
-                if (!$wasTerminal) $lead->setAttribute('_just_qualified', true);
                 return;
             }
 
@@ -48,7 +56,6 @@ class LeadConversationService
                 $lead->qualified_at = $lead->qualified_at ?: now();
                 $lead->conversation_step = 'complete';
                 $lead->save();
-                $lead->setAttribute('_just_qualified', true);
             } else {
                 $lead->qualification_status = 'QUALIFYING';
                 $lead->conversation_step = $next;
@@ -57,12 +64,8 @@ class LeadConversationService
         });
 
         $lead->refresh();
-        if ($lead->getAttribute('_just_qualified')) {
-            $this->finish($lead);
-            return;
-        }
 
-        if (in_array($lead->qualification_status, ['GENUINE','REVIEW','EXISTING_CLIENT','NON_SALES','REJECTED'], true)) {
+        if (in_array($lead->qualification_status, $terminal, true)) {
             $this->finish($lead);
             return;
         }
@@ -137,20 +140,20 @@ class LeadConversationService
         if ($lead->qualification_status === 'GENUINE') {
             $this->whatsApp->sendText($lead, 'Thanks — that’s everything we need. A member of the HD Accountancy team will contact you shortly.');
             $this->alerts->notify($lead);
-            $lead->update(['human_takeover' => true]);
         } elseif ($lead->qualification_status === 'REVIEW') {
             $this->whatsApp->sendText($lead, 'Thanks for the information. I’ll pass this to the HD Accountancy team so they can review your enquiry and get back to you.');
             $this->alerts->notify($lead);
-            $lead->update(['human_takeover' => true]);
         } elseif ($lead->qualification_status === 'EXISTING_CLIENT') {
             $this->whatsApp->sendText($lead, 'Thanks for letting me know. As you’re already an HD Accountancy client, I’ll pass your message to the team.');
             $this->alerts->notify($lead);
-            $lead->update(['human_takeover' => true]);
         } elseif ($lead->qualification_status === 'NON_SALES') {
             $this->whatsApp->sendText($lead, 'Thanks for your message. This WhatsApp line is primarily for client and accountancy enquiries. Your message has been recorded.');
-        } elseif ($lead->qualification_status === 'REJECTED') {
-            // No further automated engagement with obvious spam/bots.
         }
+        // REJECTED gets no automated engagement.
+
+        // Only mark the handover complete once the outbound send (if any)
+        // succeeded; a failed send stays retryable by the queue.
+        $lead->update(['human_takeover' => true]);
     }
 
     private function extractAnswer(LeadMessage $message): string

@@ -24,6 +24,12 @@ class ProcessIncomingLeadMessage implements ShouldQueue
     {
         $message = LeadMessage::with('lead')->find($this->leadMessageId);
         if (!$message || $message->direction !== 'inbound') return;
+        if ($message->delivery_status === 'processed') return;
+
         $conversation->process($message);
+
+        // Mark only after the whole turn (including outbound sends) succeeded,
+        // so a failed attempt can still be retried by the queue.
+        $message->forceFill(['delivery_status' => 'processed'])->save();
     }
 };

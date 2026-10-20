@@ -18,7 +18,7 @@ class MetaAdAttributionService
     public function enrich(Lead $lead): void
     {
         if (!$lead->ad_id || $lead->campaign_id) return;
-        $token = env('META_ADS_ACCESS_TOKEN') ?: config('meta_whatsapp.access_token');
+        $token = config('meta_whatsapp.ads_access_token') ?: config('meta_whatsapp.access_token');
         if (!$token) return;
 
         $url = rtrim(config('meta_whatsapp.base_url'), '/') . '/' . config('meta_whatsapp.graph_version') . '/' . $lead->ad_id;

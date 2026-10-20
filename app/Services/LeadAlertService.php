@@ -32,9 +32,9 @@ class LeadAlertService
     private function sendSms(string $to, string $body): void
     {
         try {
-            $sid = env('TWILIO_ACCOUNT_SID');
-            $token = env('TWILIO_AUTH_TOKEN');
-            $from = env('TWILIO_SMS_FROM');
+            $sid = config('lead_qualification.twilio_sid');
+            $token = config('lead_qualification.twilio_token');
+            $from = config('lead_qualification.twilio_from');
             if (!$sid || !$token || !$from) {
                 $gateway = Getway::where('name', 'Twilio')->first();
                 $sid = $sid ?: data_get($gateway, 'clientid');

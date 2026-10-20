@@ -3,6 +3,7 @@
 return [
     'graph_version' => env('META_GRAPH_VERSION', 'v24.0'),
     'access_token' => env('META_WHATSAPP_ACCESS_TOKEN'),
+    'ads_access_token' => env('META_ADS_ACCESS_TOKEN'),
     'phone_number_id' => env('META_WHATSAPP_PHONE_NUMBER_ID'),
     'business_account_id' => env('META_WHATSAPP_BUSINESS_ACCOUNT_ID'),
     'verify_token' => env('META_WHATSAPP_VERIFY_TOKEN'),

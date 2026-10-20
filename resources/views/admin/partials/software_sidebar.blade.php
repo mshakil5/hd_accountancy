@@ -9,6 +9,13 @@
             </a>
         </li>
 
+        <li class="nav-item {{ request()->routeIs('admin.leads.*') ? 'active' : '' }}">
+            <a class="nav-link collapsed" href="{{ route('admin.leads.index') }}">
+                <i class="bi bi-person-lines-fill"></i>
+                <span>Leads</span>
+            </a>
+        </li>
+
         @if (in_array('2', json_decode(optional(Auth::user()->role)->permission ?? '[]', true) ?: []))
             <form action="{{ route('toggle.sidebar') }}" method="POST">
                 @csrf

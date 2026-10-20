@@ -8,7 +8,7 @@ use Illuminate\Console\Command;
 class PruneLeadData extends Command
 {
     protected $signature = 'leads:prune {--days=}';
-    protected $description = 'Delete closed/rejected/non-sales lead records older than the configured retention period';
+    protected $description = 'Delete rejected/non-sales lead records older than the configured retention period';
 
     public function handle(): int
     {

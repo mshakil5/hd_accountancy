@@ -7,6 +7,7 @@ use App\Models\Lead;
 use App\Services\LeadAlertService;
 use App\Services\MetaWhatsAppService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class LeadController extends Controller
 {
@@ -54,7 +55,12 @@ class LeadController extends Controller
             return back()->withErrors(['message' => 'The 24-hour WhatsApp customer-service window has expired. Send an approved WhatsApp template from Meta before sending free-form messages.']);
         }
         $lead->update(['human_takeover' => true, 'assigned_to' => auth()->id()]);
-        $whatsApp->sendText($lead, $request->message, 'staff', auth()->id());
+        try {
+            $whatsApp->sendText($lead, $request->message, 'staff', auth()->id());
+        } catch (\Throwable $e) {
+            Log::warning('Admin WhatsApp send failed', ['lead_id' => $lead->id, 'error' => $e->getMessage()]);
+            return back()->withErrors(['message' => 'WhatsApp could not send this message. Check the integration health page and try again.']);
+        }
         return back()->with('success', 'WhatsApp message sent.');
     }
 
@@ -65,7 +71,12 @@ class LeadController extends Controller
             return back()->withErrors(['message' => 'No approved re-engagement template is configured.']);
         }
         $lead->update(['human_takeover' => true, 'assigned_to' => auth()->id()]);
-        $whatsApp->sendTemplate($lead, $template, config('meta_whatsapp.reengagement_template_language'), 'staff', auth()->id());
+        try {
+            $whatsApp->sendTemplate($lead, $template, config('meta_whatsapp.reengagement_template_language'), 'staff', auth()->id());
+        } catch (\Throwable $e) {
+            Log::warning('Admin WhatsApp template send failed', ['lead_id' => $lead->id, 'error' => $e->getMessage()]);
+            return back()->withErrors(['message' => 'The WhatsApp template could not be sent. Check the integration health page and try again.']);
+        }
         return back()->with('success', 'Approved WhatsApp template sent.');
     }
 
@@ -77,9 +88,23 @@ class LeadController extends Controller
             'admin_notes' => 'nullable|string|max:10000',
         ]);
         $data = $request->only(['qualification_status','sales_status','admin_notes']);
+        $notesProvided = $request->exists('admin_notes');
+        $notes = $request->input('admin_notes');
+        unset($data['admin_notes']);
+
+        // "nullable" lets an empty string through (and the web middleware turns
+        // it into null); never write either into the status columns.
+        foreach (['qualification_status', 'sales_status'] as $field) {
+            if (array_key_exists($field, $data) && ($data[$field] === '' || $data[$field] === null)) {
+                unset($data[$field]);
+            }
+        }
         if (($data['sales_status'] ?? null) === 'CONTACTED' && !$lead->contacted_at) $data['contacted_at'] = now();
         if (in_array($data['sales_status'] ?? '', ['WON','LOST','CLOSED'], true)) $data['closed_at'] = now();
-        $lead->update(array_filter($data, fn($v) => $v !== null));
+
+        $attributes = array_filter($data, fn($v) => $v !== null);
+        if ($notesProvided) $attributes['admin_notes'] = $notes;
+        $lead->update($attributes);
         return back()->with('success', 'Lead updated.');
     }
 

@@ -7,6 +7,10 @@ return [
     'alert_sms_enabled' => env('LEAD_ALERT_SMS_ENABLED', false),
     'retention_days' => (int) env('LEAD_RETENTION_DAYS', 365),
 
+    'twilio_sid' => env('TWILIO_ACCOUNT_SID'),
+    'twilio_token' => env('TWILIO_AUTH_TOKEN'),
+    'twilio_from' => env('TWILIO_SMS_FROM'),
+
     'terminal_qualification_statuses' => ['GENUINE', 'REVIEW', 'REJECTED', 'EXISTING_CLIENT', 'NON_SALES'],
 
     'intent_options' => [
