@@ -7,6 +7,8 @@ use App\Models\BankImport;
 use App\Models\Client;
 use App\Models\Receipt;
 use App\Services\BankLedgerPostingService;
+use App\Services\BankStatementVerificationService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -226,6 +228,10 @@ class BankReconciliationPageController extends Controller
             abort_unless($entry,404);
             $change=['updated_at'=>now()];
             $action=$data['action'];
+            if($action!=='add_note'
+                && DB::table('bank_imports')->where('id',$entry->bank_import_id)->value('verification_status')!==BankStatementVerificationService::VERIFIED) {
+                abort(409,'Verify this statement in the verification workspace before reconciling its rows.');
+            }
             $isApproved=($entry->reconciliation_status??'draft')==='approved';
             if(in_array($action,['approve','reject','reopen'])){
                 if($action==='approve'){
@@ -404,9 +410,157 @@ class BankReconciliationPageController extends Controller
         $sum=0;foreach($lines as $line)$sum+=(int)round((float)$line->amount*100);
         return $sum===(int)round(abs((float)$entry->amount)*100);
     }
+    /* ------------------------------------------------------------------ *
+     * Statement verification (accountant workspace)
+     * ------------------------------------------------------------------ */
+
+    public function verification(int $importId) {
+        $import=BankImport::findOrFail($importId);
+        $entries=DB::table('bank_entries')->where('bank_import_id',$importId)
+            ->orderByRaw('COALESCE(source_page,1)')->orderByRaw('COALESCE(source_position,0)')->orderBy('id')->get();
+        $pages=DB::table('bank_statement_pages')->where('bank_import_id',$importId)->orderBy('page_no')->get();
+        $exceptions=DB::table('bank_statement_exceptions')->where('bank_import_id',$importId)
+            ->orderByRaw('CASE WHEN resolved_at IS NULL THEN 0 ELSE 1 END')->orderByDesc('id')->get();
+        $revisions=DB::table('bank_entry_revisions')->whereIn('bank_entry_id',$entries->pluck('id'))
+            ->latest('id')->limit(100)->get();
+        return view('admin.accounting.bank_verification',[
+            'import'=>$import,'entries'=>$entries,'pages'=>$pages,'exceptions'=>$exceptions,'revisions'=>$revisions,
+            'blocking'=>app(BankStatementVerificationService::class)->blockingCount($import),
+            'bank'=>DB::table('reconciliation_bank_accounts')->find($import->bank_account_id),
+            'client'=>$import->client,
+        ]);
+    }
+
+    public function streamStatement(int $importId) {
+        $item=BankImport::findOrFail($importId);
+        abort_unless($item->storage_path && Storage::disk('local')->exists($item->storage_path),404);
+        return response()->file(Storage::disk('local')->path($item->storage_path),['Content-Type'=>'application/pdf']);
+    }
+
+    public function verifyImport(Request $request,int $importId) {
+        $data=$request->validate(['verification_note'=>'nullable|string|max:2000']);
+        $import=BankImport::findOrFail($importId);
+        try {
+            app(BankStatementVerificationService::class)->verify($import,auth()->id(),$data['verification_note']??null);
+        } catch (ValidationException $exception) {
+            return back()->withErrors($exception->errors())->with('error',$exception->getMessage());
+        }
+        return back()->with('success','Statement verified. Its rows can now be reconciled.');
+    }
+
+    public function updateEntry(Request $request,int $entryId) {
+        $data=$request->validate([
+            'transaction_date'=>'required|date','description'=>'required|string|max:500',
+            'amount'=>'required|numeric|between:-999999999,999999999','reason'=>'required|string|max:1000',
+        ]);
+        $entry=DB::table('bank_entries')->find($entryId);
+        abort_unless($entry,404);
+        abort_if(($entry->reconciliation_status??'draft')==='approved',409,'Approved reconciliations cannot be edited.');
+        $import=BankImport::findOrFail($entry->bank_import_id);
+        DB::transaction(function()use($entry,$import,$data){
+            $date=Carbon::parse($data['transaction_date'])->toDateString();
+            $amount=round((float)$data['amount'],2);
+            DB::table('bank_entries')->where('id',$entry->id)->update([
+                'transaction_date'=>$date,'description'=>$data['description'],
+                'amount'=>number_format($amount,2,'.',''),'updated_at'=>now(),
+            ]);
+            DB::table('bank_entry_revisions')->insert([
+                'bank_entry_id'=>$entry->id,'actor_id'=>auth()->id(),'action'=>'edit',
+                'original_values'=>json_encode(['transaction_date'=>$entry->transaction_date,
+                    'description'=>$entry->description,'amount'=>(float)$entry->amount,'balance_after'=>$entry->balance_after]),
+                'corrected_values'=>json_encode(['transaction_date'=>$date,'description'=>$data['description'],'amount'=>$amount]),
+                'reason'=>$data['reason'],'created_at'=>now(),'updated_at'=>now(),
+            ]);
+            $verifier=app(BankStatementVerificationService::class);
+            $verifier->reopen($import);
+            $verifier->refresh($import);
+        });
+        return redirect()->route('admin.bank-reconciliation.verification',$import->id)
+            ->with('success','Row corrected. Original values, corrected values and your reason were saved.');
+    }
+
+    public function storeEntry(Request $request,int $importId) {
+        $data=$request->validate([
+            'transaction_date'=>'required|date','description'=>'required|string|max:500',
+            'amount'=>'required|numeric|between:-999999999,999999999','reason'=>'nullable|string|max:1000',
+        ]);
+        $import=BankImport::findOrFail($importId);
+        DB::transaction(function()use($import,$data){
+            $date=Carbon::parse($data['transaction_date'])->toDateString();
+            $amount=round((float)$data['amount'],2);
+            $entryId=DB::table('bank_entries')->insertGetId([
+                'client_id'=>$import->client_id,'bank_import_id'=>$import->id,
+                'bank_account_id'=>$import->bank_account_id,
+                'transaction_date'=>$date,'description'=>$data['description'],'reference'=>null,
+                'amount'=>number_format($amount,2,'.',''),'currency'=>'GBP','status'=>'needs_review',
+                'extraction_source'=>'manual','reconciliation_status'=>'draft',
+                'created_at'=>now(),'updated_at'=>now(),
+            ]);
+            DB::table('bank_entry_revisions')->insert([
+                'bank_entry_id'=>$entryId,'actor_id'=>auth()->id(),'action'=>'add',
+                'original_values'=>null,
+                'corrected_values'=>json_encode(['transaction_date'=>$date,'description'=>$data['description'],'amount'=>$amount]),
+                'reason'=>$data['reason']??'Row added by accountant','created_at'=>now(),'updated_at'=>now(),
+            ]);
+            $verifier=app(BankStatementVerificationService::class);
+            $verifier->reopen($import);
+            $verifier->refresh($import);
+        });
+        return redirect()->route('admin.bank-reconciliation.verification',$import->id)
+            ->with('success','Row added to the statement. Checks have been re-run.');
+    }
+
+    public function destroyEntry(Request $request,int $entryId) {
+        $data=$request->validate(['reason'=>'required|string|max:1000']);
+        $entry=DB::table('bank_entries')->find($entryId);
+        abort_unless($entry,404);
+        abort_if(($entry->reconciliation_status??'draft')==='approved',409,'Approved reconciliations cannot be removed.');
+        $import=BankImport::findOrFail($entry->bank_import_id);
+        DB::transaction(function()use($entry,$import,$data){
+            DB::table('bank_entry_revisions')->insert([
+                'bank_entry_id'=>null,'actor_id'=>auth()->id(),'action'=>'remove',
+                'original_values'=>json_encode($entry),'corrected_values'=>null,
+                'reason'=>$data['reason'],'created_at'=>now(),'updated_at'=>now(),
+            ]);
+            DB::table('bank_entries')->where('id',$entry->id)->delete();
+            $verifier=app(BankStatementVerificationService::class);
+            $verifier->reopen($import);
+            $verifier->refresh($import);
+        });
+        return redirect()->route('admin.bank-reconciliation.verification',$import->id)
+            ->with('success','Row removed and the removal reason was recorded.');
+    }
+
+    public function verifyEntry(int $entryId) {
+        $entry=DB::table('bank_entries')->find($entryId);
+        abort_unless($entry,404);
+        DB::table('bank_entries')->where('id',$entryId)
+            ->update(['verified_by'=>auth()->id(),'verified_at'=>now(),'updated_at'=>now()]);
+        DB::table('bank_entry_revisions')->insert([
+            'bank_entry_id'=>$entryId,'actor_id'=>auth()->id(),'action'=>'verify',
+            'original_values'=>null,'corrected_values'=>null,'reason'=>'Row checked against the PDF',
+            'created_at'=>now(),'updated_at'=>now(),
+        ]);
+        return back()->with('success','Row verified against the original statement.');
+    }
+
+    public function resolveException(Request $request,int $exceptionId) {
+        $data=$request->validate(['resolution'=>'required|string|max:1000']);
+        $exception=DB::table('bank_statement_exceptions')->find($exceptionId);
+        abort_unless($exception,404);
+        DB::table('bank_statement_exceptions')->where('id',$exceptionId)->update([
+            'resolved_by'=>auth()->id(),'resolved_at'=>now(),'resolution'=>$data['resolution'],'updated_at'=>now(),
+        ]);
+        return back()->with('success','Exception resolved with your reason.');
+    }
+
     public function approveImport(Request $request,int $importId) {
         $data=$request->validate(['client_id'=>'required|integer|exists:clients,id']);
         $client=Client::findOrFail($data['client_id']);
+        $import=BankImport::findOrFail($importId);
+        if($import->verification_status!==BankStatementVerificationService::VERIFIED){
+            return back()->with('error','Verify this statement before approving its transactions.');
+        }
         $approved=0;$skipped=0;$posted=0;
         DB::transaction(function()use($client,$importId,&$approved,&$skipped,&$posted){
             $entries=DB::table('bank_entries')->where('client_id',$client->id)

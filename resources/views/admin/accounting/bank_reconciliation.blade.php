@@ -133,9 +133,9 @@
 </div>
 <div class="hd-card">
 <h5>Imported statements</h5>
-<div class="hd-scroll"><table class="hd-table"><thead><tr><th>Uploaded</th><th>File</th><th>Bank</th><th>Type</th><th>Processing</th><th>Imported rows</th><th></th></tr></thead><tbody>
+<div class="hd-scroll"><table class="hd-table"><thead><tr><th>Uploaded</th><th>File</th><th>Bank</th><th>Type</th><th>Processing</th><th>Imported rows</th><th>Verification</th><th></th></tr></thead><tbody>
 @forelse($imports as $imp)
-<tr><td>{{ $imp->created_at }}</td><td>{{ $imp->filename }}</td><td>{{ optional($bankAccounts->firstWhere('id',$imp->bank_account_id))->bank_name ?? 'Unassigned' }}</td><td>{{ strtoupper($imp->file_type??'csv') }}</td><td>{{ str_replace('_',' ', $imp->processing_status??'parsed') }}</td><td>{{ $imp->transaction_count }}</td>
+<tr><td>{{ $imp->created_at }}</td><td>{{ $imp->filename }}</td><td>{{ optional($bankAccounts->firstWhere('id',$imp->bank_account_id))->bank_name ?? 'Unassigned' }}</td><td>{{ strtoupper($imp->file_type??'csv') }}</td><td>{{ str_replace('_',' ', $imp->processing_status??'parsed') }}</td><td>{{ $imp->transaction_count }}</td><td>@php $vs=$imp->verification_status ?? 'pending'; $vc=match($vs){'verified'=>'success','ready_for_reconciliation'=>'info','needs_accountant_review'=>'warning','extraction_failed'=>'danger',default=>'secondary'}; @endphp<span class="badge bg-{{ $vc }}">{{ ucwords(str_replace('_',' ',$vs)) }}</span><div class="mt-1"><a href="{{ route('admin.bank-reconciliation.verification',$imp->id) }}">Open verification</a></div></td>
 <td>@if($imp->storage_path)<a href="{{ route('admin.bank-reconciliation.statement',$imp->id) }}">View original statement</a>@endif
 <form method="POST" action="{{ route('admin.bank-reconciliation.approve-import',$imp->id) }}" class="mt-1">@csrf
  <input type="hidden" name="client_id" value="{{ $imp->client_id }}">

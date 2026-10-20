@@ -93,6 +93,17 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/bank-reconciliation/import/{importId}/download', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'statement'])->name('admin.bank-reconciliation.statement');
     Route::post('/bank-reconciliation/import/{importId}/approve', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'approveImport'])->name('admin.bank-reconciliation.approve-import');
 
+    // Statement verification: extraction is not proof of completeness, so rows are
+    // checked against the PDF and manually corrected before reconciliation opens up.
+    Route::get('/bank-reconciliation/import/{importId}/verification', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'verification'])->name('admin.bank-reconciliation.verification');
+    Route::get('/bank-reconciliation/import/{importId}/pdf', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'streamStatement'])->name('admin.bank-reconciliation.statement-view');
+    Route::post('/bank-reconciliation/import/{importId}/verify', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'verifyImport'])->name('admin.bank-reconciliation.verify-import');
+    Route::post('/bank-reconciliation/import/{importId}/rows', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'storeEntry'])->name('admin.bank-reconciliation.store-entry');
+    Route::post('/bank-reconciliation/rows/{entryId}/update', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'updateEntry'])->name('admin.bank-reconciliation.update-entry');
+    Route::post('/bank-reconciliation/rows/{entryId}/remove', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'destroyEntry'])->name('admin.bank-reconciliation.destroy-entry');
+    Route::post('/bank-reconciliation/rows/{entryId}/verify', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'verifyEntry'])->name('admin.bank-reconciliation.verify-entry');
+    Route::post('/bank-reconciliation/exceptions/{exceptionId}/resolve', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'resolveException'])->name('admin.bank-reconciliation.resolve-exception');
+
     //Admin crud
     Route::get('/new-admin', [AdminController::class, 'getAdmin'])->name('allAdmin');
     Route::post('/new-admin', [AdminController::class, 'adminStore']);

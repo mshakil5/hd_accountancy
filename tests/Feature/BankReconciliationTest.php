@@ -6,7 +6,10 @@ use App\Http\Controllers\Admin\BankReconciliationPageController;
 use App\Models\User;
 use App\Services\BankLedgerPostingService;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
@@ -110,6 +113,8 @@ class BankReconciliationTest extends TestCase
             'client_id' => $this->client->id, 'bank_account_id' => $bankAccountId, 'filename' => 'test.csv',
             'sha256' => hash('sha256', $this->uid('sha')), 'created_by' => $this->userId,
             'transaction_count' => 1, 'file_type' => 'csv', 'processing_status' => 'parsed',
+            // Reconciliation only opens for statements an accountant has verified.
+            'verification_status' => 'verified', 'verified_by' => $this->userId, 'verified_at' => now(),
             'created_at' => now(), 'updated_at' => now(),
         ]);
     }
@@ -229,5 +234,71 @@ class BankReconciliationTest extends TestCase
         $this->assertNotEmpty($ranked);
         $this->assertSame(1, $ranked[0]['id']);
         $this->assertGreaterThanOrEqual($ranked[count($ranked) - 1]['score'], $ranked[0]['score']);
+    }
+
+    /** Bank statements are PDF-only: a PDF upload is accepted and stored as PDF. */
+    public function test_bank_statement_upload_accepts_pdf(): void
+    {
+        $client = DB::table('clients')->where('status', true)->whereNotNull('client_credential_id')->first()
+            ?: DB::table('clients')->whereKey($this->client->id)->first();
+        if (!$client) {
+            $this->markTestSkipped('No client fixture available.');
+        }
+
+        $bankId = (int) DB::table('reconciliation_bank_accounts')->insertGetId([
+            'client_id' => $client->id, 'bank_name' => 'HSBC', 'account_label' => 'Current',
+            'account_last_four' => (string) rand(1000, 9999), 'currency' => 'GBP', 'active' => 1,
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+
+        $pdf = "%PDF-1.4\n"
+            . "1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n"
+            . "2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n"
+            . "3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 595 842]/Contents 4 0 R/Resources<</Font<</F1 5 0 R>>>>>>endobj\n"
+            . "4 0 obj<</Length 74>>stream\nBT /F1 10 Tf 50 800 Td (15/06/2024 ACME LTD -100.00) Tj ET\nendstream endobj\n"
+            . "5 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>endobj\n"
+            . "trailer<</Root 1 0 R/Size 6>>\n%%EOF\n";
+
+        $request = Request::create('/api/businesses/' . $client->id . '/bank-imports', 'POST', [
+            'bank_account_id' => $bankId,
+        ], [], ['file' => UploadedFile::fake()->createWithContent('statement.pdf', $pdf)]);
+        $request->setUserResolver(fn () => User::find($this->userId));
+
+        $response = app(\App\Http\Controllers\Api\BankReconciliationController::class)
+            ->upload($request, (int) $client->id);
+
+        $this->assertSame(201, $response->getStatusCode());
+        $import = DB::table('bank_imports')->where('client_id', $client->id)
+            ->where('filename', 'statement.pdf')->first();
+        $this->assertNotNull($import, 'PDF statement was not imported.');
+        $this->assertSame('pdf', $import->file_type);
+        $this->assertStringEndsWith('.pdf', $import->storage_path);
+
+        // Upload now runs the verification engine and reports its verdict.
+        $payload = $response->getData(true);
+        $this->assertContains($payload['verification_status'], ['ready_for_reconciliation', 'needs_accountant_review', 'extraction_failed']);
+        $this->assertArrayHasKey('blocking_exceptions', $payload);
+        $this->assertSame($import->verification_status, DB::table('bank_imports')->where('id', $import->id)->value('verification_status'));
+
+        Storage::disk('local')->delete($import->storage_path);
+    }
+
+    /** Bank statements are PDF-only: a CSV upload must be rejected before import. */
+    public function test_bank_statement_upload_rejects_csv(): void
+    {
+        $client = DB::table('clients')->where('status', true)->whereNotNull('client_credential_id')->first()
+            ?: DB::table('clients')->whereKey($this->client->id)->first();
+        if (!$client) {
+            $this->markTestSkipped('No client fixture available.');
+        }
+
+        $request = Request::create('/api/businesses/' . $client->id . '/bank-imports', 'POST', [], [], [
+            'file' => UploadedFile::fake()->create('statement.csv', 12, 'text/csv'),
+        ]);
+        $request->setUserResolver(fn () => User::find($this->userId));
+
+        $this->expectException(ValidationException::class);
+        app(\App\Http\Controllers\Api\BankReconciliationController::class)
+            ->upload($request, (int) $client->id);
     }
 }
