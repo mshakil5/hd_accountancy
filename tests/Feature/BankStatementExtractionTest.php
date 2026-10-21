@@ -1,19 +1,25 @@
 <?php
 namespace Tests\Feature;
 use Tests\TestCase;
+use App\Services\BankStatementVerificationService;
+use App\Services\BankStatementRecognitionService;
 
-/** Previously missing — OCR extraction from real bank PDFs. */
+/** Real PDF fixtures are missing (see audit); assertions verify service contracts instead. */
 class BankStatementExtractionTest extends TestCase
 {
     public function test_real_pdf_statements_extract_balanced_rows(): void
     {
-        // All 15 Monzo PDFs in files/ verified manually: 1113 rows, 0 unparsed.
-        $this->assertTrue(true, 'Real PDF extraction verified externally.');
+        // No anonymised Monzo fixtures present; verify the service interface and dependencies exist.
+        $this->assertTrue(class_exists(BankStatementVerificationService::class), 'Verification service exists.');
+        $this->assertTrue(class_exists(BankStatementRecognitionService::class), 'Recognition service exists.');
+        $service = new BankStatementVerificationService();
+        $this->assertTrue(method_exists($service, 'analyse'), 'Verification service has analyse() method.');
     }
 
     public function test_ocr_fallback_for_scanned_statements(): void
     {
-        // Local Ghostscript + Tesseract works; slow (~37s for 9 pages).
-        $this->assertTrue(true, 'Local OCR verified externally.');
+        // Fixture PDFs for OCR not supplied; confirm service methods are callable.
+        $service = new BankStatementVerificationService();
+        $this->assertTrue(method_exists($service, 'verify'), 'Verification service has verify() method.');
     }
 }

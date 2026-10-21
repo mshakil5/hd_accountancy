@@ -113,10 +113,14 @@ class BankStatementVerificationService
 
         // Many statements (Monzo, Starling) print a balance on every row but never label
         // the opening/closing balances: derive them from the ledger so the maths still holds.
+        $derivedOpen = false; $derivedClose = false;
+        $derivedOpening = null; $derivedClosing = null;
         if (($opening === null || $closing === null) && $rows !== []) {
             $running = 0.0;
             $derivedOpening = null;
             $derivedClosing = null;
+            $derivedOpen = $opening === null;
+            $derivedClose = $closing === null;
             foreach ($this->chronological($rows) as $row) {
                 $running = round($running + (float) $row['amount'], 2);
                 if ($row['balance_after'] !== null) {
@@ -137,6 +141,11 @@ class BankStatementVerificationService
             'unparsed_samples' => array_slice($samples, 0, 5),
             'opening_balance' => $opening,
             'closing_balance' => $closing,
+            'opening_balance_source' => $opening === null ? 'none' : ($derivedOpen ? 'derived' : 'printed'),
+            'closing_balance_source' => $closing === null ? 'none' : ($derivedClose ? 'derived' : 'printed'),
+            'derived_opening_balance' => $derivedOpening,
+            'derived_closing_balance' => $derivedClosing,
+            'balances_derived' => $derivedOpen || $derivedClose,
             'ocr' => $ocr,
             'pages_total' => $pagesTotal,
             'text' => $text,
@@ -380,6 +389,15 @@ class BankStatementVerificationService
             default => self::READY,
         };
 
+        $balanceSource = ($analysis['opening_balance_source'] ?? 'none') === 'derived' || ($analysis['closing_balance_source'] ?? 'none') === 'derived' ? 'derived' : (($analysis['opening_balance'] !== null && $analysis['closing_balance'] !== null) ? 'printed' : 'none');
+        if ($balanceSource === 'derived' && $analysis['opening_balance'] === null && $analysis['closing_balance'] === null) {
+            $this->exception($import->id, [
+                'code' => 'derived_balances_only',
+                'severity' => 'warning',
+                'message' => 'Opening and closing balances were derived from extracted rows, not read from the PDF. This is not independent proof of completeness. Verify every row against the original PDF before approving.',
+                'source_value' => 'derived_opening=' . ($analysis['derived_opening_balance'] ?? 'n/a') . ' derived_closing=' . ($analysis['derived_closing_balance'] ?? 'n/a'),
+            ]);
+        }
         DB::table('bank_imports')->where('id', $import->id)->update([
             'verification_status' => $status,
             'pages_total' => count($analysis['pages']),
@@ -388,6 +406,7 @@ class BankStatementVerificationService
             'closing_balance' => $closing,
             'calculated_closing_balance' => $calculated,
             'balance_difference' => $difference,
+            'balance_source' => $balanceSource,
             'processing_status' => match ($status) {
                 self::FAILED => 'manual_extraction_required',
                 self::VERIFIED => 'verified',
@@ -621,6 +640,26 @@ class BankStatementVerificationService
             throw ValidationException::withMessages([
                 'verification' => $blocking . ' blocking statement exception(s) must be resolved before this statement can be verified.',
             ]);
+        }
+        $unackWarnings = DB::table('bank_statement_exceptions')
+            ->where('bank_import_id', $import->id)->where('severity', 'warning')
+            ->whereNull('acknowledged_at')->count();
+        if ($unackWarnings > 0) {
+            throw ValidationException::withMessages([
+                'verification' => $unackWarnings . ' warning(s) remain unacknowledged. Acknowledge each warning (with a note) before verifying.',
+            ]);
+        }
+        // OCR or derived balances require full row-level verification.
+        $ocrUsed = $this->exceptionQuery($import)->where('code', 'ocr_no_page_mapping')->whereNull('acknowledged_at')->exists();
+        $derivedOnly = DB::table('bank_imports')->where('id', $import->id)->value('balance_source') === 'derived';
+        if (($ocrUsed || $derivedOnly) && $import->verification_status !== self::VERIFIED) {
+            $verifiedRows = DB::table('bank_entries')->where('bank_import_id', $import->id)->whereNotNull('verified_at')->count();
+            $totalRows = DB::table('bank_entries')->where('bank_import_id', $import->id)->count();
+            if ($verifiedRows < $totalRows) {
+                throw ValidationException::withMessages([
+                    'verification' => 'This statement requires full row-level verification (OCR or derived balances). Verify all ' . $totalRows . ' rows before verifying.',
+                ]);
+            }
         }
         $rows = DB::table('bank_entries')->where('bank_import_id', $import->id)->count();
         if ($rows === 0) {

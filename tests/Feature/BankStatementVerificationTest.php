@@ -321,7 +321,7 @@ class BankStatementVerificationTest extends TestCase
         $import = $this->makeImport(BankStatementVerificationService::REVIEW);
         $entryId = $this->makeEntry($import, '2020-06-15', 'Acme Ltd', -10.00, 90.00);
 
-        $this->expectException(HttpException::class);
+        $this->expectException(ValidationException::class);
         $this->adminController()->action(new Request([
             'client_id' => $this->client->id,
             'action' => 'categorize',
