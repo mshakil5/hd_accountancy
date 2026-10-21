@@ -63,17 +63,35 @@ class BankReconciliationController extends Controller
         }
         return response()->json($recognizer->detect($text,$accounts));
     }
-    private function resolveBankAccount(Request $request,int $businessId): int {
-        $accounts=DB::table('reconciliation_bank_accounts')->where('client_id',$businessId)->where('active',true)->get();
-        $selected=$request->input('bank_account_id');
-        if($selected!==null && $selected!=='') {
-            $match=$accounts->first(fn($a)=>(string)$a->id===(string)$selected);
-            if(!$match) throw ValidationException::withMessages(['bank_account_id'=>'Select a valid active bank account for this business.']);
+    private function resolveBankAccount(Request $request, int $businessId, array $detection = null): int {
+        $accounts = DB::table('reconciliation_bank_accounts')->where('client_id', $businessId)->where('active', true)->get();
+        $chosen = $request->input('bank_account_id');
+        if ($chosen !== null && $chosen !== '') {
+            $match = $accounts->first(fn($a) => (string)$a->id === (string)$chosen);
+            if (!$match) throw \Illuminate\Validation\ValidationException::withMessages(['bank_account_id' => 'Select a valid active bank account for this business.']);
             return (int)$match->id;
         }
-        // Backwards-compatible for a business with just one known bank account.
-        if($accounts->count()===1) return (int)$accounts->first()->id;
-        throw ValidationException::withMessages(['bank_account_id'=>'Select a bank account before uploading. Contact your accountant to register the account if necessary.']);
+        if ($accounts->count() === 1) return (int)$accounts->first()->id;
+        if ($detection && ($detection['suggested_bank_account_id'] ?? null)) {
+            $suggested = (int)$detection['suggested_bank_account_id'];
+            if ($accounts->first(fn($a) => (int)$a->id === $suggested)) return $suggested;
+        }
+        if ($detection && ($detection['detected_bank'] ?? null)) {
+            $bankName = $detection['detected_bank'];
+            $lastFour = $detection['detected_account_last_four'] ?? null;
+            $newId = DB::table('reconciliation_bank_accounts')->insertGetId([
+                'client_id' => $businessId,
+                'bank_name' => $bankName,
+                'account_label' => $lastFour ? 'Account ending ' . $lastFour : 'New bank account',
+                'account_last_four' => $lastFour,
+                'currency' => 'GBP',
+                'active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            return $newId;
+        }
+        throw \Illuminate\Validation\ValidationException::withMessages(['bank_account_id' => 'Select a bank account before uploading, or upload a clearer PDF so the bank can be detected.']);
     }
     public function upload(Request $request, int $businessId) {
         $this->client($request,$businessId);
@@ -89,14 +107,11 @@ class BankReconciliationController extends Controller
         $accounts=DB::table('reconciliation_bank_accounts')->where('client_id',$businessId)->get()->all();
         $detection=$recognizer->detect($analysis['text'],$accounts);
         $chosen=$request->input('bank_account_id');
-        if (($chosen===null || $chosen==='') && count(array_filter($accounts,fn($a)=>(bool)$a->active)) > 1) {
-            throw ValidationException::withMessages(['bank_account_id'=>'Confirm the bank account before uploading this PDF. Use the statement recognition preview for a suggestion.']);
-        }
-        if ($detection['confidence']==='high' && $chosen && (int)$chosen !== (int)$detection['suggested_bank_account_id']) {
+        if ($detection['confidence']==='high' && $chosen && (int)$chosen !== (int)($detection['suggested_bank_account_id'] ?? 0)) {
             throw ValidationException::withMessages(['bank_account_id'=>'Statement account details appear to conflict with the selected bank account. Verify both before importing.']);
         }
 
-        $bankAccountId=$this->resolveBankAccount($request,$businessId);
+        $bankAccountId=$this->resolveBankAccount($request,$businessId,$detection);
         $hash=hash_file('sha256',$file->getRealPath());
         if(DB::table('bank_imports')->where('client_id',$businessId)->where('bank_account_id',$bankAccountId)->where('sha256',$hash)->exists())
             throw ValidationException::withMessages(['file'=>'This bank statement was already imported.']);

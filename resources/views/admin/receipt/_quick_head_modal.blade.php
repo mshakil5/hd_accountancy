@@ -89,6 +89,15 @@
                 : "No client selected — head will be created as <strong>Global</strong>."
         );
         $('#quickHeadModal').modal('show');
+        // VAT select inside the modal needs its own init — dropdown attaches to body
+        // so it is not clipped by the modal and stays clickable.
+        setTimeout(function(){
+            var $vat = $('#quick_head_tax_rate_id');
+            if ($vat.length && $.fn.select2) {
+                if ($vat.data('select2')) $vat.select2('destroy');
+                $vat.select2({width:'100%', dropdownParent: $(document.body)});
+            }
+        }, 150);
     };
 
     $('#quick_head_code').on('input', function() {

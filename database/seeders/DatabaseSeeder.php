@@ -21,5 +21,9 @@ class DatabaseSeeder extends Seeder
 
         // Excel "Chart of account, P&L, BS.xlsx" chart (global heads 101-604).
         $this->call(ChartOfAccountsExcelSeeder::class);
+
+        // Test-only fixtures: clients, client credentials and users needed by
+        // the reconciliation / accounting test suite (rolled back per test).
+        $this->call(TestFixturesSeeder::class);
     }
 }

@@ -167,6 +167,10 @@
                                        data-mode="single" title="Download the currently viewed file">
                                         <i class="fa fa-download"></i> Download Current
                                     </a>
+                                    <button type="button" id="ocrBtn" class="btn btn-sm btn-primary"
+                                        title="Scan the currently viewed file for amounts (existing values are kept if nothing is found)">
+                                        <i class="fa fa-search"></i> OCR Extract
+                                    </button>
                                 @endif
                                 @if (!in_array($receipt->status, ['archived', 'cancelled']))
                                     <label class="btn btn-sm btn-secondary mb-0" style="cursor:pointer;">
@@ -475,27 +479,19 @@
                 $('#fileCounter').text(files.length + ' file(s)  [' + (index + 1) + ' / ' + files.length + ']');
                 $('#downloadCurrentBtn').attr('href', baseUrl + '/' + receiptId + '/files/' + f.id + '/download');
                 console.log(f.id);
-                // ── NEW: Fetch Extracted Data for Current File ──
-                fetchInvoiceData(f.id);
             }
 
-            // ── Auto trigger OCR for the first file on page load ──
+            // ── Set download link for the first file on page load (no auto OCR) ──
             if (files.length > 0) {
                 $('#downloadCurrentBtn').attr('href', baseUrl + '/' + receiptId + '/files/' + files[0].id + '/download');
-                if (files[0].type === 'pdf') {
-                    fetchInvoiceData(files[0].id);
-                }
             }
 
-            // ── Function to Fetch Data via AJAX ──
+            // ── Function to Fetch Data via AJAX (manual OCR only) ──
             function fetchInvoiceData(fileId) {
-                const currentFileType = files[currentIndex].type;
+                const currentFileType = files[currentIndex] ? files[currentIndex].type : '';
                 if (currentFileType !== 'pdf') {
-                    return; 
+                    return;
                 }
-
-                $('#net_amount, #vat_amount, #tax_amount, #total_amount').val('');
-                $('#vat_percent, #tax_percent').val(0);
 
                 $.ajax({
                     url: "{{ route('admin.invoice.extractData', '') }}/" + fileId,
@@ -504,22 +500,24 @@
                         if (response.success) {
                             const data = response.data;
                             console.log(response.data);
-                            
-                            $('#net_amount').val(data.net_amount || '');
-                            $('#vat_amount').val(data.vat_amount || '');
-                            $('#tax_amount').val(data.tax_amount || '');
-                            $('#total_amount').val(data.total_amount || '');
-                            $('#vat_percent').val(data.vat_percent || 0);
-                            $('#tax_percent').val(data.tax_percent || 0);
+
+                            if (!data.net_amount && !data.vat_amount && !data.total_amount) {
+                                // Nothing readable — keep whatever is already in the form.
+                                toastr.error('Could not read any amounts from this file. Please enter manually.');
+                                return;
+                            }
+
+                            $('#net_amount').val(data.net_amount != null ? data.net_amount : '');
+                            $('#vat_amount').val(data.vat_amount != null ? data.vat_amount : '0');
+                            $('#tax_amount').val(data.tax_amount != null ? data.tax_amount : '');
+                            $('#total_amount').val(data.total_amount != null ? data.total_amount : '');
+                            $('#vat_percent').val(data.vat_percent != null ? data.vat_percent : 0);
+                            $('#tax_percent').val(data.tax_percent != null ? data.tax_percent : 0);
 
                             calculateAmounts();
 
-                            if (!data.net_amount && !data.vat_amount && !data.total_amount) {
-                                toastr.error('Could not read any amounts from this file. Please enter manually.');
-                            } else {
-                                toastr.success('Amount extracted successfully!');
-                            }
-                            
+                            toastr.success('Amount extracted successfully!');
+
                         } else {
                             toastr.error('Extraction failed: ' + response.message);
                         }
@@ -579,6 +577,20 @@
                         toastr.error(d.message);
                     }
                 });
+            });
+
+            // ── Manual OCR Button ──
+            $('#ocrBtn').click(function() {
+                if (files.length === 0) {
+                    toastr.warning('No file selected to scan.');
+                    return;
+                }
+                const currentFile = files[currentIndex];
+                if (currentFile.type !== 'pdf') {
+                    toastr.warning('Only PDF files can be scanned.');
+                    return;
+                }
+                fetchInvoiceData(currentFile.id);
             });
 
             // ── Upload File ──
@@ -650,43 +662,39 @@
             }
 
             function calculateAmounts() {
-                let netStr = $('#net_amount').val();
-                let vatStr = $('#vat_amount').val();
-                let totalStr = $('#total_amount').val();
-                
+                let netStr = ($('#net_amount').val() || '').trim();
+                let vatStr = ($('#vat_amount').val() || '').trim();
+                let totalStr = ($('#total_amount').val() || '').trim();
+
                 let rate = parseFloat($('#tax_percent').val()) || 0;
-                
+
                 let net = parseFloat(netStr) || 0;
                 let vat = parseFloat(vatStr) || 0;
                 let total = parseFloat(totalStr) || 0;
 
-                
+                // VAT on net (the account head rate). 0 rate still shows 0.00.
                 let tax = net * (rate / 100);
                 $('#tax_amount').val(tax.toFixed(2));
 
-                
-                if (netStr === '' && vatStr !== '' && totalStr !== '') {
-                    let calcNet = total - vat - tax;
-                    $('#net_amount').val(calcNet.toFixed(2));
-                } 
-                
-                else if (totalStr === '' && netStr !== '' && vatStr !== '') {
-                    let calcTotal = net + tax + vat;
-                    $('#total_amount').val(calcTotal.toFixed(2));
-                } 
-                
-                else if (vatStr === '' && netStr !== '' && totalStr !== '') {
-                    let calcVat = total - net - tax;
-                    $('#vat_amount').val(calcVat.toFixed(2));
-                } 
-                
-                else if (netStr !== '' && vatStr !== '') {
-                    let calcTotal = net + tax + vat;
-                    $('#total_amount').val(calcTotal.toFixed(2));
+                // Net known -> gross is always net + tax + vat (VAT may be blank/0).
+                if (netStr !== '') {
+                    $('#total_amount').val((net + tax + vat).toFixed(2));
+                    return;
+                }
+
+                // Net blank but gross + vat known -> back-calculate net.
+                if (totalStr !== '' && vatStr !== '') {
+                    $('#net_amount').val((total - vat - tax).toFixed(2));
+                    return;
+                }
+
+                // Net blank but gross known -> back-calculate VAT.
+                if (totalStr !== '') {
+                    $('#vat_amount').val((total - tax).toFixed(2));
                 }
             }
 
-            $('#net_amount, #vat_amount').on('input keyup change', calculateAmounts);
+            $('#net_amount, #vat_amount, #tax_percent').on('input keyup change', calculateAmounts);
 
             $('#paid').change(function() {
                 $(this).val() === 'yes' ? $('#method_box').fadeIn() : $('#method_box').fadeOut();

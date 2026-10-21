@@ -102,10 +102,16 @@ details summary{cursor:pointer;color:#1d4ed8;font-size:12px}
                     <input type="text" name="verification_note" maxlength="2000" class="form-control form-control-sm"
                            placeholder="e.g. Compared all 3 pages with the PDF; two rows corrected.">
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-4 text-end">
                     <button class="btn btn-success btn-sm w-100" @disabled($blocking > 0)>
                         Verify statement &amp; unlock reconciliation
                     </button>
+                </div>
+                <div class="col-md-4 text-end">
+                    <form method="POST" action="{{ route('admin.bank-reconciliation.verify-all-rows', $import->id) }}" class="mt-2" onsubmit="return confirm('Verify all unverified rows for this statement? This marks them ready for reconciliation.')">
+                        @csrf
+                        <button class="btn btn-outline-success btn-sm w-100">Verify all rows</button>
+                    </form>
                 </div>
             </div>
             @if($blocking > 0)

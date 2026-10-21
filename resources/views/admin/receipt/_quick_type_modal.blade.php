@@ -85,16 +85,21 @@
             } else {
                 $('#quickTypeModal').modal('hide');
                 toastr.success(d.message, 'Success!');
-                // append new type to dropdown and select it
+                // append new type to dropdown and select it (scoped to the target row if any)
                 var opt = new Option($('#quick_type_name').val() + ' (' + $('#quick_type_category').val().charAt(0).toUpperCase() + $('#quick_type_category').val().slice(1) + ')', d.id, true, true);
-                $('#account_type_id').append(opt).val(String(d.id));
+                var typeSel = (window.quickAddTargetEl && window.quickAddTargetEl.closest) ? $(window.quickAddTargetEl.closest('.hd-form-grid, .hd-tab-panel, label')).find('select[name="account_type_id"]') : $('select[name="account_type_id"]');
+                if (typeSel.length) {
+                    typeSel.append(opt).val(String(d.id)).trigger('change');
+                    if ($.fn.select2) typeSel.trigger('change.select2');
+                }
                 // update selected head's data-type-id by reloading heads
                 var createdHeadId = $('#quick_type_head_id').val();
                 if (typeof window.reloadHeadDropdown === 'function') {
                     window.reloadHeadDropdown(createdHeadId);
                 } else {
                     // fallback: select the head in dropdown
-                    $('#account_head_id').val(String(createdHeadId)).trigger('change');
+                    var headDrop = (typeof window.qaHeadSel === 'function') ? window.qaHeadSel() : (window.quickAddTargetEl ? $(window.quickAddTargetEl) : $('#account_head_id'));
+                    headDrop.val(String(createdHeadId)).trigger('change');
                 }
             }
         }).fail(function() {

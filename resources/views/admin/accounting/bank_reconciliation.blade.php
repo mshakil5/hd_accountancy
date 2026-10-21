@@ -10,12 +10,15 @@
 .hd-actions{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
 .hd-actions select,.hd-actions input{max-width:195px;min-height:34px}
 .hd-actions button{min-height:34px}
+.hd-quick-actions{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
 .hd-reconcile-row{display:grid;grid-template-columns:minmax(240px,41%) minmax(0,59%);border:1px solid #dae4ef;border-radius:9px;margin:16px 0;overflow:hidden;background:#fff}
 .hd-bank-side{background:#f2f7fa;padding:19px;border-right:1px solid #dae4ef}.hd-action-side{padding:13px 18px;min-width:0}
 .hd-bank-description{font-size:17px;font-weight:600;margin:12px 0 5px;overflow-wrap:anywhere}.hd-pill{padding:3px 8px;background:#e2e8f0;border-radius:20px;font-size:11px}
 .hd-amounts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:19px 0}.hd-amounts>div{display:flex;flex-direction:column}.hd-amounts strong{font-size:18px}
 .hd-row-tabs{display:flex;flex-wrap:wrap;gap:2px;border-bottom:1px solid #e2e8f0;margin-bottom:14px}.hd-tab{border:0;background:transparent;color:#334155;padding:9px 10px;cursor:pointer;font-size:13px}.hd-tab.active{color:#0369a1;border-bottom:3px solid #0284c7;font-weight:700}
-.hd-tab-panel[hidden]{display:none!important}.hd-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:end}.hd-form-grid button{justify-self:start}.hd-form-grid label,.hd-inline-form label{font-size:12px;font-weight:600;width:100%}.hd-inline-form{display:flex;flex-wrap:wrap;gap:8px;align-items:end}.hd-inline-form label{max-width:180px}
+.hd-tab-panel[hidden]{display:none!important}.hd-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:end}.hd-form-grid button{justify-self:start}.hd-form-grid label,.hd-inline-form label{font-size:12px;font-weight:600;width:100%}
+.hd-field{width:100%}
+.hd-field>label{font-size:12px;font-weight:600;margin-bottom:4px;display:block}.hd-inline-form{display:flex;flex-wrap:wrap;gap:8px;align-items:end}.hd-inline-form label{max-width:180px}
 .select2-container .select2-selection--single{height:38px!important;border:1px solid #ced4da!important;border-radius:.25rem!important}
 .select2-container--default .select2-selection--single .select2-selection__rendered{line-height:36px!important}
 .select2-container--default .select2-selection--single .select2-selection__arrow{height:36px!important}
@@ -125,6 +128,7 @@
 <div class="col-md-2"><button class="btn btn-outline-primary">Add account</button></div>
 </form></div>
 @endif
+<input type="hidden" id="client_credential_id" value="{{ $credentialId ?? $presetId }}">
 <div class="row">
 @foreach(['unmatched','needs_review','matched','split','categorized'] as $status)
 <div class="col-6 col-md-2"><div class="hd-card"><div class="hd-small">{{ ucwords(str_replace('_',' ',$status)) }}</div><h3>{{ (int)($stats[$status]??0) }}</h3></div></div>
@@ -145,7 +149,19 @@
 </tbody></table></div>
 </div>
 <div class="hd-card hd-workspace" id="hd-reconciliation-workspace">
-<div class="d-flex justify-content-between align-items-center flex-wrap"><div><h4>Reconcile bank transactions</h4><p class="hd-small">Bank details on the left; accountant actions and uploaded receipts on the right. Reconcile each row, then <strong>approve</strong> it. Approval locks the row and posts it to the existing account heads, so the P&amp;L and balance sheet reflect it without duplication.</p></div><span class="hd-small">{{ $entries->total() }} bank transactions in this view</span></div>
+<div class="d-flex justify-content-between align-items-center flex-wrap"><div><h4>Reconcile bank transactions</h4><p class="hd-small">Bank details on the left; accountant actions and uploaded receipts on the right. Reconcile each row, then <strong>approve</strong> it. Approval locks the row and posts it to the existing account heads, so the P&amp;L and balance sheet reflect it without duplication.</p></div><div class="d-flex align-items-center gap-2 flex-wrap"><span class="hd-small">{{ $entries->total() }} bank transactions in this view</span>
+<form method="POST" action="{{ route('admin.bank-reconciliation.approve-all') }}" onsubmit="return confirm('Approve every row that is already matched/categorised/split? Each approved row locks and posts to the ledger.')">
+@csrf
+<input type="hidden" name="client_id" value="{{ request('client_id') }}">
+<input type="hidden" name="client_credential_id" value="{{ request('client_credential_id') }}">
+<button class="btn btn-success btn-sm"><i class="fa fa-check-double"></i> Approve all ready rows</button>
+</form>
+<form method="POST" action="{{ route('admin.bank-reconciliation.verify-all-rows-for-client') }}" onsubmit="return confirm('Verify every row still awaiting PDF verification for this business?')">
+@csrf
+<input type="hidden" name="client_id" value="{{ request('client_id') }}">
+<button class="btn btn-outline-success btn-sm"><i class="fa fa-check"></i> Verify all rows</button>
+</form>
+</div></div>
 @forelse($entries as $entry)
 @php
 // Exact-amount suggestions. A receipt already matched or split elsewhere is refused
@@ -243,12 +259,12 @@ $rejected = $reconStatus==='rejected';
    <p class="hd-small">Categorise a bank movement without a linked receipt. Approving the row posts it to the chosen account head, so it appears in the P&amp;L / balance sheet.</p>
    <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-form-grid">@csrf
     <input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="categorize">
-    <label>What / account head
-     <span>
+    <div class="hd-field"><label for="hd-create-head-{{ $entry->id }}">What / account head</label>
+     <span class="hd-quick-actions">
       <button type="button" class="btn btn-sm btn-success" style="font-size:11px;border-radius:20px;padding:2px 10px;background:linear-gradient(45deg,#28a745,#20c997);border:none;" onclick="openQuickHeadFor(this)" title="Quickly create a missing account head"><i class="fa fa-plus-circle"></i> Quick Add Head</button>
       <button type="button" class="btn btn-sm btn-info" style="font-size:11px;border-radius:20px;padding:2px 10px;" onclick="openQuickTypeFor(this)" title="Quickly create a type under the selected head"><i class="fa fa-plus-circle"></i> Quick Add Type</button>
      </span>
-     <select class="form-control select2" name="account_head_id" required><option value="">Choose account head</option>@foreach($heads as $h)<option value="{{ $h->id }}" {{ $entry->account_head_id==$h->id?'selected':'' }}>{{ $h->code }} — {{ $h->name }}</option>@endforeach</select></label>
+     <select class="form-control select2" id="hd-create-head-{{ $entry->id }}" name="account_head_id" required><option value="">Choose account head</option>@foreach($heads as $h)<option value="{{ $h->id }}" {{ $entry->account_head_id==$h->id?'selected':'' }}>{{ $h->code }} — {{ $h->name }}</option>@endforeach</select></div>
     <label>Why / description<input class="form-control" type="text" name="review_note" placeholder="Reason for classification"></label>
     <button class="btn btn-primary btn-sm">Save classification</button>
    </form>
@@ -339,7 +355,7 @@ $rejected = $reconStatus==='rejected';
 @empty
 <div class="alert alert-info"><strong>No bank transactions to reconcile.</strong> @if($imports->contains(fn($imp)=>(int)$imp->transaction_count===0)) One or more statements have 0 imported rows. PDF extraction must be completed or a supported CSV imported before transaction matching will appear. @else Import a statement for the selected client to begin. @endif</div>
 @endforelse
-<div class="mt-3">{{ $entries->links() }}</div>
+<div class="mt-3">{{ $entries->links('vendor.pagination.bootstrap-5') }}</div>
 </div>
 <script>
 document.addEventListener('click',function(e){
@@ -353,7 +369,7 @@ document.addEventListener('click',function(e){
   if(panel) panel.querySelectorAll('select.select2').forEach(function(s){
    const $s=jQuery(s);
    if($s.data('select2')){$s.select2('destroy');}
-   $s.select2({width:'100%'});
+   $s.select2({width:'100%', dropdownParent: $(document.body)});
   });
  }
 });
@@ -392,7 +408,7 @@ function hdAddSplitLine(btn){
  tpl.querySelectorAll('.select2-container').forEach(c=>c.remove());
  tpl.querySelectorAll('select').forEach(s=>{s.removeAttribute('data-select2-id');s.style.display='';});
  const clone=wrap.appendChild(tpl);
- if(window.jQuery){const $s=jQuery(clone).find('select.select2');$s.select2({width:'100%'});}
+ if(window.jQuery){const $s=jQuery(clone).find('select.select2');$s.select2({width:'100%', dropdownParent: $(document.body)});}
  hdSplitTotals(form);
 }
 function hdRemoveSplitLine(btn){
@@ -432,22 +448,56 @@ document.addEventListener('DOMContentLoaded',function(){document.querySelectorAl
 // Bank-reconciliation wiring: each row/tab has its own account-head dropdown, so
 // remember which one opened the modal and refresh only that one afterwards.
 window.openQuickHeadFor = function(btn){
-    var sel = btn.closest('label') ? btn.closest('label').querySelector('select[name="account_head_id"]') : null;
-    if(!sel) sel = btn.closest('.hd-form-grid, .hd-tab-panel') ? btn.closest('.hd-form-grid, .hd-tab-panel').querySelector('select[name="account_head_id"]') : null;
+    var sel = hdHeadSelectFor(btn);
     window.quickAddTargetEl = sel;
     window.openQuickHeadModal();
 };
 window.openQuickTypeFor = function(btn){
-    var sel = btn.closest('label') ? btn.closest('label').querySelector('select[name="account_head_id"]') : null;
-    if(!sel) sel = btn.closest('.hd-form-grid, .hd-tab-panel') ? btn.closest('.hd-form-grid, .hd-tab-panel').querySelector('select[name="account_head_id"]') : null;
+    var sel = hdHeadSelectFor(btn);
     window.quickAddTargetEl = sel;
     window.openQuickTypeModal();
 };
+// Find the account-head dropdown that belongs to the clicked button.
+function hdHeadSelectFor(btn){
+    var scope = btn.closest('.hd-field') || btn.closest('label') || btn.closest('.hd-form-grid, .hd-tab-panel');
+    if(!scope) return null;
+    var sel = scope.querySelector('select[name="account_head_id"]');
+    if(!sel) sel = scope.querySelector('select[name^="allocations["]');
+    return sel;
+}
 </script>
 @endsection
 @section('script')
 <script>
 $(function(){
+  // AJAX action handler — keeps page position, updates workspace
+  $(document).on('submit', '.hd-inline-form, .hd-form-grid, form[action*="bank-reconciliation/action"]', function(e) {
+    var $form = $(this);
+    e.preventDefault();
+    $.post($form.attr('action'), $form.serialize(), function(resp) {
+      if (resp && resp.success) {
+        toastr.success(resp.message || 'Saved');
+        // Refresh workspace in-place to show updated status (verified / approved / etc.)
+        var scrollY = window.scrollY;
+        $.get(window.location.href, function(html){
+          var $newWorkspace = $('<div>').html(html).find('#hd-reconciliation-workspace');
+          if ($newWorkspace.length) {
+            $('#hd-reconciliation-workspace').replaceWith($newWorkspace);
+            window.scrollTo(0, scrollY);
+            $newWorkspace.find('select.select2').each(function(){
+              if(!$(this).hasClass('select2-hidden-accessible')) $(this).select2({width:'100%'});
+            });
+          }
+        });
+      } else {
+        toastr.error(resp && resp.message ? resp.message : 'Failed');
+      }
+    }).fail(function(xhr) {
+      var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Request failed';
+      toastr.error(msg);
+    });
+  });
+
  var presetCredentialId='{{ $presetId }}';
  var presetBusiness='{{ $businessId }}';
  var presetApplied=false;

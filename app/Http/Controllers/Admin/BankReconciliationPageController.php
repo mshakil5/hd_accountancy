@@ -223,6 +223,8 @@ class BankReconciliationPageController extends Controller
         ]);
         $client=Client::findOrFail($data['client_id']);
         $posted=0;$reversed=0;
+        $isAjax=$request->ajax()||$request->wantsJson();
+        try {
         DB::transaction(function()use($request,$entryId,$client,$data,&$posted,&$reversed){
             $entry=DB::table('bank_entries')->where('client_id',$client->id)->lockForUpdate()->find($entryId);
             abort_unless($entry,404);
@@ -230,7 +232,7 @@ class BankReconciliationPageController extends Controller
             $action=$data['action'];
             if($action!=='add_note'
                 && DB::table('bank_imports')->where('id',$entry->bank_import_id)->value('verification_status')!==BankStatementVerificationService::VERIFIED) {
-                abort(409,'Verify this statement in the verification workspace before reconciling its rows.');
+                throw ValidationException::withMessages(['action'=>'Verify this statement in the verification workspace before reconciling its rows.']);
             }
             $isApproved=($entry->reconciliation_status??'draft')==='approved';
             if(in_array($action,['approve','reject','reopen'])){
@@ -391,6 +393,13 @@ class BankReconciliationPageController extends Controller
                 'action'=>$action,'old_values'=>json_encode($entry),'new_values'=>json_encode($change),
                 'created_at'=>now(),'updated_at'=>now()]);
         });
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($isAjax) return response()->json(['success'=>false,'message'=>$e->getMessage(),'errors'=>$e->errors()],422);
+            throw $e;
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            if ($isAjax) return response()->json(['success'=>false,'message'=>$e->getMessage()], $e->getStatusCode());
+            throw $e;
+        }
         $message=match($data['action']){
             'approve'=>$posted
                 ? 'Reconciliation approved and posted to the ledger ('.$posted.' entr'.($posted===1?'y':'ies').').'
@@ -401,6 +410,9 @@ class BankReconciliationPageController extends Controller
                 : 'Reconciliation reopened for editing.',
             default => 'Bank reconciliation action saved. No accounting journal posted.',
         };
+        if ($isAjax) {
+            return response()->json(['success'=>true,'message'=>$message,'entry_id'=>$entryId,'action'=>$data['action']]);
+        }
         return redirect()->route('admin.bank-reconciliation.index',['client_credential_id'=>$client->client_credential_id,'client_id'=>$client->id])
             ->with('success',$message);
     }
@@ -531,17 +543,90 @@ class BankReconciliationPageController extends Controller
             ->with('success','Row removed and the removal reason was recorded.');
     }
 
-    public function verifyEntry(int $entryId) {
+    public function verifyAllRowsForClient(Request $request) {
+        $client=Client::findOrFail($request->input('client_id'));
+        $count=DB::table('bank_entries')
+            ->where('client_id', $client->id)
+            ->where('status', 'needs_review')
+            ->update([
+                'verified_by' => auth()->id(),
+                'verified_at' => now(),
+                'updated_at' => now(),
+                'status' => 'unmatched',
+            ]);
+        return redirect()->back()->with('success', $count.' row(s) verified and ready for reconciliation.');
+    }
+
+    public function approveAllRows(Request $request) {
+        $client=Client::findOrFail($request->input('client_id'));
+        $rows=DB::table('bank_entries')
+            ->where('client_id', $client->id)
+            ->whereIn('status', ['matched', 'categorized', 'split'])
+            ->where('reconciliation_status', '!=', 'approved');
+        $count=0;$skipped=0;
+        foreach ($rows->get() as $entry) {
+            // The statement-level verification gate applies to bulk approval too.
+            $importVerified=DB::table('bank_imports')->where('id',$entry->bank_import_id)
+                ->value('verification_status')===BankStatementVerificationService::VERIFIED;
+            if(!$importVerified){$skipped++;continue;}
+            try {
+                if ($entry->status === 'split') {
+                    $lines = DB::table('bank_allocation_lines')->where('bank_entry_id', $entry->id)->get();
+                    $sum = 0;
+                    foreach ($lines as $line) $sum += (int) round((float) $line->amount * 100);
+                    if ($sum !== (int) round(abs((float) $entry->amount) * 100)) { $skipped++; continue; }
+                }
+                $this->posting->assertReadyForApproval((object)$entry);
+                DB::table('bank_entries')->where('id', $entry->id)->update([
+                    'reconciliation_status' => 'approved',
+                    'approved_by' => auth()->id(),
+                    'approved_at' => now(),
+                ]);
+                $this->posting->postEntry((object)$entry, auth()->id());
+                $count++;
+            } catch (\Throwable $e) {
+                $skipped++;
+            }
+        }
+        $message=$count.' reconciled row(s) approved and posted to the ledger.';
+        if($skipped) $message.=' '.$skipped.' row(s) skipped (not reconciled, or statement not verified).';
+        return redirect()->back()->with('success', $message);
+    }
+
+    public function verifyAllRows(Request $request, int $importId) {
+        $import = DB::table('bank_imports')->find($importId);
+        abort_unless($import, 404);
+        DB::table('bank_entries')
+            ->where('bank_import_id', $importId)
+            ->where('status', 'needs_review')
+            ->update([
+                'verified_by' => auth()->id(),
+                'verified_at' => now(),
+                'updated_at' => now(),
+                'status' => 'unmatched',
+            ]);
+        $count = DB::table('bank_entries')
+            ->where('bank_import_id', $importId)
+            ->where('status', 'unmatched')
+            ->count();
+        return redirect()->route('admin.bank-reconciliation.verification', $importId)
+            ->with('success', 'All ' . ($count) . ' rows verified and ready for reconciliation.');
+    }
+
+    public function verifyEntry(int $entryId, Request $request) {
         $entry=DB::table('bank_entries')->find($entryId);
         abort_unless($entry,404);
         DB::table('bank_entries')->where('id',$entryId)
-            ->update(['verified_by'=>auth()->id(),'verified_at'=>now(),'updated_at'=>now()]);
+            ->update(['verified_by'=>auth()->id(),'verified_at'=>now(),'updated_at'=>now(),'status'=>'unmatched']);
         DB::table('bank_entry_revisions')->insert([
             'bank_entry_id'=>$entryId,'actor_id'=>auth()->id(),'action'=>'verify',
             'original_values'=>null,'corrected_values'=>null,'reason'=>'Row checked against the PDF',
             'created_at'=>now(),'updated_at'=>now(),
         ]);
-        return back()->with('success','Row verified against the original statement.');
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['success'=>true,'message'=>'Row verified against the original statement.','entry_id'=>$entryId,'status'=>'unmatched']);
+        }
+        return redirect()->back()->with('success','Row verified against the original statement.');
     }
 
     public function resolveException(Request $request,int $exceptionId) {

@@ -14,7 +14,7 @@
   <meta content="" name="keywords">
 
   <!-- Favicons -->
-  <link rel="icon" href="{{ asset('images/company/' . $companyDetails->fav_icon) }}" />
+  <link rel="icon" href="{{ asset('images/company/' . ($companyDetails?->fav_icon ?? 'logo.png')) }}" />
 
   <!-- Google Fonts -->
   <link href="https://fonts.gstatic.com" rel="preconnect">
