@@ -50,7 +50,7 @@ class Client extends Model
         return $this->belongsTo(ClientType::class);
     }
 
-    public function services(): HasMany
+    public function services(): BelongsToMany
     {
         return $this->belongsToMany(Service::class, 'client_service', 'client_id', 'service_id');
     }
