@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\File;
 
 class TrashBinController extends Controller
@@ -56,7 +57,12 @@ class TrashBinController extends Controller
             return back()->with('error', 'Record not found.');
         }
 
-        $record->restore();
+        try {
+            $record->restore();
+        } catch (QueryException $e) {
+            return back()->with('error', 'This record cannot be restored because its unique details (for example its email) are already used by another active record.');
+        }
+
         return back()->with('success', 'Record restored successfully.');
     }
 

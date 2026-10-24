@@ -27,6 +27,7 @@ class ClientCredential extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'active_email',
     ];
 
     protected $casts = [

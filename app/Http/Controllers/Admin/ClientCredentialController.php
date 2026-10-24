@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\Rule;
 
 class ClientCredentialController extends Controller
 {
@@ -97,7 +98,13 @@ class ClientCredentialController extends Controller
         $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:client_credentials,email,'.$request->codeid,
+            'email' => [
+                'required',
+                'email',
+                Rule::unique('client_credentials', 'email')
+                    ->ignore($request->codeid)
+                    ->whereNull('deleted_at'),
+            ],
         ]);
 
         if(empty($request->first_name)){
