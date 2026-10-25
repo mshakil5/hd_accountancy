@@ -96,10 +96,10 @@ class BankReconciliationController extends Controller
         $verification=app(BankStatementVerificationService::class);
         $analysis=['rows'=>[],'pages'=>[],'unparsed'=>0,'opening_balance'=>null,'closing_balance'=>null,'ocr'=>false,'pages_total'=>0,'text'=>''];
 
-        $recognizer=app(BankStatementRecognitionService::class);
-        $accounts=DB::table('reconciliation_bank_accounts')->where('client_id',$businessId)->get()->all();
-        // Skip OCR/detection during upload to avoid timeouts; admin verifies later
-        $detection=['detected_bank'=>null,'detected_account_last_four'=>null,'suggested_bank_account_id'=>null,'confidence'=>'unknown','candidates'=>[]];
+        $recognizer = app(BankStatementRecognitionService::class);
+        $accounts = DB::table('reconciliation_bank_accounts')->where('client_id', $businessId)->get()->all();
+        // Bank detection uses backend OCR (Ghostscript + Tesseract) — only bank/account, NO transaction parsing
+        $detection = $recognizer->detect($recognizer->extractPdfTextWithOcr($file->getRealPath()), $accounts);
         $bankAccountId=$this->resolveBankAccount($request,$businessId,$detection);
         $selected=collect($accounts)->first(fn($account)=>(int)$account->id===$bankAccountId);
         $detectedBank=strtolower(trim((string)($detection['detected_bank']??'')));
