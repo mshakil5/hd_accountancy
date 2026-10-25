@@ -64,16 +64,33 @@ class BankReconciliationController extends Controller
         }
         return response()->json($recognizer->detect($text,$accounts));
     }
-    private function resolveBankAccount(Request $request, int $businessId): int {
+    private function resolveBankAccount(Request $request, int $businessId, array $detection): int {
         $accounts = DB::table('reconciliation_bank_accounts')->where('client_id', $businessId)->where('active', true)->get();
         $chosen = $request->input('bank_account_id');
-        $match = $accounts->first(fn($a) => (string)$a->id === (string)$chosen);
-        if (!$match) throw \Illuminate\Validation\ValidationException::withMessages(['bank_account_id' => 'Choose the bank account for this statement before uploading.']);
-        return (int)$match->id;
+        if ($chosen !== null && $chosen !== '') {
+            $match = $accounts->first(fn($a) => (string)$a->id === (string)$chosen);
+            if (!$match) throw \Illuminate\Validation\ValidationException::withMessages(['bank_account_id' => 'Select a valid active bank account for this business.']);
+            return (int)$match->id;
+        }
+        if (!empty($detection['suggested_bank_account_id'])) {
+            return (int)$detection['suggested_bank_account_id'];
+        }
+        $bankName=trim((string)($detection['detected_bank']??''));
+        $lastFour=trim((string)($detection['detected_account_last_four']??''));
+        if ($bankName!=='' && preg_match('/^\d{4}$/',$lastFour)) {
+            // An OCR-detected bank alone is not enough to distinguish two
+            // accounts. Bank + final four digits is safe to register as new.
+            return (int) DB::table('reconciliation_bank_accounts')->insertGetId([
+                'client_id'=>$businessId,'bank_name'=>$bankName,
+                'account_label'=>'Account ending '.$lastFour,'account_last_four'=>$lastFour,
+                'currency'=>'GBP','active'=>true,'created_at'=>now(),'updated_at'=>now(),
+            ]);
+        }
+        throw \Illuminate\Validation\ValidationException::withMessages(['bank_account_id' => 'We could not safely identify this statement account. Upload a clearer first page or select its registered bank account.']);
     }
     public function upload(Request $request, int $businessId) {
         $this->client($request,$businessId);
-        $request->validate(['file'=>'required|file|mimes:pdf|max:20480','bank_account_id'=>'required|integer']);
+        $request->validate(['file'=>'required|file|mimes:pdf|max:20480','bank_account_id'=>'nullable|integer']);
         $file=$request->file('file');
 
         // Extraction is not proof of completeness: analyse pages/balances first, then
@@ -95,7 +112,7 @@ class BankReconciliationController extends Controller
         // mapping. Detection also needs OCR because a clean PDF can still render
         // its bank logo and name as an image.
         $detection=$recognizer->detect($recognizer->extractPdfTextWithOcr($file->getRealPath()),$accounts);
-        $bankAccountId=$this->resolveBankAccount($request,$businessId);
+        $bankAccountId=$this->resolveBankAccount($request,$businessId,$detection);
         $selected=collect($accounts)->first(fn($account)=>(int)$account->id===$bankAccountId);
         $detectedBank=strtolower(trim((string)($detection['detected_bank']??'')));
         $selectedBank=strtolower(trim((string)($selected->bank_name??'')));
@@ -103,8 +120,8 @@ class BankReconciliationController extends Controller
         $selectedLastFour=(string)($selected->account_last_four??'');
         $banksMatch=$detectedBank==='' || $selectedBank===$detectedBank
             || str_contains($selectedBank,$detectedBank) || str_contains($detectedBank,$selectedBank);
-        if ((!$banksMatch)
-            || ($detectedLastFour!=='' && $selectedLastFour!=='' && $selectedLastFour!==$detectedLastFour)) {
+        if ($request->filled('bank_account_id') && ((!$banksMatch)
+            || ($detectedLastFour!=='' && $selectedLastFour!=='' && $selectedLastFour!==$detectedLastFour))) {
             Log::warning('Bank statement account selection rejected', [
                 'business_id' => $businessId,
                 'selected_bank' => $selected->bank_name ?? null,

@@ -133,6 +133,9 @@ class InvoiceExtractorService
                 'total_amount_found' => $result['total_amount'] !== null,
                 'vat_percent_found' => $result['vat_percent'] !== null,
             ]);
+            if (!array_filter($result)) {
+                $this->logUndetectedInvoiceMoneyLines($pdfPath, $text);
+            }
             return $result;
 
         } catch (Exception $e) {
@@ -235,9 +238,9 @@ class InvoiceExtractorService
         $text = preg_replace('/\s+/', ' ', $text);
 
         $data = [
-            'net_amount'    => $this->extractValue($text, ['amount excl', 'goods value', 'goods total', 'sub total', 'subtotal', 'order value', 'net amount', '\bnet\b']),
-            'vat_amount'    => $this->extractValue($text, ['vat value', 'total vat', 'vat total', 'vat amount', 'value added tax', '\bvat\b']),
-            'total_amount'  => $this->extractValue($text, ['invoice total', 'total due', 'grand total', 'goods supplied', 'outstanding', '\btotal\b']),
+            'net_amount'    => $this->extractValue($text, ['amount excl(?:uding)?(?: vat)?', 'subtotal(?: excl(?:uding)? vat)?', 'goods value', 'goods total', 'sub total', 'order value', 'net amount', '\bnet\b']),
+            'vat_amount'    => $this->extractValue($text, ['vat value', 'total vat', 'vat total', 'vat amount', 'value added tax', 'sales tax', '\bvat\b', '\btax\b']),
+            'total_amount'  => $this->extractValue($text, ['invoice total', 'total due', 'grand total', 'total paid', 'amount paid', 'amount due', 'amount charged', 'payment total', 'payment amount', 'balance due', 'goods supplied', 'outstanding', '\btotal\b']),
             'vat_percent'   => $this->extractPercent($text),
             'tax_percent'   => $this->extractPercent($text),
         ];
@@ -251,17 +254,41 @@ class InvoiceExtractorService
     private function extractValue(string $text, array $keywords): ?string
     {
         foreach ($keywords as $keyword) {
-            $pattern = '/' . $keyword . '[\s\:\$£€]*?(\d+(?:,\d{3})*(?:\.\d{2})?)/i';
+            $amount = '(\d+(?:,\d{3})*(?:\.\d{2})?)';
+            // Most documents use "Total: 12.34", but receipt printers and
+            // OCR frequently emit the value first: "12.34 Total".
+            $pattern = '/' . $keyword . '[^\d]{0,50}?' . $amount . '/i';
             if (preg_match($pattern, $text, $matches)) {
                 return str_replace(',', '', $matches[1]);
             }
-            
-            $pattern2 = '/' . $keyword . '[\s\:\$£€]*?(\d+)/i';
-            if (preg_match($pattern2, $text, $matches)) {
+
+            $reversePattern = '/' . $amount . '[^\d]{0,50}?' . $keyword . '/i';
+            if (preg_match($reversePattern, $text, $matches)) {
                 return $matches[1];
             }
         }
         return null;
+    }
+
+    /** Log only the relevant OCR lines when a receipt needs a new parser rule. */
+    private function logUndetectedInvoiceMoneyLines(string $path, string $text): void
+    {
+        $lines = [];
+        foreach (preg_split('/\R/u', $text) ?: [] as $line) {
+            $line = trim(preg_replace('/\s+/u', ' ', $line) ?? '');
+            if ($line !== '' && preg_match('/(?:total|amount|paid|due|charge|vat|tax|subtotal|balance)/iu', $line)
+                && preg_match('/\d+(?:,\d{3})*(?:\.\d{2})?/', $line)) {
+                $lines[] = mb_substr($line, 0, 200);
+            }
+            if (count($lines) >= 12) {
+                break;
+            }
+        }
+        Log::warning('Invoice OCR found no recognised fields', [
+            'path' => $path,
+            'money_line_candidates' => $lines,
+            'candidate_count' => count($lines),
+        ]);
     }
 
     /**
