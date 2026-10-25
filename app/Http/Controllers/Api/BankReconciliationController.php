@@ -98,10 +98,8 @@ class BankReconciliationController extends Controller
 
         $recognizer=app(BankStatementRecognitionService::class);
         $accounts=DB::table('reconciliation_bank_accounts')->where('client_id',$businessId)->get()->all();
-        // The verification engine keeps the PDF text layer to preserve row/page
-        // mapping. Detection also needs OCR because a clean PDF can still render
-        // its bank logo and name as an image.
-        $detection=$recognizer->detect($recognizer->extractPdfTextWithOcr($file->getRealPath()),$accounts);
+        // Skip OCR/detection during upload to avoid timeouts; admin verifies later
+        $detection=['detected_bank'=>null,'detected_account_last_four'=>null,'suggested_bank_account_id'=>null,'confidence'=>'unknown','candidates'=>[]];
         $bankAccountId=$this->resolveBankAccount($request,$businessId,$detection);
         $selected=collect($accounts)->first(fn($account)=>(int)$account->id===$bankAccountId);
         $detectedBank=strtolower(trim((string)($detection['detected_bank']??'')));
