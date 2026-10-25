@@ -21,14 +21,17 @@ class OpenAILeadInterpreter
         return (bool) config('openai.enabled') && filled(config('openai.api_key'));
     }
 
-    public function interpret(Lead $lead, string $message): array
+    public function interpret(Lead $lead, string $message, ?int $excludeMessageId = null): array
     {
         $ruleResult = $this->ruleBased($message);
         if (!$this->configured()) {
             return $ruleResult;
         }
 
-        $history = $lead->messages()->whereNotNull('body')->latest('id')->limit(8)->get()->reverse()
+        $history = $lead->messages()
+            ->whereNotNull('body')
+            ->when($excludeMessageId, fn($query) => $query->where('id', '!=', $excludeMessageId))
+            ->latest('id')->limit(8)->get()->reverse()
             ->map(fn($m) => strtoupper($m->direction) . ': ' . $m->body)->implode("\n");
 
         $instructions = <<<'TXT'

@@ -8,7 +8,7 @@
 <div class="row">
     <div class="col-lg-5">
         <div class="card"><div class="card-body pt-3">
-            <h5 class="card-title">{{ $lead->name ?: 'WhatsApp prospect' }} <span class="badge bg-secondary">{{ str_replace('_',' ',$lead->qualification_status) }}</span></h5>
+            <h5 class="card-title">{{ $lead->name ?: 'WhatsApp prospect' }} <span class="badge bg-secondary">{{ str_replace('_',' ',$lead->qualification_status) }}</span>@if($lead->automation_completed_at) <span class="badge bg-info text-dark">Automation complete</span>@endif @if($lead->human_takeover) <span class="badge bg-primary">Human takeover</span>@endif</h5>
             <dl class="row mb-0">
                 <dt class="col-5">WhatsApp</dt><dd class="col-7">+{{ $lead->whatsapp_id }}</dd>
                 <dt class="col-5">Requirement</dt><dd class="col-7">{{ config('lead_qualification.intent_options.'.$lead->intent, $lead->intent ?: '—') }}</dd>
@@ -20,9 +20,12 @@
             </dl>
             @if($lead->ai_summary)<div class="alert alert-light border mt-3"><strong>Summary</strong><br>{{ $lead->ai_summary }}</div>@endif
             <div class="d-flex gap-2 flex-wrap">
-                @if(!$lead->human_takeover)<form method="POST" action="{{ route('admin.leads.takeover',$lead) }}">@csrf<button class="btn btn-primary">Take over</button></form>@else<form method="POST" action="{{ route('admin.leads.release',$lead) }}">@csrf<button class="btn btn-outline-primary">Release automation</button></form>@endif
+                @if(!$lead->human_takeover)<form method="POST" action="{{ route('admin.leads.takeover',$lead) }}">@csrf<button class="btn btn-primary">Take over</button></form>@else<form method="POST" action="{{ route('admin.leads.release',$lead) }}">@csrf<button class="btn btn-outline-primary">Release takeover</button></form>@endif
                 <form method="POST" action="{{ route('admin.leads.notify',$lead) }}">@csrf<button class="btn btn-outline-secondary">Resend alert</button></form>
             </div>
+            @if($lead->automation_completed_at && !$lead->human_takeover)
+            <div class="alert alert-info mt-3 mb-0">The bot has finished qualifying this lead. New replies are stored and the team is alerted; the bot will not re-qualify.</div>
+            @endif
         </div></div>
         <div class="card"><div class="card-body pt-3">
             <form method="POST" action="{{ route('admin.leads.update',$lead) }}">@csrf @method('PUT')

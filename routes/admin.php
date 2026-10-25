@@ -75,6 +75,7 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     // Meta / WhatsApp lead qualification
     Route::get('/leads', [LeadController::class, 'index'])->name('admin.leads.index');
     Route::get('/leads/health', [LeadController::class, 'health'])->name('admin.leads.health');
+    Route::post('/leads/clear', [LeadController::class, 'clearAll'])->name('admin.leads.clear');
     Route::get('/leads/{lead}', [LeadController::class, 'show'])->name('admin.leads.show');
     Route::post('/leads/{lead}/take-over', [LeadController::class, 'takeOver'])->name('admin.leads.takeover');
     Route::post('/leads/{lead}/release', [LeadController::class, 'release'])->name('admin.leads.release');

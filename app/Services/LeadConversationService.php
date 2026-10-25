@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Lead;
 use App\Models\LeadMessage;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class LeadConversationService
@@ -19,12 +20,27 @@ class LeadConversationService
     public function process(LeadMessage $message): void
     {
         $lead = $message->lead()->firstOrFail();
+
+        // A member of staff has taken this conversation over. Keep storing
+        // inbound messages, but leave replies to the human.
+        if ($lead->human_takeover) return;
+
+        // The bot already completed this lead. Never re-qualify or send the
+        // closing message twice. Only alert on replies from sales-relevant
+        // leads; rejected/non-sales senders must not be able to generate
+        // repeated email/SMS alerts.
+        if ($lead->automation_completed_at) {
+            if (in_array($lead->qualification_status, ['GENUINE', 'REVIEW', 'EXISTING_CLIENT'], true)
+                && $this->maySendFollowUpAlert($lead)) {
+                $this->alerts->notifyFollowUp($lead, $message);
+            }
+            return;
+        }
+
         $terminal = config('lead_qualification.terminal_qualification_statuses');
 
-        if ($lead->human_takeover) return;
-        // Terminal leads are never re-qualified. Finish again only when the
-        // handover did not complete (e.g. the outbound send failed and the job
-        // is retrying); a completed handover sets human_takeover above.
+        // A previous attempt saved the terminal status but did not finish the
+        // handover (for example the outbound send failed and the job retried).
         if (in_array($lead->qualification_status, $terminal, true)) {
             $this->finish($lead);
             return;
@@ -34,7 +50,7 @@ class LeadConversationService
         $lead->refresh();
 
         $answer = $this->extractAnswer($message);
-        $analysis = $this->interpreter->interpret($lead, $answer);
+        $analysis = $this->interpreter->interpret($lead, $answer, $message->id);
 
         DB::transaction(function () use ($lead, $analysis, $answer) {
             $this->applyAnalysis($lead, $analysis);
@@ -151,14 +167,29 @@ class LeadConversationService
         }
         // REJECTED gets no automated engagement.
 
-        // Only mark the handover complete once the outbound send (if any)
-        // succeeded; a failed send stays retryable by the queue.
-        $lead->update(['human_takeover' => true]);
+        // Completion is deliberately separate from `human_takeover`: the bot is
+        // done, but nobody has taken the lead over yet. Only set this after the
+        // outbound send (if any) succeeded, so a failed send stays retryable.
+        $lead->update(['automation_completed_at' => now()]);
     }
 
     private function extractAnswer(LeadMessage $message): string
     {
         $payload = $message->interactive_payload ?: [];
         return (string) ($payload['id'] ?? $message->body ?? '');
+    }
+
+    /**
+     * One alert per lead per window. A single prospect must not be able to
+     * generate an unlimited number of emails/SMS messages by sending quickly.
+     */
+    private function maySendFollowUpAlert(Lead $lead): bool
+    {
+        $minutes = (int) config('lead_qualification.follow_up_alert_throttle_minutes', 15);
+        if ($minutes <= 0) {
+            return true;
+        }
+
+        return Cache::add('lead-follow-up-alert:' . $lead->id, true, now()->addMinutes($minutes));
     }
 };

@@ -12,6 +12,7 @@ class LeadQualificationService
         if ($hint === 'existing_client' || $lead->intent === 'existing_client') return 'EXISTING_CLIENT';
         if ($hint === 'non_sales' || $lead->intent === 'non_sales') return 'NON_SALES';
         if ($hint === 'rejected') return 'REJECTED';
+        if ($hint === 'review') return 'REVIEW';
 
         $intent = $lead->intent;
         $person = $lead->person_type;

@@ -15,6 +15,7 @@ class Lead extends Model
         'qualification_data' => 'array',
         'human_takeover' => 'boolean',
         'qualified_at' => 'datetime',
+        'automation_completed_at' => 'datetime',
         'contacted_at' => 'datetime',
         'last_inbound_at' => 'datetime',
         'last_outbound_at' => 'datetime',
@@ -34,6 +35,11 @@ class Lead extends Model
     public function isWithinWhatsAppWindow(): bool
     {
         return $this->last_inbound_at && $this->last_inbound_at->greaterThan(now()->subHours(24));
+    }
+
+    public function isAutomationComplete(): bool
+    {
+        return $this->automation_completed_at !== null;
     }
 
     public function scopeOpen($query)

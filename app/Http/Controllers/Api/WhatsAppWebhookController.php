@@ -58,35 +58,52 @@ class WhatsAppWebhookController extends Controller
 
         $contact = collect($value['contacts'] ?? [])->firstWhere('wa_id', $from) ?: [];
         $name = data_get($contact, 'profile.name');
+
+        // Meta sends ad referrals with source_type=ad. Posts and other
+        // referral types must not be treated as ad attribution.
         $referral = $message['referral'] ?? [];
+        $isAdReferral = !empty($referral) && ($referral['source_type'] ?? 'ad') === 'ad';
 
         $lead = Lead::where('whatsapp_id', $from)->open()->latest('id')->first();
+
+        // A new ad click after the bot finished is a fresh enquiry. Never
+        // overwrite the completed lead's campaign attribution with it. While a
+        // human has the old conversation open, keep the reply there instead of
+        // starting a second qualification thread.
+        if ($lead && $lead->automation_completed_at && !$lead->human_takeover && $isAdReferral) {
+            $lead = null;
+        }
+
         if (!$lead) {
+            $inferredIntent = $isAdReferral ? $this->inferIntentFromReferral($referral) : null;
             $lead = Lead::create([
                 'name' => $name,
                 'whatsapp_id' => $from,
                 'phone' => $from,
-                'source' => !empty($referral) ? 'meta_ad_whatsapp' : 'whatsapp',
-                'click_id' => $referral['ctwa_clid'] ?? null,
-                'ad_id' => $referral['source_id'] ?? null,
-                'ad_headline' => $referral['headline'] ?? null,
-                'ad_body' => $referral['body'] ?? null,
-                'source_url' => $referral['source_url'] ?? null,
+                'source' => $isAdReferral ? 'meta_ad_whatsapp' : 'whatsapp',
+                'click_id' => $isAdReferral ? ($referral['ctwa_clid'] ?? null) : null,
+                'ad_id' => $isAdReferral ? ($referral['source_id'] ?? null) : null,
+                'ad_headline' => $isAdReferral ? ($referral['headline'] ?? null) : null,
+                'ad_body' => $isAdReferral ? ($referral['body'] ?? null) : null,
+                'source_url' => $isAdReferral ? ($referral['source_url'] ?? null) : null,
                 'qualification_status' => 'NEW',
                 'sales_status' => 'NEW',
-                'conversation_step' => 'intent',
-                'intent' => $this->inferIntentFromReferral($referral),
+                'conversation_step' => $inferredIntent ? 'person_type' : 'intent',
+                'intent' => $inferredIntent,
             ]);
         } elseif (!$lead->name && $name) {
-            $lead->name = $name; $lead->save();
+            $lead->name = $name;
+            $lead->save();
         }
 
-        if (!$lead->intent && !empty($referral)) {
-            $lead->intent = $this->inferIntentFromReferral($referral);
-            if ($lead->intent) $lead->conversation_step = 'person_type';
-        }
+        if ($isAdReferral) {
+            if (!$lead->intent) {
+                $lead->intent = $this->inferIntentFromReferral($referral);
+                if ($lead->intent && $lead->conversation_step === 'intent') {
+                    $lead->conversation_step = 'person_type';
+                }
+            }
 
-        if (!empty($referral)) {
             $lead->fill(array_filter([
                 'source' => 'meta_ad_whatsapp',
                 'click_id' => $referral['ctwa_clid'] ?? $lead->click_id,
@@ -113,8 +130,10 @@ class WhatsAppWebhookController extends Controller
             'provider_timestamp' => isset($message['timestamp']) ? Carbon::createFromTimestamp((int) $message['timestamp']) : now(),
         ]);
 
+        // Manual takeover suppresses automation entirely. A completed lead is
+        // still queued so the team gets a follow-up alert about the reply.
         if (!$lead->human_takeover) {
-            ProcessIncomingLeadMessage::dispatch($leadMessage->id)->onQueue('leads');
+            ProcessIncomingLeadMessage::dispatch($leadMessage->id, $lead->id)->onQueue('leads');
         }
     }
 
