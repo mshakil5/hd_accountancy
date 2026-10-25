@@ -86,6 +86,14 @@ class BankStatementVerificationService
                 $ocr = true;
                 $parsedPages = [1 => $ocrText];
             }
+        } else if ($ocr && !empty($ocrText)) {
+            // Garbled embedded text is longer but unreadable — prefer OCR if embedded shows no transactions
+            $embeddedSample = mb_substr($embedded, 0, 2000);
+            if (!$this->looksLikeTransactions($embeddedSample)) {
+                $ocr = true;
+                $ocrReason = 'embedded_garbage_preferred_ocr';
+                $parsedPages = [1 => $ocrText];
+            }
         }
         if (!$parsedPages) {
             $parsedPages = [1 => ''];
