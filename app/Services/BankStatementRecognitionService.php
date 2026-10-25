@@ -74,7 +74,7 @@ class BankStatementRecognitionService
             // The issuing bank and account header are on page one. OCRing a
             // whole statement here can exceed an HTTP request timeout, while
             // full-document OCR remains available for scanned-row extraction.
-            $text = app(InvoiceExtractorService::class)->extractRawText($path, 1);
+            $text = app(InvoiceExtractorService::class)->extractRawText($path, 1, 200);
             Log::info('First-page OCR completed via InvoiceExtractorService (Ghostscript -> PNG -> Tesseract)', ['path' => $path, 'length' => mb_strlen($text)]);
             return $text;
         } catch (\Throwable $e) {

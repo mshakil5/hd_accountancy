@@ -68,11 +68,12 @@ class BankStatementVerificationService
         $ocr = false;
         $ocrReason = null;
 
-        // A PDF can contain plenty of selectable text while its table glyphs
-        // are emitted in the wrong order. If it cannot even resemble a
-        // transaction row, use the shared Ghostscript + Tesseract path.
-        if (mb_strlen($embedded) < 50 || !$this->looksLikeTransactions($embedded)) {
-            $ocrReason = mb_strlen($embedded) < 50 ? 'embedded_text_too_short' : 'embedded_text_has_no_transaction_pattern';
+        // Full-document OCR is deliberately reserved for image-only PDFs. A
+        // four-page OCR can take tens of seconds and must not turn a usable
+        // text-based statement into an HTTP timeout just because its layout
+        // needs a bank-specific parser.
+        if (mb_strlen($embedded) < 50) {
+            $ocrReason = 'embedded_text_too_short';
             Log::info('Bank statement OCR fallback requested', [
                 'path' => $path,
                 'pages_total' => $pagesTotal,

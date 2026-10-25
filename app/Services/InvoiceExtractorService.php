@@ -159,9 +159,10 @@ class InvoiceExtractorService
      * Shares the same Ghostscript + Tesseract toolchain as extractInvoiceData(),
      * so it works anywhere invoice OCR works (e.g. the production VPS).
      */
-    public function extractRawText(string $pdfPath, ?int $lastPage = null): string
+    public function extractRawText(string $pdfPath, ?int $lastPage = null, int $dpi = 300): string
     {
-        $key = $this->ocrMemoKey($pdfPath, $lastPage);
+        $dpi = max(150, min($dpi, 300));
+        $key = $this->ocrMemoKey($pdfPath, $lastPage, $dpi);
         if ($key !== null && array_key_exists($key, self::$ocrMemo)) {
             return self::$ocrMemo[$key];
         }
@@ -173,12 +174,13 @@ class InvoiceExtractorService
             $imagePattern = $tempDir . DIRECTORY_SEPARATOR . $base . '-%d.png';
 
             $pageRange = $lastPage === null ? '' : ' -dFirstPage=1 -dLastPage=' . max(1, $lastPage);
-            $gsCmd = "{$this->config['ghostscript']} -dSAFER -dBATCH -dNOPAUSE -sDEVICE=png16m -r300{$pageRange} -sOutputFile=\"{$imagePattern}\" \"{$pdfPath}\" 2>&1";
+            $gsCmd = "{$this->config['ghostscript']} -dSAFER -dBATCH -dNOPAUSE -sDEVICE=png16m -r{$dpi}{$pageRange} -sOutputFile=\"{$imagePattern}\" \"{$pdfPath}\" 2>&1";
             $gsOutput = (string) @shell_exec($gsCmd);
             $images = glob($tempDir . DIRECTORY_SEPARATOR . $base . '-*.png') ?: [];
             Log::info('Ghostscript PDF render completed', [
                 'path' => $pdfPath,
                 'last_page' => $lastPage,
+                'dpi' => $dpi,
                 'images_rendered' => count($images),
             ]);
             if (!$images) {
@@ -208,7 +210,7 @@ class InvoiceExtractorService
             }
             self::$ocrMemo[$key] = $text;
         }
-        Log::info('Raw PDF OCR completed', ['path' => $pdfPath, 'last_page' => $lastPage, 'length' => mb_strlen(trim($text))]);
+        Log::info('Raw PDF OCR completed', ['path' => $pdfPath, 'last_page' => $lastPage, 'dpi' => $dpi, 'length' => mb_strlen(trim($text))]);
         return $text;
     }
 
@@ -216,14 +218,14 @@ class InvoiceExtractorService
      * Identity of a file for memoisation: real path plus size and mtime, so a
      * changed file is never served from a stale entry.
      */
-    private function ocrMemoKey(string $pdfPath, ?int $lastPage = null): ?string
+    private function ocrMemoKey(string $pdfPath, ?int $lastPage = null, int $dpi = 300): ?string
     {
         $real = realpath($pdfPath);
         if ($real === false || !is_file($real)) {
             return null;
         }
         $stat = @stat($real);
-        return $real . '|' . ($stat['size'] ?? 0) . '|' . ($stat['mtime'] ?? 0) . '|' . ($lastPage ?? 'all');
+        return $real . '|' . ($stat['size'] ?? 0) . '|' . ($stat['mtime'] ?? 0) . '|' . ($lastPage ?? 'all') . '|' . $dpi;
     }
 
     /**
