@@ -68,11 +68,13 @@ class BankStatementVerificationService
         $ocr = false;
         $ocrReason = null;
 
-        // Full-document OCR is deliberately reserved for image-only PDFs. A
-        // four-page OCR can take tens of seconds and must not turn a usable
-        // text-based statement into an HTTP timeout just because its layout
-        // needs a bank-specific parser.
-        if (mb_strlen($embedded) < 50) {
+        // Always run backend OCR and merge — embedded garbage (long but unreadable) must not block OCR.
+        $ocrText = trim((string) app(InvoiceExtractorService::class)->extractRawText($path));
+        $ocrReason = 'ocr_always_for_statements';
+        $ocr = mb_strlen($ocrText) > 0;
+        if ($ocr && mb_strlen($ocrText) > mb_strlen($embedded)) {
+            $parsedPages = [1 => $ocrText];
+        } else if (mb_strlen($embedded) < 50) {
             $ocrReason = 'embedded_text_too_short';
             Log::info('Bank statement OCR fallback requested', [
                 'path' => $path,
@@ -80,11 +82,8 @@ class BankStatementVerificationService
                 'embedded_length' => mb_strlen($embedded),
                 'reason' => $ocrReason,
             ]);
-            $ocrText = trim((string) app(InvoiceExtractorService::class)->extractRawText($path));
             if (mb_strlen($ocrText) > mb_strlen($embedded)) {
                 $ocr = true;
-                // OCR returns one blob for the whole document: page mapping is lost,
-                // which is exactly why scanned statements always need a human check.
                 $parsedPages = [1 => $ocrText];
             }
         }
