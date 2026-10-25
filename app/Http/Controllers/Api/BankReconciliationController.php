@@ -105,7 +105,10 @@ class BankReconciliationController extends Controller
 
         $recognizer=app(BankStatementRecognitionService::class);
         $accounts=DB::table('reconciliation_bank_accounts')->where('client_id',$businessId)->get()->all();
-        $detection=$recognizer->detect($analysis['text'],$accounts);
+        // The verification engine keeps the PDF text layer to preserve row/page
+        // mapping. Detection also needs OCR because a clean PDF can still render
+        // its bank logo and name as an image.
+        $detection=$recognizer->detect($recognizer->extractPdfTextWithOcr($file->getRealPath()),$accounts);
         $chosen=$request->input('bank_account_id');
         if ($detection['confidence']==='high' && $chosen && (int)$chosen !== (int)($detection['suggested_bank_account_id'] ?? 0)) {
             throw ValidationException::withMessages(['bank_account_id'=>'Statement account details appear to conflict with the selected bank account. Verify both before importing.']);

@@ -165,9 +165,13 @@ class InvoiceExtractorService
             $imagePattern = $tempDir . DIRECTORY_SEPARATOR . $base . '-%d.png';
 
             $gsCmd = "{$this->config['ghostscript']} -dSAFER -dBATCH -dNOPAUSE -sDEVICE=png16m -r300 -sOutputFile=\"{$imagePattern}\" \"{$pdfPath}\" 2>&1";
-            @shell_exec($gsCmd);
+            $gsOutput = (string) @shell_exec($gsCmd);
+            $images = glob($tempDir . DIRECTORY_SEPARATOR . $base . '-*.png') ?: [];
+            if (!$images) {
+                Log::warning('Ghostscript produced no OCR images', ['path' => $pdfPath, 'output' => mb_substr($gsOutput, 0, 1000)]);
+            }
 
-            foreach (glob($tempDir . DIRECTORY_SEPARATOR . $base . '-*.png') ?: [] as $image) {
+            foreach ($images as $image) {
                 $outBase = $tempDir . DIRECTORY_SEPARATOR . pathinfo($image, PATHINFO_FILENAME);
                 @shell_exec("{$this->config['tesseract']} \"{$image}\" \"{$outBase}\" -l eng 2>&1");
                 $textFile = $outBase . '.txt';
@@ -188,6 +192,7 @@ class InvoiceExtractorService
             }
             self::$ocrMemo[$key] = $text;
         }
+        Log::info('Raw PDF OCR completed', ['path' => $pdfPath, 'length' => mb_strlen(trim($text))]);
         return $text;
     }
 

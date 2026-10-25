@@ -22,6 +22,15 @@ class BankStatementRecognitionService
         'TSB' => ['tsb bank'],
         'Bank of Scotland' => ['bank of scotland'],
         'Royal Bank of Scotland' => ['royal bank of scotland'],
+        'Bank of Ireland' => ['bank of ireland'],
+        'Co-operative Bank' => ['co-operative bank', 'cooperative bank'],
+        'First Direct' => ['first direct'],
+        'Virgin Money' => ['virgin money'],
+        'Chase' => ['chase uk', 'chase bank'],
+        'Wise' => ['wise'],
+        'Tide' => ['tide'],
+        'Mettle' => ['mettle'],
+        'Kroo' => ['kroo'],
     ];
 
     public function extractPdfText(string $path): string
@@ -37,30 +46,25 @@ class BankStatementRecognitionService
     }
 
     /**
-     * Extract text from a PDF, falling back to OCR when embedded text is missing
-     * (scanned / image-based statements). Tesseract must be installed on the
-     * server for the OCR path to work; otherwise returns whatever embedded text
-     * is available (possibly empty).
+     * Extract text from a PDF with both its embedded text and OCR.  Bank logos
+     * and header labels are frequently rendered as images even in otherwise
+     * text-based PDFs, so OCR must not be limited to scanned statements.
      */
     public function extractPdfTextWithOcr(string $path): string
     {
         $embedded=$this->extractPdfText($path);
         $embeddedLen = mb_strlen(trim($embedded));
         Log::info('PDF embedded text length', ['path' => $path, 'length' => $embeddedLen]);
-        if ($embeddedLen > 50) {
-            Log::info('Using embedded PDF text (no OCR needed)', ['path' => $path]);
-            return $embedded;
-        }
-        Log::info('Embedded text too short, falling back to OCR via Ghostscript + Tesseract', ['path' => $path, 'embedded_length' => $embeddedLen]);
+        Log::info('Reading bank-statement header with Ghostscript + Tesseract', ['path' => $path, 'embedded_length' => $embeddedLen]);
         $ocrText = $this->ocrViaTesseract($path);
         $ocrLen = mb_strlen(trim($ocrText));
         Log::info('OCR result via Tesseract/Ghostscript', ['path' => $path, 'ocr_length' => $ocrLen]);
-        if ($ocrLen > $embeddedLen) {
-            Log::info('Using OCR text over embedded', ['path' => $path]);
-            return $ocrText;
+        if ($ocrLen > 0 && $embeddedLen > 0) {
+            // OCR first: it preserves visual header order, while the PDF text
+            // layer often starts with a transaction table or has no logo text.
+            return $ocrText . "\n" . $embedded;
         }
-        Log::warning('OCR did not improve over embedded text', ['path' => $path, 'embedded_length' => $embeddedLen, 'ocr_length' => $ocrLen]);
-        return $embedded;
+        return $ocrLen > 0 ? $ocrText : $embedded;
     }
 
     private function ocrViaTesseract(string $path): string
@@ -80,13 +84,24 @@ class BankStatementRecognitionService
     {
         Log::info('Starting bank detection', ['text_length' => mb_strlen($text), 'accounts_count' => count($accounts)]);
         // Prefer the statement header; whole-document scanning can confuse payees with issuer.
-        $header = mb_strtolower(mb_substr($text, 0, 4500));
+        $rawHeader = mb_substr($text, 0, 4500);
+        $header = mb_strtolower($rawHeader);
         $found = [];
         foreach (self::BANKS as $bank => $signals) {
             foreach ($signals as $signal) {
                 if (preg_match('/(?<![\pL])'.preg_quote($signal, '/').'(?![\pL])/iu', $header)) {
                     $found[] = $bank; break;
                 }
+            }
+        }
+        // Statements from banks that are not in the built-in list often print
+        // their legal name in the header. Accept that only when it is explicitly
+        // labelled as the bank name, never from arbitrary transaction text.
+        if (!$found && preg_match('/(?:bank\s*(?:name)?|financial\s+institution)\s*[:\-]\s*([\pL][\pL&.,\'\- ]{2,80})/iu', $rawHeader, $m)) {
+            $candidate = trim(preg_replace('/\s+/u', ' ', $m[1]));
+            $candidate = preg_replace('/\s+(?:account|statement|sort\s+code)\b.*$/iu', '', $candidate);
+            if ($candidate !== '' && mb_strlen($candidate) <= 80) {
+                $found[] = $candidate;
             }
         }
         $bank = count($found) === 1 ? $found[0] : null;
