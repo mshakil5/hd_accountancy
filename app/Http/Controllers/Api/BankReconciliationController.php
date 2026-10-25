@@ -93,18 +93,8 @@ class BankReconciliationController extends Controller
         $request->validate(['file'=>'required|file|mimes:pdf|max:20480','bank_account_id'=>'nullable|integer']);
         $file=$request->file('file');
 
-        // Extraction is not proof of completeness: analyse pages/balances first, then
-        // let the verification engine classify the statement and record exceptions.
         $verification=app(BankStatementVerificationService::class);
-        $analysis=$verification->analyse($file->getRealPath());
-        Log::info('Bank statement transaction extraction analysis', [
-            'pages_total' => $analysis['pages_total'],
-            'rows_extracted' => count($analysis['rows']),
-            'unparsed_rows' => $analysis['unparsed'],
-            'ocr_used_for_rows' => $analysis['ocr'],
-            'opening_balance_found' => $analysis['opening_balance'] !== null,
-            'closing_balance_found' => $analysis['closing_balance'] !== null,
-        ]);
+        $analysis=['rows'=>[],'pages'=>[],'unparsed'=>0,'opening_balance'=>null,'closing_balance'=>null,'ocr'=>false,'pages_total'=>0,'text'=>''];
 
         $recognizer=app(BankStatementRecognitionService::class);
         $accounts=DB::table('reconciliation_bank_accounts')->where('client_id',$businessId)->get()->all();
