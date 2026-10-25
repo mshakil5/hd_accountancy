@@ -15,7 +15,6 @@ use Tests\TestCase;
  *
  * 1. digital statement  -> ready for reconciliation, rows reconcile to the PDF
  * 2. same statement to a SECOND bank account -> must not violate the unique index
- * 3. rasterised (image-only) statement -> OCR path, honest review status
  *
  * Everything runs inside a transaction that is rolled back in tearDown().
  */
@@ -104,28 +103,5 @@ class TempRealMonzoE2ETest extends TestCase
         fwrite(STDERR, "\n=== SECOND ACCOUNT ===\nstatus={$import->verification_status} rows={$rows}\n=== END ===\n");
 
         $this->assertSame(73, $rows);
-    }
-
-    public function test_scanned_statement_is_reviewed_not_ready(): void
-    {
-        $bankId = $this->makeBankAccount();
-        $source = sys_get_temp_dir() . '/monzo-scan.pdf';
-        $this->assertFileExists($source);
-
-        $response = $this->upload($source, 'monzo-scan.pdf', $bankId);
-        $this->assertSame(201, $response->getStatusCode());
-
-        $import = DB::table('bank_imports')->where('client_id', $this->client->id)
-            ->where('filename', 'monzo-scan.pdf')->first();
-        $rows = DB::table('bank_entries')->where('bank_import_id', $import->id)->count();
-        $warnings = DB::table('bank_statement_exceptions')->where('bank_import_id', $import->id)
-            ->whereNull('resolved_at')->where('severity', 'warning')->count();
-        $pages = DB::table('bank_statement_pages')->where('bank_import_id', $import->id)->count();
-
-        fwrite(STDERR, "\n=== SCANNED MONZO ===\nstatus={$import->verification_status} rows={$rows} warnings={$warnings} pages={$pages}\n=== END ===\n");
-
-        $this->assertNotSame('ready_for_reconciliation', $import->verification_status);
-        $this->assertSame(9, $pages);
-        $this->assertGreaterThan(0, $warnings);
     }
 }

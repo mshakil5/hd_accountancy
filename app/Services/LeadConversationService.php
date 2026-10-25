@@ -11,7 +11,7 @@ class LeadConversationService
 {
     public function __construct(
         private MetaWhatsAppService $whatsApp,
-        private OpenAILeadInterpreter $interpreter,
+        private LeadInterpreter $interpreter,
         private LeadQualificationService $qualifier,
         private LeadAlertService $alerts,
         private MetaAdAttributionService $attribution,
@@ -50,7 +50,15 @@ class LeadConversationService
         $lead->refresh();
 
         $answer = $this->extractAnswer($message);
-        $analysis = $this->interpreter->interpret($lead, $answer, $message->id);
+        $analysis = $this->interpreter->interpret($answer);
+
+        // A button/list answer belongs to exactly one step. Never let the
+        // interpreter infer other fields from the option id (for example,
+        // "self_employed_landlord" must not overwrite the chosen intent with
+        // "landlord_property").
+        if ($this->isStepOption($lead->conversation_step, $answer)) {
+            $analysis = ['summary' => $analysis['summary'] ?? ''];
+        }
 
         DB::transaction(function () use ($lead, $analysis, $answer) {
             $this->applyAnalysis($lead, $analysis);
@@ -120,6 +128,19 @@ class LeadConversationService
             $lead->qualification_data = $data;
             $lead->save();
         }
+    }
+
+    private function isStepOption(?string $step, string $answer): bool
+    {
+        $maps = [
+            'intent' => 'intent_options',
+            'person_type' => 'person_options',
+            'current_accountant' => 'accountant_options',
+            'contact_timeframe' => 'timeframe_options',
+        ];
+
+        return isset($maps[$step])
+            && array_key_exists($answer, config('lead_qualification.' . $maps[$step], []));
     }
 
     private function askNext(Lead $lead): void

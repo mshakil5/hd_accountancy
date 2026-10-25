@@ -11,10 +11,11 @@ use App\Services\LeadConversationService;
 use App\Services\LeadQualificationService;
 use App\Services\MetaAdAttributionService;
 use App\Services\MetaWhatsAppService;
-use App\Services\OpenAILeadInterpreter;
+use App\Services\LeadInterpreter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
@@ -53,7 +54,6 @@ class LeadQualificationTest extends TestCase
             'lead_qualification.alert_email' => null,
             'lead_qualification.alert_phone' => null,
             'lead_qualification.alert_sms_enabled' => false,
-            'openai.enabled' => false,
         ]);
 
         Queue::fake();
@@ -119,6 +119,40 @@ class LeadQualificationTest extends TestCase
         $lead = Lead::where('whatsapp_id', $phone)->firstOrFail();
         $this->assertSame(1, LeadMessage::where('lead_id', $lead->id)->count());
         Queue::assertPushed(ProcessIncomingLeadMessage::class, 1);
+    }
+
+    public function test_concurrent_duplicate_webhook_delivery_returns_ok(): void
+    {
+        $phone = $this->phone();
+        $messageId = $this->wamid();
+        $payload = $this->payload($phone, $messageId, [], 'Hello');
+
+        // Simulate another worker winning the race after the existence check
+        // but before this worker inserts the row.
+        $event = 'eloquent.creating: ' . LeadMessage::class;
+        Event::listen($event, function (LeadMessage $model) use ($messageId) {
+            if ($model->provider_message_id !== $messageId) return;
+
+            DB::table('lead_messages')->insert([
+                'lead_id' => $model->lead_id,
+                'provider_message_id' => $messageId,
+                'direction' => 'inbound',
+                'sender_type' => 'prospect',
+                'message_type' => 'text',
+                'body' => 'duplicate',
+                'delivery_status' => 'received',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        });
+
+        try {
+            $this->signedPost($payload)->assertOk();
+        } finally {
+            Event::forget($event);
+        }
+
+        $this->assertSame(1, LeadMessage::where('provider_message_id', $messageId)->count());
     }
 
     public function test_manual_takeover_stores_messages_without_queueing_the_bot(): void
@@ -269,7 +303,7 @@ class LeadQualificationTest extends TestCase
         );
         $alerts->shouldReceive('notifyFollowUp')->once();
 
-        $interpreter = Mockery::mock(OpenAILeadInterpreter::class);
+        $interpreter = Mockery::mock(LeadInterpreter::class);
         $interpreter->shouldNotReceive('interpret');
         $attribution = Mockery::mock(MetaAdAttributionService::class);
         $attribution->shouldNotReceive('enrich');
@@ -310,7 +344,7 @@ class LeadQualificationTest extends TestCase
         );
         $alerts->shouldNotReceive('notify');
 
-        $interpreter = Mockery::mock(OpenAILeadInterpreter::class);
+        $interpreter = Mockery::mock(LeadInterpreter::class);
         $interpreter->shouldNotReceive('interpret');
         $attribution = Mockery::mock(MetaAdAttributionService::class);
         $attribution->shouldNotReceive('enrich');
@@ -335,7 +369,7 @@ class LeadQualificationTest extends TestCase
         $alerts = Mockery::mock(LeadAlertService::class);
         $alerts->shouldNotReceive('notifyFollowUp');
         $alerts->shouldNotReceive('notify');
-        $interpreter = Mockery::mock(OpenAILeadInterpreter::class);
+        $interpreter = Mockery::mock(LeadInterpreter::class);
         $interpreter->shouldNotReceive('interpret');
         $attribution = Mockery::mock(MetaAdAttributionService::class);
         $attribution->shouldNotReceive('enrich');
@@ -362,7 +396,7 @@ class LeadQualificationTest extends TestCase
         $whatsApp->shouldNotReceive('sendText');
         $alerts = Mockery::mock(LeadAlertService::class);
         $alerts->shouldReceive('notifyFollowUp')->once();
-        $interpreter = Mockery::mock(OpenAILeadInterpreter::class);
+        $interpreter = Mockery::mock(LeadInterpreter::class);
         $interpreter->shouldNotReceive('interpret');
         $attribution = Mockery::mock(MetaAdAttributionService::class);
         $attribution->shouldNotReceive('enrich');
@@ -386,7 +420,7 @@ class LeadQualificationTest extends TestCase
 
         $whatsApp = Mockery::mock(MetaWhatsAppService::class);
         $whatsApp->shouldNotReceive('sendText');
-        $interpreter = Mockery::mock(OpenAILeadInterpreter::class);
+        $interpreter = Mockery::mock(LeadInterpreter::class);
         $interpreter->shouldNotReceive('interpret');
         $attribution = Mockery::mock(MetaAdAttributionService::class);
         $attribution->shouldNotReceive('enrich');
@@ -422,7 +456,7 @@ class LeadQualificationTest extends TestCase
         $alerts = Mockery::mock(LeadAlertService::class);
         $alerts->shouldNotReceive('notify');
         $alerts->shouldReceive('notifyFollowUp')->once();
-        $interpreter = Mockery::mock(OpenAILeadInterpreter::class);
+        $interpreter = Mockery::mock(LeadInterpreter::class);
         $interpreter->shouldNotReceive('interpret');
         $attribution = Mockery::mock(MetaAdAttributionService::class);
         $attribution->shouldNotReceive('enrich');
@@ -438,9 +472,16 @@ class LeadQualificationTest extends TestCase
         $service->process($message);
     }
 
-    public function test_reopening_qualification_clears_the_completion_marker(): void
+    public function test_reopening_qualification_clears_the_completion_marker_and_answers(): void
     {
-        $lead = $this->makeCompletedLead(['qualified_at' => now()]);
+        $lead = $this->makeCompletedLead([
+            'qualified_at' => now(),
+            'intent' => 'change_accountant',
+            'person_type' => 'owner_director',
+            'current_accountant' => 'yes_change',
+            'contact_timeframe' => 'asap',
+            'qualification_data' => ['intent' => 'change_accountant'],
+        ]);
 
         app(LeadController::class)->update(new Request([
             'qualification_status' => 'QUALIFYING',
@@ -449,7 +490,68 @@ class LeadQualificationTest extends TestCase
         $lead->refresh();
         $this->assertNull($lead->automation_completed_at);
         $this->assertNull($lead->qualified_at);
+        $this->assertNull($lead->intent);
+        $this->assertNull($lead->person_type);
+        $this->assertNull($lead->current_accountant);
+        $this->assertNull($lead->contact_timeframe);
+        $this->assertNull($lead->qualification_data);
+        $this->assertSame('intent', $lead->conversation_step);
         $this->assertSame('QUALIFYING', $lead->qualification_status);
+    }
+
+    public function test_button_answer_does_not_overwrite_other_qualification_fields(): void
+    {
+        $lead = $this->makeLead([
+            'intent' => 'change_accountant',
+            'conversation_step' => 'person_type',
+            'qualification_status' => 'QUALIFYING',
+        ]);
+        $message = $this->makeInbound($lead, 'Self-employed');
+        $message->forceFill([
+            'interactive_payload' => ['id' => 'self_employed_landlord', 'title' => 'Self-employed'],
+        ])->save();
+
+        $whatsApp = Mockery::mock(MetaWhatsAppService::class);
+        $whatsApp->shouldReceive('sendList')->once();
+        $alerts = Mockery::mock(LeadAlertService::class);
+        $alerts->shouldNotReceive('notify');
+        $interpreter = Mockery::mock(LeadInterpreter::class);
+        $interpreter->shouldReceive('interpret')->once()->andReturn([
+            'intent' => 'landlord_property',
+            'person_type' => 'self_employed_landlord',
+            'current_accountant' => 'unknown',
+            'contact_timeframe' => 'unknown',
+            'classification_hint' => 'unknown',
+            'summary' => 'Self-employed prospect.',
+        ]);
+        $attribution = Mockery::mock(MetaAdAttributionService::class);
+        $attribution->shouldReceive('enrich')->once();
+
+        $service = new LeadConversationService(
+            $whatsApp,
+            $interpreter,
+            app(LeadQualificationService::class),
+            $alerts,
+            $attribution
+        );
+
+        $service->process($message);
+
+        $lead->refresh();
+        $this->assertSame('change_accountant', $lead->intent);
+        $this->assertSame('self_employed_landlord', $lead->person_type);
+        $this->assertSame('contact_timeframe', $lead->conversation_step);
+    }
+
+    public function test_job_retry_settings_tolerate_overlap_releases(): void
+    {
+        $job = new ProcessIncomingLeadMessage(1, 1);
+
+        $this->assertSame(0, $job->tries);
+        $this->assertSame(3, $job->maxExceptions);
+        $this->assertInstanceOf(\DateTimeInterface::class, $job->retryUntil());
+        $this->assertSame(180, (int) config('queue.connections.database.retry_after'));
+        $this->assertGreaterThan($job->timeout, (int) config('queue.connections.database.retry_after'));
     }
 
     public function test_reversing_a_closed_sales_status_clears_closed_at(): void
@@ -476,21 +578,30 @@ class LeadQualificationTest extends TestCase
 
     public function test_rule_based_parser_extracts_common_enquiries(): void
     {
-        config(['openai.enabled' => false]);
-        $interpreter = app(OpenAILeadInterpreter::class);
-        $lead = new Lead(['whatsapp_id' => 'test']);
+        $interpreter = app(LeadInterpreter::class);
 
-        $change = $interpreter->interpret($lead, 'I need a new accountant asap, I run a company');
+        $change = $interpreter->interpret('I need a new accountant asap, I run a company');
         $this->assertSame('change_accountant', $change['intent']);
         $this->assertSame('owner_director', $change['person_type']);
         $this->assertSame('asap', $change['contact_timeframe']);
 
-        $nonSales = $interpreter->interpret($lead, 'We offer SEO and web design services');
+        $nonSales = $interpreter->interpret('We offer SEO and web design services');
         $this->assertSame('non_sales', $nonSales['intent']);
         $this->assertSame('non_sales', $nonSales['classification_hint']);
 
-        $existing = $interpreter->interpret($lead, 'I am already a client of yours');
+        $existing = $interpreter->interpret('I am already a client of yours');
         $this->assertSame('existing_client', $existing['intent']);
+
+        // Short keywords must match whole words only: "decision" is not CIS,
+        // "private" is not VAT, and "seoul" is not SEO.
+        $decision = $interpreter->interpret('We need help making a decision');
+        $this->assertSame('unknown', $decision['intent']);
+
+        $private = $interpreter->interpret('This is a private matter');
+        $this->assertSame('unknown', $private['intent']);
+
+        $cv = $interpreter->interpret('Can you review my CV?');
+        $this->assertSame('non_sales', $cv['intent']);
     }
 
     // ------------------------------------------------------------------

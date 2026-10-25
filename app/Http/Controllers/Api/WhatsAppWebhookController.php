@@ -8,6 +8,7 @@ use App\Models\Lead;
 use App\Models\LeadMessage;
 use App\Services\MetaWhatsAppService;
 use Carbon\Carbon;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -117,18 +118,26 @@ class WhatsAppWebhookController extends Controller
         $lead->save();
 
         [$body, $type, $interactive] = $this->normaliseMessage($message);
-        $leadMessage = LeadMessage::create([
-            'lead_id' => $lead->id,
-            'provider_message_id' => $providerId,
-            'direction' => 'inbound',
-            'sender_type' => 'prospect',
-            'message_type' => $type,
-            'body' => $body,
-            'interactive_payload' => $interactive,
-            'raw_payload' => $message,
-            'delivery_status' => 'received',
-            'provider_timestamp' => isset($message['timestamp']) ? Carbon::createFromTimestamp((int) $message['timestamp']) : now(),
-        ]);
+        try {
+            $leadMessage = LeadMessage::create([
+                'lead_id' => $lead->id,
+                'provider_message_id' => $providerId,
+                'direction' => 'inbound',
+                'sender_type' => 'prospect',
+                'message_type' => $type,
+                'body' => $body,
+                'interactive_payload' => $interactive,
+                'raw_payload' => $message,
+                'delivery_status' => 'received',
+                'provider_timestamp' => isset($message['timestamp']) ? Carbon::createFromTimestamp((int) $message['timestamp']) : now(),
+            ]);
+        } catch (QueryException $e) {
+            // Meta can deliver the same webhook twice at the same time; the
+            // unique provider_message_id index is the final guard. A duplicate
+            // is a success, not a 500 that makes Meta retry again.
+            if ((string) $e->getCode() === '23000') return;
+            throw $e;
+        }
 
         // Manual takeover suppresses automation entirely. A completed lead is
         // still queued so the team gets a follow-up alert about the reply.

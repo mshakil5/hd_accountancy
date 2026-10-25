@@ -16,11 +16,23 @@ class ProcessIncomingLeadMessage implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $tries = 3;
+    public int $tries = 0;
+    public int $maxExceptions = 3;
     public array $backoff = [15, 60, 180];
     public int $timeout = 60;
 
     public function __construct(public int $leadMessageId, public int $leadId = 0) {}
+
+    /**
+     * Unlimited attempts until this deadline. The WithoutOverlapping middleware
+     * releases a job while another message for the same lead is running, and
+     * every release counts as an attempt; a fixed `$tries` would fail the job
+     * simply because the lead sent two messages quickly.
+     */
+    public function retryUntil(): \DateTimeInterface
+    {
+        return now()->addMinutes(30);
+    }
 
     /**
      * Serialise all turns for one lead. Without this, two quick messages can be

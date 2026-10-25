@@ -148,15 +148,23 @@ class LeadController extends Controller
         }
 
         // Reopening qualification (anything other than a terminal status)
-        // restarts automation on the next inbound message.
+        // restarts automation on the next inbound message. Clear the previous
+        // answers as well, otherwise the next message is classified from the
+        // old data and the closing text is sent again without any questions.
         if (array_key_exists('qualification_status', $data)
             && !in_array($data['qualification_status'], ['GENUINE','REVIEW','REJECTED','EXISTING_CLIENT','NON_SALES'], true)) {
             $data['automation_completed_at'] = null;
             $data['qualified_at'] = null;
+            $data['intent'] = null;
+            $data['person_type'] = null;
+            $data['current_accountant'] = null;
+            $data['contact_timeframe'] = null;
+            $data['qualification_data'] = null;
+            $data['conversation_step'] = 'intent';
         }
 
         $attributes = array_filter($data, fn($v) => $v !== null);
-        foreach (['closed_at', 'automation_completed_at', 'qualified_at'] as $nullableField) {
+        foreach (['closed_at', 'automation_completed_at', 'qualified_at', 'intent', 'person_type', 'current_accountant', 'contact_timeframe', 'qualification_data'] as $nullableField) {
             if (array_key_exists($nullableField, $data) && $data[$nullableField] === null) {
                 $attributes[$nullableField] = null;
             }
@@ -180,7 +188,6 @@ class LeadController extends Controller
             'Meta verify token' => filled(config('meta_whatsapp.verify_token')),
             'Meta app secret' => filled(config('meta_whatsapp.app_secret')),
             'Re-engagement template (optional)' => filled(config('meta_whatsapp.reengagement_template')),
-            'OpenAI API key' => filled(config('openai.api_key')),
             'Lead alert email or phone' => filled(config('lead_qualification.alert_email')) || filled(config('lead_qualification.alert_phone')),
             'Queue is asynchronous' => config('queue.default') !== 'sync',
             'Database queue table exists' => config('queue.default') !== 'database' || Schema::hasTable('jobs'),
