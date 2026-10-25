@@ -71,8 +71,11 @@ class BankStatementRecognitionService
     {
         Log::info('Starting OCR with Ghostscript + Tesseract', ['path' => $path]);
         try {
-            $text = app(InvoiceExtractorService::class)->extractRawText($path);
-            Log::info('OCR completed via InvoiceExtractorService (Ghostscript -> PNG -> Tesseract)', ['path' => $path, 'length' => mb_strlen($text)]);
+            // The issuing bank and account header are on page one. OCRing a
+            // whole statement here can exceed an HTTP request timeout, while
+            // full-document OCR remains available for scanned-row extraction.
+            $text = app(InvoiceExtractorService::class)->extractRawText($path, 1);
+            Log::info('First-page OCR completed via InvoiceExtractorService (Ghostscript -> PNG -> Tesseract)', ['path' => $path, 'length' => mb_strlen($text)]);
             return $text;
         } catch (\Throwable $e) {
             Log::error('OCR via Tesseract/InvoiceExtractorService failed', ['path' => $path, 'error' => $e->getMessage()]);

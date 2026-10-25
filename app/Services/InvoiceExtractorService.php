@@ -151,9 +151,9 @@ class InvoiceExtractorService
      * Shares the same Ghostscript + Tesseract toolchain as extractInvoiceData(),
      * so it works anywhere invoice OCR works (e.g. the production VPS).
      */
-    public function extractRawText(string $pdfPath): string
+    public function extractRawText(string $pdfPath, ?int $lastPage = null): string
     {
-        $key = $this->ocrMemoKey($pdfPath);
+        $key = $this->ocrMemoKey($pdfPath, $lastPage);
         if ($key !== null && array_key_exists($key, self::$ocrMemo)) {
             return self::$ocrMemo[$key];
         }
@@ -164,7 +164,8 @@ class InvoiceExtractorService
             $base = uniqid('pdf_ocr_');
             $imagePattern = $tempDir . DIRECTORY_SEPARATOR . $base . '-%d.png';
 
-            $gsCmd = "{$this->config['ghostscript']} -dSAFER -dBATCH -dNOPAUSE -sDEVICE=png16m -r300 -sOutputFile=\"{$imagePattern}\" \"{$pdfPath}\" 2>&1";
+            $pageRange = $lastPage === null ? '' : ' -dFirstPage=1 -dLastPage=' . max(1, $lastPage);
+            $gsCmd = "{$this->config['ghostscript']} -dSAFER -dBATCH -dNOPAUSE -sDEVICE=png16m -r300{$pageRange} -sOutputFile=\"{$imagePattern}\" \"{$pdfPath}\" 2>&1";
             $gsOutput = (string) @shell_exec($gsCmd);
             $images = glob($tempDir . DIRECTORY_SEPARATOR . $base . '-*.png') ?: [];
             if (!$images) {
@@ -192,7 +193,7 @@ class InvoiceExtractorService
             }
             self::$ocrMemo[$key] = $text;
         }
-        Log::info('Raw PDF OCR completed', ['path' => $pdfPath, 'length' => mb_strlen(trim($text))]);
+        Log::info('Raw PDF OCR completed', ['path' => $pdfPath, 'last_page' => $lastPage, 'length' => mb_strlen(trim($text))]);
         return $text;
     }
 
@@ -200,14 +201,14 @@ class InvoiceExtractorService
      * Identity of a file for memoisation: real path plus size and mtime, so a
      * changed file is never served from a stale entry.
      */
-    private function ocrMemoKey(string $pdfPath): ?string
+    private function ocrMemoKey(string $pdfPath, ?int $lastPage = null): ?string
     {
         $real = realpath($pdfPath);
         if ($real === false || !is_file($real)) {
             return null;
         }
         $stat = @stat($real);
-        return $real . '|' . ($stat['size'] ?? 0) . '|' . ($stat['mtime'] ?? 0);
+        return $real . '|' . ($stat['size'] ?? 0) . '|' . ($stat['mtime'] ?? 0) . '|' . ($lastPage ?? 'all');
     }
 
     /**
