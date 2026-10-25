@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Log;
 use Exception;
+use Smalot\PdfParser\Parser;
 
 class InvoiceExtractorService
 {
@@ -110,38 +111,42 @@ class InvoiceExtractorService
     public function extractInvoiceData(string $pdfPath): array
     {
         try {
-            $tempDir = sys_get_temp_dir();
-            $baseName = uniqid('invoice_ocr_');
-            $imagePath = $tempDir . '/' . $baseName . '.png';
-            $textPath = $tempDir . '/' . $baseName;
- 
-            $gsCmd = "{$this->config['ghostscript']} -dSAFER -dBATCH -dNOPAUSE -sDEVICE=png16m -r300 -dFirstPage=1 -dLastPage=1 -sOutputFile=\"{$imagePath}\" \"{$pdfPath}\" 2>&1";
-            $gsOutput = shell_exec($gsCmd);
-
-            if (!file_exists($imagePath)) { 
-                Log::error('Ghostscript Failed', ['command' => $gsCmd, 'output' => $gsOutput]);
-                return ['error' => 'Ghostscript failed to convert PDF: ' . $gsOutput];
+            $embedded = $this->extractEmbeddedPdfText($pdfPath);
+            // Invoices normally place their totals on page one. Combining both
+            // sources lets OCR recover image-only labels without throwing away
+            // accurate selectable amounts from the PDF.
+            $ocr = $this->extractRawText($pdfPath, 1);
+            $text = trim($ocr . "\n" . $embedded);
+            if ($text === '') {
+                return ['error' => 'No text could be read from this PDF.'];
             }
- 
-            $tessCmd = "{$this->config['tesseract']} \"{$imagePath}\" \"{$textPath}\" -l eng 2>&1";
-            $tessOutput = shell_exec($tessCmd);
-
-            $textFilePath = $textPath . '.txt';
-            if (!file_exists($textFilePath)) {
-                return ['error' => 'Tesseract failed: ' . $tessOutput];
-            }
-
-            $text = file_get_contents($textFilePath);
-
-            @unlink($imagePath);
-            @unlink($textFilePath);
-
-            // Log::info('Raw OCR Text Extracted (CLI)', ['text' => $text]);
-
-            return $this->parseExtractedText($text);
+            Log::info('Invoice text extracted', [
+                'path' => $pdfPath,
+                'embedded_length' => mb_strlen(trim($embedded)),
+                'ocr_length' => mb_strlen(trim($ocr)),
+            ]);
+            $result = $this->parseExtractedText($text);
+            Log::info('Invoice OCR fields detected', [
+                'path' => $pdfPath,
+                'net_amount_found' => $result['net_amount'] !== null,
+                'vat_amount_found' => $result['vat_amount'] !== null,
+                'total_amount_found' => $result['total_amount'] !== null,
+                'vat_percent_found' => $result['vat_percent'] !== null,
+            ]);
+            return $result;
 
         } catch (Exception $e) {
             return ['error' => 'OCR Failed: ' . $e->getMessage()];
+        }
+    }
+
+    private function extractEmbeddedPdfText(string $pdfPath): string
+    {
+        try {
+            return (string) (new Parser())->parseFile($pdfPath)->getText();
+        } catch (\Throwable $e) {
+            Log::warning('Invoice embedded PDF text extraction failed', ['path' => $pdfPath, 'error' => $e->getMessage()]);
+            return '';
         }
     }
 
@@ -168,17 +173,24 @@ class InvoiceExtractorService
             $gsCmd = "{$this->config['ghostscript']} -dSAFER -dBATCH -dNOPAUSE -sDEVICE=png16m -r300{$pageRange} -sOutputFile=\"{$imagePattern}\" \"{$pdfPath}\" 2>&1";
             $gsOutput = (string) @shell_exec($gsCmd);
             $images = glob($tempDir . DIRECTORY_SEPARATOR . $base . '-*.png') ?: [];
+            Log::info('Ghostscript PDF render completed', [
+                'path' => $pdfPath,
+                'last_page' => $lastPage,
+                'images_rendered' => count($images),
+            ]);
             if (!$images) {
                 Log::warning('Ghostscript produced no OCR images', ['path' => $pdfPath, 'output' => mb_substr($gsOutput, 0, 1000)]);
             }
 
             foreach ($images as $image) {
                 $outBase = $tempDir . DIRECTORY_SEPARATOR . pathinfo($image, PATHINFO_FILENAME);
-                @shell_exec("{$this->config['tesseract']} \"{$image}\" \"{$outBase}\" -l eng 2>&1");
+                $tessOutput = (string) @shell_exec("{$this->config['tesseract']} \"{$image}\" \"{$outBase}\" -l eng 2>&1");
                 $textFile = $outBase . '.txt';
                 if (file_exists($textFile)) {
                     $text .= file_get_contents($textFile) . "\n";
                     @unlink($textFile);
+                } else {
+                    Log::warning('Tesseract produced no OCR text', ['path' => $pdfPath, 'output' => mb_substr($tessOutput, 0, 1000)]);
                 }
                 @unlink($image);
             }

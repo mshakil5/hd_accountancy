@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\BankImport;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Smalot\PdfParser\Parser;
@@ -65,8 +66,19 @@ class BankStatementVerificationService
         $pagesTotal = max(1, count($parsedPages));
         $embedded = trim(implode("\n", $parsedPages));
         $ocr = false;
+        $ocrReason = null;
 
-        if (mb_strlen($embedded) < 50) {
+        // A PDF can contain plenty of selectable text while its table glyphs
+        // are emitted in the wrong order. If it cannot even resemble a
+        // transaction row, use the shared Ghostscript + Tesseract path.
+        if (mb_strlen($embedded) < 50 || !$this->looksLikeTransactions($embedded)) {
+            $ocrReason = mb_strlen($embedded) < 50 ? 'embedded_text_too_short' : 'embedded_text_has_no_transaction_pattern';
+            Log::info('Bank statement OCR fallback requested', [
+                'path' => $path,
+                'pages_total' => $pagesTotal,
+                'embedded_length' => mb_strlen($embedded),
+                'reason' => $ocrReason,
+            ]);
             $ocrText = trim((string) app(InvoiceExtractorService::class)->extractRawText($path));
             if (mb_strlen($ocrText) > mb_strlen($embedded)) {
                 $ocr = true;
@@ -134,7 +146,7 @@ class BankStatementVerificationService
             $closing ??= $derivedClosing;
         }
 
-        return [
+        $result = [
             'pages' => $pages,
             'rows' => $rows,
             'unparsed' => $unparsed,
@@ -150,6 +162,23 @@ class BankStatementVerificationService
             'pages_total' => $pagesTotal,
             'text' => $text,
         ];
+        Log::info('Bank statement analysis completed', [
+            'path' => $path,
+            'pages_total' => $pagesTotal,
+            'page_results' => array_map(fn($page) => [
+                'text_length' => $page['text_length'],
+                'transactions_detected' => $page['transactions_detected'],
+                'rows' => $page['rows'],
+                'ocr_unmapped' => $page['ocr_unmapped'],
+            ], $pages),
+            'rows_extracted' => count($rows),
+            'unparsed_rows' => $unparsed,
+            'ocr_used' => $ocr,
+            'ocr_reason' => $ocrReason,
+            'opening_balance_found' => $opening !== null,
+            'closing_balance_found' => $closing !== null,
+        ]);
+        return $result;
     }
 
     /** @return array{rows: array<int,array<string,mixed>>, unparsed:int, samples:array<int,string>} */

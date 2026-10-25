@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use App\Services\BankStatementRecognitionService;
 use App\Services\BankStatementVerificationService;
 
@@ -63,45 +64,30 @@ class BankReconciliationController extends Controller
         }
         return response()->json($recognizer->detect($text,$accounts));
     }
-    private function resolveBankAccount(Request $request, int $businessId, array $detection = null): int {
+    private function resolveBankAccount(Request $request, int $businessId): int {
         $accounts = DB::table('reconciliation_bank_accounts')->where('client_id', $businessId)->where('active', true)->get();
         $chosen = $request->input('bank_account_id');
-        if ($chosen !== null && $chosen !== '') {
-            $match = $accounts->first(fn($a) => (string)$a->id === (string)$chosen);
-            if (!$match) throw \Illuminate\Validation\ValidationException::withMessages(['bank_account_id' => 'Select a valid active bank account for this business.']);
-            return (int)$match->id;
-        }
-        if ($accounts->count() === 1) return (int)$accounts->first()->id;
-        if ($detection && ($detection['suggested_bank_account_id'] ?? null)) {
-            $suggested = (int)$detection['suggested_bank_account_id'];
-            if ($accounts->first(fn($a) => (int)$a->id === $suggested)) return $suggested;
-        }
-        if ($detection && ($detection['detected_bank'] ?? null)) {
-            $bankName = $detection['detected_bank'];
-            $lastFour = $detection['detected_account_last_four'] ?? null;
-            $newId = DB::table('reconciliation_bank_accounts')->insertGetId([
-                'client_id' => $businessId,
-                'bank_name' => $bankName,
-                'account_label' => $lastFour ? 'Account ending ' . $lastFour : 'New bank account',
-                'account_last_four' => $lastFour,
-                'currency' => 'GBP',
-                'active' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-            return $newId;
-        }
-        throw \Illuminate\Validation\ValidationException::withMessages(['bank_account_id' => 'Select a bank account before uploading, or upload a clearer PDF so the bank can be detected.']);
+        $match = $accounts->first(fn($a) => (string)$a->id === (string)$chosen);
+        if (!$match) throw \Illuminate\Validation\ValidationException::withMessages(['bank_account_id' => 'Choose the bank account for this statement before uploading.']);
+        return (int)$match->id;
     }
     public function upload(Request $request, int $businessId) {
         $this->client($request,$businessId);
-        $request->validate(['file'=>'required|file|mimes:pdf|max:20480','bank_account_id'=>'nullable|integer']);
+        $request->validate(['file'=>'required|file|mimes:pdf|max:20480','bank_account_id'=>'required|integer']);
         $file=$request->file('file');
 
         // Extraction is not proof of completeness: analyse pages/balances first, then
         // let the verification engine classify the statement and record exceptions.
         $verification=app(BankStatementVerificationService::class);
         $analysis=$verification->analyse($file->getRealPath());
+        Log::info('Bank statement transaction extraction analysis', [
+            'pages_total' => $analysis['pages_total'],
+            'rows_extracted' => count($analysis['rows']),
+            'unparsed_rows' => $analysis['unparsed'],
+            'ocr_used_for_rows' => $analysis['ocr'],
+            'opening_balance_found' => $analysis['opening_balance'] !== null,
+            'closing_balance_found' => $analysis['closing_balance'] !== null,
+        ]);
 
         $recognizer=app(BankStatementRecognitionService::class);
         $accounts=DB::table('reconciliation_bank_accounts')->where('client_id',$businessId)->get()->all();
@@ -109,12 +95,27 @@ class BankReconciliationController extends Controller
         // mapping. Detection also needs OCR because a clean PDF can still render
         // its bank logo and name as an image.
         $detection=$recognizer->detect($recognizer->extractPdfTextWithOcr($file->getRealPath()),$accounts);
-        $chosen=$request->input('bank_account_id');
-        if ($detection['confidence']==='high' && $chosen && (int)$chosen !== (int)($detection['suggested_bank_account_id'] ?? 0)) {
-            throw ValidationException::withMessages(['bank_account_id'=>'Statement account details appear to conflict with the selected bank account. Verify both before importing.']);
+        $bankAccountId=$this->resolveBankAccount($request,$businessId);
+        $selected=collect($accounts)->first(fn($account)=>(int)$account->id===$bankAccountId);
+        $detectedBank=strtolower(trim((string)($detection['detected_bank']??'')));
+        $selectedBank=strtolower(trim((string)($selected->bank_name??'')));
+        $detectedLastFour=(string)($detection['detected_account_last_four']??'');
+        $selectedLastFour=(string)($selected->account_last_four??'');
+        $banksMatch=$detectedBank==='' || $selectedBank===$detectedBank
+            || str_contains($selectedBank,$detectedBank) || str_contains($detectedBank,$selectedBank);
+        if ((!$banksMatch)
+            || ($detectedLastFour!=='' && $selectedLastFour!=='' && $selectedLastFour!==$detectedLastFour)) {
+            Log::warning('Bank statement account selection rejected', [
+                'business_id' => $businessId,
+                'selected_bank' => $selected->bank_name ?? null,
+                'selected_last_four' => $selectedLastFour ?: null,
+                'detected_bank' => $detection['detected_bank'] ?? null,
+                'detected_last_four' => $detectedLastFour ?: null,
+                'bank_matches' => $banksMatch,
+                'last_four_matches' => $detectedLastFour === '' || $selectedLastFour === '' || $selectedLastFour === $detectedLastFour,
+            ]);
+            throw ValidationException::withMessages(['bank_account_id'=>'The selected bank account conflicts with the bank or account number detected in this statement. Choose the matching account or ask an accountant to register it first.']);
         }
-
-        $bankAccountId=$this->resolveBankAccount($request,$businessId,$detection);
         $hash=hash_file('sha256',$file->getRealPath());
         if(DB::table('bank_imports')->where('client_id',$businessId)->where('bank_account_id',$bankAccountId)->where('sha256',$hash)->exists())
             throw ValidationException::withMessages(['file'=>'This bank statement was already imported.']);
