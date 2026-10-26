@@ -470,6 +470,7 @@ function hdHeadSelectFor(btn){
 @endsection
 @section('script')
 <script>
+if(window.jQuery){
 $(function(){
   // AJAX action handler — keeps page position, updates workspace
   $(document).on('submit', '.hd-inline-form, .hd-form-grid, form[action*="bank-reconciliation/action"]', function(e) {
@@ -534,5 +535,6 @@ $(function(){
  }
  }
 });
+}
 </script>
 @endsection
