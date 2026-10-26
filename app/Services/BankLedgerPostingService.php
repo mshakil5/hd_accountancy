@@ -111,7 +111,7 @@ class BankLedgerPostingService
             return;
         }
         if ($entry->status === 'matched') {
-            $this->assertReceiptReady($entry->receipt_id, $entry->client_id);
+            $this->assertReceiptReady($entry->receipt_id, $entry->client_id, $entry->account_head_id ?? null);
         } elseif ($entry->status === 'categorized') {
             if (!$entry->account_head_id) {
                 throw ValidationException::withMessages(['reconciliation' => 'Choose an account head before approval.']);
@@ -159,18 +159,19 @@ class BankLedgerPostingService
      * and a positive total. It deliberately does NOT require an existing
      * journal — the bank statement is what triggers recognition.
      */
-    private function assertReceiptReady(?int $receiptId, int $clientId): void
+    private function assertReceiptReady(?int $receiptId, int $clientId, ?int $fallbackHeadId = null): void
     {
         if (!$receiptId || !DB::table('receipts')->where('id', $receiptId)->where('client_id', $clientId)->exists()) {
             throw ValidationException::withMessages(['reconciliation' => 'Linked receipt is missing or belongs to another client.']);
         }
         $receipt = Receipt::with('detail')->find($receiptId);
+        $headId = $receipt?->detail?->account_head_id ?: $fallbackHeadId;
         if (!$receipt || !in_array($receipt->status, ['ready', 'archived'], true)
-            || !$receipt->detail || !$receipt->detail->account_head_id
+            || !$receipt->detail || !$headId
             || (float) $receipt->detail->total_amount <= 0) {
             throw ValidationException::withMessages(['reconciliation' => 'Validate the receipt details and account head before reconciling.']);
         }
-        $this->assertAccountHeadOwned((int) $receipt->detail->account_head_id, $clientId);
+        $this->assertAccountHeadOwned((int) $headId, $clientId);
     }
 
     /** Post the linked receipt's journal on bank approval. */
@@ -186,7 +187,11 @@ class BankLedgerPostingService
             if (Transaction::where('receipt_id',$id)->exists()) continue;
             $receipt=Receipt::with('detail')->where('client_id',$entry->client_id)->findOrFail($id);
             $detail=$receipt->detail;
-            $head=AccountHead::with('accountType')->findOrFail($detail->account_head_id);
+            $headId=$detail?->account_head_id ?: ($entry->account_head_id ?? null);
+            if (!$headId) {
+                throw ValidationException::withMessages(['reconciliation' => 'Assign an Account Head to receipt #' . $id . ' before posting.']);
+            }
+            $head=AccountHead::with('accountType')->findOrFail($headId);
             if (!$head->accountType) {
                 throw ValidationException::withMessages(['reconciliation' => 'Assign an Account Type to account head "'.$head->name.'" before posting.']);
             }

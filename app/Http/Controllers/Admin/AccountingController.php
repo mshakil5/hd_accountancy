@@ -32,17 +32,34 @@ class AccountingController extends Controller
     private function applyLedgerScope($query, $credentialId, $businessId, callable $receiptDate, callable $bankDate)
     {
         return $query->where(function ($q) use ($credentialId, $businessId, $receiptDate, $bankDate) {
-            $q->whereHas('receipt', function ($r) use ($credentialId, $businessId, $receiptDate) {
-                $r->whereNotIn('status', self::EXCLUDED_RECEIPT_STATUSES);
-                if ($businessId) {
-                    $r->where('client_id', $businessId);
-                } elseif ($credentialId) {
-                    $r->whereHas('client', fn($c) => $c->where('client_credential_id', $credentialId));
-                }
-                $r->whereHas('detail', fn($d) => $receiptDate($d));
+            $q->where(function ($rq) use ($credentialId, $businessId, $receiptDate) {
+                $rq->whereHas('receipt', function ($r) use ($credentialId, $businessId, $receiptDate) {
+                    $r->whereNotIn('status', self::EXCLUDED_RECEIPT_STATUSES);
+                    if ($businessId) {
+                        $r->where('client_id', $businessId);
+                    } elseif ($credentialId) {
+                        $r->whereHas('client', fn($c) => $c->where('client_credential_id', $credentialId));
+                    }
+                    $r->whereHas('detail', fn($d) => $receiptDate($d));
+                });
+                $rq->where(function ($sub) {
+                    $sub->whereNull('transactions.bank_entry_id')
+                        ->orWhereExists(function ($be) {
+                            $be->select(\Illuminate\Support\Facades\DB::raw(1))
+                               ->from('bank_entries')
+                               ->whereColumn('bank_entries.id', 'transactions.bank_entry_id')
+                               ->where('bank_entries.reconciliation_status', 'approved');
+                        });
+                });
             });
             $q->orWhere(function ($b) use ($credentialId, $businessId, $bankDate) {
                 $b->whereNotNull('bank_entry_id');
+                $b->whereExists(function ($be) {
+                    $be->select(\Illuminate\Support\Facades\DB::raw(1))
+                       ->from('bank_entries')
+                       ->whereColumn('bank_entries.id', 'transactions.bank_entry_id')
+                       ->where('bank_entries.reconciliation_status', 'approved');
+                });
                 if ($businessId) {
                     $b->where('client_id', $businessId);
                 } elseif ($credentialId) {

@@ -230,7 +230,8 @@ class BankReconciliationPageController extends Controller
             abort_unless($entry,404);
             $change=['updated_at'=>now()];
             $action=$data['action'];
-            if($action!=='add_note'
+            if(!in_array($action, ['add_note', 'verify'], true)
+                && $entry->bank_import_id
                 && DB::table('bank_imports')->where('id',$entry->bank_import_id)->value('verification_status')!==BankStatementVerificationService::VERIFIED) {
                 throw ValidationException::withMessages(['action'=>'Verify this statement in the verification workspace before reconciling its rows.']);
             }
@@ -323,6 +324,19 @@ class BankReconciliationPageController extends Controller
                 foreach(['amount','transaction_date','description','review_note'] as $field)
                     if(array_key_exists($field,$data)&&$data[$field]!==null)$change[$field]=$data[$field];
                 $change['status']='unmatched';
+                $change['verified_by']=auth()->id();
+                $change['verified_at']=now();
+                DB::table('bank_entry_revisions')->insert([
+                    'bank_entry_id'=>$entryId,'actor_id'=>auth()->id(),'action'=>'verify',
+                    'original_values'=>null,'corrected_values'=>null,'reason'=>'Row checked against the PDF',
+                    'created_at'=>now(),'updated_at'=>now(),
+                ]);
+                $import = \App\Models\BankImport::find($entry->bank_import_id ?? 0);
+                if ($import) {
+                    try {
+                        app(BankStatementVerificationService::class)->verify($import, auth()->id());
+                    } catch (\Illuminate\Validation\ValidationException $e) {}
+                }
             } elseif($action==='unmatch'){
                 abort_unless(in_array($entry->status,['matched','split','categorized']),409,'Nothing to undo.');
                 DB::table('bank_allocation_lines')->where('bank_entry_id',$entryId)->delete();
@@ -334,8 +348,8 @@ class BankReconciliationPageController extends Controller
                 abort_unless($counter,404,'Counterparty bank entry not found.');
                 abort_unless(abs(round((float)$entry->amount*100)+round((float)$counter->amount*100))<1,409,'Transfer entries must have equal and opposite amounts.');
                 abort_unless(($entry->bank_account_id??0)!==($counter->bank_account_id??0),409,'Transfer must be between two different bank accounts.');
-                $change+=['transfer_type'=>'internal_transfer','linked_bank_entry_id'=>$linkedId,'status'=>'categorized','account_head_id'=>$data['account_head_id']??null,'review_note'=>'Internal transfer · linked to bank entry #'.$linkedId];
-                DB::table('bank_entries')->where('id',$linkedId)->update(['transfer_type'=>'internal_transfer','linked_bank_entry_id'=>$entryId,'status'=>'categorized','review_note'=>'Internal transfer · linked to bank entry #'.$entryId]);
+                $change+=['transfer_type'=>'internal_transfer','linked_bank_entry_id'=>$linkedId,'status'=>'categorized','account_head_id'=>$data['account_head_id']??null,'review_note'=>'Internal transfer · linked to bank entry #'.$linkedId,'reconciliation_status'=>'draft','approved_by'=>null,'approved_at'=>null];
+                DB::table('bank_entries')->where('id',$linkedId)->update(['transfer_type'=>'internal_transfer','linked_bank_entry_id'=>$entryId,'status'=>'categorized','review_note'=>'Internal transfer · linked to bank entry #'.$entryId,'reconciliation_status'=>'draft','approved_by'=>null,'approved_at'=>null,'updated_at'=>now()]);
             } elseif($action==='settle'){
                 $settleType=$data['settlement_type']??'partial';
                 $receiptId=$data['receipt_id']??null;
@@ -375,7 +389,17 @@ class BankReconciliationPageController extends Controller
                       ->where('id','!=',$entryId)->exists(),409,'Receipt is already matched to another bank entry.');
                     $total=(float)($receipt->detail?->total_amount ?? 0);
                     abort_unless($total>0 && abs(abs((float)$entry->amount)-$total)<0.01,409,'Amounts differ. Review partial payments manually.');
-                    $change+=['status'=>'matched','receipt_id'=>$receipt->id,'account_head_id'=>$head??$receipt->detail?->account_head_id,
+                    $chosenHead = $head ?? $receipt->detail?->account_head_id;
+                    if(!$chosenHead) {
+                        throw ValidationException::withMessages(['account_head_id' => 'Select an account head for this receipt match.']);
+                    }
+                    if ($receipt->detail && !$receipt->detail->account_head_id && $chosenHead) {
+                        $receipt->detail->update(['account_head_id' => $chosenHead]);
+                    }
+                    if (in_array($receipt->status, ['pending', 'to_review'], true)) {
+                        $receipt->update(['status' => 'ready']);
+                    }
+                    $change+=['status'=>'matched','receipt_id'=>$receipt->id,'account_head_id'=>$chosenHead,
                         'matched_by'=>auth()->id(),'matched_at'=>now()];
                 }
             }
@@ -413,8 +437,7 @@ class BankReconciliationPageController extends Controller
         if ($isAjax) {
             return response()->json(['success'=>true,'message'=>$message,'entry_id'=>$entryId,'action'=>$data['action']]);
         }
-        return redirect()->route('admin.bank-reconciliation.index',['client_credential_id'=>$client->client_credential_id,'client_id'=>$client->id])
-            ->with('success',$message);
+        return redirect()->back()->with('success',$message);
     }
     private function splitBalances(object $entry):bool {
         $lines=DB::table('bank_allocation_lines')->where('bank_entry_id',$entry->id)->get();
@@ -561,7 +584,11 @@ class BankReconciliationPageController extends Controller
 
     public function verifyAllRowsForClient(Request $request) {
         $clientIds = $this->getScopeClientIds($request);
-        $count=DB::table('bank_entries')
+        $entryIds = DB::table('bank_entries')
+            ->whereIn('client_id', $clientIds)
+            ->where('status', 'needs_review')
+            ->pluck('id');
+        $count = DB::table('bank_entries')
             ->whereIn('client_id', $clientIds)
             ->where('status', 'needs_review')
             ->update([
@@ -570,7 +597,33 @@ class BankReconciliationPageController extends Controller
                 'updated_at' => now(),
                 'status' => 'unmatched',
             ]);
-        return redirect()->back()->with('success', $count.' row(s) verified and ready for reconciliation.');
+        // Verify each affected import so reconcile actions are unblocked.
+        $verifier = app(BankStatementVerificationService::class);
+        $importIds = DB::table('bank_entries')
+            ->whereIn('id', $entryIds)
+            ->whereNotNull('bank_import_id')
+            ->pluck('bank_import_id')
+            ->unique();
+        $verifiedImports = 0;
+        $blockedImports = 0;
+        foreach ($importIds as $importId) {
+            $import = \App\Models\BankImport::find($importId);
+            if (!$import) continue;
+            try {
+                $verifier->verify($import, auth()->id());
+                $verifiedImports++;
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                $blockedImports++;
+            }
+        }
+        $message = $count.' row(s) verified and marked ready for reconciliation.';
+        if ($verifiedImports) {
+            $message .= ' '.$verifiedImports.' statement(s) verified.';
+        }
+        if ($blockedImports) {
+            $message .= ' '.$blockedImports.' statement(s) have unresolved exceptions — resolve them in the verification workspace before reconciling.';
+        }
+        return redirect()->back()->with('success', $message);
     }
 
     public function approveAllRows(Request $request) {
@@ -578,12 +631,15 @@ class BankReconciliationPageController extends Controller
         $rows=DB::table('bank_entries')
             ->whereIn('client_id', $clientIds)
             ->whereIn('status', ['matched', 'categorized', 'split'])
-            ->where('reconciliation_status', '!=', 'approved');
+            ->where(function($q) {
+                $q->whereNull('reconciliation_status')
+                  ->orWhere('reconciliation_status', '!=', 'approved');
+            });
         $count=0;$skipped=0;
         foreach ($rows->get() as $entry) {
             // The statement-level verification gate applies to bulk approval too.
-            $importVerified=DB::table('bank_imports')->where('id',$entry->bank_import_id)
-                ->value('verification_status')===BankStatementVerificationService::VERIFIED;
+            $importVerified = !$entry->bank_import_id || (DB::table('bank_imports')->where('id',$entry->bank_import_id)
+                ->value('verification_status')===BankStatementVerificationService::VERIFIED);
             if(!$importVerified){$skipped++;continue;}
             try {
                 if ($entry->status === 'split') {
@@ -631,18 +687,29 @@ class BankReconciliationPageController extends Controller
 
     public function verifyEntry(int $entryId, Request $request) {
         $entry=DB::table('bank_entries')->find($entryId);
-        abort_unless($entry,404);
+        abort_unless($entry, 404);
         DB::table('bank_entries')->where('id',$entryId)
             ->update(['verified_by'=>auth()->id(),'verified_at'=>now(),'updated_at'=>now(),'status'=>'unmatched']);
         DB::table('bank_entry_revisions')->insert([
-            'bank_entry_id'=>$entryId,'actor_id'=>auth()->id(),'action'=>'verify',
-            'original_values'=>null,'corrected_values'=>null,'reason'=>'Row checked against the PDF',
+            'bank_entry_id'=>$entryId,'actor_id'=>auth()->id(),
+            'action'=>'verify','original_values'=>null,'corrected_values'=>null,'reason'=>'Row checked against the PDF',
             'created_at'=>now(),'updated_at'=>now(),
         ]);
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json(['success'=>true,'message'=>'Row verified against the original statement.','entry_id'=>$entryId,'status'=>'unmatched']);
+        // Try to verify the parent import so reconcile actions are unblocked once all rows are checked.
+        $importVerified = false;
+        $import = \App\Models\BankImport::find($entry->bank_import_id ?? 0);
+        if ($import) {
+            try {
+                app(BankStatementVerificationService::class)->verify($import, auth()->id());
+                $importVerified = true;
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                // Import has unresolved exceptions — entry is still marked unmatched.
+            }
         }
-        return redirect()->back()->with('success','Row verified against the original statement.');
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['success'=>true,'message'=>'Row verified against the original statement.','entry_id'=>$entryId,'status'=>'unmatched','import_verified'=>$importVerified]);
+        }
+        return redirect()->back()->with('success','Row verified against the original statement.'.($importVerified?' Statement verified.':' Statement still has unresolved exceptions — check the verification workspace.'));
     }
 
     public function resolveException(Request $request,int $exceptionId) {

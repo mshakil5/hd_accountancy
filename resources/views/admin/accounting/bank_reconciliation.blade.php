@@ -35,7 +35,7 @@
  <div><h3 class="mb-1">Bank Reconciliation</h3><p class="hd-small mb-0">Review bank transactions, match uploaded receipts, categorise exceptions and <strong>approve the reconciliation</strong>. Only an approved row posts to the ledger, so a receipt reaches the P&amp;L / balance sheet once its bank line is approved.</p></div>
 </div>
 @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
-@if($errors->any())<div class="alert alert-danger">@foreach($errors->all() as $error)<div>{{ $error }}</div>@endforeach</div>@endif
+@if(isset($errors) && $errors->any())<div class="alert alert-danger">@foreach($errors->all() as $error)<div>{{ $error }}</div>@endforeach</div>@endif
 <div class="hd-card">
  <div class="row align-items-center">
   <div class="col-md-4">
@@ -195,10 +195,10 @@ $rejected = $reconStatus==='rejected';
  <div class="hd-action-side">
   @if($approved)
     <div class="alert alert-success py-2">Reconciliation <strong>approved</strong>@if($entry->approved_at) on {{ $entry->approved_at }}@endif. @if($entry->journal_posted_at)Posted to the ledger and reflected in the P&amp;L / balance sheet. @else No ledger rows were needed for this entry. @endif This row is locked.</div>
-    <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}">@csrf<input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="reopen"><button class="btn btn-outline-secondary btn-sm" onclick="return confirm('Reopen this approved reconciliation for editing?')">Reopen for editing</button></form>
+    <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-action-form">@csrf<input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="reopen"><button class="btn btn-outline-secondary btn-sm" onclick="return confirm('Reopen this approved reconciliation for editing?')">Reopen for editing</button></form>
   @elseif($pending)
     <div class="alert alert-warning py-2">PDF row requires verification before it can be reconciled.</div>
-    <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-inline-form">@csrf
+    <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-inline-form hd-action-form">@csrf
      <input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="verify">
      <label>Date<input class="form-control" type="date" name="transaction_date" value="{{ $entry->transaction_date }}" required></label>
      <label>Signed amount (£)<input class="form-control" type="number" step="0.01" name="amount" value="{{ $entry->amount }}" required></label>
@@ -207,19 +207,39 @@ $rejected = $reconStatus==='rejected';
     </form>
   @elseif($locked)
    <div class="alert alert-success py-2">{{ $entry->status==='split'?'Split saved':'Receipt matched' }}. Approving below locks the row and posts it to the ledger.</div>
-   @if($entry->status==='split')<div class="hd-small">Allocation lines: {{ ($splits[$entry->id]??collect())->count() }}</div>@endif
+   @if($entry->status==='split')
+     @php $entrySplits = $splits[$entry->id] ?? collect(); @endphp
+     <div class="hd-small mb-1 font-weight-bold">Split allocations ({{ $entrySplits->count() }}):</div>
+     <div class="hd-scroll mb-2">
+       <table class="hd-table mb-0" style="background:#f8fafc;border-radius:6px;">
+         <thead><tr><th>Amount</th><th>Head</th><th>Receipt</th><th>Memo</th></tr></thead>
+         <tbody>
+           @foreach($entrySplits as $sp)
+             @php $spHead = $heads->firstWhere('id', $sp->account_head_id); $spReceipt = $receipts->firstWhere('id', $sp->receipt_id); @endphp
+             <tr>
+               <td><strong>£{{ number_format((float)$sp->amount, 2) }}</strong></td>
+               <td>{{ $spHead ? $spHead->code.' — '.$spHead->name : '—' }}</td>
+               <td>{{ $spReceipt ? '#'.$spReceipt->receipt_number.' ('.$spReceipt->supplier.')' : '—' }}</td>
+               <td>{{ $sp->memo ?: '—' }}</td>
+             </tr>
+           @endforeach
+         </tbody>
+       </table>
+     </div>
+   @endif
    <div class="d-flex gap-2 flex-wrap mt-2">
-    <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}">@csrf<input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="unmatch"><button class="btn btn-outline-secondary btn-sm" onclick="return confirm('Undo reconciliation?')">Undo reconciliation</button></form>
-    <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}">@csrf<input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="approve"><button class="btn btn-success btn-sm" onclick="return confirm('Approve this reconciliation? The row becomes read-only.')">Approve reconciliation</button></form>
-    <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}">@csrf<input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="reject"><button class="btn btn-outline-danger btn-sm" onclick="return confirm('Reject this reconciliation and return it for review?')">Reject</button></form>
+    <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-action-form">@csrf<input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="unmatch"><button class="btn btn-outline-secondary btn-sm" onclick="return confirm('Undo reconciliation?')">Undo reconciliation</button></form>
+    <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-action-form">@csrf<input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="approve"><button class="btn btn-success btn-sm" onclick="return confirm('Approve this reconciliation? The row becomes read-only.')">Approve reconciliation</button></form>
+    <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-action-form">@csrf<input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="reject"><button class="btn btn-outline-danger btn-sm" onclick="return confirm('Reject this reconciliation and return it for review?')">Reject</button></form>
    </div>
   @else
   @if($rejected)<div class="alert alert-danger py-2">Returned for review. Correct it and approve again.</div>@endif
   @if($entry->status==='categorized')
    <div class="alert alert-info py-2">Categorised. Approve to sign this row off.</div>
    <div class="d-flex gap-2 flex-wrap mb-3">
-    <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}">@csrf<input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="approve"><button class="btn btn-success btn-sm" onclick="return confirm('Approve this reconciliation? The row becomes read-only.')">Approve reconciliation</button></form>
-    <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}">@csrf<input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="reject"><button class="btn btn-outline-danger btn-sm" onclick="return confirm('Reject this reconciliation and return it for review?')">Reject</button></form>
+    <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-action-form">@csrf<input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="unmatch"><button class="btn btn-outline-secondary btn-sm" onclick="return confirm('Undo categorisation?')">Undo categorisation</button></form>
+    <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-action-form">@csrf<input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="approve"><button class="btn btn-success btn-sm" onclick="return confirm('Approve this reconciliation? The row becomes read-only.')">Approve reconciliation</button></form>
+    <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-action-form">@csrf<input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="reject"><button class="btn btn-outline-danger btn-sm" onclick="return confirm('Reject this reconciliation and return it for review?')">Reject</button></form>
    </div>
   @endif
   <div class="hd-row-tabs" role="tablist" aria-label="Reconciliation actions for transaction {{ $entry->id }}">
@@ -233,7 +253,7 @@ $rejected = $reconStatus==='rejected';
   </div>
   <section class="hd-tab-panel" data-hd-panel="match">
    <p class="hd-small">Suggested uploaded receipts with exactly matching amounts. Confirm the supplier and evidence before matching.</p>
-   <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-form-grid">@csrf
+   <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-form-grid hd-action-form">@csrf
     <input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="match">
     <label>Who / receipt<select class="form-control select2" name="receipt_id" required><option value="">{{ $exact->isEmpty()?'No exact receipt suggestions':'Select suggested receipt' }}</option>@foreach($exact as $r)<option value="{{ $r->id }}">#{{ $r->receipt_number }} · {{ $r->supplier?:'Unknown supplier' }} · £{{ number_format((float)$r->detail->total_amount,2) }}</option>@endforeach</select></label>
     <label>What / account head<select class="form-control select2" name="account_head_id"><option value="">Use receipt account head</option>@foreach($heads as $h)<option value="{{ $h->id }}">{{ $h->code }} — {{ $h->name }}</option>@endforeach</select>
@@ -247,7 +267,7 @@ $rejected = $reconStatus==='rejected';
    <div class="hd-scroll"><table class="hd-table"><thead><tr><th>Receipt</th><th>Supplier</th><th>Amount</th><th>Score</th><th></th></tr></thead><tbody>
     @foreach($fuzzy as $f)
     <tr><td>#{{ $f['receipt_number'] }}</td><td>{{ $f['supplier']?:'Unknown' }}</td><td>£{{ number_format($f['amount'],2) }}</td><td>{{ $f['score'] }}</td>
-     <td><form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}">@csrf
+     <td><form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-action-form">@csrf
       <input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="settle">
       <input type="hidden" name="receipt_id" value="{{ $f['id'] }}"><input type="hidden" name="settlement_type" value="partial">
       <button class="btn btn-outline-primary btn-sm" onclick="return confirm('Record this receipt as a partial settlement against the bank line?')">Settle</button>
@@ -258,7 +278,7 @@ $rejected = $reconStatus==='rejected';
   </section>
   <section class="hd-tab-panel" data-hd-panel="create" hidden>
    <p class="hd-small">Categorise a bank movement without a linked receipt. Approving the row posts it to the chosen account head, so it appears in the P&amp;L / balance sheet.</p>
-   <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-form-grid">@csrf
+   <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-form-grid hd-action-form">@csrf
     <input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="categorize">
     <div class="hd-field"><label for="hd-create-head-{{ $entry->id }}">What / account head</label>
      <span class="hd-quick-actions">
@@ -272,7 +292,7 @@ $rejected = $reconStatus==='rejected';
   </section>
   <section class="hd-tab-panel" data-hd-panel="split" hidden>
    <p class="hd-small">Allocate this bank movement across two or more heads or receipts. Lines must total £{{ number_format(abs((float)$entry->amount),2) }}. Approving posts each line to its account head, including any VAT recorded here.</p>
-   <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-split-form" data-split-total="{{ number_format(abs((float)$entry->amount),2,'.','') }}">@csrf
+   <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-split-form hd-action-form" data-split-total="{{ number_format(abs((float)$entry->amount),2,'.','') }}">@csrf
     <input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="split">
     <div class="hd-split-lines">
      @foreach([0,1] as $i)<div class="hd-form-grid mb-2 hd-split-line"><label>Line amount (£)<input class="form-control hd-split-amount" type="number" name="allocations[{{ $i }}][amount]" min="0.01" step="0.01" required></label>
@@ -289,7 +309,7 @@ $rejected = $reconStatus==='rejected';
      <button type="button" class="btn btn-outline-secondary btn-sm" onclick="hdRemoveSplitLine(this)" disabled><i class="fa fa-minus"></i> Remove line</button>
      <span class="hd-small hd-split-meter" role="status">Allocated £0.00 of £{{ number_format(abs((float)$entry->amount),2) }}</span>
     </div>
-    <button class="btn btn-primary btn-sm mt-2" onclick="return hdConfirmSplit(this)">Save split</button>
+    <button class="btn btn-primary btn-sm mt-2" onclick="return hdConfirmSplit(this.closest('form'))">Save split</button>
    </form>
   </section>
   <section class="hd-tab-panel" data-hd-panel="discuss" hidden>
@@ -305,13 +325,13 @@ $rejected = $reconStatus==='rejected';
     @foreach($entryRequests as $rq)<div class="hd-pill" style="background:{{ $rq->status==='open'?'#fef9c3':'#dcfce7' }};display:block;text-align:left;white-space:normal;line-height:1.4;margin-top:4px">{{ $rq->message }} <span style="opacity:.6">· {{ ucfirst($rq->status) }} · {{ $rq->created_at }}</span></div>@endforeach
    </div>
    @endif
-   <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="mb-2">@csrf<input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="add_note"><label>Internal note<input class="form-control" name="review_note" required maxlength="2000" placeholder="Clarification for accountant"></label><button class="btn btn-outline-primary btn-sm mt-2">Save note</button></form>
-   <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}">@csrf<input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="request_receipt"><label>Message to client<input class="form-control" name="review_note" placeholder="Please upload supporting receipt"></label><button class="btn btn-outline-warning btn-sm mt-2">Request receipt</button></form>
+   <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="mb-2 hd-action-form">@csrf<input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="add_note"><label>Internal note<input class="form-control" name="review_note" required maxlength="2000" placeholder="Clarification for accountant"></label><button class="btn btn-outline-primary btn-sm mt-2">Save note</button></form>
+   <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-action-form">@csrf<input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="request_receipt"><label>Message to client<input class="form-control" name="review_note" placeholder="Please upload supporting receipt"></label><button class="btn btn-outline-warning btn-sm mt-2">Request receipt</button></form>
   </section>
   <section class="hd-tab-panel" data-hd-panel="find" hidden>
    <p class="hd-small">Search among the most recent 400 uploaded receipts. Only exact-amount receipts can be confirmed; partial/multiple matches are not yet supported.</p>
    <input type="search" class="form-control mb-2 hd-receipt-search" placeholder="Search receipt number or supplier" aria-label="Search receipts">
-   <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-form-grid">@csrf<input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="match">
+   <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-form-grid hd-action-form">@csrf<input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="match">
     <label>Uploaded receipt<select class="form-control hd-receipt-select" name="receipt_id" required><option value="">Choose receipt</option>@foreach($receipts as $r)@php $claimed=isset($claimedReceiptIds[(int)$r->id]); $st=$settledTotals[$r->id]??null; @endphp<option value="{{ $r->id }}" data-search="{{ strtolower(($r->receipt_number??'').' '.($r->supplier??'')) }}" {{ $claimed?'disabled':'' }}>#{{ $r->receipt_number }} · {{ $r->supplier?:'Unknown supplier' }} · £{{ number_format((float)$r->detail->total_amount,2) }}{{ $claimed?' · already matched':($st?' · £'.number_format((float)$st->settled,2).' settled':'') }}</option>@endforeach</select></label>
     <label>Account head<select class="form-control select2" name="account_head_id"><option value="">Use receipt account head</option>@foreach($heads as $h)<option value="{{ $h->id }}">{{ $h->code }} — {{ $h->name }}</option>@endforeach</select>
      <button type="button" class="btn btn-sm btn-success mt-1" style="font-size:11px;border-radius:20px;padding:2px 10px;background:linear-gradient(45deg,#28a745,#20c997);border:none;" onclick="openQuickHeadFor(this)" title="Quickly create a missing account head"><i class="fa fa-plus-circle"></i> Quick Add Head</button>
@@ -321,7 +341,7 @@ $rejected = $reconStatus==='rejected';
   </section>
   <section class="hd-tab-panel" data-hd-panel="settle" hidden>
    <p class="hd-small">Record a partial or over/under settlement when a receipt does not exactly equal the bank amount. A settlement record tracks the outstanding remainder; the row stays in draft until approved.</p>
-   <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-form-grid">@csrf
+   <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-form-grid hd-action-form">@csrf
     <input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="settle">
     <label>Receipt<select class="form-control select2" name="receipt_id"><option value="">No receipt (write-off / unlinked)</option>@foreach($receipts as $r)@php $st=$settledTotals[$r->id]??null; $claimed=isset($claimedReceiptIds[(int)$r->id]); @endphp<option value="{{ $r->id }}">#{{ $r->receipt_number }} · {{ $r->supplier?:'Unknown supplier' }} · £{{ number_format((float)$r->detail->total_amount,2) }}{{ $st?' · £'.number_format((float)$st->settled,2).' already settled':($claimed?' · matched elsewhere (still settleable)':'') }}</option>@endforeach</select></label>
     <label>Type<select class="form-control select2" name="settlement_type"><option value="partial">Partial</option><option value="over_payment">Over payment</option><option value="under_payment">Under payment</option></select></label>
@@ -340,7 +360,7 @@ $rejected = $reconStatus==='rejected';
         && abs(round((float)$c->amount*100)+round((float)$entry->amount*100))<1
         && ($c->bank_account_id??null)!==$entry->bank_account_id);
     @endphp
-   <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-form-grid">@csrf
+   <form method="POST" action="{{ route('admin.bank-reconciliation.action',$entry->id) }}" class="hd-form-grid hd-action-form">@csrf
     <input type="hidden" name="client_id" value="{{ $entry->client_id }}"><input type="hidden" name="action" value="transfer">
     <label>Counterparty entry<select class="form-control select2" name="linked_entry_id" required><option value="">{{ $viable->isEmpty()?'No matching counterpart found':'Choose the other side' }}</option>@foreach($viable as $c)<option value="{{ $c->id }}">#{{ $c->id }} · {{ $c->transaction_date }} · {{ \Illuminate\Support\Str::limit($c->description,40) }} · £{{ number_format((float)$c->amount,2) }} · {{ optional($bankAccounts->firstWhere('id',$c->bank_account_id))->bank_name ?? 'Unassigned' }}</option>@endforeach</select></label>
     <label>Bank account head<select class="form-control select2" name="account_head_id"><option value="">Choose the bank account head</option>@foreach($heads as $h)<option value="{{ $h->id }}">{{ $h->code }} — {{ $h->name }}</option>@endforeach</select>
@@ -407,7 +427,13 @@ function hdAddSplitLine(btn){
   if(el.name)el.name=el.name.replace(/allocations\[\d+\]/,'allocations['+i+']');
  });
  tpl.querySelectorAll('.select2-container').forEach(c=>c.remove());
- tpl.querySelectorAll('select').forEach(s=>{s.removeAttribute('data-select2-id');s.style.display='';});
+ tpl.querySelectorAll('select').forEach(s=>{
+  s.classList.remove('select2-hidden-accessible');
+  s.removeAttribute('data-select2-id');
+  s.removeAttribute('tabindex');
+  s.removeAttribute('aria-hidden');
+  s.style.display='';
+ });
  const clone=wrap.appendChild(tpl);
  if(window.jQuery){const $s=jQuery(clone).find('select.select2');$s.select2({width:'100%', dropdownParent: $(document.body)});}
  hdSplitTotals(form);
@@ -473,7 +499,7 @@ function hdHeadSelectFor(btn){
 if(window.jQuery){
 $(function(){
   // AJAX action handler — keeps page position, updates workspace
-  $(document).on('submit', '.hd-inline-form, .hd-form-grid, form[action*="bank-reconciliation/action"]', function(e) {
+  $(document).on('submit', '.hd-action-form, .hd-inline-form, .hd-form-grid, .hd-split-form, form[action*="/bank-reconciliation/"][action*="/action"]', function(e) {
     var $form = $(this);
     e.preventDefault();
     $.post($form.attr('action'), $form.serialize(), function(resp) {
@@ -482,13 +508,19 @@ $(function(){
         // Refresh workspace in-place to show updated status (verified / approved / etc.)
         var scrollY = window.scrollY;
         $.get(window.location.href, function(html){
-          var $newWorkspace = $('<div>').html(html).find('#hd-reconciliation-workspace');
+          var $parsed = $('<div>').html(html);
+          var $newWorkspace = $parsed.find('#hd-reconciliation-workspace');
           if ($newWorkspace.length) {
             $('#hd-reconciliation-workspace').replaceWith($newWorkspace);
             window.scrollTo(0, scrollY);
             $newWorkspace.find('select.select2').each(function(){
               if(!$(this).hasClass('select2-hidden-accessible')) $(this).select2({width:'100%'});
             });
+            $newWorkspace.find('.hd-split-form').each(function(){ hdSplitTotals(this); });
+          }
+          var $newOverview = $parsed.find('#hd-bank-account-overview');
+          if ($newOverview.length && $('#hd-bank-account-overview').length) {
+            $('#hd-bank-account-overview').replaceWith($newOverview);
           }
         });
       } else {
@@ -519,8 +551,8 @@ $(function(){
    var match=data.find(function(item){return item.id==presetCredentialId;});
    if(match){
     presetApplied=true;
-     $('#bankFilterClient').val(presetCredentialId).trigger('change');
-    $('#bankFilterClient').append(new Option(match.text,match.id,true,true)).trigger('change');
+    var option = new Option(match.text, match.id, true, true);
+    $('#bankFilterClient').append(option).trigger('change');
     $('#ciName').text(match.text);
     $('#ciEmail').text(match.email||'N/A');
     $('#ciPhone').text(match.phone||'N/A');
@@ -531,6 +563,7 @@ $(function(){
    $.each(data,function(i,c){opts+='<option value="'+c.id+'">'+c.name+'</option>';});
    $('#bankFilterBusiness').html(opts);
    if(presetBusiness)$('#bankFilterBusiness').val(presetBusiness);
+   $('#bankFilterBusiness').trigger('change.select2');
   });
  }
  }
