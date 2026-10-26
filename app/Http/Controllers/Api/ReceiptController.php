@@ -275,6 +275,27 @@ class ReceiptController extends Controller
         return response()->json(['message' => 'File deleted successfully.'], 200);
     }
 
+    public function downloadFile(Request $request, $receiptId, $fileId)
+    {
+        $receipt = Receipt::with(['files', 'client'])->findOrFail($receiptId);
+
+        $user = $request->user();
+        if ($user instanceof ClientCredential) {
+            if ($receipt->client->client_credential_id !== $user->id) {
+                return response()->json(['message' => 'Unauthorized.'], 403);
+            }
+        }
+
+        $file = ReceiptFile::where('receipt_id', $receiptId)->where('id', $fileId)->firstOrFail();
+
+        if (!Storage::disk('s3')->exists($file->file_path)) {
+            abort(404, 'File not found in cloud storage.');
+        }
+
+        $downloadName = $file->file_name ?: basename($file->file_path);
+        return Storage::disk('s3')->download($file->file_path, $downloadName);
+    }
+
     public function addFile(Request $request, $receiptId)
     {
         $receipt = Receipt::with('client')->findOrFail($receiptId);

@@ -673,14 +673,14 @@ class BankStatementVerificationService
         }
         $unackWarnings = DB::table('bank_statement_exceptions')
             ->where('bank_import_id', $import->id)->where('severity', 'warning')
-            ->whereNull('acknowledged_at')->count();
+            ->whereNull('resolved_at')->count();
         if ($unackWarnings > 0) {
             throw ValidationException::withMessages([
                 'verification' => $unackWarnings . ' warning(s) remain unacknowledged. Acknowledge each warning (with a note) before verifying.',
             ]);
         }
         // OCR or derived balances require full row-level verification.
-        $ocrUsed = $this->exceptionQuery($import)->where('code', 'ocr_no_page_mapping')->whereNull('acknowledged_at')->exists();
+        $ocrUsed = $this->exceptionQuery($import)->where('code', 'ocr_no_page_mapping')->whereNull('resolved_at')->exists();
         $derivedOnly = DB::table('bank_imports')->where('id', $import->id)->value('balance_source') === 'derived';
         if (($ocrUsed || $derivedOnly) && $import->verification_status !== self::VERIFIED) {
             $verifiedRows = DB::table('bank_entries')->where('bank_import_id', $import->id)->whereNotNull('verified_at')->count();

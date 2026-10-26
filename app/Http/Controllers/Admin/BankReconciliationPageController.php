@@ -334,8 +334,8 @@ class BankReconciliationPageController extends Controller
                 $import = \App\Models\BankImport::find($entry->bank_import_id ?? 0);
                 if ($import) {
                     try {
-                        app(BankStatementVerificationService::class)->verify($import, auth()->id());
-                    } catch (\Illuminate\Validation\ValidationException $e) {}
+                        app(BankStatementVerificationService::class)->verify($import, auth()->id() ?? 1);
+                    } catch (\Throwable $e) {}
                 }
             } elseif($action==='unmatch'){
                 abort_unless(in_array($entry->status,['matched','split','categorized']),409,'Nothing to undo.');
