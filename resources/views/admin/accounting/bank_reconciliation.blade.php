@@ -152,13 +152,13 @@
 <div class="d-flex justify-content-between align-items-center flex-wrap"><div><h4>Reconcile bank transactions</h4><p class="hd-small">Bank details on the left; accountant actions and uploaded receipts on the right. Reconcile each row, then <strong>approve</strong> it. Approval locks the row and posts it to the existing account heads, so the P&amp;L and balance sheet reflect it without duplication.</p></div><div class="d-flex align-items-center gap-2 flex-wrap"><span class="hd-small">{{ $entries->total() }} bank transactions in this view</span>
 <form method="POST" action="{{ route('admin.bank-reconciliation.approve-all') }}" onsubmit="return confirm('Approve every row that is already matched/categorised/split? Each approved row locks and posts to the ledger.')">
 @csrf
-<input type="hidden" name="client_id" value="{{ request('client_id') ?? request('business_id') }}">
+<input type="hidden" name="client_id" value="{{ request('client_id') ?? $businessId ?? request('business_id') ?? '' }}">
 <input type="hidden" name="client_credential_id" value="{{ request('client_credential_id') ?? request('credential_id') }}">
 <button class="btn btn-success btn-sm"><i class="fa fa-check-double"></i> Approve all ready rows</button>
 </form>
 <form method="POST" action="{{ route('admin.bank-reconciliation.verify-all-rows-for-client') }}" onsubmit="return confirm('Verify every row still awaiting PDF verification for this business?')">
 @csrf
-<input type="hidden" name="client_id" value="{{ request('client_id') ?? request('business_id') }}">
+<input type="hidden" name="client_id" value="{{ request('client_id') ?? $businessId ?? request('business_id') ?? '' }}">
 <input type="hidden" name="client_credential_id" value="{{ request('client_credential_id') ?? request('credential_id') }}">
 <button class="btn btn-outline-success btn-sm"><i class="fa fa-check"></i> Verify all rows</button>
 </form>
