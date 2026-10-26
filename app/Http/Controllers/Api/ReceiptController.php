@@ -296,6 +296,33 @@ class ReceiptController extends Controller
         return Storage::disk('s3')->download($file->file_path, $downloadName);
     }
 
+    /**
+     * Return a short-lived pre-signed URL for a receipt file so the app
+     * can open it directly in the browser without passing auth headers.
+     */
+    public function fileLink(Request $request, $receiptId, $fileId)
+    {
+        $receipt = Receipt::with(['files', 'client'])->findOrFail($receiptId);
+
+        $user = $request->user();
+        if ($user instanceof ClientCredential) {
+            if ($receipt->client->client_credential_id !== $user->id) {
+                return response()->json(['message' => 'Unauthorized.'], 403);
+            }
+        }
+
+        $file = ReceiptFile::where('receipt_id', $receiptId)->where('id', $fileId)->firstOrFail();
+
+        if (!Storage::disk('s3')->exists($file->file_path)) {
+            return response()->json(['message' => 'File not found in storage.'], 404);
+        }
+
+        // Generate a temporary pre-signed URL (valid for 10 minutes).
+        $url = Storage::disk('s3')->temporaryUrl($file->file_path, now()->addMinutes(10));
+
+        return response()->json(['url' => $url], 200);
+    }
+
     public function addFile(Request $request, $receiptId)
     {
         $receipt = Receipt::with('client')->findOrFail($receiptId);

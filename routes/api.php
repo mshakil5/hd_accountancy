@@ -49,6 +49,7 @@ Route::delete('receipts/{id}', [ReceiptController::class, 'destroy']);
 Route::post('receipts/{receiptId}/files', [ReceiptController::class, 'addFile']);
 Route::delete('receipts/{receiptId}/files/{fileId}', [ReceiptController::class, 'deleteFile']);
 Route::get('receipts/{receiptId}/files/{fileId}/download', [ReceiptController::class, 'downloadFile']);
+Route::get('receipts/{receiptId}/files/{fileId}/link', [ReceiptController::class, 'fileLink']);
 });
 
 // Token-protected PDF stream (token issued by pdf-link, expires in 10 minutes)
