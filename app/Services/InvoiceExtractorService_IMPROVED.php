@@ -185,16 +185,18 @@ class InvoiceExtractorService
 
         return [
             'net_amount'   => $this->extractValue($clean, [
-                'amount excl', 'goods value', 'goods total', 'sub total', 'subtotal',
-                'order value', 'net amount', 'net total', '\bnet\b',
+                'amount excl', 'amount excluding vat', 'goods value', 'goods total', 'sub total', 'subtotal',
+                'order value', 'net amount', 'net total', 'net value', 'net excluding vat', '\bnet\b',
             ]),
             'vat_amount'   => $this->extractValue($clean, [
                 'vat value', 'total vat', 'vat total', 'vat amount', 'value added tax', '\bvat\b',
+                'tax value', 'tax total', 'total tax',
             ]),
             'total_amount' => $this->extractValue($clean, [
                 'invoice total', 'total due', 'grand total', 'amount due', 'balance due',
                 'total to pay', 'total paid', 'goods supplied', 'outstanding',
-                'total amount', '\btotal\b',
+                'total amount', 'total including vat', 'total inc vat', 'amount including vat',
+                'amount charged', 'amount paid', 'payment total', '\btotal\b',
             ]),
             'vat_percent'  => $this->extractPercent($clean),
             'tax_percent'  => $this->extractPercent($clean),
@@ -205,7 +207,7 @@ class InvoiceExtractorService
     {
         foreach ($keywords as $keyword) {
             // keyword followed by optional punctuation then a money number
-            $pattern = '/' . $keyword . '[\s\:\-]*?(?:£|\$|€)?\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?|\d+\.\d{2})/i';
+            $pattern = '/' . $keyword . '[\s\:\-]*?(?:£|\$|€)?\s*(\d{1,5}(?:,\d{3})*(?:\.\d{2})?|\d+\.\d{2})/i';
             if (preg_match($pattern, $text, $matches)) {
                 return str_replace(',', '', $matches[1]);
             }
@@ -213,7 +215,7 @@ class InvoiceExtractorService
 
         // Fallback: largest money-like number near the bottom third of the text
         // (common for "TOTAL" on receipts)
-        if (preg_match_all('/(\d{1,3}(?:,\d{3})*\.\d{2})/', $text, $all) && !empty($all[1])) {
+        if (preg_match_all('/(\d{1,5}(?:,\d{3})*(?:\.\d{2})?)/', $text, $all) && !empty($all[1])) {
             $nums = array_map(fn ($n) => (float) str_replace(',', '', $n), $all[1]);
             // Prefer numbers that look like totals (not tiny)
             $candidates = array_filter($nums, fn ($n) => $n >= 0.5);
