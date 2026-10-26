@@ -543,10 +543,26 @@ class BankReconciliationPageController extends Controller
             ->with('success','Row removed and the removal reason was recorded.');
     }
 
+    private function getScopeClientIds(Request $request): array
+    {
+        $businessId = (int)$request->input('client_id');
+        $credentialId = (int)$request->input('client_credential_id');
+        if ($businessId) {
+            return [$businessId];
+        }
+        if ($credentialId) {
+            return Client::where('client_credential_id', $credentialId)
+                ->where('status', 1)
+                ->pluck('id')
+                ->all();
+        }
+        return [];
+    }
+
     public function verifyAllRowsForClient(Request $request) {
-        $client=Client::findOrFail($request->input('client_id'));
+        $clientIds = $this->getScopeClientIds($request);
         $count=DB::table('bank_entries')
-            ->where('client_id', $client->id)
+            ->whereIn('client_id', $clientIds)
             ->where('status', 'needs_review')
             ->update([
                 'verified_by' => auth()->id(),
@@ -558,9 +574,9 @@ class BankReconciliationPageController extends Controller
     }
 
     public function approveAllRows(Request $request) {
-        $client=Client::findOrFail($request->input('client_id'));
+        $clientIds = $this->getScopeClientIds($request);
         $rows=DB::table('bank_entries')
-            ->where('client_id', $client->id)
+            ->whereIn('client_id', $clientIds)
             ->whereIn('status', ['matched', 'categorized', 'split'])
             ->where('reconciliation_status', '!=', 'approved');
         $count=0;$skipped=0;
