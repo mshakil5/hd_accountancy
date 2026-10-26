@@ -12,6 +12,6 @@ class ReceiptFile extends Model
 
     public function getUrlAttribute()
     {
-        return asset($this->file_path);
+        return url('/admin/receipts/' . $this->receipt_id . '/files/' . $this->id . '/download');
     }
 }
