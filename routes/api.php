@@ -19,6 +19,8 @@ Route::middleware('auth:api,api_client')->group(function () {
     Route::get('businesses/{businessId}/bank-imports', [\App\Http\Controllers\Api\BankReconciliationController::class, 'imports']);
     Route::post('businesses/{businessId}/bank-imports', [\App\Http\Controllers\Api\BankReconciliationController::class, 'upload']);
     Route::get('businesses/{businessId}/bank-imports/{importId}/download', [\App\Http\Controllers\Api\BankReconciliationController::class, 'downloadStatement']);
+    Route::post('businesses/{businessId}/bank-imports/{importId}/replace', [\App\Http\Controllers\Api\BankReconciliationController::class, 'replaceStatement']);
+    Route::get('businesses/{businessId}/bank-imports/{importId}/pdf-link', [\App\Http\Controllers\Api\BankReconciliationController::class, 'statementLink']);
     Route::get('businesses/{businessId}/bank-entries', [\App\Http\Controllers\Api\BankReconciliationController::class, 'entries']);
     Route::get('businesses/{businessId}/bank-entries/{entryId}/suggestions', [\App\Http\Controllers\Api\BankReconciliationController::class, 'suggestions']);
     Route::post('businesses/{businessId}/bank-entries/{entryId}/match', [\App\Http\Controllers\Api\BankReconciliationController::class, 'match']);
@@ -47,6 +49,10 @@ Route::delete('receipts/{id}', [ReceiptController::class, 'destroy']);
 Route::post('receipts/{receiptId}/files', [ReceiptController::class, 'addFile']);
 Route::delete('receipts/{receiptId}/files/{fileId}', [ReceiptController::class, 'deleteFile']);
 });
+
+// Token-protected PDF stream (token issued by pdf-link, expires in 10 minutes)
+Route::get('bank-imports/pdf/{token}', [\App\Http\Controllers\Api\BankReconciliationController::class, 'statementPublic'])
+    ->middleware('throttle:30,1')->name('api.bank-imports.pdf-public');
 
 // Meta WhatsApp Cloud API webhook
 Route::get('/webhooks/whatsapp', [WhatsAppWebhookController::class, 'verify']);

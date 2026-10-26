@@ -10,6 +10,8 @@ use Illuminate\Validation\ValidationException;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use App\Services\BankStatementRecognitionService;
 use App\Services\BankStatementVerificationService;
 
@@ -45,6 +47,78 @@ class BankReconciliationController extends Controller
         $item=DB::table('bank_imports')->where('client_id',$businessId)->find($importId);
         abort_unless($item && $item->storage_path && Storage::disk('local')->exists($item->storage_path),404);
         return Storage::disk('local')->download($item->storage_path,basename($item->filename));
+    }
+    /**
+     * Replace the PDF of an existing import (same import id). Allowed only while the
+     * statement is not verified and has no reconciled rows; verification restarts.
+     */
+    public function replaceStatement(Request $request,int $businessId,int $importId) {
+        $this->client($request,$businessId);
+        $request->validate(['file'=>'required|file|mimes:pdf|max:20480']);
+        $import=BankImport::where('client_id',$businessId)->findOrFail($importId);
+
+        $locked=DB::table('bank_entries')->where('bank_import_id',$importId)
+            ->where(fn($q)=>$q->whereIn('status',['matched','categorized','split'])->orWhere('reconciliation_status','approved'))
+            ->exists();
+        if($import->verification_status===BankStatementVerificationService::VERIFIED || $locked)
+            throw ValidationException::withMessages(['file'=>'This statement is already verified or reconciled, so its document cannot be replaced. Ask your accountant to reopen it.']);
+
+        $file=$request->file('file');
+        $hash=hash_file('sha256',$file->getRealPath());
+        if($import->sha256===$hash)
+            throw ValidationException::withMessages(['file'=>'This is already the current document.']);
+        if(DB::table('bank_imports')->where('client_id',$businessId)->where('bank_account_id',$import->bank_account_id)
+            ->where('sha256',$hash)->where('id','!=',$importId)->exists())
+            throw ValidationException::withMessages(['file'=>'This bank statement was already imported.']);
+
+        $oldPath=$import->storage_path;
+        $newPath=$file->storeAs('bank-statements/'.$businessId,bin2hex(random_bytes(16)).'.pdf','local');
+        if(!$newPath)throw ValidationException::withMessages(['file'=>'The file could not be saved. Please try again.']);
+
+        try {
+            $result=DB::transaction(function()use($importId,$file,$hash,$newPath){
+                DB::table('bank_imports')->where('id',$importId)->update([
+                    'filename'=>mb_substr($file->getClientOriginalName(),0,255),
+                    'sha256'=>$hash,'storage_path'=>$newPath,'file_type'=>'pdf',
+                    'verification_status'=>'pending','processing_status'=>'awaiting_verification',
+                    'verified_by'=>null,'verified_at'=>null,'verification_note'=>null,
+                    'warnings_acknowledged_at'=>null,'warnings_acknowledged_by'=>null,'warnings_acknowledgement_note'=>null,
+                    'updated_at'=>now(),
+                ]);
+                // Rows were checked against the old PDF, so they must be verified again.
+                DB::table('bank_entries')->where('bank_import_id',$importId)
+                    ->update(['status'=>'needs_review','verified_by'=>null,'verified_at'=>null,'updated_at'=>now()]);
+                $analysis=['rows'=>[],'pages'=>[],'unparsed'=>0,'opening_balance'=>null,'closing_balance'=>null,'ocr'=>false,'pages_total'=>0,'text'=>''];
+                return app(BankStatementVerificationService::class)->refresh(BankImport::findOrFail($importId),$analysis);
+            });
+        } catch(\Throwable $e) {Storage::disk('local')->delete($newPath);throw $e;}
+
+        if($oldPath && $oldPath!==$newPath)Storage::disk('local')->delete($oldPath);
+        return response()->json([
+            'import_id'=>$importId,'verification_status'=>$result['status'],
+            'message'=>'Statement document replaced. It will be re-checked by your accountant.',
+        ]);
+    }
+    /** Short-lived link so the phone can open the PDF in a browser/PDF viewer (no bearer header possible there). */
+    public function statementLink(Request $request,int $businessId,int $importId) {
+        $this->client($request,$businessId);
+        $item=DB::table('bank_imports')->where('client_id',$businessId)->find($importId);
+        abort_unless($item && $item->storage_path && Storage::disk('local')->exists($item->storage_path),404,'Statement file not found.');
+        $token=Str::random(48);
+        Cache::put('bank_pdf_link:'.$token,$importId,now()->addMinutes(10));
+        $url=route('api.bank-imports.pdf-public',['token'=>$token]);
+        if(str_starts_with((string)config('app.url'),'https://'))$url=preg_replace('/^http:/','https:',$url);
+        return response()->json(['url'=>$url,'filename'=>basename($item->filename)]);
+    }
+    public function statementPublic(string $token) {
+        $importId=Cache::get('bank_pdf_link:'.$token);
+        abort_unless($importId,404);
+        $item=DB::table('bank_imports')->find($importId);
+        abort_unless($item && $item->storage_path && Storage::disk('local')->exists($item->storage_path),404);
+        return response()->file(Storage::disk('local')->path($item->storage_path),[
+            'Content-Type'=>'application/pdf',
+            'Content-Disposition'=>'inline; filename="'.addslashes(basename($item->filename)).'"',
+        ]);
     }
     public function accounts(Request $request,int $businessId) {
         $this->client($request,$businessId);
