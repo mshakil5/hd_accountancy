@@ -516,6 +516,7 @@ $(function(){
    var match=data.find(function(item){return item.id==presetCredentialId;});
    if(match){
     presetApplied=true;
+     $('#bankFilterClient').val(presetCredentialId).trigger('change');
     $('#bankFilterClient').append(new Option(match.text,match.id,true,true)).trigger('change');
     $('#ciName').text(match.text);
     $('#ciEmail').text(match.email||'N/A');
