@@ -499,10 +499,11 @@ $(function(){
     });
   });
 
- var presetCredentialId='{{ $credentialId ?? "" }}';
- var presetBusiness='{{ $businessId ?? "" }}';
- var presetApplied=false;
- $('#bankFilterClient').select2({
+ if(window.jQuery){
+  var presetCredentialId='{{ $credentialId ?? "" }}';
+  var presetBusiness='{{ $businessId ?? "" }}';
+  var presetApplied=false;
+  $('#bankFilterClient').select2({
   placeholder:"-- Choose a client --",allowClear:true,cache:true,
   ajax:{url:"{{ route('admin.bank-reconciliation.search-clients') }}",dataType:'json',delay:250,
    data:function(params){return {q:params.term};},
@@ -530,6 +531,7 @@ $(function(){
    $('#bankFilterBusiness').html(opts);
    if(presetBusiness)$('#bankFilterBusiness').val(presetBusiness);
   });
+ }
  }
 });
 </script>
