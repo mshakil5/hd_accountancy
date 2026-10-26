@@ -498,8 +498,8 @@ $(function(){
     });
   });
 
- var presetCredentialId='{{ $presetId }}';
- var presetBusiness='{{ $businessId }}';
+ var presetCredentialId='{{ $credentialId ?? "" }}';
+ var presetBusiness='{{ $businessId ?? "" }}';
  var presetApplied=false;
  $('#bankFilterClient').select2({
   placeholder:"-- Choose a client --",allowClear:true,cache:true,
