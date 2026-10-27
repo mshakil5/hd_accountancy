@@ -197,6 +197,10 @@ class BankReconciliationPageController extends Controller
         // column populated so the NOT NULL schema remains valid.
         $data['account_label']='';
         $data['currency']='GBP';
+        if(empty($data['sort_code'])
+            || !\Illuminate\Support\Facades\Schema::hasColumn('reconciliation_bank_accounts','sort_code'))
+            unset($data['sort_code']);
+        if(empty($data['account_last_four'])) unset($data['account_last_four']);
         $data['created_at']=now();$data['updated_at']=now();
         DB::table('reconciliation_bank_accounts')->insert($data);
         return redirect()->route('admin.bank-reconciliation.index',[

@@ -5,6 +5,7 @@ use App\Http\Controllers\Controller;
 use App\Models\{BankImport, Client, ClientCredential, Receipt, AccountHead, BankAccount};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Carbon\Carbon;
@@ -194,17 +195,25 @@ class BankReconciliationController extends Controller
             'sort_code'       => 'nullable|string|max:32',
         ]);
 
-        $id = DB::table('reconciliation_bank_accounts')->insertGetId([
+        $payload = [
             'client_id'        => $businessId,
             'bank_name'        => trim($data['bank_name']),
-            'account_label'    => '',
             'account_last_four'=> $data['account_last_four'] ?? null,
-            'sort_code'        => $data['sort_code'] ?? null,
             'currency'         => 'GBP',
             'active'           => true,
             'created_at'       => now(),
             'updated_at'       => now(),
-        ]);
+        ];
+        if (Schema::hasColumn('reconciliation_bank_accounts','account_label')) {
+            // Legacy column is NOT NULL on older databases; the app no longer
+            // collects a label, so store an empty value.
+            $payload['account_label'] = '';
+        }
+        if (Schema::hasColumn('reconciliation_bank_accounts','sort_code')
+            && !empty($data['sort_code'])) {
+            $payload['sort_code'] = $data['sort_code'];
+        }
+        $id = DB::table('reconciliation_bank_accounts')->insertGetId($payload);
 
         return response()->json([
             'id'               => $id,
