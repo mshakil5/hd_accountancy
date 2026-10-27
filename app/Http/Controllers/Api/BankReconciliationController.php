@@ -29,7 +29,7 @@ class BankReconciliationController extends Controller
         ->where('bank_imports.client_id',$businessId)
         ->when($request->filled('bank_account_id'),fn($q)=>$q->where('bank_imports.bank_account_id',$request->input('bank_account_id')))
         ->select('bank_imports.*','reconciliation_bank_accounts.bank_name')
-        ->latest()->limit(100)->get();
+        ->latest('bank_imports.created_at')->limit(100)->get();
         $counts=DB::table('bank_entries')->where('client_id',$businessId)
             ->select('bank_import_id','status',DB::raw('count(*) as total'))
             ->groupBy('bank_import_id','status')->get()->groupBy('bank_import_id');
@@ -140,26 +140,17 @@ class BankReconciliationController extends Controller
         $this->client($request,$businessId);
         $data = $request->validate([
             'bank_name'       => 'required|string|max:100',
-            'account_label'   => 'required|string|max:100',
             'account_last_four'=> 'nullable|string|size:4|regex:/^\d{4}$/',
             'sort_code'       => 'nullable|string|max:32',
-            'iban'            => 'nullable|string|max:64',
-            'currency'        => 'nullable|string|size:3',
         ]);
-
-        $currency = strtoupper(trim((string)($data['currency'] ?? 'GBP')));
-        if (!in_array($currency, ['GBP','USD','EUR'], true)) {
-            $currency = 'GBP';
-        }
 
         $id = DB::table('reconciliation_bank_accounts')->insertGetId([
             'client_id'        => $businessId,
             'bank_name'        => trim($data['bank_name']),
-            'account_label'    => trim($data['account_label']),
+            'account_label'    => '',
             'account_last_four'=> $data['account_last_four'] ?? null,
             'sort_code'        => $data['sort_code'] ?? null,
-            'iban'             => $data['iban'] ?? null,
-            'currency'         => $currency,
+            'currency'         => 'GBP',
             'active'           => true,
             'created_at'       => now(),
             'updated_at'       => now(),
@@ -168,11 +159,9 @@ class BankReconciliationController extends Controller
         return response()->json([
             'id'               => $id,
             'bank_name'        => trim($data['bank_name']),
-            'account_label'    => trim($data['account_label']),
             'account_last_four'=> $data['account_last_four'] ?? null,
             'sort_code'        => $data['sort_code'] ?? null,
-            'iban'             => $data['iban'] ?? null,
-            'currency'         => $currency,
+            'currency'         => 'GBP',
             'active'           => true,
         ], 201);
     }

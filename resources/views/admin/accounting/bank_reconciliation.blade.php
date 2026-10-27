@@ -63,7 +63,7 @@
   <div class="col-md-3"><label>Business</label><select class="form-control select2" name="client_id" id="bankFilterBusiness" style="width:100%"><option value="">All businesses</option></select></div>
   <div class="col-md-3"><label>Bank Account</label><select class="form-control select2" name="bank_account_id" style="width:100%">
 <option value="">All bank accounts</option>
-@foreach($bankAccounts as $bank)<option value="{{ $bank->id }}" {{ (int)$bankAccountId===(int)$bank->id?'selected':'' }}>{{ $bank->bank_name }} — {{ $bank->account_label }} {{ $bank->account_last_four?'••'.$bank->account_last_four:'' }}{{ !$bank->active?' (Legacy)':'' }}</option>@endforeach
+@foreach($bankAccounts as $bank)@continue(strtolower(trim($bank->bank_name)) === 'unknown historical bank')<option value="{{ $bank->id }}" {{ (int)$bankAccountId===(int)$bank->id?'selected':'' }}>{{ $bank->bank_name }}{{ $bank->account_last_four?' ••'.$bank->account_last_four:'' }}</option>@endforeach
 </select></div>
 <div class="col-md-3"><label>Status</label><select class="form-control select2" name="status" style="width:100%"><option value="">All</option>
   @foreach(['unmatched','needs_review','matched','split','categorized'] as $s)<option value="{{ $s }}" {{ request('status')===$s?'selected':'' }}>{{ ucwords(str_replace('_',' ',$s)) }}</option>@endforeach
@@ -93,9 +93,10 @@
     <div class="hd-bank-overview">
       @foreach($bankOverview as $overview)
         @php $b=$overview->bank; $progress=$overview->total ? round(100*$overview->approved/$overview->total) : 0; @endphp
-        <a class="hd-bank-overview-card {{ (int)$bankAccountId===(int)$b->id ? 'is-selected' : '' }}" href="{{ route('admin.bank-reconciliation.index', ['client_credential_id'=>$credentialId,'client_id'=>$businessId,'bank_account_id'=>$b->id]) }}#hd-reconciliation-workspace" aria-label="Open reconciliation for {{ $b->bank_name }} {{ $b->account_label }}">
+        @continue(strtolower(trim($b->bank_name)) === 'unknown historical bank')
+        <a class="hd-bank-overview-card {{ (int)$bankAccountId===(int)$b->id ? 'is-selected' : '' }}" href="{{ route('admin.bank-reconciliation.index', ['client_credential_id'=>$credentialId,'client_id'=>$businessId,'bank_account_id'=>$b->id]) }}#hd-reconciliation-workspace" aria-label="Open reconciliation for {{ $b->bank_name }}">
           <div class="d-flex justify-content-between align-items-start">
-            <div><strong>{{ $b->bank_name }}</strong><div class="hd-small">{{ $b->account_label }} @if($b->account_last_four) · ending {{ $b->account_last_four }} @endif · {{ $b->currency }}</div></div>
+            <div><strong>{{ $b->bank_name }}</strong><div class="hd-small">@if($b->sort_code ?? null){{ $b->sort_code }} @endif@if($b->account_last_four) · ending {{ $b->account_last_four }} @endif · {{ $b->currency }}</div></div>
             <span class="hd-pill">{{ $b->active ? 'Active' : 'Legacy / inactive' }}</span>
           </div>
           <div class="hd-bank-metrics">
@@ -121,10 +122,9 @@
 <p class="hd-small">Register each bank separately (e.g. HSBC, Barclays, Halifax). Select a bank in the filter above. Never upload statements for different accounts into one bank record.</p>
 <form method="POST" action="{{ route('admin.bank-reconciliation.accounts.create') }}" class="row align-items-end">@csrf
 <input type="hidden" name="client_id" value="{{ $businessId }}"><input type="hidden" name="client_credential_id" value="{{ $credentialId }}">
-<div class="col-md-3"><label>Bank</label><input name="bank_name" class="form-control" maxlength="100" placeholder="HSBC" required></div>
-<div class="col-md-3"><label>Account nickname</label><input name="account_label" class="form-control" maxlength="100" placeholder="Business Current" required></div>
-<div class="col-md-2"><label>Last 4 digits</label><input name="account_last_four" class="form-control" maxlength="4" pattern="[0-9]{4}" placeholder="1234"></div>
-<div class="col-md-2"><label>Currency</label><select class="form-control select2" name="currency"><option>GBP</option><option>EUR</option><option>USD</option></select></div>
+<div class="col-md-4"><label>Bank</label><input name="bank_name" class="form-control" maxlength="100" placeholder="HSBC" required></div>
+<div class="col-md-3"><label>Sort code</label><input name="sort_code" class="form-control" maxlength="32" placeholder="12-34-56"></div>
+<div class="col-md-3"><label>Last 4 digits</label><input name="account_last_four" class="form-control" maxlength="4" pattern="[0-9]{4}" placeholder="1234"></div>
 <div class="col-md-2"><button class="btn btn-outline-primary">Add account</button></div>
 </form></div>
 @endif

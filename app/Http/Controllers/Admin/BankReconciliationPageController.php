@@ -187,13 +187,16 @@ class BankReconciliationPageController extends Controller
         $data=$request->validate([
             'client_id'=>'required|integer|exists:clients,id',
             'bank_name'=>'required|string|max:100',
-            'account_label'=>'required|string|max:100',
             'account_last_four'=>'nullable|digits:4',
-            'currency'=>'required|in:GBP,EUR,USD',
+            'sort_code'=>'nullable|string|max:32',
         ]);
         $client=Client::findOrFail($data['client_id']);
         // Only allow account management within the selected credential/business.
         abort_unless((int)$client->client_credential_id===(int)$request->input('client_credential_id'),403);
+        // Account label is no longer collected from the app; keep the legacy
+        // column populated so the NOT NULL schema remains valid.
+        $data['account_label']='';
+        $data['currency']='GBP';
         $data['created_at']=now();$data['updated_at']=now();
         DB::table('reconciliation_bank_accounts')->insert($data);
         return redirect()->route('admin.bank-reconciliation.index',[
