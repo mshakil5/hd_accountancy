@@ -2,7 +2,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\{BankImport, Client, ClientCredential, Receipt, AccountHead};
+use App\Models\{BankImport, Client, ClientCredential, Receipt, AccountHead, BankAccount};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -24,7 +24,12 @@ class BankReconciliationController extends Controller
     }
     public function imports(Request $request, int $businessId) {
         $this->client($request,$businessId);
-        $imports=DB::table('bank_imports')->where('client_id',$businessId)->when($request->filled('bank_account_id'),fn($q)=>$q->where('bank_account_id',$request->input('bank_account_id')))->latest()->limit(100)->get();
+        $imports=DB::table('bank_imports')
+        ->leftJoin('reconciliation_bank_accounts','reconciliation_bank_accounts.id','=','bank_imports.bank_account_id')
+        ->where('bank_imports.client_id',$businessId)
+        ->when($request->filled('bank_account_id'),fn($q)=>$q->where('bank_imports.bank_account_id',$request->input('bank_account_id')))
+        ->select('bank_imports.*','reconciliation_bank_accounts.bank_name')
+        ->latest()->limit(100)->get();
         $counts=DB::table('bank_entries')->where('client_id',$businessId)
             ->select('bank_import_id','status',DB::raw('count(*) as total'))
             ->groupBy('bank_import_id','status')->get()->groupBy('bank_import_id');
@@ -123,7 +128,53 @@ class BankReconciliationController extends Controller
     public function accounts(Request $request,int $businessId) {
         $this->client($request,$businessId);
         return response()->json(DB::table('reconciliation_bank_accounts')
-            ->where('client_id',$businessId)->orderBy('bank_name')->get());
+            ->where('client_id',$businessId)->where('active',true)->orderBy('bank_name')->get());
+    }
+
+    /**
+     * Register a new bank account for this business so it can be picked
+     * when uploading statements. The user supplies the details manually;
+     * we do NOT auto-create from OCR results.
+     */
+    public function storeAccount(Request $request, int $businessId) {
+        $this->client($request,$businessId);
+        $data = $request->validate([
+            'bank_name'       => 'required|string|max:100',
+            'account_label'   => 'required|string|max:100',
+            'account_last_four'=> 'nullable|string|size:4|regex:/^\d{4}$/',
+            'sort_code'       => 'nullable|string|max:32',
+            'iban'            => 'nullable|string|max:64',
+            'currency'        => 'nullable|string|size:3',
+        ]);
+
+        $currency = strtoupper(trim((string)($data['currency'] ?? 'GBP')));
+        if (!in_array($currency, ['GBP','USD','EUR'], true)) {
+            $currency = 'GBP';
+        }
+
+        $id = DB::table('reconciliation_bank_accounts')->insertGetId([
+            'client_id'        => $businessId,
+            'bank_name'        => trim($data['bank_name']),
+            'account_label'    => trim($data['account_label']),
+            'account_last_four'=> $data['account_last_four'] ?? null,
+            'sort_code'        => $data['sort_code'] ?? null,
+            'iban'             => $data['iban'] ?? null,
+            'currency'         => $currency,
+            'active'           => true,
+            'created_at'       => now(),
+            'updated_at'       => now(),
+        ]);
+
+        return response()->json([
+            'id'               => $id,
+            'bank_name'        => trim($data['bank_name']),
+            'account_label'    => trim($data['account_label']),
+            'account_last_four'=> $data['account_last_four'] ?? null,
+            'sort_code'        => $data['sort_code'] ?? null,
+            'iban'             => $data['iban'] ?? null,
+            'currency'         => $currency,
+            'active'           => true,
+        ], 201);
     }
     public function recogniseStatement(Request $request,int $businessId, BankStatementRecognitionService $recognizer) {
         $this->client($request,$businessId);
@@ -146,25 +197,12 @@ class BankReconciliationController extends Controller
             if (!$match) throw \Illuminate\Validation\ValidationException::withMessages(['bank_account_id' => 'Select a valid active bank account for this business.']);
             return (int)$match->id;
         }
-        if (!empty($detection['suggested_bank_account_id'])) {
-            return (int)$detection['suggested_bank_account_id'];
-        }
-        $bankName=trim((string)($detection['detected_bank']??''));
-        $lastFour=trim((string)($detection['detected_account_last_four']??''));
-        if ($bankName!=='' && preg_match('/^\d{4}$/',$lastFour)) {
-            // An OCR-detected bank alone is not enough to distinguish two
-            // accounts. Bank + final four digits is safe to register as new.
-            return (int) DB::table('reconciliation_bank_accounts')->insertGetId([
-                'client_id'=>$businessId,'bank_name'=>$bankName,
-                'account_label'=>'Account ending '.$lastFour,'account_last_four'=>$lastFour,
-                'currency'=>'GBP','active'=>true,'created_at'=>now(),'updated_at'=>now(),
-            ]);
-        }
-        throw \Illuminate\Validation\ValidationException::withMessages(['bank_account_id' => 'We could not safely identify this statement account. Upload a clearer first page or select its registered bank account.']);
+        // The user MUST pick an account explicitly. No auto-creation from OCR.
+        throw \Illuminate\Validation\ValidationException::withMessages(['bank_account_id' => 'Please select or create a bank account for this statement before uploading.']);
     }
     public function upload(Request $request, int $businessId) {
         $this->client($request,$businessId);
-        $request->validate(['file'=>'required|file|mimes:pdf|max:20480','bank_account_id'=>'nullable|integer']);
+        $request->validate(['file'=>'required|file|mimes:pdf|max:20480','bank_account_id'=>'required|integer']);
         $file=$request->file('file');
 
         $verification=app(BankStatementVerificationService::class);
@@ -176,24 +214,22 @@ class BankReconciliationController extends Controller
         $detection = $recognizer->detect($recognizer->extractPdfTextWithOcr($file->getRealPath()), $accounts);
         $bankAccountId=$this->resolveBankAccount($request,$businessId,$detection);
         $selected=collect($accounts)->first(fn($account)=>(int)$account->id===$bankAccountId);
+        // The user explicitly picked this account. Log a warning if the OCR
+        // disagrees, but never block — the choice was deliberate.
         $detectedBank=strtolower(trim((string)($detection['detected_bank']??'')));
         $selectedBank=strtolower(trim((string)($selected->bank_name??'')));
         $detectedLastFour=(string)($detection['detected_account_last_four']??'');
         $selectedLastFour=(string)($selected->account_last_four??'');
         $banksMatch=$detectedBank==='' || $selectedBank===$detectedBank
             || str_contains($selectedBank,$detectedBank) || str_contains($detectedBank,$selectedBank);
-        if ($request->filled('bank_account_id') && ((!$banksMatch)
-            || ($detectedLastFour!=='' && $selectedLastFour!=='' && $selectedLastFour!==$detectedLastFour))) {
-            Log::warning('Bank statement account selection rejected', [
+        if ((!$banksMatch) || ($detectedLastFour!=='' && $selectedLastFour!=='' && $selectedLastFour!==$detectedLastFour)) {
+            Log::warning('Bank statement uploaded against user-selected account that OCR disagrees with', [
                 'business_id' => $businessId,
                 'selected_bank' => $selected->bank_name ?? null,
                 'selected_last_four' => $selectedLastFour ?: null,
                 'detected_bank' => $detection['detected_bank'] ?? null,
                 'detected_last_four' => $detectedLastFour ?: null,
-                'bank_matches' => $banksMatch,
-                'last_four_matches' => $detectedLastFour === '' || $selectedLastFour === '' || $selectedLastFour === $detectedLastFour,
             ]);
-            throw ValidationException::withMessages(['bank_account_id'=>'The selected bank account conflicts with the bank or account number detected in this statement. Choose the matching account or ask an accountant to register it first.']);
         }
         $hash=hash_file('sha256',$file->getRealPath());
         if(DB::table('bank_imports')->where('client_id',$businessId)->where('bank_account_id',$bankAccountId)->where('sha256',$hash)->exists())
