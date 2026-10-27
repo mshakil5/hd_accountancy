@@ -104,6 +104,56 @@ class BankReconciliationController extends Controller
             'message'=>'Statement document replaced. It will be re-checked by your accountant.',
         ]);
     }
+    /**
+     * Move an existing statement to a different bank account. Used from the
+     * statement screen when the wrong bank was picked at upload time, so the
+     * PDF does not have to be uploaded again.
+     */
+    public function changeBankAccount(Request $request,int $businessId,int $importId) {
+        $this->client($request,$businessId);
+        $data=$request->validate(['bank_account_id'=>'required|integer']);
+        $import=BankImport::where('client_id',$businessId)->findOrFail($importId);
+        $account=DB::table('reconciliation_bank_accounts')->where('client_id',$businessId)
+            ->where('active',true)->find($data['bank_account_id']);
+        if(!$account)
+            throw ValidationException::withMessages(['bank_account_id'=>'Select a valid active bank account for this business.']);
+
+        if((int)$import->bank_account_id===(int)$account->id)
+            return response()->json([
+                'import_id'=>$importId,'bank_account_id'=>(int)$account->id,'bank_name'=>$account->bank_name,
+                'message'=>'This statement is already linked to '.$account->bank_name.'.',
+            ]);
+
+        $locked=DB::table('bank_entries')->where('bank_import_id',$importId)
+            ->where(fn($q)=>$q->whereIn('status',['matched','categorized','split'])->orWhere('reconciliation_status','approved'))
+            ->exists();
+        if($import->verification_status===BankStatementVerificationService::VERIFIED || $locked)
+            throw ValidationException::withMessages(['bank_account_id'=>'This statement is already verified or reconciled, so its bank account cannot be changed. Ask your accountant to reopen it.']);
+
+        if($import->sha256 && DB::table('bank_imports')->where('client_id',$businessId)
+            ->where('bank_account_id',$account->id)->where('sha256',$import->sha256)->where('id','!=',$importId)->exists())
+            throw ValidationException::withMessages(['bank_account_id'=>'That statement is already imported for '.$account->bank_name.'.']);
+
+        try {
+            DB::transaction(function()use($importId,$account){
+                DB::table('bank_imports')->where('id',$importId)
+                    ->update(['bank_account_id'=>$account->id,'updated_at'=>now()]);
+                // Statement lines are unique per bank account, so they move with
+                // the statement — otherwise reconciliation filters would disagree.
+                DB::table('bank_entries')->where('bank_import_id',$importId)
+                    ->update(['bank_account_id'=>$account->id,'updated_at'=>now()]);
+            });
+        } catch(\Illuminate\Database\QueryException $e) {
+            if((string)$e->getCode()==='23000')
+                throw ValidationException::withMessages(['bank_account_id'=>'These statement lines already exist under '.$account->bank_name.'. Choose the bank account that holds them.']);
+            throw $e;
+        }
+
+        return response()->json([
+            'import_id'=>$importId,'bank_account_id'=>(int)$account->id,'bank_name'=>$account->bank_name,
+            'message'=>'Statement moved to '.$account->bank_name.'.',
+        ]);
+    }
     /** Short-lived link so the phone can open the PDF in a browser/PDF viewer (no bearer header possible there). */
     public function statementLink(Request $request,int $businessId,int $importId) {
         $this->client($request,$businessId);

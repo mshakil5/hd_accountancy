@@ -21,6 +21,7 @@ Route::post('businesses/{businessId}/bank-accounts', [\App\Http\Controllers\Api\
     Route::post('businesses/{businessId}/bank-imports', [\App\Http\Controllers\Api\BankReconciliationController::class, 'upload']);
     Route::get('businesses/{businessId}/bank-imports/{importId}/download', [\App\Http\Controllers\Api\BankReconciliationController::class, 'downloadStatement']);
     Route::post('businesses/{businessId}/bank-imports/{importId}/replace', [\App\Http\Controllers\Api\BankReconciliationController::class, 'replaceStatement']);
+    Route::put('businesses/{businessId}/bank-imports/{importId}/bank-account', [\App\Http\Controllers\Api\BankReconciliationController::class, 'changeBankAccount']);
     Route::get('businesses/{businessId}/bank-imports/{importId}/pdf-link', [\App\Http\Controllers\Api\BankReconciliationController::class, 'statementLink']);
     Route::get('businesses/{businessId}/bank-entries', [\App\Http\Controllers\Api\BankReconciliationController::class, 'entries']);
     Route::get('businesses/{businessId}/bank-entries/{entryId}/suggestions', [\App\Http\Controllers\Api\BankReconciliationController::class, 'suggestions']);
