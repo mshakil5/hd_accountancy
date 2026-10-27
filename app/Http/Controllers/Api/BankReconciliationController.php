@@ -77,12 +77,24 @@ class BankReconciliationController extends Controller
             ->where('sha256',$hash)->where('id','!=',$importId)->exists())
             throw ValidationException::withMessages(['file'=>'This bank statement was already imported.']);
 
+        $verification=app(BankStatementVerificationService::class);
+        // The new PDF is the source of truth: parse it, drop the lines that
+        // belonged to the old document and store the new ones, then re-run the
+        // verification checks against the replacement file.
+        $analysis=$verification->analyse($file->getRealPath());
+        // Never throw away readable rows for a PDF we cannot read — that would
+        // silently empty a statement the accountant may already be working on.
+        if(!$analysis['rows'])
+            throw ValidationException::withMessages(['file'=>'We could not read any transactions from this PDF, so your current statement has been left unchanged.']);
+
         $oldPath=$import->storage_path;
         $newPath=$file->storeAs('bank-statements/'.$businessId,bin2hex(random_bytes(16)).'.pdf','local');
         if(!$newPath)throw ValidationException::withMessages(['file'=>'The file could not be saved. Please try again.']);
 
+        $bankAccountId=(int)($import->bank_account_id??0);
+        if($bankAccountId<=0)$bankAccountId=null;
         try {
-            $result=DB::transaction(function()use($importId,$file,$hash,$newPath){
+            $result=DB::transaction(function()use($importId,$file,$hash,$newPath,$analysis,$verification,$businessId,$bankAccountId){
                 DB::table('bank_imports')->where('id',$importId)->update([
                     'filename'=>mb_substr($file->getClientOriginalName(),0,255),
                     'sha256'=>$hash,'storage_path'=>$newPath,'file_type'=>'pdf',
@@ -91,17 +103,19 @@ class BankReconciliationController extends Controller
                     'warnings_acknowledged_at'=>null,'warnings_acknowledged_by'=>null,'warnings_acknowledgement_note'=>null,
                     'updated_at'=>now(),
                 ]);
-                // Rows were checked against the old PDF, so they must be verified again.
-                DB::table('bank_entries')->where('bank_import_id',$importId)
-                    ->update(['status'=>'needs_review','verified_by'=>null,'verified_at'=>null,'updated_at'=>now()]);
-                $analysis=['rows'=>[],'pages'=>[],'unparsed'=>0,'opening_balance'=>null,'closing_balance'=>null,'ocr'=>false,'pages_total'=>0,'text'=>''];
-                return app(BankStatementVerificationService::class)->refresh(BankImport::findOrFail($importId),$analysis);
+                // Rows were checked against the old PDF, so they are replaced by
+                // whatever the new document actually contains.
+                DB::table('bank_entries')->where('bank_import_id',$importId)->delete();
+                $stored=$this->storeStatementRows($importId,$businessId,$bankAccountId,$analysis['rows']);
+                DB::table('bank_imports')->where('id',$importId)->update(['transaction_count'=>$stored['added']]);
+                return $verification->refresh(BankImport::findOrFail($importId),$analysis);
             });
         } catch(\Throwable $e) {Storage::disk('local')->delete($newPath);throw $e;}
 
         if($oldPath && $oldPath!==$newPath)Storage::disk('local')->delete($oldPath);
         return response()->json([
             'import_id'=>$importId,'verification_status'=>$result['status'],
+            'count'=>DB::table('bank_entries')->where('bank_import_id',$importId)->count(),
             'message'=>'Statement document replaced. It will be re-checked by your accountant.',
         ]);
     }
@@ -254,12 +268,20 @@ class BankReconciliationController extends Controller
         $file=$request->file('file');
 
         $verification=app(BankStatementVerificationService::class);
-        $analysis=['rows'=>[],'pages'=>[],'unparsed'=>0,'opening_balance'=>null,'closing_balance'=>null,'ocr'=>false,'pages_total'=>0,'text'=>''];
+        // Parse the PDF once. The same analysis drives bank detection, the
+        // stored transaction rows and the verification checks, so the statement
+        // and its rows can never disagree.
+        $analysis=$verification->analyse($file->getRealPath());
 
         $recognizer = app(BankStatementRecognitionService::class);
         $accounts = DB::table('reconciliation_bank_accounts')->where('client_id', $businessId)->get()->all();
-        // Bank detection uses backend OCR (Ghostscript + Tesseract) — only bank/account, NO transaction parsing
-        $detection = $recognizer->detect($recognizer->extractPdfTextWithOcr($file->getRealPath()), $accounts);
+        // Reuse the text already extracted above; only fall back to the slow
+        // OCR pass when the PDF produced no usable text at all.
+        $detectionText = trim((string) ($analysis['text'] ?? ''));
+        if ($detectionText === '') {
+            $detectionText = $recognizer->extractPdfTextWithOcr($file->getRealPath());
+        }
+        $detection = $recognizer->detect($detectionText, $accounts);
         $bankAccountId=$this->resolveBankAccount($request,$businessId,$detection);
         $selected=collect($accounts)->first(fn($account)=>(int)$account->id===$bankAccountId);
         // The user explicitly picked this account. Log a warning if the OCR
@@ -299,25 +321,8 @@ class BankReconciliationController extends Controller
                 ]);
                 // Avoid re-importing overlapping statement lines, preserving repeated identical
                 // payments inside a statement by tracking their occurrence number.
-                $seen=[];$added=0;$skipped=0;
-                foreach($rows as $row) {
-                    $key=hash('sha256',implode('|',[$row['transaction_date'],$row['description'],$row['reference'],$row['amount']]));
-                    $occurrence=($seen[$key]??0)+1;$seen[$key]=$occurrence;
-                    $already=DB::table('bank_entries')->where('client_id',$businessId)->where('bank_account_id',$bankAccountId)
-                        ->where('line_fingerprint',$key)->where('line_occurrence',$occurrence)->exists();
-                    if($already){$skipped++;continue;}
-                    $row['client_id']=$businessId;$row['currency']='GBP';
-                    $row['bank_import_id']=$importId;$row['bank_account_id']=$bankAccountId;
-                    $row['line_fingerprint']=$key;$row['line_occurrence']=$occurrence;
-                    $row['status']='needs_review';
-                    $row['original_values']=json_encode([
-                        'transaction_date'=>$row['transaction_date'],'description'=>$row['description'],
-                        'amount'=>$row['amount'],'balance_after'=>$row['balance_after']??null,
-                    ]);
-                    $row['created_at']=now();$row['updated_at']=now();
-                    DB::table('bank_entries')->insert($row);$added++;
-                }
-                DB::table('bank_imports')->where('id',$importId)->update(['transaction_count'=>$added]);
+                $stored=$this->storeStatementRows($importId,$businessId,$bankAccountId,$rows);
+                DB::table('bank_imports')->where('id',$importId)->update(['transaction_count'=>$stored['added']]);
 
                 $import=BankImport::findOrFail($importId);
                 $summary=$verification->refresh($import,$analysis);
@@ -327,7 +332,7 @@ class BankReconciliationController extends Controller
                     BankStatementVerificationService::REVIEW=>'Bank statement imported, but '.$summary['blocking'].' issue(s) need an accountant to compare the rows with the PDF before reconciliation.',
                     default=>'PDF uploaded safely, but no transactions could be extracted reliably. Please upload a text-based PDF export or ask your accountant to review the original.',
                 };
-                return ['import_id'=>$importId,'bank_account_id'=>$bankAccountId,'count'=>$added,'duplicates_skipped'=>$skipped,
+                return ['import_id'=>$importId,'bank_account_id'=>$bankAccountId,'count'=>$stored['added'],'duplicates_skipped'=>$stored['skipped'],
                     'requires_review'=>$summary['status']!==BankStatementVerificationService::READY,
                     'verification_status'=>$summary['status'],'blocking_exceptions'=>$summary['blocking'],
                     'pages_total'=>$summary['pages_total'],'opening_balance'=>$summary['opening_balance'],
@@ -337,6 +342,41 @@ class BankReconciliationController extends Controller
         } catch(\Throwable $e) {Storage::disk('local')->delete($storagePath);throw $e;}
         return response()->json($result,201);
     }
+
+    /**
+     * Store the parsed statement lines for an import.
+     *
+     * Repeated identical payments inside one statement are preserved by
+     * tracking an occurrence number, while lines that already exist for the
+     * same bank account are skipped so overlapping statements can be uploaded
+     * without creating duplicates.
+     *
+     * @param  array<int,array<string,mixed>>  $rows
+     * @return array{added:int,skipped:int}
+     */
+    private function storeStatementRows(int $importId, int $businessId, ?int $bankAccountId, array $rows): array {
+        $seen=[];$added=0;$skipped=0;
+        foreach($rows as $row) {
+            $key=hash('sha256',implode('|',[$row['transaction_date'],$row['description'],$row['reference']??'',number_format((float)$row['amount'],2,'.','')]));
+            $occurrence=($seen[$key]??0)+1;$seen[$key]=$occurrence;
+            $already=DB::table('bank_entries')->where('client_id',$businessId)
+                ->when($bankAccountId,fn($q)=>$q->where('bank_account_id',$bankAccountId))
+                ->where('line_fingerprint',$key)->where('line_occurrence',$occurrence)->exists();
+            if($already){$skipped++;continue;}
+            $row['client_id']=$businessId;$row['currency']='GBP';
+            $row['bank_import_id']=$importId;$row['bank_account_id']=$bankAccountId;
+            $row['line_fingerprint']=$key;$row['line_occurrence']=$occurrence;
+            $row['status']='needs_review';
+            $row['original_values']=json_encode([
+                'transaction_date'=>$row['transaction_date'],'description'=>$row['description'],
+                'amount'=>$row['amount'],'balance_after'=>$row['balance_after']??null,
+            ]);
+            $row['created_at']=now();$row['updated_at']=now();
+            DB::table('bank_entries')->insert($row);$added++;
+        }
+        return ['added'=>$added,'skipped'=>$skipped];
+    }
+
     private function parseMoney(string $raw): float {
         $n=trim(str_replace(['£',',',' '],'',$raw));
         if(preg_match('/^\\((.*)\\)$/',$n,$m))$n='-'.$m[1];
