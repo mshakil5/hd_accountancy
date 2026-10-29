@@ -126,18 +126,10 @@
                     @endif
                 </div>
                 <div>
-                    <a href="{{ route('admin.receipt.bill', $receipt->id) }}" class="btn btn-default btn-sm">
+                    <a href="{{ route('admin.receipt.bill', $receipt->id) }}"
+                       class="btn btn-primary btn-sm" style="background:linear-gradient(45deg,#007bff,#0056b3);border:none;box-shadow:0 2px 6px rgba(0,123,255,.4);">
                         <i class="fa fa-file-text-o"></i> Bill
                     </a>
-                    @if ($receipt->files->count() > 0)
-                        <a href="{{ route('admin.receipt.downloadAll', $receipt->id) }}"
-                           class="btn btn-success btn-sm receipt-download-btn"
-                           data-mode="{{ $receipt->files->count() > 1 ? 'zip' : 'single' }}"
-                           data-count="{{ $receipt->files->count() }}"
-                           title="{{ $receipt->files->count() > 1 ? 'All ' . $receipt->files->count() . ' PDFs will be zipped into one file' : 'Download the PDF' }}">
-                            <i class="fa fa-download"></i> Download {{ $receipt->files->count() > 1 ? 'All (ZIP)' : 'PDF' }}
-                        </a>
-                    @endif
                     @if ($prev)
                         <a href="{{ route('admin.receipt.show', $prev) }}" class="btn btn-default btn-sm"><i
                                 class="fa fa-chevron-left"></i> Prev</a>
@@ -163,10 +155,6 @@
                             <h3 class="card-title">Receipt Media Viewer</h3>
                             <div class="d-flex align-items-center" style="gap:6px;">
                                 @if ($receipt->files->count() > 0)
-                                    <a href="#" id="downloadCurrentBtn" class="btn btn-sm btn-success receipt-download-btn"
-                                       data-mode="single" title="Download the currently viewed file">
-                                        <i class="fa fa-download"></i> Download Current
-                                    </a>
                                     <button type="button" id="ocrBtn" class="btn btn-sm btn-primary"
                                         title="Scan the currently viewed file for amounts (existing values are kept if nothing is found)">
                                         <i class="fa fa-search"></i> OCR Extract
