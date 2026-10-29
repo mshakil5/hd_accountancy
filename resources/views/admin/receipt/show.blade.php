@@ -300,6 +300,12 @@
                                         value="{{ $receipt->supplier }}" placeholder="Supplier name...">
                                 </div>
 
+                                <div class="detail-field">
+                                    <label class="detail-label">Invoice / Reference Number</label>
+                                    <input type="text" class="form-control" id="invoice_number" name="invoice_number"
+                                        value="{{ $receipt->detail?->invoice_number }}">
+                                </div>
+
                                 <div class="row">
                                     <div class="col-md-6 detail-field">
                                         <label class="detail-label">Invoice Date</label>
@@ -315,9 +321,7 @@
 
                                 <div class="detail-field">
                                     <label class="detail-label d-flex align-items-center justify-content-between">Account Head
-                                        <span>
-                                            <button type="button" class="btn btn-sm btn-success ml-2" style="font-size:12px;border-radius:20px;padding:2px 12px;background:linear-gradient(45deg,#28a745,#20c997);border:none;box-shadow:0 2px 6px rgba(40,167,69,.4);" onclick="openQuickHeadModal()" title="Quickly create a missing head for this client"><i class="fa fa-plus-circle"></i> Quick Add Head</button>
-                                        </span>
+                                        <button type="button" id="quickAddHeadBtn" class="btn btn-sm btn-success ml-2" style="font-size:12px;border-radius:20px;padding:2px 12px;background:linear-gradient(45deg,#28a745,#20c997);border:none;box-shadow:0 2px 6px rgba(40,167,69,.4);" title="Quickly create a missing head for this client"><i class="fa fa-plus-circle"></i> Quick Add Head</button>
                                     </label>
                                     <select class="form-control select2" id="account_head_id" name="account_head_id"
                                         style="width:100%;">
@@ -331,39 +335,19 @@
                                     </select>
                                 </div>
 
-                                <div class="detail-field">
-                                    <label class="detail-label">Account Type</label>
-                                    <select class="form-control" id="account_type_id" name="account_type_id" disabled>
-                                        <option value="">Select Account Head first</option>
-                                        @foreach ($accountTypes as $type)
-                                            <option value="{{ $type->id }}"
-                                                {{ $receipt->detail?->accountHead?->account_type_id == $type->id ? 'selected' : '' }}>
-                                            {{ $type->name }} ({{ ucfirst($type->category) }})
-                                        </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-
                                 <div class="row">
                                     <div class="col-md-6 detail-field">
                                         <label class="detail-label">Net Amount (£)</label>
                                         <input type="number" step="0.01" class="form-control" id="net_amount" name="net_amount"
                                             value="{{ $receipt->detail?->net_amount }}">
                                     </div>
-                                    <div class="col-md-3 detail-field">
-                                        <label class="detail-label">VAT Rate (%)</label>
-                                        <input type="number" step="0.01" class="form-control" id="tax_percent" name="tax_percent"
-                                            value="{{ $receipt->detail?->net_amount ? round(($receipt->detail->tax_amount / $receipt->detail->net_amount) * 100, 2) : 0 }}">
-                                    </div>
-                                    <div class="col-md-3 detail-field">
-                                        <label class="detail-label">VAT Amt (£)</label>
-                                        <input type="text" class="form-control" id="tax_amount" name="tax_amount" readonly
-                                            value="{{ $receipt->detail?->tax_amount ?? 0 }}">
+                                    <div class="col-md-6 detail-field">
+                                        <label class="detail-label">VAT Amount (£)</label>
+                                        <input type="number" step="0.01" class="form-control" id="tax_amount" name="tax_amount"
+                                            value="{{ ($receipt->detail?->tax_amount ?? 0) + ($receipt->detail?->vat_amount ?? 0) }}">
                                     </div>
                                 </div>
 
-                                <input type="hidden" id="vat_amount" name="vat_amount"
-                                    value="{{ $receipt->detail?->vat_amount ?? 0 }}">
                                 <div class="row">
                                     <div class="col-md-6 detail-field">
                                         <label class="detail-label">Gross Amount (£)</label>
@@ -372,47 +356,35 @@
                                     </div>
                                     <div class="col-md-6 detail-field">
                                         <label class="detail-label">Is Paid?</label>
-                                        <select class="form-control" id="paid" name="paid">
-                                            <option value="no" {{ $receipt->detail?->paid == 0 ? 'selected' : '' }}>No
+                                        <select class="form-control" id="paid_method">
+                                            <option value="">No / Unpaid</option>
+                                            <option value="cash"
+                                                {{ $receipt->detail?->paid && $receipt->detail?->payment_method == 'cash' ? 'selected' : '' }}>Cash
                                             </option>
-                                            <option value="yes" {{ $receipt->detail?->paid == 1 ? 'selected' : '' }}>Yes
+                                            <option value="bank"
+                                                {{ $receipt->detail?->paid && $receipt->detail?->payment_method == 'bank' ? 'selected' : '' }}>Bank
                                             </option>
                                         </select>
                                     </div>
                                 </div>
 
-                                <div class="detail-field" id="method_box"
-                                    style="{{ $receipt->detail?->paid == 1 ? '' : 'display:none;' }}">
-                                    <label class="detail-label">Payment Method</label>
-                                    <select class="form-control" id="payment_method" name="payment_method">
-                                        <option value="cash"
-                                            {{ $receipt->detail?->payment_method == 'cash' ? 'selected' : '' }}>Cash
+                                <input type="hidden" id="paid" name="paid"
+                                    value="{{ $receipt->detail?->paid ? 'yes' : 'no' }}">
+                                <input type="hidden" id="payment_method" name="payment_method"
+                                    value="{{ $receipt->detail?->payment_method }}">
+
+                                <div class="detail-field">
+                                    <label class="detail-label">Status</label>
+                                    <select class="form-control" id="status" name="status">
+                                        <option value="pending" {{ $receipt->status == 'pending' ? 'selected' : '' }}>Pending
                                         </option>
-                                        <option value="bank"
-                                            {{ $receipt->detail?->payment_method == 'bank' ? 'selected' : '' }}>Bank
+                                        <option value="to_review" {{ $receipt->status == 'to_review' ? 'selected' : '' }}>To
+                                            Review</option>
+                                        <option value="ready" {{ $receipt->status == 'ready' ? 'selected' : '' }}>Ready
                                         </option>
+                                        <option value="archived" {{ $receipt->status == 'archived' ? 'selected' : '' }}>
+                                            Archived</option>
                                     </select>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-6 detail-field">
-                                        <label class="detail-label">Invoice / Reference Number</label>
-                                        <input type="text" class="form-control" id="invoice_number" name="invoice_number"
-                                            value="{{ $receipt->detail?->invoice_number }}">
-                                    </div>
-                                    <div class="col-md-6 detail-field">
-                                        <label class="detail-label">Status</label>
-                                        <select class="form-control" id="status" name="status">
-                                            <option value="pending" {{ $receipt->status == 'pending' ? 'selected' : '' }}>Pending
-                                            </option>
-                                            <option value="to_review" {{ $receipt->status == 'to_review' ? 'selected' : '' }}>To
-                                                Review</option>
-                                            <option value="ready" {{ $receipt->status == 'ready' ? 'selected' : '' }}>Ready
-                                            </option>
-                                            <option value="archived" {{ $receipt->status == 'archived' ? 'selected' : '' }}>
-                                                Archived</option>
-                                        </select>
-                                    </div>
                                 </div>
 
                                 <div class="detail-field">
@@ -506,12 +478,20 @@
                                 return;
                             }
 
-                            $('#net_amount').val(data.net_amount != null ? data.net_amount : '');
-                            $('#vat_amount').val(data.vat_amount != null ? data.vat_amount : '0');
-                            $('#tax_amount').val(data.tax_amount != null ? data.tax_amount : '');
-                            $('#total_amount').val(data.total_amount != null ? data.total_amount : '');
-                            $('#vat_percent').val(data.vat_percent != null ? data.vat_percent : 0);
-                            $('#tax_percent').val(data.tax_percent != null ? data.tax_percent : 0);
+                            // No VAT rate anymore: OCR fills net + VAT directly and
+                            // gross is derived, reconciling whatever the PDF gave us.
+                            let net   = data.net_amount   != null ? parseFloat(data.net_amount)   : null;
+                            let vat   = data.vat_amount   != null ? parseFloat(data.vat_amount)   : null;
+                            let gross = data.total_amount != null ? parseFloat(data.total_amount) : null;
+
+                            // Fill the missing leg when the PDF only printed two of the three.
+                            if (vat === null && net !== null && gross !== null)   vat   = gross - net;
+                            if (net === null && vat !== null && gross !== null)   net   = gross - vat;
+                            if (gross === null && net !== null && vat !== null)   gross = net + vat;
+
+                            $('#net_amount').val(net !== null ? net.toFixed(2) : '');
+                            $('#tax_amount').val(vat !== null ? vat.toFixed(2) : '0');
+                            $('#total_amount').val(gross !== null ? gross.toFixed(2) : '');
 
                             calculateAmounts();
 
@@ -622,66 +602,43 @@
                 $(this).val('');
             });
 
-            // -- Account Head -> Account Type (auto-filled) --
+            // -- Account Head selection (its type is set by the head itself) --
             $('#account_head_id').change(function() {
-                const selected = $(this).find('option:selected');
-                const headId = $(this).val();
-                if (!headId) {
-                    $('#account_type_id').prop('disabled', true).val('');
-                    return;
-                }
-                $('#account_type_id').prop('disabled', false);
-                $('#account_type_id').val(selected.attr('data-type-id') || '');
                 calculateAmounts();
             });
 
-            // Auto-fill type for the pre-selected head on page load
-            if ($('#account_head_id').val()) {
-                $('#account_head_id').trigger('change');
-            }
-
             function calculateAmounts() {
                 let netStr = ($('#net_amount').val() || '').trim();
-                let vatStr = ($('#vat_amount').val() || '').trim();
-                let totalStr = ($('#total_amount').val() || '').trim();
-
-                let rate = parseFloat($('#tax_percent').val()) || 0;
+                let vatStr = ($('#tax_amount').val() || '').trim();
 
                 let net = parseFloat(netStr) || 0;
                 let vat = parseFloat(vatStr) || 0;
-                let total = parseFloat(totalStr) || 0;
 
-                // VAT on net (the account head rate). 0 rate still shows 0.00.
-                let tax = net * (rate / 100);
-                $('#tax_amount').val(tax.toFixed(2));
-
-                // Net known -> gross is always net + tax + vat (VAT may be blank/0).
-                if (netStr !== '') {
-                    $('#total_amount').val((net + tax + vat).toFixed(2));
-                    return;
-                }
-
-                // Net blank but gross + vat known -> back-calculate net.
-                if (totalStr !== '' && vatStr !== '') {
-                    $('#net_amount').val((total - vat - tax).toFixed(2));
-                    return;
-                }
-
-                // Net blank but gross known -> back-calculate VAT.
-                if (totalStr !== '') {
-                    $('#vat_amount').val((total - tax).toFixed(2));
+                // No VAT rate anymore: VAT is entered directly, gross = net + VAT.
+                if (netStr !== '' || vatStr !== '') {
+                    $('#total_amount').val((net + vat).toFixed(2));
                 }
             }
 
-            $('#net_amount, #vat_amount, #tax_percent').on('input keyup change', calculateAmounts);
+            $('#net_amount, #tax_amount').on('input keyup change', calculateAmounts);
 
-            $('#paid').change(function() {
-                $(this).val() === 'yes' ? $('#method_box').fadeIn() : $('#method_box').fadeOut();
+            calculateAmounts();
+
+            // Single "Is Paid?" control: Cash / Bank imply paid, empty means unpaid.
+            $('#paid_method').on('change', function() {
+                const method = $(this).val();
+                $('#paid').val(method ? 'yes' : 'no');
+                $('#payment_method').val(method || '');
             });
 
             if ($.fn.select2) {
                 $('#account_head_id').select2({ width: '100%', placeholder: 'Select Account Head' });
             }
+
+            // Reusable Quick Add Account Head (always scoped to this receipt's client).
+            $('#quickAddHeadBtn').on('click', function() {
+                QuickAccountHead.open();
+            });
 
             // (Client/Business are fixed for this receipt — no cascade needed)
 
@@ -691,15 +648,12 @@
                     client_id: $('#client_id').val(),
                     status: $('#status').val(),
                     supplier: $('#supplier').val(),
-                    account_type_id: $('#account_type_id').val(),
                     account_head_id: $('#account_head_id').val(),
                     invoice_date: $('#invoice_date').val(),
                     due_date: $('#due_date').val(),
                     invoice_number: $('#invoice_number').val(),
                     net_amount: $('#net_amount').val(),
-                    tax_percent: $('#tax_percent').val(),
                     tax_amount: $('#tax_amount').val(),
-                    vat_amount: $('#vat_amount').val(),
                     paid: $('#paid').val(),
                     payment_method: $('#payment_method').val(),
                     description: $('#description').val()
@@ -710,7 +664,6 @@
                 var status = $('#status').val();
                 if (['ready', 'archived'].includes(status)) {
                     var errs = [];
-                    if (!$('#account_type_id').val()) errs.push('Account Type is required.');
                     if (!$('#account_head_id').val()) errs.push('Account Head is required.');
                     if (!$('#invoice_date').val()) errs.push('Invoice Date is required.');
                     if (!$('#net_amount').val()) errs.push('Net Amount is required.');
@@ -802,5 +755,9 @@
             });
         });
     </script>
-    @include('admin.receipt._quick_head_modal')
+    @include('admin.partials.quick_account_head', [
+        'quickHeadClientId'   => $credentialId,
+        'quickHeadClientName' => trim(($receipt->client?->credential?->first_name ?? '') . ' ' . ($receipt->client?->credential?->last_name ?? '')),
+        'quickHeadTarget'     => '#account_head_id',
+    ])
 @endsection

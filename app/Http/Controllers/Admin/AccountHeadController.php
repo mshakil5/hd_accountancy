@@ -68,6 +68,27 @@ class AccountHeadController extends Controller
     }
 
     /**
+     * Active heads a receipt/ledger can post to (global + one client).
+     * Used by the reusable Quick Add Account Head component to refresh its
+     * target dropdown after a head is created.
+     */
+    public function options(Request $request)
+    {
+        $credId = $request->client_credential_id ?: null;
+
+        return AccountHead::where('is_active', 1)
+            ->whereNotNull('account_type_id')
+            ->where(function ($q) use ($credId) {
+                $q->whereNull('client_credential_id');
+                if ($credId) {
+                    $q->orWhere('client_credential_id', $credId);
+                }
+            })
+            ->orderBy('code')
+            ->get(['id', 'code', 'name', 'account_type_id', 'account_sub_type_id']);
+    }
+
+    /**
      * Sub type dropdown: only the children of the selected type.
      */
     public function subTypes($typeId)

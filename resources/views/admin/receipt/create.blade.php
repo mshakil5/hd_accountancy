@@ -103,89 +103,73 @@
                             <div class="card card-outline card-success">
                                 <div class="card-header"><h3 class="card-title">Step 3: Audit & Process Details</h3></div>
                                 <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-md-3 detail-field">
-                                            <label class="detail-label">Status Workflow</label>
-                                            <select class="form-control" id="status" name="status">
-                                                <option value="pending">Pending</option>
-                                                <option value="to_review">To Review</option>
-                                                <option value="ready">Ready</option>
-                                                <option value="archived">Archived</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-6 detail-field">
-                                            <label class="detail-label d-flex align-items-center justify-content-between">Account Head
-                                                <button type="button" class="btn btn-sm btn-success ml-2" style="font-size:12px;border-radius:20px;padding:2px 12px;background:linear-gradient(45deg,#28a745,#20c997);border:none;box-shadow:0 2px 6px rgba(40,167,69,.4);" onclick="openQuickHeadModal()" title="Quickly create a missing head for this client (same fields as global making)"><i class="fa fa-plus-circle"></i> Quick Add</button>
-                                            </label>
-                                            <select class="form-control select2" id="account_head_id" name="account_head_id" style="width:100%;">
-                                                <option value="">Select Account Head</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-3 detail-field">
-                                            <label class="detail-label">Account Type</label>
-                                            <select class="form-control" id="account_type_id" name="account_type_id" disabled>
-                                                <option value="">Auto-filled from Account Head</option>
-                                                @foreach($accountTypes as $type)
-                                                    <option value="{{ $type->id }}">{{ $type->name }} ({{ ucfirst($type->category) }})</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
+                                    <div class="detail-field">
+                                        <label class="detail-label">Supplier</label>
+                                        <input type="text" class="form-control" id="supplier" name="supplier" placeholder="Supplier name...">
+                                    </div>
+
+                                    <div class="detail-field">
+                                        <label class="detail-label">Invoice / Reference Number</label>
+                                        <input type="text" class="form-control" id="invoice_number" name="invoice_number" placeholder="INV-0001">
                                     </div>
 
                                     <div class="row">
-                                        <div class="col-md-3 detail-field">
+                                        <div class="col-md-6 detail-field">
                                             <label class="detail-label">Invoice Date</label>
                                             <input type="date" class="form-control" id="invoice_date" name="invoice_date" value="{{ now()->format('Y-m-d') }}">
                                         </div>
-                                        <div class="col-md-3 detail-field">
+                                        <div class="col-md-6 detail-field">
                                             <label class="detail-label">Due Date</label>
                                             <input type="date" class="form-control" id="due_date" name="due_date">
                                         </div>
-                                        <div class="col-md-6 detail-field">
-                                            <label class="detail-label">Invoice / Reference Number</label>
-                                            <input type="text" class="form-control" id="invoice_number" name="invoice_number" placeholder="INV-0001">
-                                        </div>
+                                    </div>
+
+                                    <div class="detail-field">
+                                        <label class="detail-label d-flex align-items-center justify-content-between">Account Head
+                                            <button type="button" id="quickAddHeadBtn" class="btn btn-sm btn-success ml-2" style="font-size:12px;border-radius:20px;padding:2px 12px;background:linear-gradient(45deg,#28a745,#20c997);border:none;box-shadow:0 2px 6px rgba(40,167,69,.4);" title="Quickly create a missing head for this client"><i class="fa fa-plus-circle"></i> Quick Add Head</button>
+                                        </label>
+                                        <select class="form-control select2" id="account_head_id" name="account_head_id" style="width:100%;">
+                                            <option value="">Select Account Head</option>
+                                        </select>
                                     </div>
 
                                     <div class="row">
-                                        <div class="col-md-3 detail-field">
+                                        <div class="col-md-6 detail-field">
                                             <label class="detail-label">Net Amount (£)</label>
                                             <input type="number" step="0.01" class="form-control" id="net_amount" name="net_amount" placeholder="0.00">
                                         </div>
-                                        <div class="col-md-2 detail-field">
-                                            <label class="detail-label">VAT Rate (%)</label>
-                                            <input type="number" step="0.01" class="form-control" id="tax_percent" name="tax_percent" value="0">
-                                        </div>
-                                        <div class="col-md-2 detail-field">
-                                            <label class="detail-label">VAT Amt (£)</label>
-                                            <input type="text" class="form-control" id="tax_amount" name="tax_amount" readonly value="0">
-                                        </div>
-                                        <input type="hidden" id="vat_amount" name="vat_amount" value="0">
-                                        <div class="col-md-3 detail-field">
-                                            <label class="detail-label">Total Amount (£)</label>
-                                            <input type="text" class="form-control" id="total_amount" readonly value="£0.00">
+                                        <div class="col-md-6 detail-field">
+                                            <label class="detail-label">VAT Amount (£)</label>
+                                            <input type="number" step="0.01" class="form-control" id="tax_amount" name="tax_amount" placeholder="0.00" value="0">
                                         </div>
                                     </div>
 
                                     <div class="row">
-                                        <div class="col-md-4 detail-field">
-                                            <label class="detail-label">Supplier</label>
-                                            <input type="text" class="form-control" id="supplier" name="supplier" placeholder="Supplier name...">
+                                        <div class="col-md-6 detail-field">
+                                            <label class="detail-label">Gross Amount (£)</label>
+                                            <input type="text" class="form-control" id="total_amount" readonly value="0.00">
                                         </div>
-                                        <div class="col-md-4 detail-field">
+                                        <div class="col-md-6 detail-field">
                                             <label class="detail-label">Is Paid?</label>
-                                            <select class="form-control" id="paid" name="paid">
-                                                <option value="no">No</option>
-                                                <option value="yes">Yes</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-4 detail-field" id="method_box" style="display:none;">
-                                            <label class="detail-label">Payment Method</label>
-                                            <select class="form-control" id="payment_method" name="payment_method">
+                                            <select class="form-control" id="paid_method">
+                                                <option value="">No / Unpaid</option>
                                                 <option value="cash">Cash</option>
                                                 <option value="bank">Bank</option>
                                             </select>
                                         </div>
+                                    </div>
+
+                                    <input type="hidden" id="paid" name="paid" value="no">
+                                    <input type="hidden" id="payment_method" name="payment_method" value="">
+
+                                    <div class="detail-field">
+                                        <label class="detail-label">Status</label>
+                                        <select class="form-control" id="status" name="status">
+                                            <option value="pending">Pending</option>
+                                            <option value="to_review">To Review</option>
+                                            <option value="ready">Ready</option>
+                                            <option value="archived">Archived</option>
+                                        </select>
                                     </div>
 
                                     <div class="mt-3 d-flex gap-2">
@@ -318,7 +302,7 @@ $(function () {
         goToStep(3);
     });
 
-    // ── Account Head → Account Type (VAT Rate behaviour unchanged) ──
+    // ── Account Head (its type is carried by the head itself) ──
     function loadReceiptHeads(selectId) {
         const headDrop = $('#account_head_id');
         headDrop.html('<option value="">Loading...</option>').trigger('change');
@@ -344,24 +328,39 @@ $(function () {
     loadReceiptHeads();
 
     $('#account_head_id').change(function () {
-        const selected = $(this).find('option:selected');
-        $('#account_type_id').val(selected.attr('data-type-id') || '');
         calculateAmounts();
     });
 
     function calculateAmounts() {
-        const net  = parseFloat($('#net_amount').val()) || 0;
-        const rate = parseFloat($('#tax_percent').val()) || 0;
-        const vat  = parseFloat($('#vat_amount').val()) || 0;
-        const tax  = net * (rate / 100);
-        $('#tax_amount').val(tax.toFixed(2));
-        $('#total_amount').val('£' + (net + tax + vat).toFixed(2));
+        const netStr = ($('#net_amount').val() || '').trim();
+        const vatStr = ($('#tax_amount').val() || '').trim();
+        const net  = parseFloat(netStr) || 0;
+        const vat  = parseFloat(vatStr) || 0;
+        // No VAT rate: VAT is entered directly, gross = net + VAT.
+        if (netStr !== '' || vatStr !== '') {
+            $('#total_amount').val((net + vat).toFixed(2));
+        }
     }
 
-    $('#net_amount, #vat_amount, #tax_percent').on('input keyup change', calculateAmounts);
+    $('#net_amount, #tax_amount').on('input keyup change', calculateAmounts);
 
-    $('#paid').change(function () {
-        $(this).val() === 'yes' ? $('#method_box').fadeIn() : $('#method_box').fadeOut();
+    // Reusable Quick Add Account Head (scoped to the client picked in step 1).
+    $('#quickAddHeadBtn').on('click', function () {
+        var credId = $('#client_credential_id').val() || null;
+        var credName = '';
+        try { credName = ($('#client_credential_id').select2('data')[0] || {}).text || ''; } catch (e) {}
+        QuickAccountHead.open({
+            clientId: credId,
+            clientName: credName,
+            onCreated: function (head) { loadReceiptHeads(head.id); }
+        });
+    });
+
+    // Single "Is Paid?" control: Cash / Bank imply paid, empty means unpaid.
+    $('#paid_method').on('change', function () {
+        const method = $(this).val();
+        $('#paid').val(method ? 'yes' : 'no');
+        $('#payment_method').val(method || '');
     });
 
     // ── Submit ──
@@ -370,7 +369,6 @@ $(function () {
 
         if (['ready', 'archived'].includes(status)) {
             let errs = [];
-            if (!$('#account_type_id').val()) errs.push('Account Type is required.');
             if (!$('#account_head_id').val()) errs.push('Account Head is required.');
             if (!$('#invoice_date').val())    errs.push('Invoice Date is required.');
             if (!$('#net_amount').val())      errs.push('Net Amount is required.');
@@ -395,15 +393,12 @@ $(function () {
         formData.append('notes',                $('#notes').val());
         formData.append('supplier',             $('#supplier').val());
         formData.append('status',               $('#status').val());
-        formData.append('account_type_id',      $('#account_type_id').val());
         formData.append('account_head_id',      $('#account_head_id').val());
         formData.append('invoice_date',         $('#invoice_date').val());
         formData.append('due_date',             $('#due_date').val());
         formData.append('invoice_number',       $('#invoice_number').val());
         formData.append('net_amount',           $('#net_amount').val());
-        formData.append('tax_percent',          $('#tax_percent').val());
         formData.append('tax_amount',           $('#tax_amount').val());
-        formData.append('vat_amount',           $('#vat_amount').val());
         formData.append('paid',                 $('#paid').val());
         formData.append('payment_method',       $('#payment_method').val());
         formData.append('description',          $('#description').val());
@@ -436,5 +431,9 @@ $(function () {
     });
 });
 </script>
-@include('admin.receipt._quick_head_modal')
+@include('admin.partials.quick_account_head', [
+    'quickHeadClientId'   => null,
+    'quickHeadClientName' => '',
+    'quickHeadTarget'     => '#account_head_id',
+])
 @endsection

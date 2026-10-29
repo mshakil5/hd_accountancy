@@ -125,7 +125,7 @@ class InvoiceExtractorService
                 'embedded_length' => mb_strlen(trim($embedded)),
                 'ocr_length' => mb_strlen(trim($ocr)),
             ]);
-            $result = $this->parseExtractedText($text);
+            $result = $this->reconcileAmounts($this->parseExtractedText($text));
             Log::info('Invoice OCR fields detected', [
                 'path' => $pdfPath,
                 'net_amount_found' => $result['net_amount'] !== null,
@@ -246,6 +246,67 @@ class InvoiceExtractorService
             'vat_percent'   => $this->extractPercent($text),
             'tax_percent'   => $this->extractPercent($text),
         ];
+
+        return $data;
+    }
+
+    /**
+     * Make the three money legs agree.
+     *
+     * Receipts print "VAT 20%" and OCR happily returns 20.00 as the VAT amount,
+     * and some PDFs only print two of net / VAT / gross. Rebuild the missing or
+     * mis-read leg so the receipt form never gets nonsense.
+     */
+    private function reconcileAmounts(array $data): array
+    {
+        $toFloat = static function ($value) {
+            if ($value === null || $value === '') {
+                return null;
+            }
+            return is_numeric($value) ? (float) $value : null;
+        };
+
+        $net   = $toFloat($data['net_amount'] ?? null);
+        $vat   = $toFloat($data['vat_amount'] ?? null);
+        $total = $toFloat($data['total_amount'] ?? null);
+        $pct   = $toFloat($data['vat_percent'] ?? null);
+
+        // "VAT 20%" captured as the VAT amount: drop it and use the rate instead.
+        if ($vat !== null && $pct !== null && abs($vat - $pct) < 0.005) {
+            $vat = null;
+        }
+        if ($vat === null && $net !== null && $pct !== null && $pct > 0) {
+            $vat = round($net * $pct / 100, 2);
+        }
+
+        // Fill in whichever leg the document did not print.
+        if ($vat === null && $net !== null && $total !== null) {
+            $vat = round($total - $net, 2);
+        }
+        if ($net === null && $vat !== null && $total !== null) {
+            $net = round($total - $vat, 2);
+        }
+        if ($total === null && $net !== null && $vat !== null) {
+            $total = round($net + $vat, 2);
+        }
+
+        // A VAT amount larger than the gross is always a bad read.
+        if ($vat !== null && $total !== null && $vat > $total) {
+            $vat = round($total - ($net ?? 0), 2);
+            if ($vat < 0) {
+                $vat = 0.0;
+            }
+        }
+
+        if ($net !== null) {
+            $data['net_amount'] = number_format($net, 2, '.', '');
+        }
+        if ($vat !== null) {
+            $data['vat_amount'] = number_format($vat, 2, '.', '');
+        }
+        if ($total !== null) {
+            $data['total_amount'] = number_format($total, 2, '.', '');
+        }
 
         return $data;
     }

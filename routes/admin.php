@@ -746,6 +746,7 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/account-heads', [AccountHeadController::class, 'index'])->name('accountHeads');
     Route::get('/account-heads/datatable', [AccountHeadController::class, 'datatable']);
     Route::get('/account-heads/check-code', [AccountHeadController::class, 'checkCode']);
+    Route::get('/account-heads/options', [AccountHeadController::class, 'options']);
     Route::get('/account-heads/types', [AccountHeadController::class, 'types']);
     Route::get('/account-heads/sub-types/{typeId}', [AccountHeadController::class, 'subTypes']);
     Route::post('/account-heads', [AccountHeadController::class, 'store']);

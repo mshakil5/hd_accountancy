@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AccountHead;
-use App\Models\AccountType;
 use App\Models\Client;
 use App\Models\ClientCredential;
 use App\Models\Receipt;
@@ -153,13 +152,6 @@ class ReceiptController extends Controller
     {
         $receipt = Receipt::with(['files', 'detail.accountHead.accountType', 'client.credential'])->findOrFail($id);
         $credentialId = $receipt->client?->client_credential_id;
-        $accountTypes = AccountType::where('is_active', true)
-            ->where(function ($q) use ($credentialId) {
-                $q->whereNull('client_credential_id');
-                if ($credentialId) {
-                    $q->orWhere('client_credential_id', $credentialId);
-                }
-            })->get();
         $heads = AccountHead::with('accountType:id,name')
             ->where('is_active', true)
             ->whereNotNull('account_type_id') // head-first flow: untyped heads are not usable yet
@@ -191,7 +183,7 @@ class ReceiptController extends Controller
         $businesses = \App\Models\Client::where('client_credential_id', $credentialId)
             ->where('status', 1)->get();
 
-        return view('admin.receipt.show', compact('receipt', 'accountTypes', 'heads', 'prev', 'next', 'credentialId', 'businesses', 'pendingPosition', 'pendingTotal', 'totalCount'));
+        return view('admin.receipt.show', compact('receipt', 'heads', 'prev', 'next', 'credentialId', 'businesses', 'pendingPosition', 'pendingTotal', 'totalCount'));
     }
 
     public function getAccountHeads(Request $request)
@@ -238,7 +230,6 @@ class ReceiptController extends Controller
 
         if (in_array($newStatus, ['ready', 'archived'])) {
             $errors = [];
-            if (!$request->account_type_id) $errors[] = 'Account Type is required.';
             if (!$request->account_head_id) $errors[] = 'Account Head is required.';
             if (!$request->invoice_date)    $errors[] = 'Invoice Date is required.';
             if (!$request->net_amount)      $errors[] = 'Net Amount is required.';
@@ -476,8 +467,7 @@ class ReceiptController extends Controller
 
     public function create()
     {
-        $accountTypes = AccountType::where('is_active', true)->get();
-        return view('admin.receipt.create', compact('accountTypes'));
+        return view('admin.receipt.create');
     }
 
     public function store(Request $request)
@@ -487,7 +477,6 @@ class ReceiptController extends Controller
         if (!$request->client_id)            $errors[] = 'Business/Client is required.';
 
         if (in_array($request->status, ['ready', 'archived'])) {
-            if (!$request->account_type_id) $errors[] = 'Account Type is required.';
             if (!$request->account_head_id) $errors[] = 'Account Head is required.';
             if (!$request->invoice_date)    $errors[] = 'Invoice Date is required.';
             if (!$request->net_amount)      $errors[] = 'Net Amount is required.';

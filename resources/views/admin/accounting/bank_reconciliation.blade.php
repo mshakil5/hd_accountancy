@@ -467,15 +467,18 @@ document.addEventListener('DOMContentLoaded',function(){document.querySelectorAl
 @endif
 </div>
 
-{{-- Quick Add Head modal (shared with the receipt page) --}}
-@include('admin.receipt._quick_head_modal')
+{{-- Reusable Quick Add Account Head (scoped to the selected client) --}}
+@include('admin.partials.quick_account_head', [
+    'quickHeadClientId'   => $credentialId ?? $presetId,
+    'quickHeadClientName' => '',
+    'quickHeadTarget'     => '#account_head_id',
+])
 <script>
 // Bank-reconciliation wiring: each row/tab has its own account-head dropdown, so
 // remember which one opened the modal and refresh only that one afterwards.
 window.openQuickHeadFor = function(btn){
     var sel = hdHeadSelectFor(btn);
-    window.quickAddTargetEl = sel;
-    window.openQuickHeadModal();
+    QuickAccountHead.open({ target: sel });
 };
 // Find the account-head dropdown that belongs to the clicked button.
 function hdHeadSelectFor(btn){
