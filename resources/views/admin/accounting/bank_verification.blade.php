@@ -116,7 +116,7 @@
                     </span>
                 @else
                     <span class="hd-small text-success font-weight-bold">
-                        <i class="bi bi-check-circle-fill mr-1"></i> All checks passed! Ready to verify.
+                        <i class="bi bi-check-circle-fill mr-1"></i> All checks passed!
                     </span>
                 @endif
             </div>
@@ -128,10 +128,6 @@
                 <form method="POST" action="{{ route('admin.bank-statements.verify-all-rows', $import->id) }}" onsubmit="return confirm('Verify all unverified rows for this statement? This marks them ready for reconciliation.')">
                     @csrf
                     <button type="submit" class="btn btn-outline-success btn-sm"><i class="bi bi-check-all mr-1"></i> Verify all rows</button>
-                </form>
-                <form method="POST" action="{{ route('admin.bank-statements.verify-import', $import->id) }}">
-                    @csrf
-                    <button type="submit" class="btn btn-success btn-sm" @disabled($blocking > 0)><i class="bi bi-shield-check mr-1"></i> Verify statement &amp; unlock reconciliation</button>
                 </form>
             </div>
         </div>
