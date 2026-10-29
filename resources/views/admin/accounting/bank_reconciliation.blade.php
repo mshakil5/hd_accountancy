@@ -1,5 +1,5 @@
 @extends('admin.layouts.admin')
-@php $presetId = request('client_credential_id'); @endphp
+@php $presetId = $credentialId ?? request('client_credential_id') ?? request('credential_id'); @endphp
 @section('content')
 <div class="container-fluid py-4">
 <style>
@@ -36,11 +36,13 @@
 </div>
 @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
 @if(isset($errors) && $errors->any())<div class="alert alert-danger">@foreach($errors->all() as $error)<div>{{ $error }}</div>@endforeach</div>@endif
-<div class="hd-card">
+<div class="hd-card mb-3">
  <div class="row align-items-center">
   <div class="col-md-4">
    <label class="font-weight-bold">Select Client</label>
-   <select class="form-control select2" id="bankFilterClient" style="width:100%"><option value="">-- Choose a client --</option></select>
+   <select class="form-control select2" id="filterClient" style="width:100%">
+    <option value="">-- Choose a client --</option>
+   </select>
   </div>
   @if($presetId)
   <div class="col-md-8">
@@ -48,7 +50,7 @@
     <span class="font-weight-bold" style="font-size:18px;" id="ciName"></span>
     <span style="opacity:.9;font-size:14px;"><i class="bi bi-envelope mr-1"></i><span id="ciEmail"></span></span>
     <span style="opacity:.9;font-size:14px;"><i class="bi bi-telephone mr-1"></i><span id="ciPhone"></span></span>
-    <a href="{{ url('/admin/bank-reconciliation') }}" class="btn btn-sm btn-light ml-2" style="color:#667eea;font-weight:600;">Change</a>
+    <a href="{{ route('admin.bank-reconciliation.index') }}" class="btn btn-sm btn-light ml-2" style="color:#667eea;font-weight:600;">Change</a>
    </div>
   </div>
   @endif
@@ -60,7 +62,12 @@
 <div class="hd-card">
  <form method="GET" action="{{ route('admin.bank-reconciliation.index') }}" class="row align-items-end">
   <input type="hidden" name="client_credential_id" value="{{ $presetId }}">
-  <div class="col-md-3"><label>Business</label><select class="form-control select2" name="client_id" id="bankFilterBusiness" style="width:100%"><option value="">All businesses</option></select></div>
+  <div class="col-md-3">
+    <label>Business</label>
+    <select class="form-control select2" name="client_id" id="filterBusiness" style="width:100%">
+      <option value="">All businesses</option>
+    </select>
+  </div>
   <div class="col-md-3"><label>Bank Account</label><select class="form-control select2" name="bank_account_id" style="width:100%">
 <option value="">All bank accounts</option>
 @foreach($bankAccounts as $bank)@continue(strtolower(trim($bank->bank_name)) === 'unknown historical bank')<option value="{{ $bank->id }}" {{ (int)$bankAccountId===(int)$bank->id?'selected':'' }}>{{ $bank->bank_name }}{{ $bank->account_last_four?' ••'.$bank->account_last_four:'' }}</option>@endforeach
@@ -96,7 +103,7 @@
         @continue(strtolower(trim($b->bank_name)) === 'unknown historical bank')
         <a class="hd-bank-overview-card {{ (int)$bankAccountId===(int)$b->id ? 'is-selected' : '' }}" href="{{ route('admin.bank-reconciliation.index', ['client_credential_id'=>$credentialId,'client_id'=>$businessId,'bank_account_id'=>$b->id]) }}#hd-reconciliation-workspace" aria-label="Open reconciliation for {{ $b->bank_name }}">
           <div class="d-flex justify-content-between align-items-start">
-            <div><strong>{{ $b->bank_name }}</strong><div class="hd-small">@if($b->sort_code ?? null){{ $b->sort_code }} @endif@if($b->account_last_four) · ending {{ $b->account_last_four }} @endif · {{ $b->currency }}</div></div>
+            <div><strong>{{ $b->bank_name }}</strong><div class="hd-small">@if($b->sort_code ?? null){{ $b->sort_code }} @endif @if($b->account_last_four) · ending {{ $b->account_last_four }} @endif · {{ $b->currency }}</div></div>
             <span class="hd-pill">{{ $b->active ? 'Active' : 'Legacy / inactive' }}</span>
           </div>
           <div class="hd-bank-metrics">
@@ -136,17 +143,57 @@
 <div class="col-6 col-md-2"><div class="hd-card" style="border-color:#bbf7d0"><div class="hd-small">Approved</div><h3 style="color:#15803d">{{ (int)($approvalStats['approved']??0) }}</h3></div></div>
 </div>
 <div class="hd-card">
-<h5>Imported statements</h5>
-<div class="hd-scroll"><table class="hd-table"><thead><tr><th>Uploaded</th><th>File</th><th>Bank</th><th>Type</th><th>Processing</th><th>Imported rows</th><th>Verification</th><th></th></tr></thead><tbody>
-@forelse($imports as $imp)
-<tr><td>{{ $imp->created_at }}</td><td>{{ $imp->filename }}</td><td>{{ optional($bankAccounts->firstWhere('id',$imp->bank_account_id))->bank_name ?? 'Unassigned' }}</td><td>{{ strtoupper($imp->file_type??'csv') }}</td><td>{{ str_replace('_',' ', $imp->processing_status??'parsed') }}</td><td>{{ $imp->transaction_count }}</td><td>@php $vs=$imp->verification_status ?? 'pending'; $vc=match($vs){'verified'=>'success','ready_for_reconciliation'=>'info','needs_accountant_review'=>'warning','extraction_failed'=>'danger',default=>'secondary'}; @endphp<span class="badge bg-{{ $vc }}">{{ ucwords(str_replace('_',' ',$vs)) }}</span><div class="mt-1"><a href="{{ route('admin.bank-reconciliation.verification',$imp->id) }}">Open verification</a></div></td>
-<td>@if($imp->storage_path)<a href="{{ route('admin.bank-reconciliation.statement',$imp->id) }}">View original statement</a>@endif
-<form method="POST" action="{{ route('admin.bank-reconciliation.approve-import',$imp->id) }}" class="mt-1">@csrf
- <input type="hidden" name="client_id" value="{{ $imp->client_id }}">
- <button class="btn btn-outline-success btn-sm" onclick="return confirm('Approve every reconciled transaction (matched, categorised or split) in this statement?')">Approve reconciled rows</button>
-</form></td></tr>
-@empty <tr><td colspan="7">No statements imported yet. Clients can upload from the mobile app.</td></tr>@endforelse
-</tbody></table></div>
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+  <div>
+    <h5 class="mb-1"><i class="bi bi-file-earmark-spreadsheet mr-1 text-primary"></i> Bank Statements</h5>
+    <p class="hd-small mb-0">Upload PDFs, review OCR-extracted rows, and verify opening/closing balances in the Bank Statements module before reconciling here.</p>
+  </div>
+  <div class="d-flex gap-2 align-items-center">
+    @if($businessId)
+    @php
+      $stmtPending = $imports->where('verification_status','!=','verified')->count();
+    @endphp
+    @if($stmtPending > 0)
+      <span class="badge bg-warning">{{ $stmtPending }} statement(s) need verification</span>
+    @else
+      <span class="badge bg-success">All statements verified</span>
+    @endif
+    @endif
+    <a href="{{ route('admin.bank-statements.index', array_filter(['client_credential_id'=>$credentialId,'client_id'=>$businessId])) }}"
+       class="btn btn-outline-primary btn-sm">
+      <i class="bi bi-arrow-up-right-square"></i> Manage Bank Statements
+    </a>
+  </div>
+</div>
+@if($imports->isNotEmpty())
+<div class="mt-3 hd-scroll">
+  <table class="hd-table">
+    <thead><tr><th>File</th><th>Bank</th><th>Rows</th><th>Verification</th><th></th></tr></thead>
+    <tbody>
+    @foreach($imports as $imp)
+      @php $vs=$imp->verification_status ?? 'pending'; $vc=match($vs){'verified'=>'success','ready_for_reconciliation'=>'info','needs_accountant_review'=>'warning','extraction_failed'=>'danger',default=>'secondary'}; @endphp
+      <tr>
+        <td class="hd-small">{{ $imp->filename }}</td>
+        <td class="hd-small">{{ optional($bankAccounts->firstWhere('id',$imp->bank_account_id))->bank_name ?? 'Unassigned' }}</td>
+        <td>{{ $imp->transaction_count }}</td>
+        <td><span class="badge bg-{{ $vc }}">{{ ucwords(str_replace('_',' ',$vs)) }}</span></td>
+        <td>
+          <a href="{{ route('admin.bank-statements.verification',$imp->id) }}" class="btn btn-xs btn-outline-secondary btn-sm">
+            <i class="bi bi-layout-split"></i> Verify Rows
+          </a>
+          @if($vs === 'verified')
+          <form method="POST" action="{{ route('admin.bank-reconciliation.approve-import',$imp->id) }}" class="d-inline ml-1">@csrf
+            <input type="hidden" name="client_id" value="{{ $imp->client_id }}">
+            <button class="btn btn-outline-success btn-sm" onclick="return confirm('Approve every reconciled transaction in this statement?')">Approve Reconciled</button>
+          </form>
+          @endif
+        </td>
+      </tr>
+    @endforeach
+    </tbody>
+  </table>
+</div>
+@endif
 </div>
 <div class="hd-card hd-workspace" id="hd-reconciliation-workspace">
 <div class="d-flex justify-content-between align-items-center flex-wrap"><div><h4>Reconcile bank transactions</h4><p class="hd-small">Bank details on the left; accountant actions and uploaded receipts on the right. Reconcile each row, then <strong>approve</strong> it. Approval locks the row and posts it to the existing account heads, so the P&amp;L and balance sheet reflect it without duplication.</p></div><div class="d-flex align-items-center gap-2 flex-wrap"><span class="hd-small">{{ $entries->total() }} bank transactions in this view</span>
@@ -389,7 +436,7 @@ document.addEventListener('click',function(e){
   if(panel) panel.querySelectorAll('select.select2').forEach(function(s){
    const $s=jQuery(s);
    if($s.data('select2')){$s.select2('destroy');}
-   $s.select2({width:'100%', dropdownParent: $(document.body)});
+   $s.select2({width:'100%', dropdownParent: jQuery(document.body)});
   });
  }
 });
@@ -434,7 +481,7 @@ function hdAddSplitLine(btn){
   s.style.display='';
  });
  const clone=wrap.appendChild(tpl);
- if(window.jQuery){const $s=jQuery(clone).find('select.select2');$s.select2({width:'100%', dropdownParent: $(document.body)});}
+ if(window.jQuery){const $s=jQuery(clone).find('select.select2');$s.select2({width:'100%', dropdownParent: jQuery(document.body)});}
  hdSplitTotals(form);
 }
 function hdRemoveSplitLine(btn){
@@ -490,29 +537,78 @@ function hdHeadSelectFor(btn){
 }
 </script>
 @endsection
+
 @section('script')
+{{-- 1) Client / business dropdowns (kept separate so an error elsewhere can never break the client list) --}}
 <script>
-if(window.jQuery){
-$(function(){
-  // AJAX action handler — keeps page position, updates workspace
-  $(document).on('submit', '.hd-action-form, .hd-inline-form, .hd-form-grid, .hd-split-form, form[action*="/bank-reconciliation/"][action*="/action"]', function(e) {
+jQuery(function ($) {
+  var presetCredentialId = "{{ $presetId }}";
+  var presetBusiness = "{{ $businessId ?? request('client_id') ?? '' }}";
+  var presetApplied = false;
+
+  $('#filterClient').select2({
+    placeholder: "-- Choose a client --",
+    allowClear: true,
+    ajax: {
+      url: "{{ url('/admin/receipts/search-clients') }}",
+      dataType: 'json',
+      delay: 250,
+      data: function (params) { return { q: params.term }; },
+      processResults: function (data) { return { results: data }; },
+      cache: true
+    }
+  }).on('change', function () {
+    var val = $(this).val();
+    if (!val) return;
+    if (presetApplied) { presetApplied = false; return; }
+    window.location.href = "{{ route('admin.bank-reconciliation.index') }}?client_credential_id=" + val;
+  });
+
+  if (presetCredentialId) {
+    $.get("{{ url('/admin/receipts/search-clients') }}", { q: '' }, function (data) {
+      var match = data.find(function (item) { return item.id == presetCredentialId; });
+      if (match) {
+        presetApplied = true;
+        $('#filterClient').append(new Option(match.text, match.id, true, true)).trigger('change');
+        $('#ciName').text(match.text);
+        $('#ciEmail').text(match.email || 'N/A');
+        $('#ciPhone').text(match.phone || 'N/A');
+      }
+    });
+
+    $.get("{{ url('/admin/receipts/get-clients-by-credential') }}", { client_credential_id: presetCredentialId }, function (data) {
+      var opts = '<option value="">All businesses</option>';
+      $.each(data, function (i, c) {
+        var sel = String(c.id) === String(presetBusiness) ? ' selected' : '';
+        opts += '<option value="' + c.id + '"' + sel + '>' + c.name + '</option>';
+      });
+      $('#filterBusiness').html(opts).trigger('change.select2');
+    });
+  }
+});
+</script>
+
+{{-- 2) AJAX action handler: submits row actions without a page reload and refreshes the workspace --}}
+<script>
+jQuery(function ($) {
+  $(document).on('submit', '.hd-action-form, .hd-inline-form, .hd-form-grid, .hd-split-form, form[action*="/bank-reconciliation/"][action*="/action"]', function (e) {
     var $form = $(this);
     e.preventDefault();
-    $.post($form.attr('action'), $form.serialize(), function(resp) {
+    $.post($form.attr('action'), $form.serialize(), function (resp) {
       if (resp && resp.success) {
         toastr.success(resp.message || 'Saved');
         // Refresh workspace in-place to show updated status (verified / approved / etc.)
         var scrollY = window.scrollY;
-        $.get(window.location.href, function(html){
+        $.get(window.location.href, function (html) {
           var $parsed = $('<div>').html(html);
           var $newWorkspace = $parsed.find('#hd-reconciliation-workspace');
           if ($newWorkspace.length) {
             $('#hd-reconciliation-workspace').replaceWith($newWorkspace);
             window.scrollTo(0, scrollY);
-            $newWorkspace.find('select.select2').each(function(){
-              if(!$(this).hasClass('select2-hidden-accessible')) $(this).select2({width:'100%'});
+            $newWorkspace.find('select.select2').each(function () {
+              if (!$(this).hasClass('select2-hidden-accessible')) $(this).select2({ width: '100%' });
             });
-            $newWorkspace.find('.hd-split-form').each(function(){ hdSplitTotals(this); });
+            $newWorkspace.find('.hd-split-form').each(function () { hdSplitTotals(this); });
           }
           var $newOverview = $parsed.find('#hd-bank-account-overview');
           if ($newOverview.length && $('#hd-bank-account-overview').length) {
@@ -522,48 +618,11 @@ $(function(){
       } else {
         toastr.error(resp && resp.message ? resp.message : 'Failed');
       }
-    }).fail(function(xhr) {
+    }).fail(function (xhr) {
       var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Request failed';
       toastr.error(msg);
     });
   });
-
- if(window.jQuery){
-  var presetCredentialId='{{ $credentialId ?? "" }}';
-  var presetBusiness='{{ $businessId ?? "" }}';
-  var presetApplied=false;
-  $('#bankFilterClient').select2({
-  placeholder:"-- Choose a client --",allowClear:true,cache:true,
-  ajax:{url:"{{ route('admin.bank-reconciliation.search-clients') }}",dataType:'json',delay:250,
-   data:function(params){return {q:params.term};},
-   processResults:function(data){return {results:data};},cache:true}
- }).on('change',function(){
-  var val=$(this).val(); if(!val)return;
-  if(presetApplied){presetApplied=false;return;}
-  window.location.href="{{ route('admin.bank-reconciliation.index') }}?client_credential_id="+val;
- });
- if(presetCredentialId){
-  $.get("{{ route('admin.bank-reconciliation.search-clients') }}",{q:''},function(data){
-   var match=data.find(function(item){return item.id==presetCredentialId;});
-   if(match){
-    presetApplied=true;
-    var option = new Option(match.text, match.id, true, true);
-    $('#bankFilterClient').append(option).trigger('change');
-    $('#ciName').text(match.text);
-    $('#ciEmail').text(match.email||'N/A');
-    $('#ciPhone').text(match.phone||'N/A');
-   }
-  });
-  $.get("{{ route('admin.bank-reconciliation.businesses') }}",{client_credential_id:presetCredentialId},function(data){
-   var opts='<option value="">All businesses</option>';
-   $.each(data,function(i,c){opts+='<option value="'+c.id+'">'+c.name+'</option>';});
-   $('#bankFilterBusiness').html(opts);
-   if(presetBusiness)$('#bankFilterBusiness').val(presetBusiness);
-   $('#bankFilterBusiness').trigger('change.select2');
-  });
- }
- }
 });
-}
 </script>
 @endsection

@@ -39,9 +39,23 @@ class BankStatementVerificationService
         'ocr_no_page_mapping',
     ];
 
-    private const DATE_LINE = '/^(\d{2}[\/\-]\d{2}[\/\-]\d{4}|\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4})\b\s*(.*)$/u';
+    private const DATE_LINE = '/^(\d{2}[\/\-]\d{2}[\/\-](?:\d{4}|\d{2})|\d{1,2}\s+[A-Za-z]{3,9}\s+(?:\d{4}|\d{2}))\b\s*(.*)$/u';
 
-    private const DATE_FORMATS = ['d/m/Y', 'j/n/Y', 'd-m-Y', 'j-n-Y', 'd M Y', 'j M Y', 'd F Y', 'j F Y'];
+    private const DATE_FORMATS = [
+        'd/m/Y', 'j/n/Y', 'd-m-Y', 'j-n-Y', 'd M Y', 'j M Y', 'd F Y', 'j F Y',
+        'd M y', 'j M y', 'd-m-y', 'j-n-y', 'd/m/y', 'j/m/y',
+    ];
+
+    private const DEBIT_INDICATORS = [
+        'DEB', 'DD', 'SO', 'FPO', 'PAY', 'CHG', 'FEE', 'DR',
+        'DIRECT DEBIT', 'STANDING ORDER', 'APPLE PAY', 'GOOGLE PAY',
+        'CONTACTLESS', 'CHIP & PIN', 'CARD PAYMENT', 'ONLINE PAYMENT',
+        'CASH DEPOSIT CHARGE', 'SERVICE CHARGE', 'SERVICE CHARGES',
+    ];
+
+    private const CREDIT_INDICATORS = [
+        'FPI', 'BGC', 'DEP', 'CR', 'CREDIT', 'CASH DEPOSIT', 'PAYMENTS IN',
+    ];
 
     /* ------------------------------------------------------------------ *
      * Extraction
@@ -52,7 +66,7 @@ class BankStatementVerificationService
      *               rows: array<int,array<string,mixed>>, unparsed:int, unparsed_samples:array<int,string>,
      *               opening_balance:?float, closing_balance:?float, ocr:bool, pages_total:int, text:string}
      */
-    public function analyse(string $path): array
+    public function analyse(string $path, bool $forceOcr = false): array
     {
         $parsedPages = [];
         try {
@@ -68,24 +82,27 @@ class BankStatementVerificationService
         $ocr = false;
         $ocrReason = null;
 
-        // Full-document OCR is deliberately reserved for image-only PDFs. A
-        // four-page OCR can take tens of seconds and must not turn a usable
-        // text-based statement into an HTTP timeout just because its layout
-        // needs a bank-specific parser.
-        if (mb_strlen($embedded) < 50) {
-            $ocrReason = 'embedded_text_too_short';
-            Log::info('Bank statement OCR fallback requested', [
+        // Full-document OCR runs if embedded text is almost empty OR if explicitly forced by user
+        if ($forceOcr || mb_strlen($embedded) < 50) {
+            $ocrReason = $forceOcr ? 'user_forced_ocr' : 'embedded_text_too_short';
+            Log::info('Bank statement OCR requested', [
                 'path' => $path,
                 'pages_total' => $pagesTotal,
                 'embedded_length' => mb_strlen($embedded),
                 'reason' => $ocrReason,
             ]);
-            $ocrText = trim((string) app(InvoiceExtractorService::class)->extractRawText($path));
-            if (mb_strlen($ocrText) > mb_strlen($embedded)) {
+
+            $ocrPages = app(InvoiceExtractorService::class)->extractRawTextByPage($path);
+            if (!empty($ocrPages) && mb_strlen(trim(implode("\n", $ocrPages))) > 0) {
                 $ocr = true;
-                // OCR returns one blob for the whole document: page mapping is lost,
-                // which is exactly why scanned statements always need a human check.
-                $parsedPages = [1 => $ocrText];
+                $parsedPages = $ocrPages;
+                $pagesTotal = max($pagesTotal, count($parsedPages));
+            } else {
+                $ocrText = trim((string) app(InvoiceExtractorService::class)->extractRawText($path));
+                if (mb_strlen($ocrText) > ($forceOcr ? 0 : mb_strlen($embedded))) {
+                    $ocr = true;
+                    $parsedPages = [1 => $ocrText];
+                }
             }
         }
         if (!$parsedPages) {
@@ -320,16 +337,43 @@ class BankStatementVerificationService
         $balanceRaw = isset($m[3]) && trim($m[3]) !== '' ? trim((string) $m[3]) : null;
         $balance = $balanceRaw !== null ? $this->amount($balanceRaw) : null;
 
-        if (!preg_match('/^[+-]/', $amountRaw) && $balance === null) {
-            return null;
+        $amt = $this->amount($amountRaw);
+
+        // Detect direction from explicit +/- sign, or from UK transaction type indicators
+        if (!preg_match('/^[+-]/', $amountRaw)) {
+            $upper = mb_strtoupper($description);
+            $isDebit = false;
+            $isCredit = false;
+
+            foreach (self::DEBIT_INDICATORS as $deb) {
+                if (preg_match('/\b' . preg_quote($deb, '/') . '\b/u', $upper)) {
+                    $isDebit = true;
+                    break;
+                }
+            }
+
+            if (!$isDebit) {
+                foreach (self::CREDIT_INDICATORS as $crd) {
+                    if (preg_match('/\b' . preg_quote($crd, '/') . '\b/u', $upper)) {
+                        $isCredit = true;
+                        break;
+                    }
+                }
+            }
+
+            if ($isDebit) {
+                $amt = -abs($amt);
+            } elseif ($isCredit) {
+                $amt = abs($amt);
+            }
         }
 
-        return [$description, $this->amount($amountRaw), $balance];
+        return [$description, $amt, $balance];
     }
 
     private function looksLikeTransactions(string $text): bool
     {
-        return (bool) preg_match('/^(\d{2}[\/\-]\d{2}[\/\-]\d{4}|\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4})\s+.+?[+-]?\s*£?\s*[\d,]+\.\d{2}/mu', $text);
+        return (bool) preg_match('/^(\d{2}[\/\-]\d{2}[\/\-](?:\d{4}|\d{2})|\d{1,2}\s+[A-Za-z]{3,9}\s+(?:\d{4}|\d{2}))\s+.+?[+-]?\s*£?\s*[\d,]+\.\d{2}/mu', $text);
     }
 
     private function figure(string $text, array $labels, bool $last = false): ?float
@@ -351,7 +395,7 @@ class BankStatementVerificationService
             } catch (\Throwable $e) {
                 continue;
             }
-            if ($date && $date->format($format) === $raw) {
+            if ($date && strcasecmp($date->format($format), $raw) === 0) {
                 return $date;
             }
         }
@@ -406,6 +450,7 @@ class BankStatementVerificationService
                 'message' => 'This statement was read with OCR, which loses the page/row layout. Check every row against the original PDF before verifying.',
             ]);
         }
+        $entries = $this->calculateSystemBalancesAndAutofill($import, $analysis, $entries);
         [$opening, $closing, $calculated, $difference] = $this->checkBalances($import, $analysis, $entries);
         $this->checkRunningBalances($import, $entries);
         $this->flagDuplicates($import, $entries);
@@ -479,6 +524,86 @@ class BankStatementVerificationService
             return $this->analyse('');
         }
         return $this->analyse($disk->path($import->storage_path));
+    }
+
+    /**
+     * Force a full deep OCR scan of the stored statement PDF, re-extract all rows,
+     * calculate running system balances, and reconcile opening/closing balances.
+     */
+    public function rescanWithOcr(BankImport $import): array
+    {
+        $disk = Storage::disk('local');
+        if (!$import->storage_path || !$disk->exists($import->storage_path)) {
+            throw ValidationException::withMessages(['statement' => 'Original statement file is not found on disk.']);
+        }
+
+        $fullPath = $disk->path($import->storage_path);
+        $analysis = $this->analyse($fullPath, true);
+        $rows = $analysis['rows'];
+
+        if (empty($rows)) {
+            throw ValidationException::withMessages(['ocr' => 'OCR scan completed, but no transaction rows could be parsed from the PDF.']);
+        }
+
+        DB::transaction(function () use ($import, $rows, $analysis) {
+            $approvedEntries = DB::table('bank_entries')
+                ->where('bank_import_id', $import->id)
+                ->where('reconciliation_status', 'approved')
+                ->get();
+            $approvedFingerprints = $approvedEntries->pluck('line_fingerprint')->all();
+
+            DB::table('bank_entries')
+                ->where('bank_import_id', $import->id)
+                ->where(function ($q) {
+                    $q->whereNull('reconciliation_status')
+                      ->orWhere('reconciliation_status', '<>', 'approved');
+                })
+                ->delete();
+
+            $seen = [];
+            foreach ($rows as $row) {
+                $key = hash('sha256', implode('|', [
+                    $row['transaction_date'],
+                    $row['description'],
+                    $row['reference'] ?? '',
+                    number_format((float) $row['amount'], 2, '.', '')
+                ]));
+                $occurrence = ($seen[$key] ?? 0) + 1;
+                $seen[$key] = $occurrence;
+
+                if (in_array($key, $approvedFingerprints, true)) {
+                    continue;
+                }
+
+                $row['client_id'] = $import->client_id;
+                $row['currency'] = 'GBP';
+                $row['bank_import_id'] = $import->id;
+                $row['bank_account_id'] = $import->bank_account_id;
+                $row['line_fingerprint'] = $key;
+                $row['line_occurrence'] = $occurrence;
+                $row['status'] = 'needs_review';
+                $row['original_values'] = json_encode([
+                    'transaction_date' => $row['transaction_date'],
+                    'description' => $row['description'],
+                    'amount' => $row['amount'],
+                    'balance_after' => $row['balance_after'] ?? null,
+                ]);
+                $row['created_at'] = now();
+                $row['updated_at'] = now();
+                DB::table('bank_entries')->insert($row);
+            }
+
+            $totalCount = DB::table('bank_entries')->where('bank_import_id', $import->id)->count();
+            DB::table('bank_imports')->where('id', $import->id)->update([
+                'transaction_count' => $totalCount,
+                'pages_total' => count($analysis['pages']),
+                'updated_at' => now(),
+            ]);
+
+            $this->refresh($import, $analysis);
+        });
+
+        return $analysis;
     }
 
     private function storePages(BankImport $import, array $analysis, $entries): void
@@ -578,12 +703,103 @@ class BankStatementVerificationService
         return [$opening, $closing, $calculated, $difference];
     }
 
+    private function isNewestFirst(array $rows, ?float $openingBalance): bool
+    {
+        if (count($rows) < 2) {
+            return false;
+        }
+        $first = is_array($rows[0]) ? ($rows[0]['transaction_date'] ?? '') : ($rows[0]->transaction_date ?? '');
+        $last = is_array($rows[count($rows) - 1]) ? ($rows[count($rows) - 1]['transaction_date'] ?? '') : ($rows[count($rows) - 1]->transaction_date ?? '');
+        if ($first !== '' && $last !== '' && $first !== $last) {
+            return (string) $first > (string) $last;
+        }
+        $firstBal = is_array($rows[0]) ? ($rows[0]['balance_after'] ?? null) : ($rows[0]->balance_after ?? null);
+        $lastBal = is_array($rows[count($rows) - 1]) ? ($rows[count($rows) - 1]['balance_after'] ?? null) : ($rows[count($rows) - 1]->balance_after ?? null);
+        if ($openingBalance !== null && $firstBal !== null && $lastBal !== null) {
+            $firstDiff = abs((float) $firstBal - $openingBalance);
+            $lastDiff = abs((float) $lastBal - $openingBalance);
+            return $lastDiff < $firstDiff;
+        }
+        return false;
+    }
+
+    private function calculateSystemBalancesAndAutofill(BankImport $import, array $analysis, $entries)
+    {
+        if ($entries->isEmpty()) {
+            return $entries;
+        }
+
+        $opening = $analysis['opening_balance'] ?? ($import->opening_balance !== null ? (float) $import->opening_balance : null);
+        $rows = $entries->values()->all();
+        $isNewestFirst = $this->isNewestFirst($rows, $opening);
+
+        $chronological = $isNewestFirst ? array_reverse($rows) : $rows;
+
+        if ($opening === null) {
+            foreach ($chronological as $item) {
+                if ($item->balance_after !== null && $item->amount !== null) {
+                    $opening = round((float) $item->balance_after - (float) $item->amount, 2);
+                    break;
+                }
+            }
+        }
+
+        $running = $opening !== null ? (float) $opening : null;
+        $prevBalance = $opening !== null ? (float) $opening : null;
+
+        foreach ($chronological as $entry) {
+            $hasPdfBalance = $entry->balance_after !== null;
+            $pdfBalance = $hasPdfBalance ? (float) $entry->balance_after : null;
+            $amt = $entry->amount !== null ? (float) $entry->amount : null;
+
+            // 1. RECONCILE SIGN & AUTOFILL AGAINST BALANCE DELTA:
+            if ($prevBalance !== null && $hasPdfBalance) {
+                $delta = round($pdfBalance - $prevBalance, 2);
+
+                if ($amt === null || ($amt == 0.0 && abs($delta) >= 0.01)) {
+                    $amt = $delta;
+                    $entry->amount = $delta;
+                    DB::table('bank_entries')->where('id', $entry->id)->update([
+                        'amount' => $delta,
+                        'updated_at' => now(),
+                    ]);
+                } elseif (abs(abs($amt) - abs($delta)) < 0.01) {
+                    // Magnitude matches the balance change, ensure correct direction sign (+/-)
+                    if ($delta < 0 && $amt > 0) {
+                        $amt = -$amt;
+                        $entry->amount = $amt;
+                        DB::table('bank_entries')->where('id', $entry->id)->update(['amount' => $amt, 'updated_at' => now()]);
+                    } elseif ($delta > 0 && $amt < 0) {
+                        $amt = abs($amt);
+                        $entry->amount = $amt;
+                        DB::table('bank_entries')->where('id', $entry->id)->update(['amount' => $amt, 'updated_at' => now()]);
+                    }
+                }
+            }
+
+            // 2. SYSTEM BALANCE CALCULATION: running from opening balance
+            if ($running !== null && $amt !== null) {
+                $running = round($running + $amt, 2);
+            } elseif ($hasPdfBalance) {
+                $running = $pdfBalance;
+            }
+
+            $entry->system_balance = $running;
+            DB::table('bank_entries')->where('id', $entry->id)->update([
+                'system_balance' => $running,
+            ]);
+
+            $prevBalance = $hasPdfBalance ? $pdfBalance : $running;
+        }
+
+        return $entries;
+    }
+
     private function checkRunningBalances(BankImport $import, $entries): void
     {
-        // Monzo prints newest first; walk the rows oldest → newest so each balance
-        // can be proven from the previous row plus its signed amount.
         $rows = $entries->values()->all();
-        if (count($rows) > 1 && (string) $rows[0]->transaction_date > (string) $rows[count($rows) - 1]->transaction_date) {
+        $isNewestFirst = $this->isNewestFirst($rows, $import->opening_balance !== null ? (float) $import->opening_balance : null);
+        if ($isNewestFirst) {
             $rows = array_reverse($rows);
         }
 
@@ -602,7 +818,8 @@ class BankStatementVerificationService
                     'message' => 'Running balance does not follow from the previous row on page ' . ($entry->source_page ?? 1) . '.',
                     'source_value' => 'previous=' . number_format($previous, 2, '.', '')
                         . ' amount=' . number_format((float) $entry->amount, 2, '.', '')
-                        . ' balance=' . number_format($balance, 2, '.', ''),
+                        . ' balance=' . number_format($balance, 2, '.', '')
+                        . ' system_balance=' . number_format((float) ($entry->system_balance ?? 0), 2, '.', ''),
                 ]);
             }
             $previous = $balance;

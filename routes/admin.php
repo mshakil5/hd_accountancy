@@ -83,6 +83,24 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::post('/leads/{lead}/notify', [LeadController::class, 'notifyAgain'])->name('admin.leads.notify');
 
 
+    // Bank statements — imported statement verification & OCR management
+    Route::get('/bank-statements', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'index'])->name('admin.bank-statements.index');
+    Route::get('/bank-statements/search-clients', [ReceiptController::class, 'searchClients'])->name('admin.bank-statements.search-clients');
+    Route::get('/bank-statements/businesses', [ReceiptController::class, 'getClientsByCredential'])->name('admin.bank-statements.businesses');
+    Route::get('/bank-statements/{importId}/verification', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'verification'])->name('admin.bank-statements.verification');
+    Route::get('/bank-statements/{importId}/pdf', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'streamStatement'])->name('admin.bank-statements.statement-view');
+    Route::get('/bank-statements/{importId}/download', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'downloadStatement'])->name('admin.bank-statements.statement');
+    Route::post('/bank-statements/{importId}/rescan-ocr', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'rescanOcr'])->name('admin.bank-statements.rescan-ocr');
+    Route::post('/bank-statements/{importId}/verify', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'verifyImport'])->name('admin.bank-statements.verify-import');
+    Route::post('/bank-statements/{importId}/rows', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'storeEntry'])->name('admin.bank-statements.store-entry');
+    Route::post('/bank-statements/rows/{entryId}/update', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'updateEntry'])->name('admin.bank-statements.update-entry');
+    Route::post('/bank-statements/rows/{entryId}/remove', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'destroyEntry'])->name('admin.bank-statements.destroy-entry');
+    Route::post('/bank-statements/rows/{entryId}/verify', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'verifyEntry'])->name('admin.bank-statements.verify-entry');
+    Route::post('/bank-statements/{importId}/verify-all-rows', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'verifyAllRows'])->name('admin.bank-statements.verify-all-rows');
+    Route::post('/bank-statements/verify-all-rows-for-client', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'verifyAllRowsForClient'])->name('admin.bank-statements.verify-all-rows-for-client');
+    Route::post('/bank-statements/exceptions/{exceptionId}/resolve', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'resolveException'])->name('admin.bank-statements.resolve-exception');
+    Route::post('/bank-statements/{importId}/approve', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'approveImport'])->name('admin.bank-statements.approve-import');
+
     // Bank reconciliation — authenticated accountant workspace
     Route::post('/bank-reconciliation/accounts', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'createBankAccount'])->name('admin.bank-reconciliation.accounts.create');
     Route::get('/bank-reconciliation', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'index'])->name('admin.bank-reconciliation.index');

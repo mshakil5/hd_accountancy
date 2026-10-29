@@ -236,6 +236,7 @@
                 'accounting.profitLoss',
                 'accounting.trialBalance',
                 'accounting.balanceSheet',
+                'admin.bank-statements.*',
                 'admin.bank-reconciliation.index',
             ];
             $isAccountingOpen = request()->routeIs(...$accountingRoutes);
@@ -273,6 +274,13 @@
                     </a>
                 </li>
                 @endif
+
+                <li class="nav-item {{ request()->routeIs('admin.bank-statements.*') ? 'active' : '' }}">
+                    <a class="nav-link" href="{{ route('admin.bank-statements.index') }}">
+                        <i class="bi bi-file-earmark-spreadsheet"></i>
+                        <span>Bank Statements</span>
+                    </a>
+                </li>
 
                 <li class="nav-item {{ request()->routeIs('admin.bank-reconciliation.*') ? 'active' : '' }}">
                     <a class="nav-link" href="{{ route('admin.bank-reconciliation.index') }}">

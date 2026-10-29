@@ -5,6 +5,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AccountHead;
 use App\Models\BankImport;
 use App\Models\Client;
+use App\Models\ClientCredential;
 use App\Models\Receipt;
 use App\Services\BankLedgerPostingService;
 use App\Services\BankStatementVerificationService;

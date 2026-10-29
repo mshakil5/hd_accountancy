@@ -215,6 +215,59 @@ class InvoiceExtractorService
     }
 
     /**
+     * OCR every page of a PDF and return the raw text keyed by page number (1, 2, ...).
+     *
+     * @return array<int, string>
+     */
+    public function extractRawTextByPage(string $pdfPath, ?int $lastPage = null, int $dpi = 300): array
+    {
+        $dpi = max(150, min($dpi, 300));
+        $pages = [];
+        try {
+            $tempDir = sys_get_temp_dir();
+            $base = uniqid('pdf_ocr_p_');
+            $imagePattern = $tempDir . DIRECTORY_SEPARATOR . $base . '-%d.png';
+
+            $pageRange = $lastPage === null ? '' : ' -dFirstPage=1 -dLastPage=' . max(1, $lastPage);
+            $gsCmd = "{$this->config['ghostscript']} -dSAFER -dBATCH -dNOPAUSE -sDEVICE=png16m -r{$dpi}{$pageRange} -sOutputFile=\"{$imagePattern}\" \"{$pdfPath}\" 2>&1";
+            $gsOutput = (string) @shell_exec($gsCmd);
+            $images = glob($tempDir . DIRECTORY_SEPARATOR . $base . '-*.png') ?: [];
+            natsort($images);
+
+            Log::info('Ghostscript PDF render completed for page extraction', [
+                'path' => $pdfPath,
+                'last_page' => $lastPage,
+                'dpi' => $dpi,
+                'images_rendered' => count($images),
+            ]);
+
+            foreach ($images as $image) {
+                $pageNo = count($pages) + 1;
+                if (preg_match('/-(\d+)\.png$/', $image, $m)) {
+                    $pageNo = (int) $m[1];
+                }
+
+                $outBase = $tempDir . DIRECTORY_SEPARATOR . pathinfo($image, PATHINFO_FILENAME);
+                $tessOutput = (string) @shell_exec("{$this->config['tesseract']} \"{$image}\" \"{$outBase}\" -l eng 2>&1");
+                $textFile = $outBase . '.txt';
+                $pageText = '';
+                if (file_exists($textFile)) {
+                    $pageText = (string) file_get_contents($textFile);
+                    @unlink($textFile);
+                } else {
+                    Log::warning('Tesseract produced no OCR text for page ' . $pageNo, ['path' => $pdfPath, 'output' => mb_substr($tessOutput, 0, 1000)]);
+                }
+                $pages[$pageNo] = $pageText;
+                @unlink($image);
+            }
+        } catch (\Throwable $e) {
+            Log::error('Bank PDF OCR by page failed', ['error' => $e->getMessage()]);
+        }
+
+        return $pages;
+    }
+
+    /**
      * Identity of a file for memoisation: real path plus size and mtime, so a
      * changed file is never served from a stale entry.
      */
