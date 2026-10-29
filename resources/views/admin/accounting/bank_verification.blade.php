@@ -4,7 +4,7 @@
 <style>
 .hd-card{background:#fff;border:1px solid #e5eaf1;border-radius:12px;padding:18px;margin-bottom:16px}
 .hd-small{color:#64748b;font-size:12px}
-.hd-scroll{overflow-x:auto;}
+.hd-scroll{overflow-x:auto;overflow-y:visible;}
 .hd-table{width:100%;font-size:13px;table-layout:auto}
 .hd-table th,.hd-table td{border-bottom:1px solid #e7ebf1;padding:9px;vertical-align:top}
 .hd-table th{background:#f1f5f9}
@@ -22,7 +22,8 @@
 .hd-balances strong{display:block;font-size:16px;color:#0f172a}
 details summary{cursor:pointer;color:#1d4ed8;font-size:12px}
 .hd-table td details{position:relative;display:inline-block;vertical-align:top;}
-.hd-table td details form{position:absolute;left:0;top:100%;z-index:20;background:#fff;border:1px solid #e5eaf1;border-radius:8px;padding:8px;min-width:260px;box-shadow:0 4px 12px rgba(0,0,0,0.08);max-width:320px;overflow:hidden;}
+.hd-table td details form input,.hd-table td details form button{font-size:12px;padding:2px 4px;}
+.hd-table td details form{position:relative;z-index:20;background:#fff;border:1px solid #e5eaf1;border-radius:8px;padding:8px;box-shadow:0 4px 12px rgba(0,0,0,0.08);min-width:180px;width:100%;max-width:240px;overflow:hidden;}
 </style>
 
 @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
@@ -293,7 +294,7 @@ details summary{cursor:pointer;color:#1d4ed8;font-size:12px}
                             <div class="d-flex align-items-center gap-2">
                                 <details>
                                     <summary class="text-primary hd-small font-weight-bold" style="cursor:pointer;">Edit</summary>
-                                    <form method="POST" action="{{ route('admin.bank-statements.update-entry', $entry->id) }}" class="mt-1 p-2 border rounded bg-white shadow-sm" style="position:relative; z-index:10; min-width:220px; max-width:100%;">
+                                    <form method="POST" action="{{ route('admin.bank-statements.update-entry', $entry->id) }}" class="mt-1 p-2 border rounded bg-white shadow-sm" style="position:relative; z-index:10; min-width:190px; width:100%; max-width:100%;">
                                         @csrf
                                         <label class="hd-small font-weight-bold mb-0">Date</label>
                                         <input type="date" name="transaction_date" required value="{{ \Illuminate\Support\Carbon::parse($entry->transaction_date)->format('Y-m-d') }}" class="form-control form-control-sm mb-1">
@@ -314,7 +315,7 @@ details summary{cursor:pointer;color:#1d4ed8;font-size:12px}
                                 @endunless
                                 <details>
                                     <summary class="text-danger hd-small" style="cursor:pointer;">Delete</summary>
-                                    <form method="POST" action="{{ route('admin.bank-statements.destroy-entry', $entry->id) }}" class="mt-1 p-2 border rounded bg-white shadow-sm" style="position:relative; z-index:10; min-width:200px; max-width:100%;" onsubmit="return confirm('Remove this row from the statement?')">
+                                    <form method="POST" action="{{ route('admin.bank-statements.destroy-entry', $entry->id) }}" class="mt-1 p-2 border rounded bg-white shadow-sm" style="position:relative; z-index:10; min-width:180px; width:100%; max-width:100%;" onsubmit="return confirm('Remove this row from the statement?')">
                                         @csrf
                                         <input type="text" name="reason" required maxlength="1000" placeholder="Why remove?" class="form-control form-control-sm mb-1">
                                         <button class="btn btn-outline-danger btn-sm btn-block">Confirm Delete</button>
