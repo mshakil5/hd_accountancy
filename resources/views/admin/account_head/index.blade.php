@@ -10,14 +10,13 @@
 input:checked + .slider { background-color: #28a745; }
 input:checked + .slider:before { transform: translateX(24px); }
 
-.category-tabs { display: flex; gap: 0; margin-bottom: 16px; border-bottom: 2px solid #dee2e6; }
+.category-tabs { display: flex; flex-wrap: wrap; gap: 0; margin-bottom: 16px; border-bottom: 2px solid #dee2e6; }
 .category-tabs .tab-btn {
     padding: 8px 18px; border: 1px solid #dee2e6; border-bottom: none;
     background: #f8f9fa; cursor: pointer; font-size: 14px;
     border-radius: 6px 6px 0 0; margin-right: 4px; color: #495057;
 }
 .category-tabs .tab-btn.active { background: #fff; font-weight: 600; border-bottom: 2px solid #fff; color: #212529; }
-
 .step-title {
     font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
     color: #6c757d; border-bottom: 1px solid #e9ecef; padding-bottom: 6px; margin-bottom: 14px;
@@ -54,33 +53,50 @@ input:checked + .slider:before { transform: translateX(24px); }
                             @csrf
                             <input type="hidden" id="codeid" name="codeid">
 
-                            {{-- Step 1 — the Account Head is made first --}}
-                            <div class="step-title">1 &middot; Account Head</div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Account Type <span class="text-danger">*</span></label>
+                                        <select class="form-control" id="account_type_id" name="account_type_id">
+                                            <option value="">Select Account Type</option>
+                                            @foreach($accountTypes as $type)
+                                                <option value="{{ $type->id }}">{{ $type->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Account Sub Type <span class="text-danger">*</span></label>
+                                        <select class="form-control" id="account_sub_type_id" name="account_sub_type_id" disabled>
+                                            <option value="">Select Account Type first</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
 
-                            <div class="form-group">
-                                <label>Code <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="code" name="code" placeholder="e.g. 210">
-                                <small id="codeMsg"></small>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Code <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="code" name="code" placeholder="e.g. 210">
+                                        <small id="codeMsg"></small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Normal Balance <span class="text-danger">*</span></label>
+                                        <select class="form-control" id="normal_balance" name="normal_balance">
+                                            <option value="debit">Debit</option>
+                                            <option value="credit">Credit</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="form-group">
                                 <label>Account Head <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="name" name="name" placeholder="e.g. Transportation">
-                            </div>
-
-                            <div class="form-group">
-                                <label>Description</label>
-                                <input type="text" class="form-control" id="description" name="description">
-                            </div>
-
-                            <div class="form-group">
-                                <label>VAT Rate</label>
-                                <select class="form-control" id="tax_rate_id" name="tax_rate_id">
-                                    <option value="">Select VAT rate</option>
-                                    @foreach($taxRates as $tax)
-                                        <option value="{{ $tax->id }}">{{ $tax->name }} ({{ $tax->rate }}%)</option>
-                                    @endforeach
-                                </select>
                             </div>
 
                             <div class="form-group">
@@ -108,17 +124,15 @@ input:checked + .slider:before { transform: translateX(24px); }
             <div class="col-12">
                 <div class="card card-secondary border-theme border-2">
                     <div class="card-header">
-                        <h3 class="card-title">All Account Heads</h3>
+                        <h3 class="card-title">Chart of Accounts</h3>
                     </div>
                     <div class="card-body">
 
                         <div class="category-tabs">
-                            <button class="tab-btn active" data-category="">All Accounts</button>
-                            <button class="tab-btn" data-category="asset">Assets</button>
-                            <button class="tab-btn" data-category="liability">Liabilities</button>
-                            <button class="tab-btn" data-category="equity">Equity</button>
-                            <button class="tab-btn" data-category="expense">Expenses</button>
-                            <button class="tab-btn" data-category="revenue">Revenue</button>
+                            <button class="tab-btn active" data-type="">All</button>
+                            @foreach($accountTypes as $type)
+                                <button class="tab-btn" data-type="{{ $type->id }}">{{ $type->name }}</button>
+                            @endforeach
                         </div>
 
                         <table id="example1" class="table table-striped">
@@ -127,8 +141,10 @@ input:checked + .slider:before { transform: translateX(24px); }
                                     <th>#</th>
                                     <th>Code</th>
                                     <th>Account Head</th>
+                                    <th>Type</th>
+                                    <th>Sub Type</th>
+                                    <th>Normal</th>
                                     <th>Client</th>
-                                    <th>VAT Rate</th>
                                     <th>Status</th>
                                     <th>Action</th>
                                 </tr>
@@ -148,9 +164,7 @@ input:checked + .slider:before { transform: translateX(24px); }
 <script>
 $(function(){
     var url = "{{ url('/admin/account-heads') }}";
-    var activeCategory = '';
-    var currentHeadId = null;      // set after step 1 save (create) or on edit
-    var currentHeadName = '';
+    var activeType = '';
 
     // Client Select2 with AJAX search (form)
     $('#client_credential_id').select2({
@@ -172,7 +186,7 @@ $(function(){
         ajax: {
             url: url + '/datatable',
             data: function(d) {
-                d.category = activeCategory;
+                d.account_type_id = activeType;
                 d.client_credential_id = $('#filterClientCredential').val();
             }
         },
@@ -180,8 +194,10 @@ $(function(){
             {data: 'DT_RowIndex', orderable: false, searchable: false},
             {data: 'code'},
             {data: 'name'},
+            {data: 'type_name', orderable: false, searchable: false},
+            {data: 'sub_type_name', orderable: false, searchable: false},
+            {data: 'normal_balance_label', orderable: false, searchable: false},
             {data: 'client_name', orderable: false, searchable: false},
-            {data: 'tax_rate_name', orderable: false, searchable: false},
             {data: 'status', orderable: false, searchable: false},
             {data: 'action', orderable: false, searchable: false},
         ]
@@ -190,7 +206,7 @@ $(function(){
     $('.tab-btn').on('click', function(){
         $('.tab-btn').removeClass('active');
         $(this).addClass('active');
-        activeCategory = $(this).data('category');
+        activeType = $(this).data('type');
         table.ajax.reload();
     });
 
@@ -213,6 +229,29 @@ $(function(){
         table.ajax.reload();
     });
 
+    // ---- Type -> Sub Type ------------------------------------------------
+
+    function loadSubTypes(typeId, selectedId) {
+        var $sub = $('#account_sub_type_id');
+        if (!typeId) {
+            $sub.html('<option value="">Select Account Type first</option>').prop('disabled', true);
+            return;
+        }
+        $sub.html('<option value="">Loading...</option>').prop('disabled', true);
+        $.get(url + '/sub-types/' + typeId, function(data) {
+            var options = '<option value="">Select Account Sub Type</option>';
+            $.each(data, function(i, sub) {
+                options += '<option value="' + sub.id + '">' + sub.name + '</option>';
+            });
+            $sub.html(options).prop('disabled', false);
+            if (selectedId) $sub.val(String(selectedId));
+        });
+    }
+
+    $('#account_type_id').on('change', function() {
+        loadSubTypes($(this).val(), null);
+    });
+
     let codeTimer;
     $('#code').on('input', function(){
         clearTimeout(codeTimer);
@@ -230,7 +269,6 @@ $(function(){
         }, 400);
     });
 
-    // Re-check code when client changes
     $('#client_credential_id').on('change', function(){
         let code = $('#code').val().trim();
         if(code) $('#code').trigger('input');
@@ -242,8 +280,6 @@ $(function(){
         clearForm();
         table.ajax.reload(null, false);
     }
-
-    // ---- Step 1: create / update the head -------------------------------
 
     $('#newBtn').click(function(){
         clearForm();
@@ -261,25 +297,20 @@ $(function(){
         let isUpdate = $(this).val() == 'Update';
         let data = {
             _token: $('meta[name="csrf-token"]').attr('content'),
-            code:            $('#code').val(),
-            name:            $('#name').val(),
-            description:     $('#description').val(),
-            tax_rate_id:     $('#tax_rate_id').val(),
+            code:                 $('#code').val(),
+            name:                 $('#name').val(),
+            account_type_id:      $('#account_type_id').val(),
+            account_sub_type_id:  $('#account_sub_type_id').val(),
+            normal_balance:       $('#normal_balance').val(),
             client_credential_id: $('#client_credential_id').val(),
         };
-        if(isUpdate) {
-            data.codeid = $('#codeid').val();
-            // include the chosen type so Update can assign it in one go
-        }
+        if(isUpdate) data.codeid = $('#codeid').val();
 
         $.post(isUpdate ? url+'/update' : url, data, function(d){
             if(d.status == 303){
                 $('.ermsg').html(d.message);
-            } else if(isUpdate) {
-                toastr.success(d.message, 'Success!');
-                closeForm();
             } else {
-                toastr.success(d.message, "Success!");
+                toastr.success(d.message, 'Success!');
                 closeForm();
             }
         });
@@ -293,8 +324,9 @@ $(function(){
             $('#codeid').val(d.id);
             $('#code').val(d.code);
             $('#name').val(d.name);
-            $('#description').val(d.description);
-            $('#tax_rate_id').val(d.tax_rate_id);
+            $('#normal_balance').val(d.normal_balance || 'debit');
+            $('#account_type_id').val(d.account_type_id || '');
+            loadSubTypes(d.account_type_id || '', d.account_sub_type_id);
             if(d.client_credential_id) {
                 $.get("{{ url('/admin/receipts/search-clients') }}", { q: '' }, function(data) {
                     var match = data.find(function(item) { return item.id == d.client_credential_id; });
@@ -307,8 +339,6 @@ $(function(){
                 $('#client_credential_id').val(null).trigger('change');
             }
             $('#codeMsg').text('');
-            currentHeadId = d.id;
-            currentHeadName = d.name;
             $('#addBtn').val('Update').text('Update').show();
             $('#formTitle').text('Edit Account: ' + d.name);
             $('#addThisFormContainer').show(300);
@@ -339,11 +369,10 @@ $(function(){
         $('#createThisForm')[0].reset();
         $('#codeid').val('');
         $('#client_credential_id').val(null).trigger('change');
+        $('#account_sub_type_id').html('<option value="">Select Account Type first</option>').prop('disabled', true);
         $('#codeMsg').text('').removeClass();
         $('#addBtn').val('Create').text('Create').show();
         $('#formTitle').text('Add new Account Head');
-        currentHeadId = null;
-        currentHeadName = '';
         $('.ermsg').html('');
     }
 });

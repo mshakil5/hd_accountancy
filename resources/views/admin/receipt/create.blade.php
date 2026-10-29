@@ -154,7 +154,7 @@
                                         </div>
                                         <div class="col-md-2 detail-field">
                                             <label class="detail-label">VAT Rate (%)</label>
-                                            <input type="text" class="form-control" id="tax_percent" name="tax_percent" readonly value="0">
+                                            <input type="number" step="0.01" class="form-control" id="tax_percent" name="tax_percent" value="0">
                                         </div>
                                         <div class="col-md-2 detail-field">
                                             <label class="detail-label">VAT Amt (£)</label>
@@ -327,11 +327,10 @@ $(function () {
         }, function (data) {
             const options = $('<select>').append($('<option>', {value: '', text: 'Select Account Head'}));
             $.each(data, function (i, h) {
-                const rate = h.tax_rate ? h.tax_rate.rate : 0;
                 options.append($('<option>', {
                     value: h.id,
                     text: h.code + ' - ' + h.name
-                }).attr('data-rate', rate).attr('data-type-id', h.account_type_id));
+                }).attr('data-type-id', h.account_type_id));
             });
             headDrop.html(options.html());
             if (selectId) headDrop.val(String(selectId));
@@ -347,8 +346,6 @@ $(function () {
     $('#account_head_id').change(function () {
         const selected = $(this).find('option:selected');
         $('#account_type_id').val(selected.attr('data-type-id') || '');
-        const rate = parseFloat(selected.data('rate')) || 0;
-        $('#tax_percent').val(rate);
         calculateAmounts();
     });
 
@@ -361,7 +358,7 @@ $(function () {
         $('#total_amount').val('£' + (net + tax + vat).toFixed(2));
     }
 
-    $('#net_amount, #vat_amount').on('input keyup change', calculateAmounts);
+    $('#net_amount, #vat_amount, #tax_percent').on('input keyup change', calculateAmounts);
 
     $('#paid').change(function () {
         $(this).val() === 'yes' ? $('#method_box').fadeIn() : $('#method_box').fadeOut();

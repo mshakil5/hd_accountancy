@@ -283,7 +283,6 @@ $rejected = $reconStatus==='rejected';
     <div class="hd-field"><label for="hd-create-head-{{ $entry->id }}">What / account head</label>
      <span class="hd-quick-actions">
       <button type="button" class="btn btn-sm btn-success" style="font-size:11px;border-radius:20px;padding:2px 10px;background:linear-gradient(45deg,#28a745,#20c997);border:none;" onclick="openQuickHeadFor(this)" title="Quickly create a missing account head"><i class="fa fa-plus-circle"></i> Quick Add Head</button>
-      <button type="button" class="btn btn-sm btn-info" style="font-size:11px;border-radius:20px;padding:2px 10px;" onclick="openQuickTypeFor(this)" title="Quickly create a type under the selected head"><i class="fa fa-plus-circle"></i> Quick Add Type</button>
      </span>
      <select class="form-control select2" id="hd-create-head-{{ $entry->id }}" name="account_head_id" required><option value="">Choose account head</option>@foreach($heads as $h)<option value="{{ $h->id }}" {{ $entry->account_head_id==$h->id?'selected':'' }}>{{ $h->code }} — {{ $h->name }}</option>@endforeach</select></div>
     <label>Why / description<input class="form-control" type="text" name="review_note" placeholder="Reason for classification"></label>
@@ -468,9 +467,8 @@ document.addEventListener('DOMContentLoaded',function(){document.querySelectorAl
 @endif
 </div>
 
-{{-- Quick Add Head / Type modals (shared with the receipt page) --}}
+{{-- Quick Add Head modal (shared with the receipt page) --}}
 @include('admin.receipt._quick_head_modal')
-@include('admin.receipt._quick_type_modal')
 <script>
 // Bank-reconciliation wiring: each row/tab has its own account-head dropdown, so
 // remember which one opened the modal and refresh only that one afterwards.
@@ -478,11 +476,6 @@ window.openQuickHeadFor = function(btn){
     var sel = hdHeadSelectFor(btn);
     window.quickAddTargetEl = sel;
     window.openQuickHeadModal();
-};
-window.openQuickTypeFor = function(btn){
-    var sel = hdHeadSelectFor(btn);
-    window.quickAddTargetEl = sel;
-    window.openQuickTypeModal();
 };
 // Find the account-head dropdown that belongs to the clicked button.
 function hdHeadSelectFor(btn){

@@ -195,8 +195,8 @@
                     @endif
                 </td>
                 <td>
-                    @if($detail->accountHead?->taxRate)
-                        {{ $detail->accountHead->taxRate->name }}<br><small>{{ $detail->accountHead->taxRate->rate }}%</small>
+                    @if($detail->net_amount > 0)
+                        <small>{{ round(($detail->tax_amount / $detail->net_amount) * 100, 2) }}%</small>
                     @else
                         —
                     @endif

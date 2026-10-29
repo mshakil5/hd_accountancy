@@ -39,7 +39,7 @@ class BankReconciliationPageController extends Controller
             return view('admin.accounting.bank_reconciliation',[
                 'credentialId'=>$credentialId,'businessId'=>$businessId,'bankAccounts'=>$bankAccounts,'bankAccountId'=>$bankAccountId,'bankOverview'=>collect(),
                 'entries'=>DB::table('bank_entries')->whereRaw('1 = 0')->paginate(30),
-                'heads'=>collect(),'taxRates'=>collect(),'stats'=>collect(),'approvalStats'=>collect(),
+                'heads'=>collect(),'stats'=>collect(),'approvalStats'=>collect(),
                 'imports'=>collect(),'receipts'=>collect(),'splits'=>collect(),'unmatchedReceipts'=>collect(),
                 'claimedReceiptIds'=>collect(),'settledTotals'=>collect(),'notes'=>collect(),'receiptRequests'=>collect(),
             ]);
@@ -88,7 +88,6 @@ class BankReconciliationPageController extends Controller
         $heads=AccountHead::where('is_active',1)->whereNotNull('account_type_id')
             ->where(function($q)use($credentialId){$q->whereNull('client_credential_id');if($credentialId)$q->orWhere('client_credential_id',$credentialId);})
             ->orderBy('code')->get(['id','code','name']);
-        $taxRates=\App\Models\TaxRate::where('is_active',true)->select('id','name','rate')->get();
         $stats=$scopeEntries()->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total','status');
         $approvalStats=$scopeEntries()->selectRaw('reconciliation_status, count(*) as total')->groupBy('reconciliation_status')->pluck('total','reconciliation_status');
         $imports=DB::table('bank_imports')->whereIn('client_id',$businessIds)->when($bankAccountId,fn($q)=>$q->where('bank_account_id',$bankAccountId))->latest()->limit(10)->get();
@@ -133,7 +132,7 @@ class BankReconciliationPageController extends Controller
             ->whereNull('linked_bank_entry_id')->whereNull('transfer_type')
             ->orderByDesc('transaction_date')->limit(300)
             ->get(['id','transaction_date','description','amount','bank_account_id']);
-        return view('admin.accounting.bank_reconciliation',compact('credentialId','businessId','bankAccountId','bankAccounts','bankOverview','entries','heads','taxRates','stats','approvalStats','imports','receipts','splits','settlements','unmatchedReceipts','fuzzyMatches','transferCandidates','claimedReceiptIds','settledTotals','notes','receiptRequests'));
+        return view('admin.accounting.bank_reconciliation',compact('credentialId','businessId','bankAccountId','bankAccounts','bankOverview','entries','heads','stats','approvalStats','imports','receipts','splits','settlements','unmatchedReceipts','fuzzyMatches','transferCandidates','claimedReceiptIds','settledTotals','notes','receiptRequests'));
     }
 
     /**

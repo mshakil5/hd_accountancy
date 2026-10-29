@@ -19,6 +19,10 @@ class DatabaseSeeder extends Seeder
         //     'email' => 'test@example.com',
         // ]);
 
+        // Fixed global account types + sub types (no admin modules).
+        $this->call(AccountTypeSeeder::class);
+        $this->call(AccountSubTypeSeeder::class);
+
         // Excel "Chart of account, P&L, BS.xlsx" chart (global heads 101-604).
         $this->call(ChartOfAccountsExcelSeeder::class);
 

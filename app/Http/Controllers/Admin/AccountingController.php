@@ -101,7 +101,7 @@ class AccountingController extends Controller
      */
     private function buildProfitLoss($from, $to, $credentialId, $businessId, $paymentMethod)
     {
-        $base = Transaction::with(['accountHead.accountType', 'receipt.detail']);
+        $base = Transaction::with(['accountHead.accountType', 'accountHead.accountSubType', 'receipt.detail']);
         $this->applyLedgerScope(
             $base, $credentialId, $businessId,
             fn($d) => $d->whereBetween('invoice_date', [$from, $to]),
@@ -142,7 +142,7 @@ class AccountingController extends Controller
             if (!$accountType) continue;
 
             $category  = $accountType->category;
-            $typeName  = $accountType->name;
+            $typeName  = $accountHead->accountSubType?->name ?? $accountType->name;
             $headName  = $accountHead->name;
             $headId    = $accountHead->id;
             $method    = $txn->receipt?->detail?->payment_method ?? $txn->payment_method ?? 'cash';
@@ -169,30 +169,32 @@ class AccountingController extends Controller
         } elseif ($credentialId) {
             $legacyScopeCredId = $credentialId;
         }
-        $legacyTypes = \App\Models\AccountType::where('is_active', 1)
-            ->whereIn('category', ['revenue', 'expense'])
+        $legacySubTypes = \App\Models\AccountSubType::with('accountType:id,category')
+            ->where('is_active', 1)
+            ->whereHas('accountType', fn($q) => $q->whereIn('category', ['revenue', 'expense']))
             ->orderBy('id')->get();
-        foreach ($legacyTypes as $lt) {
-            if ($lt->category === 'revenue' && !isset($income[$lt->name])) $income[$lt->name] = [];
-            if ($lt->category === 'expense' && !isset($expenses[$lt->name])) $expenses[$lt->name] = [];
+        foreach ($legacySubTypes as $lst) {
+            if ($lst->accountType?->category === 'revenue' && !isset($income[$lst->name])) $income[$lst->name] = [];
+            if ($lst->accountType?->category === 'expense' && !isset($expenses[$lst->name])) $expenses[$lst->name] = [];
         }
         $legacyHeads = \App\Models\AccountHead::where('is_active', 1)
-            ->whereIn('account_type_id', $legacyTypes->pluck('id'))
+            ->whereIn('account_sub_type_id', $legacySubTypes->pluck('id'))
             ->where(function ($q) use ($legacyScopeCredId) {
                 $q->whereNull('client_credential_id');
                 if ($legacyScopeCredId) $q->orWhere('client_credential_id', $legacyScopeCredId);
                 else $q->orWhereNotNull('client_credential_id');
             })
-            ->with('accountType')->get();
+            ->with('accountType', 'accountSubType')->get();
         foreach ($legacyHeads as $lh) {
-            if (!$lh->accountType) continue;
+            if (!$lh->accountType || !$lh->accountSubType) continue;
+            $subName = $lh->accountSubType->name;
             if ($lh->accountType->category === 'revenue') {
-                if (!isset($income[$lh->accountType->name][$lh->name])) {
-                    $income[$lh->accountType->name][$lh->name] = ['head_id' => $lh->id, 'code' => $lh->code, 'rows' => []];
+                if (!isset($income[$subName][$lh->name])) {
+                    $income[$subName][$lh->name] = ['head_id' => $lh->id, 'code' => $lh->code, 'rows' => []];
                 }
             } elseif ($lh->accountType->category === 'expense') {
-                if (!isset($expenses[$lh->accountType->name][$lh->name])) {
-                    $expenses[$lh->accountType->name][$lh->name] = ['head_id' => $lh->id, 'code' => $lh->code, 'rows' => []];
+                if (!isset($expenses[$subName][$lh->name])) {
+                    $expenses[$subName][$lh->name] = ['head_id' => $lh->id, 'code' => $lh->code, 'rows' => []];
                 }
             }
         }
@@ -248,7 +250,7 @@ class AccountingController extends Controller
         } elseif ($credentialId) {
             $scopeCredId = $credentialId;
         }
-        $typeIdByName = \App\Models\AccountType::pluck('id', 'name')->all(); // name => id
+        $typeIdByName = \App\Models\AccountSubType::pluck('id', 'name')->all(); // name => id
         $idsOf = function (string $name) use ($typeIdByName) {
             return isset($typeIdByName[$name]) ? [$typeIdByName[$name]] : [];
         };
@@ -264,8 +266,8 @@ class AccountingController extends Controller
                     'code' => $head->code,
                     'head_id' => $head->id,
                     'head_name' => $head->name,
-                    'type_id' => $head->account_type_id,
-                    'type_name' => $head->accountType->name,
+                    'type_id' => $head->account_sub_type_id,
+                    'type_name' => $head->accountSubType?->name ?? '',
                     'cash' => 0, 'bank' => 0, 'card' => 0, 'total' => 0,
                 ];
             }
@@ -276,9 +278,9 @@ class AccountingController extends Controller
         // in-scope per-client heads), so labels always come from the heads table.
         $excelRowsForTypes = function (array $typeIds) use ($excelPerHeadId, $scopeCredId) {
             if (empty($typeIds)) return [];
-            $heads = \App\Models\AccountHead::with('accountType')
+            $heads = \App\Models\AccountHead::with('accountType', 'accountSubType')
                 ->where('is_active', 1)
-                ->whereIn('account_type_id', $typeIds)
+                ->whereIn('account_sub_type_id', $typeIds)
                 ->where(function ($q) use ($scopeCredId) {
                     $q->whereNull('client_credential_id');
                     if ($scopeCredId) $q->orWhere('client_credential_id', $scopeCredId);
@@ -293,7 +295,7 @@ class AccountingController extends Controller
                 if (in_array($agg['type_id'], $typeIds) && !isset($heads[$hid])) $missing[] = $hid;
             }
             if ($missing) {
-                foreach (\App\Models\AccountHead::with('accountType')->whereIn('id', $missing)->get() as $h) {
+                foreach (\App\Models\AccountHead::with('accountType', 'accountSubType')->whereIn('id', $missing)->get() as $h) {
                     $heads[$h->id] = $h;
                 }
             }
@@ -304,7 +306,7 @@ class AccountingController extends Controller
                     'code' => $h->code,
                     'head_id' => $h->id,
                     'head_name' => $h->name . ($h->is_active ? '' : ' (inactive)'),
-                    'type_name' => $h->accountType?->name ?? '',
+                    'type_name' => $h->accountSubType?->name ?? '',
                     'cash' => $agg['cash'] ?? 0,
                     'bank' => $agg['bank'] ?? 0,
                     'card' => $agg['card'] ?? 0,
@@ -326,24 +328,27 @@ class AccountingController extends Controller
         };
         $typeNamesOf = function (array $ids) {
             if (empty($ids)) return '';
-            $names = \App\Models\AccountType::whereIn('id', $ids)->orderBy('id')->pluck('name')->all();
+            $names = \App\Models\AccountSubType::whereIn('id', $ids)->orderBy('id')->pluck('name')->all();
             return implode(' + ', $names);
         };
         $turnoverIds = $idsOf('Turnover');
         $otherIds = $idsOf('Other Income');
         $directIds = $idsOf('Direct Expenses');
         $adminIds = $idsOf('Expenses');
+        $subTypesInCategory = function (string $category) {
+            return \App\Models\AccountSubType::whereHas('accountType', fn($q) => $q->where('category', $category))
+                ->pluck('id')->all();
+        };
         if (empty($turnoverIds) && empty($otherIds)) {
-            $turnoverIds = \App\Models\AccountType::where('category', 'revenue')->pluck('id')->all();
+            $turnoverIds = $subTypesInCategory('revenue');
         }
         if (empty($directIds) && empty($adminIds)) {
-            $adminIds = \App\Models\AccountType::where('category', 'expense')->pluck('id')->all();
+            $adminIds = $subTypesInCategory('expense');
         }
-        // Head-first flow allows new types under heads; make sure they still
-        // land in the Excel sections (grouped by category) instead of vanishing.
-        // Titles keep the canonical type names above.
-        $revenueTypeIds = \App\Models\AccountType::where('is_active', 1)->where('category', 'revenue')->pluck('id')->all();
-        $expenseTypeIds = \App\Models\AccountType::where('is_active', 1)->where('category', 'expense')->pluck('id')->all();
+        // New sub types under a category still land in the Excel sections
+        // instead of vanishing. Titles keep the canonical sub type names above.
+        $revenueTypeIds = $subTypesInCategory('revenue');
+        $expenseTypeIds = $subTypesInCategory('expense');
         $excelTurnoverTypeIds = array_values(array_unique(array_merge($turnoverIds, array_diff($revenueTypeIds, $otherIds))));
         $excelAdminTypeIds    = array_values(array_unique(array_merge($adminIds, array_diff($expenseTypeIds, $directIds))));
         $turnoverRows = $excelRowsForTypes($excelTurnoverTypeIds);
@@ -427,7 +432,7 @@ class AccountingController extends Controller
 
         \Log::info('TB Request', ['from' => $from, 'to' => $to, 'cred' => $credentialId, 'biz' => $businessId]);
 
-        $tbQuery = Transaction::with(['accountHead.accountType']);
+        $tbQuery = Transaction::with(['accountHead.accountType', 'accountHead.accountSubType']);
         $this->applyLedgerScope(
             $tbQuery, $credentialId, $businessId,
             fn($d) => $d->whereBetween('invoice_date', [$from, $to]),
@@ -446,7 +451,7 @@ class AccountingController extends Controller
                 'amount'         => $txn->total_amount,
                 'head'           => $txn->accountHead?->name,
                 'category'       => $txn->accountHead?->accountType?->category,
-                'normal_balance' => $txn->accountHead?->accountType?->normal_balance,
+                'normal_balance' => $txn->accountHead?->normalBalance(),
             ]);
         }
 
@@ -461,7 +466,7 @@ class AccountingController extends Controller
             if (!$type) continue;
 
             $headId        = $head->id;
-            $normalBalance = $type->normal_balance;
+            $normalBalance = $head->normalBalance();
             $amount        = (float) $txn->total_amount;
 
             // debit/credit based on normal_balance + transaction type
@@ -498,7 +503,7 @@ class AccountingController extends Controller
         } elseif ($credentialId) {
             $tbScopeCredId = $credentialId;
         }
-        $tbHeads = \App\Models\AccountHead::with('accountType')
+        $tbHeads = \App\Models\AccountHead::with('accountType', 'accountSubType')
             ->where('is_active', 1)
             ->where(function ($q) use ($tbScopeCredId) {
                 $q->whereNull('client_credential_id');
@@ -512,7 +517,7 @@ class AccountingController extends Controller
                 'code'           => $h->code,
                 'name'           => $h->name,
                 'category'       => ucfirst($h->accountType->category),
-                'normal_balance' => $h->accountType->normal_balance,
+                'normal_balance' => $h->normalBalance(),
                 'debit'          => 0,
                 'credit'         => 0,
             ];
@@ -567,7 +572,7 @@ class AccountingController extends Controller
      */
     private function buildBalanceSheet($asOf, $credentialId, $businessId)
     {
-        $bsQuery = Transaction::with(['accountHead.accountType']);
+        $bsQuery = Transaction::with(['accountHead.accountType', 'accountHead.accountSubType']);
         $this->applyLedgerScope(
             $bsQuery, $credentialId, $businessId,
             fn($d) => $d->where('invoice_date', '<=', $asOf),
@@ -586,7 +591,7 @@ class AccountingController extends Controller
                 'amount'         => $txn->total_amount,
                 'head'           => $txn->accountHead?->name,
                 'category'       => $txn->accountHead?->accountType?->category,
-                'normal_balance' => $txn->accountHead?->accountType?->normal_balance,
+                'normal_balance' => $txn->accountHead?->normalBalance(),
             ]);
         }
 
@@ -603,7 +608,7 @@ class AccountingController extends Controller
             if (!$type) continue;
 
             $category      = $type->category;
-            $normalBalance = $type->normal_balance;
+            $normalBalance = $head->normalBalance();
             $isDebit       = in_array($txn->type, ['payable', 'paid']);
             $amount        = (float) $txn->total_amount;
 
@@ -647,7 +652,7 @@ class AccountingController extends Controller
         } elseif ($credentialId) {
             $legacyScopeCredId = $credentialId;
         }
-        $legacyHeads = \App\Models\AccountHead::with('accountType')
+        $legacyHeads = \App\Models\AccountHead::with('accountType', 'accountSubType')
             ->where('is_active', 1)
             ->where(function ($q) use ($legacyScopeCredId) {
                 $q->whereNull('client_credential_id');
@@ -684,27 +689,27 @@ class AccountingController extends Controller
         } elseif ($credentialId) {
             $bsScopeCredId = $credentialId;
         }
-        $bsTypeIdByName = \App\Models\AccountType::pluck('id', 'name')->all(); // name => id
+        $bsTypeIdByName = \App\Models\AccountSubType::pluck('id', 'name')->all(); // name => id
         $bsIdsOf = function (string $name) use ($bsTypeIdByName) {
             return isset($bsTypeIdByName[$name]) ? [$bsTypeIdByName[$name]] : [];
         };
         $bsTypeNamesOf = function (array $ids) {
             if (empty($ids)) return '';
-            return implode(' + ', \App\Models\AccountType::whereIn('id', $ids)->orderBy('id')->pluck('name')->all());
+            return implode(' + ', \App\Models\AccountSubType::whereIn('id', $ids)->orderBy('id')->pluck('name')->all());
         };
         $balByHeadId = []; // head_id => signed balance
         $bsTypeByHeadId = []; // head_id => account_type_id
         foreach ($transactions as $txn) {
             $head = $txn->accountHead;
             if (!$head || !$head->accountType) continue;
-            $normalBalance = $head->accountType->normal_balance;
+            $normalBalance = $head->normalBalance();
             $isDebit = in_array($txn->type, ['payable', 'paid']);
             $amount = (float) $txn->total_amount;
             $balance = ($normalBalance === 'debit')
                 ? ($isDebit ? $amount : -$amount)
                 : ($isDebit ? -$amount : $amount);
             $balByHeadId[$head->id] = ($balByHeadId[$head->id] ?? 0) + $balance;
-            $bsTypeByHeadId[$head->id] = $head->account_type_id;
+            $bsTypeByHeadId[$head->id] = $head->account_sub_type_id;
         }
         // Every active head of the section's types shows as a row (global chart plus
         // in-scope per-client heads), so labels always come from the heads table.
@@ -712,9 +717,9 @@ class AccountingController extends Controller
         // section totals would silently drop posted balances.
         $bsRowsForTypes = function (array $typeIds) use ($balByHeadId, $bsTypeByHeadId, $bsScopeCredId) {
             if (empty($typeIds)) return [];
-            $heads = \App\Models\AccountHead::with('accountType')
+            $heads = \App\Models\AccountHead::with('accountType', 'accountSubType')
                 ->where('is_active', 1)
-                ->whereIn('account_type_id', $typeIds)
+                ->whereIn('account_sub_type_id', $typeIds)
                 ->where(function ($q) use ($bsScopeCredId) {
                     $q->whereNull('client_credential_id');
                     if ($bsScopeCredId) $q->orWhere('client_credential_id', $bsScopeCredId);
@@ -727,7 +732,7 @@ class AccountingController extends Controller
                 if (in_array($bsTypeByHeadId[$hid] ?? null, $typeIds) && !isset($heads[$hid])) $missing[] = $hid;
             }
             if ($missing) {
-                foreach (\App\Models\AccountHead::with('accountType')->whereIn('id', $missing)->get() as $h) {
+                foreach (\App\Models\AccountHead::with('accountType', 'accountSubType')->whereIn('id', $missing)->get() as $h) {
                     $heads[$h->id] = $h;
                 }
             }
@@ -748,23 +753,26 @@ class AccountingController extends Controller
         $currentIds = $bsIdsOf('Current Assets');
         $currLiabIds = $bsIdsOf('Current Liability');
         $nonCurrIds = $bsIdsOf('Non-current Liability');
-        $capitalIds = $bsIdsOf('Capital and reserves');
+        $capitalIds = $bsIdsOf('Capital and Reserves');
+        $bsSubTypesInCategory = function (string $category) {
+            return \App\Models\AccountSubType::whereHas('accountType', fn($q) => $q->where('category', $category))
+                ->pluck('id')->all();
+        };
         if (empty($fixedIds) && empty($currentIds)) {
-            $fixedIds = \App\Models\AccountType::where('category', 'asset')->pluck('id')->all();
+            $fixedIds = $bsSubTypesInCategory('asset');
         }
         if (empty($currLiabIds) && empty($nonCurrIds)) {
-            $currLiabIds = \App\Models\AccountType::where('category', 'liability')->pluck('id')->all();
+            $currLiabIds = $bsSubTypesInCategory('liability');
         }
         if (empty($capitalIds)) {
-            $capitalIds = \App\Models\AccountType::where('category', 'equity')->pluck('id')->all();
+            $capitalIds = $bsSubTypesInCategory('equity');
         }
-        // Head-first flow allows new types under heads — unmatched asset,
-        // liability and equity types still land in the Excel sections
+        // New sub types under a category still land in the Excel sections
         // (current assets / current liabilities / capital) instead of vanishing.
-        // Titles keep the canonical type names above.
-        $assetTypeIds  = \App\Models\AccountType::where('is_active', 1)->where('category', 'asset')->pluck('id')->all();
-        $liabTypeIds   = \App\Models\AccountType::where('is_active', 1)->where('category', 'liability')->pluck('id')->all();
-        $equityTypeIds = \App\Models\AccountType::where('is_active', 1)->where('category', 'equity')->pluck('id')->all();
+        // Titles keep the canonical sub type names above.
+        $assetTypeIds  = $bsSubTypesInCategory('asset');
+        $liabTypeIds   = $bsSubTypesInCategory('liability');
+        $equityTypeIds = $bsSubTypesInCategory('equity');
         $excelCurrentIds   = array_values(array_unique(array_merge($currentIds, array_diff($assetTypeIds, $fixedIds))));
         $excelCurrLiabIds  = array_values(array_unique(array_merge($currLiabIds, array_diff($liabTypeIds, $currLiabIds, $nonCurrIds))));
         $excelCapitalIds   = array_values(array_unique(array_merge($capitalIds, array_diff($equityTypeIds, $capitalIds))));
@@ -1017,7 +1025,7 @@ class AccountingController extends Controller
         }
         $headIds = $heads->pluck('id')->all();
 
-        $query = Transaction::with(['accountHead.accountType', 'receipt.client', 'receipt.detail', 'client'])
+        $query = Transaction::with(['accountHead.accountType', 'accountHead.accountSubType', 'receipt.client', 'receipt.detail', 'client'])
             ->whereIn('account_head_id', $headIds);
         $this->applyLedgerScope(
             $query, $credentialId, $businessId,
@@ -1040,7 +1048,7 @@ class AccountingController extends Controller
             // balance, so each leg carries its sign (P&L rows are plain sums).
             $signed = $amount;
             if ($mode === 'bs' && $t->accountHead?->accountType) {
-                $nb = $t->accountHead->accountType->normal_balance;
+                $nb = $t->accountHead->normalBalance();
                 $isDebit = in_array($t->type, ['payable', 'paid']);
                 $signed = ($nb === 'debit') ? ($isDebit ? $amount : -$amount) : ($isDebit ? -$amount : $amount);
             }
@@ -1060,7 +1068,7 @@ class AccountingController extends Controller
         });
 
         return response()->json([
-            'heads' => $heads->map(fn($h) => ['id' => $h->id, 'code' => $h->code, 'name' => $h->name, 'type' => $h->accountType?->name])->values(),
+            'heads' => $heads->map(fn($h) => ['id' => $h->id, 'code' => $h->code, 'name' => $h->name, 'type' => $h->accountSubType?->name ?? $h->accountType?->name])->values(),
             'count' => $rows->count(),
             'total' => $mode === 'bs' ? $rows->sum('signed_amount') : $rows->sum('amount'),
             'rows' => $rows,

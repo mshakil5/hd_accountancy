@@ -317,14 +317,13 @@
                                     <label class="detail-label d-flex align-items-center justify-content-between">Account Head
                                         <span>
                                             <button type="button" class="btn btn-sm btn-success ml-2" style="font-size:12px;border-radius:20px;padding:2px 12px;background:linear-gradient(45deg,#28a745,#20c997);border:none;box-shadow:0 2px 6px rgba(40,167,69,.4);" onclick="openQuickHeadModal()" title="Quickly create a missing head for this client"><i class="fa fa-plus-circle"></i> Quick Add Head</button>
-                                            <button type="button" class="btn btn-sm btn-info ml-1" style="font-size:12px;border-radius:20px;padding:2px 12px;" onclick="openQuickTypeModal()" title="Quickly create a type under the selected head"><i class="fa fa-plus-circle"></i> Quick Add Type</button>
                                         </span>
                                     </label>
                                     <select class="form-control select2" id="account_head_id" name="account_head_id"
                                         style="width:100%;">
                                         <option value="">Select Account Head</option>
                                         @foreach ($heads as $h)
-                                            <option value="{{ $h->id }}" data-rate="{{ $h->taxRate?->rate ?? 0 }}" data-type-id="{{ $h->account_type_id }}"
+                                            <option value="{{ $h->id }}" data-type-id="{{ $h->account_type_id }}"
                                                 {{ $receipt->detail?->account_head_id == $h->id ? 'selected' : '' }}>
                                             {{ $h->code }} - {{ $h->name }}
                                         </option>
@@ -337,7 +336,7 @@
                                     <select class="form-control" id="account_type_id" name="account_type_id" disabled>
                                         <option value="">Select Account Head first</option>
                                         @foreach ($accountTypes as $type)
-                                            <option value="{{ $type->id }}" data-head-id="{{ $type->account_head_id }}"
+                                            <option value="{{ $type->id }}"
                                                 {{ $receipt->detail?->accountHead?->account_type_id == $type->id ? 'selected' : '' }}>
                                             {{ $type->name }} ({{ ucfirst($type->category) }})
                                         </option>
@@ -353,8 +352,8 @@
                                     </div>
                                     <div class="col-md-3 detail-field">
                                         <label class="detail-label">VAT Rate (%)</label>
-                                        <input type="text" class="form-control" id="tax_percent" name="tax_percent" readonly
-                                            value="{{ $receipt->detail?->accountHead?->taxRate?->rate ?? 0 }}">
+                                        <input type="number" step="0.01" class="form-control" id="tax_percent" name="tax_percent"
+                                            value="{{ $receipt->detail?->net_amount ? round(($receipt->detail->tax_amount / $receipt->detail->net_amount) * 100, 2) : 0 }}">
                                     </div>
                                     <div class="col-md-3 detail-field">
                                         <label class="detail-label">VAT Amt (£)</label>
@@ -623,36 +622,16 @@
                 $(this).val('');
             });
 
-            // -- Account Head -> Account Type (types under this head + shared) + VAT --
-            function filterAccountTypes(headId) {
-                $('#account_type_id option').each(function() {
-                    var optHead = $(this).data('head-id');
-                    if (!$(this).val()) { $(this).show(); return; }
-                    if (!headId) { $(this).hide(); return; }
-                    if (String(optHead) === String(headId) || optHead === '' || optHead === undefined || optHead === null) {
-                        $(this).show();
-                    } else {
-                        $(this).hide();
-                    }
-                });
-            }
+            // -- Account Head -> Account Type (auto-filled) --
             $('#account_head_id').change(function() {
                 const selected = $(this).find('option:selected');
                 const headId = $(this).val();
                 if (!headId) {
                     $('#account_type_id').prop('disabled', true).val('');
-                    $('#account_type_id option').hide();
-                    $('#account_type_id option:first').show();
                     return;
                 }
                 $('#account_type_id').prop('disabled', false);
-                if ($.fn.select2 && !$('#account_type_id').hasClass('select2-hidden-accessible')) {
-                    $('#account_type_id').select2({ width: '100%', placeholder: 'Select Account Type' });
-                }
-                filterAccountTypes(headId);
                 $('#account_type_id').val(selected.attr('data-type-id') || '');
-                const rate = parseFloat(selected.data('rate')) || 0;
-                $('#tax_percent').val(rate);
                 calculateAmounts();
             });
 
@@ -824,5 +803,4 @@
         });
     </script>
     @include('admin.receipt._quick_head_modal')
-    @include('admin.receipt._quick_type_modal')
 @endsection

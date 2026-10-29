@@ -160,9 +160,7 @@ class ReceiptController extends Controller
                     $q->orWhere('client_credential_id', $credentialId);
                 }
             })->get();
-        $taxRates = \App\Models\TaxRate::where('is_active', true)->select('id', 'name', 'rate')->get();
-
-        $heads = AccountHead::with('taxRate')
+        $heads = AccountHead::with('accountType:id,name')
             ->where('is_active', true)
             ->whereNotNull('account_type_id') // head-first flow: untyped heads are not usable yet
             ->where(function ($q) use ($credentialId) {
@@ -193,12 +191,12 @@ class ReceiptController extends Controller
         $businesses = \App\Models\Client::where('client_credential_id', $credentialId)
             ->where('status', 1)->get();
 
-        return view('admin.receipt.show', compact('receipt', 'accountTypes', 'taxRates', 'heads', 'prev', 'next', 'credentialId', 'businesses', 'pendingPosition', 'pendingTotal', 'totalCount'));
+        return view('admin.receipt.show', compact('receipt', 'accountTypes', 'heads', 'prev', 'next', 'credentialId', 'businesses', 'pendingPosition', 'pendingTotal', 'totalCount'));
     }
 
     public function getAccountHeads(Request $request)
     {
-        $heads = AccountHead::with('taxRate')
+        $heads = AccountHead::with('accountType:id,name')
             ->when($request->filled('account_type_id'), function ($q) use ($request) {
                 $q->where('account_type_id', $request->account_type_id);
             })
@@ -450,7 +448,7 @@ class ReceiptController extends Controller
         $receipt = Receipt::with([
             'files',
             'detail.accountHead.accountType',
-            'detail.accountHead.taxRate',
+            'detail.accountHead.accountSubType',
             'client',
             'transactions'
         ])->findOrFail($id);
@@ -479,8 +477,7 @@ class ReceiptController extends Controller
     public function create()
     {
         $accountTypes = AccountType::where('is_active', true)->get();
-        $taxRates = \App\Models\TaxRate::where('is_active', true)->select('id', 'name', 'rate')->get();
-        return view('admin.receipt.create', compact('accountTypes', 'taxRates'));
+        return view('admin.receipt.create', compact('accountTypes'));
     }
 
     public function store(Request $request)

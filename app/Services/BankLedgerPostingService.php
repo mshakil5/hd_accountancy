@@ -195,7 +195,7 @@ class BankLedgerPostingService
             if (!$head->accountType) {
                 throw ValidationException::withMessages(['reconciliation' => 'Assign an Account Type to account head "'.$head->name.'" before posting.']);
             }
-            $type=($head->accountType->normal_balance === 'debit') ? 'payable' : 'receivable';
+            $type=($head->normalBalance() === 'debit') ? 'payable' : 'receivable';
             $net=(float)($detail->net_amount ?? 0);
             $tax=(float)($detail->tax_amount ?? 0);
             $vat=(float)($detail->vat_amount ?? 0);

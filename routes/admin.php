@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Admin\AccountHeadController;
 use App\Http\Controllers\Admin\AccountingController;
-use App\Http\Controllers\Admin\AccountTypeController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\BookingController;
 use App\Http\Controllers\Admin\BreakController;
@@ -50,7 +49,6 @@ use App\Http\Controllers\Admin\ServicepageController;
 use App\Http\Controllers\Admin\SoftCodeController;
 use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Admin\SubServiceController;
-use App\Http\Controllers\Admin\TaxRateController;
 use App\Http\Controllers\Admin\TestimonialController;
 use App\Http\Controllers\Admin\TimeslotController;
 use App\Http\Controllers\Admin\TrashBinController;
@@ -744,32 +742,13 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
 
     //Accounting
 
-    //Tax Rates
-    Route::get('/tax-rates', [TaxRateController::class, 'index'])->name('taxRates');
-    Route::get('/tax-rates/datatable', [TaxRateController::class, 'datatable']);
-    Route::post('/tax-rates', [TaxRateController::class, 'store']);
-    Route::get('/tax-rates/{id}/edit', [TaxRateController::class, 'edit']);
-    Route::post('/tax-rates/update', [TaxRateController::class, 'update']);
-    Route::get('/tax-rates/{id}/delete', [TaxRateController::class, 'delete']);
-    Route::get('/tax-rates/{id}/toggle', [TaxRateController::class, 'toggleStatus']);
-
-    //Account Types
-    Route::get('/account-types', [AccountTypeController::class, 'index'])->name('accountTypes');
-    Route::get('/account-types/datatable', [AccountTypeController::class, 'datatable']);
-    Route::post('/account-types', [AccountTypeController::class, 'store']);
-    Route::get('/account-types/{id}/edit', [AccountTypeController::class, 'edit']);
-    Route::post('/account-types/update', [AccountTypeController::class, 'update']);
-    Route::get('/account-types/{id}/delete', [AccountTypeController::class, 'delete']);
-    Route::get('/account-types/{id}/toggle', [AccountTypeController::class, 'toggleStatus']);
-
-    //Account Heads
+    //Chart of Accounts (type -> sub type -> head)
     Route::get('/account-heads', [AccountHeadController::class, 'index'])->name('accountHeads');
     Route::get('/account-heads/datatable', [AccountHeadController::class, 'datatable']);
     Route::get('/account-heads/check-code', [AccountHeadController::class, 'checkCode']);
-    Route::get('/account-heads/assignable-types', [AccountHeadController::class, 'assignableTypes']);
-    Route::post('/account-heads/{id}/assign-type', [AccountHeadController::class, 'assignType']);
+    Route::get('/account-heads/types', [AccountHeadController::class, 'types']);
+    Route::get('/account-heads/sub-types/{typeId}', [AccountHeadController::class, 'subTypes']);
     Route::post('/account-heads', [AccountHeadController::class, 'store']);
-    Route::get('/account-heads/by-type/{typeId}', [AccountHeadController::class, 'byType']);
     Route::get('/account-heads/{id}/edit', [AccountHeadController::class, 'edit']);
     Route::post('/account-heads/update', [AccountHeadController::class, 'update']);
     Route::get('/account-heads/{id}/delete', [AccountHeadController::class, 'delete']);
