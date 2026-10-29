@@ -268,6 +268,95 @@ class InvoiceExtractorService
     }
 
     /**
+     * Layout-preserving OCR for tabular documents (bank statements).
+     * Runs Tesseract in TSV mode (single uniform block, spaces preserved) and rebuilds every
+     * visual row from word coordinates, so IN / OUT / BALANCE columns stay on the same line
+     * as their date and description instead of being split into separate text blocks.
+     *
+     * @return array<int, string>
+     */
+    public function extractLayoutTextByPage(string $pdfPath, int $dpi = 300): array
+    {
+        $dpi = max(200, min($dpi, 400));
+        $pages = [];
+        try {
+            $tempDir = sys_get_temp_dir();
+            $base = uniqid('pdf_ocr_l_');
+            $imagePattern = $tempDir . DIRECTORY_SEPARATOR . $base . '-%d.png';
+            $gsCmd = "{$this->config['ghostscript']} -dSAFER -dBATCH -dNOPAUSE -dTextAlphaBits=4 -dGraphicsAlphaBits=4 -sDEVICE=pnggray -r{$dpi} -sOutputFile=\"{$imagePattern}\" \"{$pdfPath}\" 2>&1";
+            @shell_exec($gsCmd);
+            $images = glob($tempDir . DIRECTORY_SEPARATOR . $base . '-*.png') ?: [];
+            natsort($images);
+
+            foreach ($images as $image) {
+                $pageNo = count($pages) + 1;
+                if (preg_match('/-(\d+)\.png$/', $image, $m)) {
+                    $pageNo = (int) $m[1];
+                }
+                $tsv = (string) @shell_exec("{$this->config['tesseract']} \"{$image}\" stdout -l eng --oem 1 --psm 6 -c preserve_interword_spaces=1 tsv 2>/dev/null");
+                $pages[$pageNo] = self::layoutTextFromTsv($tsv);
+                @unlink($image);
+            }
+            ksort($pages);
+        } catch (\Throwable $e) {
+            Log::error('Bank PDF layout OCR failed', ['error' => $e->getMessage()]);
+        }
+
+        return $pages;
+    }
+
+    /** Rebuild text lines (left→right) from Tesseract TSV word boxes. */
+    public static function layoutTextFromTsv(string $tsv): string
+    {
+        $words = [];
+        foreach (preg_split('/\R/', $tsv) ?: [] as $i => $row) {
+            if ($i === 0 || $row === '') {
+                continue;
+            }
+            $c = explode("\t", $row);
+            if (count($c) < 12 || (int) $c[0] !== 5) {
+                continue;
+            }
+            $text = trim($c[11]);
+            if ($text === '' || (float) $c[10] < 0) {
+                continue;
+            }
+            $words[] = ['x' => (int) $c[6], 'y' => (int) $c[7] + (int) $c[9] / 2, 'w' => (int) $c[8], 'h' => (int) $c[9], 't' => $text];
+        }
+        if (!$words) {
+            return '';
+        }
+
+        usort($words, fn ($a, $b) => $a['y'] <=> $b['y']);
+        $heights = array_column($words, 'h');
+        sort($heights);
+        $tol = max(4, $heights[(int) (count($heights) / 2)] * 0.55);
+
+        $lines = [];
+        $current = [];
+        $anchor = null;
+        foreach ($words as $w) {
+            if ($anchor !== null && abs($w['y'] - $anchor) > $tol) {
+                $lines[] = $current;
+                $current = [];
+                $anchor = null;
+            }
+            $current[] = $w;
+            $anchor = $anchor === null ? $w['y'] : ($anchor * (count($current) - 1) + $w['y']) / count($current);
+        }
+        if ($current) {
+            $lines[] = $current;
+        }
+
+        $out = [];
+        foreach ($lines as $line) {
+            usort($line, fn ($a, $b) => $a['x'] <=> $b['x']);
+            $out[] = implode(' ', array_column($line, 't'));
+        }
+        return implode("\n", $out);
+    }
+
+    /**
      * Identity of a file for memoisation: real path plus size and mtime, so a
      * changed file is never served from a stale entry.
      */

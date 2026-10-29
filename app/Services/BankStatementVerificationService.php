@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Smalot\PdfParser\Parser;
+use App\Services\BankParsers\ParserRegistry;
 
 /**
  * Statement verification engine (HD_Bank_Statement_OCR_Verification_Guide).
@@ -82,52 +83,45 @@ class BankStatementVerificationService
         $ocr = false;
         $ocrReason = null;
 
-        // Full-document OCR runs if embedded text is almost empty OR if explicitly forced by user
-        if ($forceOcr || mb_strlen($embedded) < 50) {
-            $ocrReason = $forceOcr ? 'user_forced_ocr' : 'embedded_text_too_short';
-            Log::info('Bank statement OCR requested', [
-                'path' => $path,
-                'pages_total' => $pagesTotal,
-                'embedded_length' => mb_strlen($embedded),
-                'reason' => $ocrReason,
-            ]);
+        // 1. Embedded text first: it is exact. Only a statement that does not prove itself
+        //    (opening + rows = closing, totals match) falls through to OCR.
+        $best = $embedded !== '' ? $this->evaluatePages($parsedPages, false) : null;
+        $needsOcr = $forceOcr || mb_strlen($embedded) < 50 || $best === null || !$best['proven'];
 
-            $ocrPages = app(InvoiceExtractorService::class)->extractRawTextByPage($path);
-            if (!empty($ocrPages) && mb_strlen(trim(implode("\n", $ocrPages))) > 0) {
-                $ocr = true;
-                $parsedPages = $ocrPages;
-                $pagesTotal = max($pagesTotal, count($parsedPages));
-            } else {
-                $ocrText = trim((string) app(InvoiceExtractorService::class)->extractRawText($path));
-                if (mb_strlen($ocrText) > ($forceOcr ? 0 : mb_strlen($embedded))) {
-                    $ocr = true;
-                    $parsedPages = [1 => $ocrText];
+        if ($needsOcr) {
+            $ocrReason = $forceOcr ? 'user_forced_ocr' : ($best === null ? 'embedded_text_too_short' : 'embedded_text_not_proven');
+            Log::info('Bank statement OCR requested', ['path' => $path, 'reason' => $ocrReason]);
+
+            $extractor = app(InvoiceExtractorService::class);
+            $ocrPages = $extractor->extractLayoutTextByPage($path);
+            if (empty($ocrPages) || mb_strlen(trim(implode("\n", $ocrPages))) === 0) {
+                $ocrPages = $extractor->extractRawTextByPage($path);
+            }
+            if (empty($ocrPages)) {
+                $blob = trim((string) $extractor->extractRawText($path));
+                $ocrPages = $blob !== '' ? [1 => $blob] : [];
+            }
+            if (!empty($ocrPages)) {
+                $candidate = $this->evaluatePages($ocrPages, true);
+                if ($best === null || $this->betterThan($candidate, $best)) {
+                    $best = $candidate;
                 }
             }
         }
-        if (!$parsedPages) {
-            $parsedPages = [1 => ''];
+
+        if ($best === null) {
+            $best = $this->evaluatePages([1 => ''], false);
         }
 
-        $rows = [];
-        $unparsed = 0;
-        $samples = [];
-        $pages = [];
-        foreach ($parsedPages as $pageNo => $text) {
-            $parsed = $this->parsePage($text, (int) $pageNo, $ocr);
-            $rows = array_merge($rows, $parsed['rows']);
-            $unparsed += $parsed['unparsed'];
-            $samples = array_merge($samples, $parsed['samples']);
-            $pages[(int) $pageNo] = [
-                'text_length' => mb_strlen(trim($text)),
-                'transactions_detected' => $this->looksLikeTransactions($text),
-                'rows' => count($parsed['rows']),
-                'ocr_unmapped' => $ocr,
-            ];
-        }
+        $parsedPages = $best['pages'];
+        $ocr = $best['ocr'];
+        $pagesTotal = max($pagesTotal, count($parsedPages));
+        $rows = $best['rows'];
+        $unparsed = $best['unparsed'];
+        $samples = $best['samples'];
+        $pages = $best['page_info'];
 
-        // OCR returns one blob for the whole document, so every real PDF page must still
-        // appear in the coverage table — marked as unmapped instead of "no transactions".
+        // OCR may return one blob for the whole document: keep every real PDF page in coverage.
         if ($ocr && $pagesTotal > count($pages)) {
             for ($page = 1; $page <= $pagesTotal; $page++) {
                 if (!isset($pages[$page])) {
@@ -138,8 +132,8 @@ class BankStatementVerificationService
         }
 
         $text = implode("\n", $parsedPages);
-        $opening = $this->figure($text, ['opening balance', 'balance brought forward', 'brought forward', 'starting balance']);
-        $closing = $this->figure($text, ['closing balance', 'balance carried forward', 'carried forward', 'new balance']);
+        $opening = $best['opening'] ?? $this->figure($text, ['opening balance', 'balance brought forward', 'brought forward', 'starting balance']);
+        $closing = $best['closing'] ?? $this->figure($text, ['closing balance', 'balance carried forward', 'carried forward', 'new balance']);
 
         // Many statements (Monzo, Starling) print a balance on every row but never label
         // the opening/closing balances: derive them from the ledger so the maths still holds.
@@ -197,6 +191,84 @@ class BankStatementVerificationService
             'closing_balance_found' => $closing !== null,
         ]);
         return $result;
+    }
+
+    /**
+     * Parse pages with the bank-specific parser (if one claims the document) or the generic
+     * line parser, and report whether the result proves itself against printed totals.
+     */
+    private function evaluatePages(array $pages, bool $ocr): array
+    {
+        $text = implode("\n", $pages);
+        $parser = ParserRegistry::detect($text);
+        $rows = []; $unparsed = 0; $samples = []; $opening = null; $closing = null;
+        $totalIn = null; $totalOut = null;
+
+        if ($parser !== null) {
+            $res = $parser->parseDocument($pages, $ocr);
+            $rows = $res['rows'];
+            $unparsed = $res['unparsed'];
+            $samples = $res['samples'];
+            $opening = $res['opening'];
+            $closing = $res['closing'];
+            $totalIn = $res['total_in'];
+            $totalOut = $res['total_out'];
+        } else {
+            foreach ($pages as $pageNo => $pageText) {
+                $parsed = $this->parsePage((string) $pageText, (int) $pageNo, $ocr);
+                $rows = array_merge($rows, $parsed['rows']);
+                $unparsed += $parsed['unparsed'];
+                $samples = array_merge($samples, $parsed['samples']);
+            }
+        }
+
+        $byPage = [];
+        foreach ($rows as $row) {
+            $byPage[(int) $row['source_page']] = ($byPage[(int) $row['source_page']] ?? 0) + 1;
+        }
+        $pageInfo = [];
+        foreach ($pages as $pageNo => $pageText) {
+            $pageInfo[(int) $pageNo] = [
+                'text_length' => mb_strlen(trim((string) $pageText)),
+                'transactions_detected' => $this->looksLikeTransactions((string) $pageText) || ($byPage[(int) $pageNo] ?? 0) > 0,
+                'rows' => $byPage[(int) $pageNo] ?? 0,
+                'ocr_unmapped' => $ocr && count($pages) === 1,
+            ];
+        }
+
+        // Statements without a dedicated parser keep the previous behaviour: embedded text is
+        // trusted when it parsed cleanly; OCR is only used when the text is empty or forced.
+        $proven = $parser === null && $rows !== [] && $unparsed === 0;
+        if ($parser !== null && $rows !== [] && $opening !== null && $closing !== null) {
+            $sum = round(array_sum(array_map(fn ($r) => (float) $r['amount'], $rows)), 2);
+            $in = round(array_sum(array_map(fn ($r) => max(0.0, (float) $r['amount']), $rows)), 2);
+            $out = round(-array_sum(array_map(fn ($r) => min(0.0, (float) $r['amount']), $rows)), 2);
+            $balanceOk = abs(round($opening + $sum, 2) - $closing) < 0.01;
+            $totalsOk = ($totalIn === null || abs($in - $totalIn) < 0.01) && ($totalOut === null || abs($out - $totalOut) < 0.01);
+            if ($totalIn !== null && !$totalsOk) {
+                $unparsed++;
+                $samples[] = 'Statement totals do not match extracted rows: printed in/out ' . number_format($totalIn, 2, '.', '')
+                    . '/' . number_format((float) $totalOut, 2, '.', '') . ' vs extracted ' . number_format($in, 2, '.', '') . '/' . number_format($out, 2, '.', '');
+            }
+            $proven = $balanceOk && $totalsOk && $unparsed === 0;
+        }
+
+        return [
+            'pages' => $pages, 'rows' => $rows, 'unparsed' => $unparsed, 'samples' => $samples,
+            'opening' => $opening, 'closing' => $closing, 'ocr' => $ocr, 'page_info' => $pageInfo,
+            'proven' => $proven, 'parser' => $parser?->name(),
+        ];
+    }
+
+    private function betterThan(array $a, array $b): bool
+    {
+        if ($a['proven'] !== $b['proven']) {
+            return $a['proven'];
+        }
+        if ($a['unparsed'] !== $b['unparsed']) {
+            return $a['unparsed'] < $b['unparsed'];
+        }
+        return count($a['rows']) > count($b['rows']);
     }
 
     /** @return array{rows: array<int,array<string,mixed>>, unparsed:int, samples:array<int,string>} */

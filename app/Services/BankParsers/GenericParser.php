@@ -23,6 +23,23 @@ class GenericParser implements StatementParserInterface
         return true;
     }
 
+    public function parseDocument(array $pages, bool $fromOcr = false): array
+    {
+        $rows = [];
+        $unparsed = 0;
+        $samples = [];
+        foreach ($pages as $pageNo => $text) {
+            $res = $this->parse((string) $text, (int) $pageNo, $fromOcr);
+            $rows = array_merge($rows, $res['rows']);
+            $unparsed += $res['unparsed'];
+            $samples = array_merge($samples, $res['samples']);
+        }
+        return [
+            'rows' => $rows, 'unparsed' => $unparsed, 'samples' => array_slice($samples, 0, 5),
+            'opening' => null, 'closing' => null, 'total_in' => null, 'total_out' => null,
+        ];
+    }
+
     public function parse(string $text, int $pageNo = 1, bool $fromOcr = false): array
     {
         $rows = [];
