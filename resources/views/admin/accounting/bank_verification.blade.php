@@ -6,9 +6,9 @@
 .hd-small{color:#64748b;font-size:12px}
 .hd-scroll{overflow-x:auto;overflow-y:visible;}
 .hd-table{width:100%;font-size:13px;table-layout:auto}
-.hd-table th,.hd-table td{border-bottom:1px solid #e7ebf1;padding:9px;vertical-align:top}
-.hd-table th{background:#f1f5f9}
-.hd-grid{display:grid;grid-template-columns:minmax(320px,1fr) minmax(420px,1.15fr);gap:16px;align-items:start}
+.hd-table th,.hd-table td{border-bottom:1px solid #e7ebf1;padding:9px;vertical-align:middle}
+.hd-table th{background:#f1f5f9;font-weight:600}
+.hd-grid{display:grid;grid-template-columns:minmax(320px,1fr) minmax(420px,1.25fr);gap:16px;align-items:start}
 @media(max-width:1200px){.hd-grid{grid-template-columns:1fr}}
 .hd-pdf{width:100%;height:78vh;border:1px solid #dbe3ee;border-radius:10px;background:#f8fafc}
 .hd-row-form{display:grid;grid-template-columns:110px 1fr 110px 1fr auto;gap:6px;align-items:end}
@@ -20,10 +20,6 @@
 .hd-balances{display:flex;gap:22px;flex-wrap:wrap}
 .hd-balances div{font-size:12px;color:#64748b}
 .hd-balances strong{display:block;font-size:16px;color:#0f172a}
-details summary{cursor:pointer;color:#1d4ed8;font-size:12px}
-.hd-table td details{position:relative;display:inline-block;vertical-align:top;}
-.hd-table td details form input,.hd-table td details form button{font-size:12px;padding:2px 4px;}
-.hd-table td details form{position:relative;z-index:20;background:#fff;border:1px solid #e5eaf1;border-radius:8px;padding:8px;box-shadow:0 4px 12px rgba(0,0,0,0.08);min-width:180px;width:100%;max-width:240px;overflow:hidden;}
 </style>
 
 @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
@@ -224,14 +220,14 @@ details summary{cursor:pointer;color:#1d4ed8;font-size:12px}
             <table class="hd-table">
                 <thead>
                     <tr>
-                        <th>Page</th>
-                        <th>Date</th>
+                        <th style="width:50px; text-align:center;">Page</th>
+                        <th style="width:85px;">Date</th>
                         <th>Description</th>
-                        <th>Amount</th>
-                        <th>PDF Balance</th>
-                        <th>System Balance</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+                        <th style="width:90px; text-align:right;">Amount</th>
+                        <th style="width:95px; text-align:right;">PDF Bal</th>
+                        <th style="width:95px; text-align:right;">System Bal</th>
+                        <th style="width:90px; text-align:center;">Status</th>
+                        <th style="width:130px; text-align:center;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -243,9 +239,13 @@ details summary{cursor:pointer;color:#1d4ed8;font-size:12px}
                         $isVerified = !empty($entry->verified_at);
                     @endphp
                     <tr style="{{ $hasIssue ? 'background-color: #fff1f2; border-left: 4px solid #ef4444;' : 'background-color: #ffffff;' }}">
-                        <td>{{ $entry->source_page ?? '—' }}@if($entry->source_position)/{{ $entry->source_position }}@endif</td>
-                        <td style="white-space:nowrap;">{{ \Illuminate\Support\Carbon::parse($entry->transaction_date)->format('d/m/Y') }}</td>
-                        <td>
+                        <td style="text-align:center; font-size:11px; color:#64748b; white-space:nowrap;">
+                            {{ $entry->source_page ?? '—' }}@if($entry->source_position)/{{ $entry->source_position }}@endif
+                        </td>
+                        <td style="white-space:nowrap; font-size:12px;">
+                            {{ \Illuminate\Support\Carbon::parse($entry->transaction_date)->format('d/m/Y') }}
+                        </td>
+                        <td style="max-width:240px; word-break:break-word;">
                             <div>{{ $entry->description }}</div>
                             @if($hasMismatch)
                                 <div class="hd-small text-danger font-weight-bold">
@@ -257,13 +257,13 @@ details summary{cursor:pointer;color:#1d4ed8;font-size:12px}
                                 </div>
                             @endif
                         </td>
-                        <td style="white-space:nowrap; font-weight:600; color:{{ (float) $entry->amount < 0 ? '#b91c1c' : '#15803d' }}">
+                        <td style="white-space:nowrap; text-align:right; font-weight:600; color:{{ (float) $entry->amount < 0 ? '#b91c1c' : '#15803d' }}">
                             {{ number_format((float) $entry->amount, 2) }}
                         </td>
-                        <td style="white-space:nowrap;">
+                        <td style="white-space:nowrap; text-align:right; color:#475569;">
                             {{ $entry->balance_after !== null ? number_format((float) $entry->balance_after, 2) : '—' }}
                         </td>
-                        <td style="white-space:nowrap;">
+                        <td style="white-space:nowrap; text-align:right;">
                             @if($entry->system_balance !== null)
                                 <span class="font-weight-bold" style="color:{{ $hasMismatch ? '#dc2626' : '#15803d' }};">
                                     {{ number_format((float) $entry->system_balance, 2) }}
@@ -279,7 +279,7 @@ details summary{cursor:pointer;color:#1d4ed8;font-size:12px}
                                 <span class="text-muted">—</span>
                             @endif
                         </td>
-                        <td>
+                        <td style="text-align:center; white-space:nowrap;">
                             @if($hasMismatch)
                                 <span class="hd-pill" style="background:#dc2626; color:#ffffff; font-weight:700;"><i class="bi bi-exclamation-triangle-fill mr-1"></i> Mismatch</span>
                             @elseif($hasMissingAmount)
@@ -289,38 +289,37 @@ details summary{cursor:pointer;color:#1d4ed8;font-size:12px}
                             @else
                                 <span class="hd-pill" style="background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; font-weight:600;"><i class="bi bi-check mr-1"></i> Balanced</span>
                             @endif
-                            </td>
-                        <td style="white-space:nowrap;">
-                            <div class="d-flex align-items-center gap-2">
-                                <details>
-                                    <summary class="text-primary hd-small font-weight-bold" style="cursor:pointer;">Edit</summary>
-                                    <form method="POST" action="{{ route('admin.bank-statements.update-entry', $entry->id) }}" class="mt-1 p-2 border rounded bg-white shadow-sm" style="position:relative; z-index:10; min-width:190px; width:100%; max-width:100%;">
-                                        @csrf
-                                        <label class="hd-small font-weight-bold mb-0">Date</label>
-                                        <input type="date" name="transaction_date" required value="{{ \Illuminate\Support\Carbon::parse($entry->transaction_date)->format('Y-m-d') }}" class="form-control form-control-sm mb-1">
-                                        <label class="hd-small font-weight-bold mb-0">Description</label>
-                                        <input type="text" name="description" required maxlength="500" value="{{ $entry->description }}" class="form-control form-control-sm mb-1">
-                                        <label class="hd-small font-weight-bold mb-0">Amount</label>
-                                        <input type="number" step="0.01" name="amount" required value="{{ number_format((float) $entry->amount, 2, '.', '') }}" class="form-control form-control-sm mb-1">
-                                        <label class="hd-small font-weight-bold mb-0">Reason</label>
-                                        <input type="text" name="reason" required maxlength="1000" placeholder="Reason for correction" class="form-control form-control-sm mb-1">
-                                        <button class="btn btn-primary btn-sm btn-block">Save</button>
-                                    </form>
-                                </details>
+                        </td>
+                        <td style="white-space:nowrap; text-align:center;">
+                            <div class="d-inline-flex align-items-center gap-1">
+                                <button type="button" 
+                                        class="btn btn-sm btn-outline-primary py-0 px-2 btn-edit-row" 
+                                        style="font-size:11px;"
+                                        data-id="{{ $entry->id }}"
+                                        data-date="{{ \Illuminate\Support\Carbon::parse($entry->transaction_date)->format('Y-m-d') }}"
+                                        data-description="{{ $entry->description }}"
+                                        data-amount="{{ number_format((float) $entry->amount, 2, '.', '') }}"
+                                        title="Edit this row">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </button>
                                 @unless($entry->verified_at)
-                                    <form method="POST" action="{{ route('admin.bank-statements.verify-entry', $entry->id) }}">
+                                    <form method="POST" action="{{ route('admin.bank-statements.verify-entry', $entry->id) }}" class="d-inline m-0">
                                         @csrf
-                                        <button class="btn btn-outline-success btn-sm py-0 px-2" style="font-size:11px;" title="Mark row verified">Verify</button>
+                                        <button type="submit" class="btn btn-outline-success btn-sm py-0 px-2" style="font-size:11px;" title="Mark row verified">
+                                            <i class="bi bi-check2"></i>
+                                        </button>
                                     </form>
                                 @endunless
-                                <details>
-                                    <summary class="text-danger hd-small" style="cursor:pointer;">Delete</summary>
-                                    <form method="POST" action="{{ route('admin.bank-statements.destroy-entry', $entry->id) }}" class="mt-1 p-2 border rounded bg-white shadow-sm" style="position:relative; z-index:10; min-width:180px; width:100%; max-width:100%;" onsubmit="return confirm('Remove this row from the statement?')">
-                                        @csrf
-                                        <input type="text" name="reason" required maxlength="1000" placeholder="Why remove?" class="form-control form-control-sm mb-1">
-                                        <button class="btn btn-outline-danger btn-sm btn-block">Confirm Delete</button>
-                                    </form>
-                                </details>
+                                <button type="button" 
+                                        class="btn btn-sm btn-outline-danger py-0 px-2 btn-delete-row" 
+                                        style="font-size:11px;"
+                                        data-id="{{ $entry->id }}"
+                                        data-date="{{ \Illuminate\Support\Carbon::parse($entry->transaction_date)->format('d/m/Y') }}"
+                                        data-description="{{ $entry->description }}"
+                                        data-amount="{{ number_format((float) $entry->amount, 2, '.', '') }}"
+                                        title="Delete this row">
+                                    <i class="bi bi-trash"></i>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -369,4 +368,118 @@ details summary{cursor:pointer;color:#1d4ed8;font-size:12px}
     </div>
 </div>
 </div>
+
+{{-- Edit Row Modal --}}
+<div class="modal fade" id="editRowModal" tabindex="-1" role="dialog" aria-labelledby="editRowModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <form method="POST" id="editRowForm" action="">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editRowModalLabel"><i class="bi bi-pencil-square mr-1"></i> Edit Statement Row</h5>
+                    <button type="button" class="btn-close close" data-bs-dismiss="modal" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group mb-3">
+                        <label class="form-label font-weight-bold">Transaction Date</label>
+                        <input type="date" name="transaction_date" id="modalEditDate" required class="form-control">
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label font-weight-bold">Description</label>
+                        <input type="text" name="description" id="modalEditDescription" required maxlength="500" class="form-control">
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label font-weight-bold">Amount (£)</label>
+                        <input type="number" step="0.01" name="amount" id="modalEditAmount" required class="form-control" placeholder="-50.00 or 50.00">
+                        <small class="form-text text-muted">Use negative (-) for money out / expense, positive for money in.</small>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label font-weight-bold">Reason for correction <span class="text-danger">*</span></label>
+                        <input type="text" name="reason" id="modalEditReason" required maxlength="1000" placeholder="e.g. Corrected typo in amount / description" class="form-control">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg mr-1"></i> Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- Delete Row Modal --}}
+<div class="modal fade" id="deleteRowModal" tabindex="-1" role="dialog" aria-labelledby="deleteRowModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <form method="POST" id="deleteRowForm" action="">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger" id="deleteRowModalLabel"><i class="bi bi-trash mr-1"></i> Remove Statement Row</h5>
+                    <button type="button" class="btn-close close" data-bs-dismiss="modal" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2">Are you sure you want to remove this transaction row from the statement?</p>
+                    <div class="p-2 mb-3 bg-light rounded hd-small" id="deleteRowSummary"></div>
+                    <div class="form-group mb-3">
+                        <label class="form-label font-weight-bold">Reason for removal <span class="text-danger">*</span></label>
+                        <input type="text" name="reason" id="modalDeleteReason" required maxlength="1000" placeholder="e.g. Duplicate row, header line, or non-transaction" class="form-control">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger"><i class="bi bi-trash mr-1"></i> Remove Row</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@endsection
+
+@section('script')
+<script>
+$(document).ready(function() {
+    $(document).on('click', '.btn-edit-row', function() {
+        var id = $(this).data('id');
+        var date = $(this).data('date');
+        var desc = $(this).data('description');
+        var amount = $(this).data('amount');
+        var url = '{{ route("admin.bank-statements.update-entry", ":id") }}'.replace(':id', id);
+
+        $('#editRowForm').attr('action', url);
+        $('#modalEditDate').val(date);
+        $('#modalEditDescription').val(desc);
+        $('#modalEditAmount').val(amount);
+        $('#modalEditReason').val('');
+        
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            new bootstrap.Modal(document.getElementById('editRowModal')).show();
+        } else {
+            $('#editRowModal').modal('show');
+        }
+    });
+
+    $(document).on('click', '.btn-delete-row', function() {
+        var id = $(this).data('id');
+        var desc = $(this).data('description');
+        var amount = $(this).data('amount');
+        var date = $(this).data('date');
+        var url = '{{ route("admin.bank-statements.destroy-entry", ":id") }}'.replace(':id', id);
+
+        $('#deleteRowForm').attr('action', url);
+        $('#deleteRowSummary').html('<strong>' + $('<div>').text(desc).html() + '</strong><br>Date: ' + date + ' | Amount: £' + amount);
+        $('#modalDeleteReason').val('');
+        
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            new bootstrap.Modal(document.getElementById('deleteRowModal')).show();
+        } else {
+            $('#deleteRowModal').modal('show');
+        }
+    });
+});
+</script>
 @endsection

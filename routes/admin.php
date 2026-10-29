@@ -120,8 +120,6 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::post('/bank-reconciliation/rows/{entryId}/remove', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'destroyEntry'])->name('admin.bank-reconciliation.destroy-entry');
     Route::post('/bank-reconciliation/rows/{entryId}/verify', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'verifyEntry'])->name('admin.bank-reconciliation.verify-entry');
     Route::post('/bank-reconciliation/import/{importId}/verify-all-rows', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'verifyAllRows'])->name('admin.bank-reconciliation.verify-all-rows');
-    Route::post('/bank-reconciliation/approve-all', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'approveAllRows'])->name('admin.bank-reconciliation.approve-all');
-    Route::post('/bank-reconciliation/verify-all-rows-for-client', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'verifyAllRowsForClient'])->name('admin.bank-reconciliation.verify-all-rows-for-client');
     Route::post('/bank-reconciliation/exceptions/{exceptionId}/resolve', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'resolveException'])->name('admin.bank-reconciliation.resolve-exception');
 
     //Admin crud

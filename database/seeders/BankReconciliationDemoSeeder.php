@@ -134,7 +134,7 @@ class BankReconciliationDemoSeeder extends Seeder
                 'receipt_id' => $rid, 'account_head_id' => $head,
                 'invoice_date' => $date, 'invoice_number' => 'INV-S' . ($i + 1),
                 'net_amount' => $total, 'tax_amount' => 0.00, 'vat_amount' => 0.00,
-                'total_amount' => $total, 'paid' => 1, 'payment_method' => 'card',
+                'total_amount' => $total, 'paid' => 1, 'payment_method' => 'bank',
                 'description' => $supplier, 'created_at' => $now, 'updated_at' => $now,
             ]);
         }
