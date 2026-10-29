@@ -36,6 +36,13 @@ class InvoiceExtractorService
                     ? ['C:/Program Files/gs/gs*/bin/gswin64c.exe', 'C:/Program Files (x86)/gs/gs*/bin/gswin32c.exe']
                     : ['/usr/bin/gs', '/usr/local/bin/gs', '/opt/homebrew/bin/gs']
             ),
+            'pdftotext' => $this->findBinary(
+                [(string) getenv('PDFTOTEXT_BIN')],
+                PHP_OS_FAMILY === 'Windows' ? ['pdftotext.exe'] : ['pdftotext'],
+                PHP_OS_FAMILY === 'Windows'
+                    ? ['C:/Program Files/poppler*/Library/bin/pdftotext.exe', 'C:/poppler*/Library/bin/pdftotext.exe']
+                    : ['/usr/bin/pdftotext', '/usr/local/bin/pdftotext', '/opt/homebrew/bin/pdftotext']
+            ),
             'tesseract' => $this->findBinary(
                 [(string) getenv('TESSERACT_BIN')],
                 ['tesseract'],
@@ -262,6 +269,63 @@ class InvoiceExtractorService
             }
         } catch (\Throwable $e) {
             Log::error('Bank PDF OCR by page failed', ['error' => $e->getMessage()]);
+        }
+
+        return $pages;
+    }
+
+    /**
+     * Text layer read by native tools instead of Smalot. Some bank PDFs (Lloyds) embed fonts with
+     * a custom encoding that Smalot decodes as gibberish; pdftotext and Ghostscript decode them.
+     * Tries pdftotext first, then Ghostscript txtwrite (always present because OCR needs it).
+     *
+     * @return array<int, string> page number => text
+     */
+    public function extractNativeTextByPage(string $pdfPath): array
+    {
+        $pages = [];
+        try {
+            $bin = $this->config['pdftotext'];
+            $tmp = tempnam(sys_get_temp_dir(), 'pdftxt_');
+            if ($tmp !== false) {
+                @shell_exec("{$bin} -raw -enc UTF-8 \"{$pdfPath}\" \"{$tmp}\" 2>&1");
+                $raw = is_file($tmp) ? (string) file_get_contents($tmp) : '';
+                @unlink($tmp);
+                if (trim($raw) !== '' && !str_contains($raw, 'not found')) {
+                    foreach (explode("\f", $raw) as $i => $text) {
+                        if (trim($text) !== '' || $i === 0) {
+                            $pages[$i + 1] = $text;
+                        }
+                    }
+                    // pdftotext ends with a trailing form feed: drop the empty last page.
+                    if ($pages && trim((string) end($pages)) === '' && count($pages) > 1) {
+                        array_pop($pages);
+                    }
+                    if (mb_strlen(trim(implode('', $pages))) > 50) {
+                        return $pages;
+                    }
+                }
+                $pages = [];
+            }
+
+            $base = tempnam(sys_get_temp_dir(), 'gstxt_');
+            if ($base !== false) {
+                @unlink($base);
+                $pattern = $base . '-%d.txt';
+                @shell_exec("{$this->config['ghostscript']} -q -dNOPAUSE -dBATCH -dSAFER -sDEVICE=txtwrite -sOutputFile=\"{$pattern}\" \"{$pdfPath}\" 2>&1");
+                $files = glob($base . '-*.txt') ?: [];
+                natsort($files);
+                foreach ($files as $file) {
+                    if (preg_match('/-(\d+)\.txt$/', $file, $m)) {
+                        $pages[(int) $m[1]] = (string) file_get_contents($file);
+                    }
+                    @unlink($file);
+                }
+                ksort($pages);
+            }
+        } catch (\Throwable $e) {
+            Log::error('Native PDF text extraction failed', ['error' => $e->getMessage()]);
+            $pages = [];
         }
 
         return $pages;

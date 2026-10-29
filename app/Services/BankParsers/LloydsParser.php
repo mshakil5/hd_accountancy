@@ -65,10 +65,10 @@ class LloydsParser extends AbstractStatementParser
 
                 if (preg_match(self::ROW, $line, $m) && isset(self::MONTHS[strtolower($m[2])])
                     && ($this->isTypedRest($m[4]) || $this->isTypelessRow($m[4])
-                        || preg_match('/^STATEMENT\s+(OPENING|CLOSING)\s+BALANCE/iu', $m[4]))) {
+                        || preg_match('/^STATEMENT\s*(OPENING|CLOSING)\s*BALANCE/iu', $m[4]))) {
                     $flush();
                     $cur = ['page' => (int) $pageNo, 'date' => $this->date($m[1], $m[2], $m[3]), 'rest' => $m[4]];
-                    if (preg_match('/^STATEMENT\s+CLOSING\s+BALANCE/iu', $m[4])) {
+                    if (preg_match('/^STATEMENT\s*CLOSING\s*BALANCE/iu', $m[4])) {
                         $flush();
                         $done = true;
                     }
@@ -100,12 +100,12 @@ class LloydsParser extends AbstractStatementParser
     {
         $rest = trim($cur['rest']);
 
-        if (preg_match('/^STATEMENT\s+OPENING\s+BALANCE\s+(.*)$/iu', $rest, $m)) {
+        if (preg_match('/^STATEMENT\s*OPENING\s*BALANCE\s*(.*)$/iu', $rest, $m)) {
             [, $nums] = $this->trailingMoney($m[1], 1);
             $opening = $nums[0] ?? null;
             return;
         }
-        if (preg_match('/^STATEMENT\s+CLOSING\s+BALANCE\s+(.*)$/iu', $rest, $m)) {
+        if (preg_match('/^STATEMENT\s*CLOSING\s*BALANCE\s*(.*)$/iu', $rest, $m)) {
             [, $nums] = $this->trailingMoney(preg_replace('/\s+OD$/iu', '', $m[1]), 3);
             if (count($nums) === 3) {
                 [$totalOut, $totalIn, $closing] = $nums;
@@ -215,8 +215,9 @@ class LloydsParser extends AbstractStatementParser
 
     private function isNoise(string $line): bool
     {
+        $compact = preg_replace('/\s+/u', '', $line) ?? $line;
         foreach (self::NOISE as $re) {
-            if (preg_match($re, $line)) {
+            if (preg_match($re, $line) || preg_match($re, $compact)) {
                 return true;
             }
         }

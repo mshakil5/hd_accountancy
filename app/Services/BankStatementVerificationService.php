@@ -88,6 +88,20 @@ class BankStatementVerificationService
         $best = $embedded !== '' ? $this->evaluatePages($parsedPages, false) : null;
         $needsOcr = $forceOcr || mb_strlen($embedded) < 50 || $best === null || !$best['proven'];
 
+        // 2. Native text tools (pdftotext / Ghostscript): fixes PDFs whose fonts Smalot cannot decode.
+        if (($best === null || !$best['proven']) && is_file($path)) {
+            $native = app(InvoiceExtractorService::class)->extractNativeTextByPage($path);
+            if (!empty($native) && mb_strlen(trim(implode('', $native))) > 50) {
+                $candidate = $this->evaluatePages($native, false);
+                if ($best === null || $this->betterThan($candidate, $best)) {
+                    $best = $candidate;
+                    $ocrReason = 'native_text';
+                }
+            }
+            $needsOcr = $forceOcr || $best === null || !$best['proven'];
+        }
+
+        // 3. OCR last resort.
         if ($needsOcr) {
             $ocrReason = $forceOcr ? 'user_forced_ocr' : ($best === null ? 'embedded_text_too_short' : 'embedded_text_not_proven');
             Log::info('Bank statement OCR requested', ['path' => $path, 'reason' => $ocrReason]);
@@ -238,7 +252,7 @@ class BankStatementVerificationService
 
         // Statements without a dedicated parser keep the previous behaviour: embedded text is
         // trusted when it parsed cleanly; OCR is only used when the text is empty or forced.
-        $proven = $parser === null && $rows !== [] && $unparsed === 0;
+        $proven = $parser === null && $rows !== [] && $unparsed === 0 && $this->runningBalancesHold($rows);
         if ($parser !== null && $rows !== [] && $opening !== null && $closing !== null) {
             $sum = round(array_sum(array_map(fn ($r) => (float) $r['amount'], $rows)), 2);
             $in = round(array_sum(array_map(fn ($r) => max(0.0, (float) $r['amount']), $rows)), 2);
@@ -258,6 +272,36 @@ class BankStatementVerificationService
             'opening' => $opening, 'closing' => $closing, 'ocr' => $ocr, 'page_info' => $pageInfo,
             'proven' => $proven, 'parser' => $parser?->name(),
         ];
+    }
+
+    /** True when every printed balance follows from the previous one (gibberish never does). */
+    private function runningBalancesHold(array $rows): bool
+    {
+        $prev = null;
+        $checked = 0;
+        foreach ($this->chronological($rows) as $row) {
+            if ($row['balance_after'] === null) {
+                continue;
+            }
+            if ($prev !== null) {
+                $checked++;
+                if (abs(round($prev + (float) $row['amount'], 2) - (float) $row['balance_after']) >= 0.01) {
+                    return false;
+                }
+            }
+            $prev = (float) $row['balance_after'];
+        }
+        return $checked > 0 || count($rows) >= 1 && $prev === null && $this->plausibleText($rows);
+    }
+
+    private function plausibleText(array $rows): bool
+    {
+        foreach ($rows as $row) {
+            if (!preg_match('/[A-Za-z]{3}/', (string) $row['description'])) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private function betterThan(array $a, array $b): bool
@@ -1018,7 +1062,10 @@ class BankStatementVerificationService
 
     public function blockingCount(BankImport $import): int
     {
-        return $this->exceptionQuery($import)->where('severity', 'blocking')->count();
+        return $this->exceptionQuery($import)
+            ->where('severity', 'blocking')
+            ->whereIn('code', ['balance_mismatch', 'derived_balances_only', 'no_transactions_extracted'])
+            ->count();
     }
 
     public function exceptionQuery(BankImport $import)

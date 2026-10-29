@@ -426,7 +426,7 @@
                                 '<td>' + (r.business || '-') + '</td>' +
                                 '<td>' + (r.payment_method || '-') + '</td>' +
                                 '<td>' + (r.type || '-') + '</td>' +
-                                '<td class="text-right">£' + parseFloat(r.amount || 0).toFixed(2) + '</td></tr>';
+                                '<td class="text-right">£' + parseFloat(r.signed_amount ?? r.amount ?? 0).toFixed(2) + '</td></tr>';
                         });
                         html += '</tbody></table>';
                     }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AccountHead;
 use App\Models\Client;
 use App\Models\ClientCredential;
 use App\Models\Transaction;
@@ -17,6 +18,46 @@ class AccountingController extends Controller
      * receipt workflow's own completed count.
      */
     private const EXCLUDED_RECEIPT_STATUSES = ['cancelled', 'pending', 'to_review'];
+
+    /**
+     * A ledger row's `type` tells us which side of the head it sits on:
+     * payable / paid = debit, receivable / received = credit.
+     */
+    private function isDebitLedgerType(?string $type): bool
+    {
+        return in_array($type, ['payable', 'paid'], true);
+    }
+
+    /**
+     * Natural side used for report presentation. This is the side of the head's
+     * account *category*, not the head's own normal balance: the Excel chart has
+     * debit-natured contra heads inside credit categories (Sales Refund 107,
+     * Owners Drawing 604), and their debit balance must REDUCE the section
+     * total rather than add to it. Using the head's normal balance here inflated
+     * both P&L income and Balance Sheet equity and broke the accounting identity.
+     */
+    private function presentationNormalBalance(?AccountHead $head): string
+    {
+        $category = $head?->accountType?->category;
+
+        return in_array($category, ['asset', 'expense'], true) ? 'debit' : 'credit';
+    }
+
+    /**
+     * Signed amount for report rows. Positive means "increases its own section",
+     * negative means "contra" (reduces it). The ledger stores only positive
+     * amounts, so the sign comes from the row side + the category's natural side.
+     */
+    private function signedReportAmount(Transaction $txn, ?AccountHead $head): float
+    {
+        $amount = (float) $txn->total_amount;
+        $isDebit = $this->isDebitLedgerType($txn->type);
+        $normal = $this->presentationNormalBalance($head);
+
+        return $normal === 'debit'
+            ? ($isDebit ? $amount : -$amount)
+            : ($isDebit ? -$amount : $amount);
+    }
 
     /**
      * Restrict a ledger query to the requested credential/business and period,
@@ -146,7 +187,7 @@ class AccountingController extends Controller
             $headName  = $accountHead->name;
             $headId    = $accountHead->id;
             $method    = $txn->receipt?->detail?->payment_method ?? $txn->payment_method ?? 'cash';
-            $amount    = (float) $txn->total_amount;
+            $amount    = $this->signedReportAmount($txn, $accountHead);
 
             $entry = ['amount' => $amount, 'method' => $method];
 
@@ -260,7 +301,7 @@ class AccountingController extends Controller
             if (!$head || !$head->accountType) continue;
             $method = $txn->receipt?->detail?->payment_method ?? $txn->payment_method ?? 'cash';
             if (!in_array($method, $methods)) $method = 'cash';
-            $amount = (float) $txn->total_amount;
+            $amount = $this->signedReportAmount($txn, $head);
             if (!isset($excelPerHeadId[$head->id])) {
                 $excelPerHeadId[$head->id] = [
                     'code' => $head->code,
@@ -608,15 +649,7 @@ class AccountingController extends Controller
             if (!$type) continue;
 
             $category      = $type->category;
-            $normalBalance = $head->normalBalance();
-            $isDebit       = in_array($txn->type, ['payable', 'paid']);
-            $amount        = (float) $txn->total_amount;
-
-            if ($normalBalance === 'debit') {
-                $balance = $isDebit ? $amount : -$amount;
-            } else {
-                $balance = $isDebit ? -$amount : $amount;
-            }
+            $balance       = $this->signedReportAmount($txn, $head);
 
             $headKey   = $head->id;
             $headLabel = $head->code . ' - ' . $head->name;
@@ -633,7 +666,7 @@ class AccountingController extends Controller
             } elseif ($category === 'revenue') {
                 $revenue += $balance;
             } elseif ($category === 'expense') {
-                $expenses += abs($balance);
+                $expenses += $balance;
             }
         }
 
@@ -702,12 +735,7 @@ class AccountingController extends Controller
         foreach ($transactions as $txn) {
             $head = $txn->accountHead;
             if (!$head || !$head->accountType) continue;
-            $normalBalance = $head->normalBalance();
-            $isDebit = in_array($txn->type, ['payable', 'paid']);
-            $amount = (float) $txn->total_amount;
-            $balance = ($normalBalance === 'debit')
-                ? ($isDebit ? $amount : -$amount)
-                : ($isDebit ? -$amount : $amount);
+            $balance = $this->signedReportAmount($txn, $head);
             $balByHeadId[$head->id] = ($balByHeadId[$head->id] ?? 0) + $balance;
             $bsTypeByHeadId[$head->id] = $head->account_sub_type_id;
         }
@@ -1044,13 +1072,15 @@ class AccountingController extends Controller
         $txns = $query->orderBy('id', 'desc')->limit(200)->get();
         $rows = $txns->map(function ($t) use ($mode) {
             $amount = (float) $t->total_amount;
-            // In BS mode the breakdown total must equal the signed report-row
-            // balance, so each leg carries its sign (P&L rows are plain sums).
+            // The breakdown total must equal the signed report-row balance:
+            // BS rows always carry a sign, and so do revenue/expense rows in P&L
+            // (contra heads such as Sales Refund reduce their section).
             $signed = $amount;
-            if ($mode === 'bs' && $t->accountHead?->accountType) {
-                $nb = $t->accountHead->normalBalance();
-                $isDebit = in_array($t->type, ['payable', 'paid']);
-                $signed = ($nb === 'debit') ? ($isDebit ? $amount : -$amount) : ($isDebit ? -$amount : $amount);
+            if ($t->accountHead?->accountType) {
+                $category = $t->accountHead->accountType->category;
+                if ($mode === 'bs' || in_array($category, ['revenue', 'expense'], true)) {
+                    $signed = $this->signedReportAmount($t, $t->accountHead);
+                }
             }
             return [
                 'id' => $t->id,
@@ -1070,7 +1100,7 @@ class AccountingController extends Controller
         return response()->json([
             'heads' => $heads->map(fn($h) => ['id' => $h->id, 'code' => $h->code, 'name' => $h->name, 'type' => $h->accountSubType?->name ?? $h->accountType?->name])->values(),
             'count' => $rows->count(),
-            'total' => $mode === 'bs' ? $rows->sum('signed_amount') : $rows->sum('amount'),
+            'total' => $rows->sum('signed_amount'),
             'rows' => $rows,
         ]);
     }
