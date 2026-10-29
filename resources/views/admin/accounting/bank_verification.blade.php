@@ -157,7 +157,7 @@
             @else
                 <div class="hd-scroll">
                 <table class="hd-table">
-                    <thead><tr><th>Severity</th><th>Issue</th><th>Page</th><th>Detail</th><th>Action</th></tr></thead>
+                    <thead><tr><th>Severity</th><th>Issue</th><th>Page</th><th>Detail</th></tr></thead>
                     <tbody>
                     @foreach($exceptions as $exception)
                         <tr>
@@ -167,17 +167,6 @@
                             </td>
                             <td>{{ $exception->page_no ?? '—' }}</td>
                             <td class="hd-small" style="max-width:280px;white-space:pre-wrap;">{{ \Illuminate\Support\Str::limit((string) $exception->source_value, 220) }}</td>
-                            <td>
-                                @if($exception->resolved_at)
-                                    <span class="hd-pill ok">Resolved</span>
-                                @else
-                                    <form method="POST" action="{{ route('admin.bank-statements.resolve-exception', $exception->id) }}">
-                                        @csrf
-                                        <input type="hidden" name="resolution" value="resolved">
-                                        <button class="btn btn-outline-secondary btn-sm">Resolve</button>
-                                    </form>
-                                @endif
-                            </td>
                         </tr>
                     @endforeach
                     </tbody>
