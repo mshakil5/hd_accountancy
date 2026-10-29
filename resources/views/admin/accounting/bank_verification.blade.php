@@ -170,12 +170,11 @@
                             <td>
                                 @if($exception->resolved_at)
                                     <span class="hd-pill ok">Resolved</span>
-                                    <div class="hd-small">{{ $exception->resolution }}</div>
                                 @else
                                     <form method="POST" action="{{ route('admin.bank-statements.resolve-exception', $exception->id) }}">
                                         @csrf
-                                        <input type="text" name="resolution" required maxlength="1000" class="form-control form-control-sm mb-1" placeholder="How it was checked/why accepted">
-                                        <button class="btn btn-outline-secondary btn-sm">Resolve with reason</button>
+                                        <input type="hidden" name="resolution" value="resolved">
+                                        <button class="btn btn-outline-secondary btn-sm">Resolve</button>
                                     </form>
                                 @endif
                             </td>
