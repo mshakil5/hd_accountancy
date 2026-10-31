@@ -654,6 +654,14 @@
                     <div class="alert alert-success mt-3 text-center">
                         {{ session('success') }}
                     </div>
+
+                    <script>
+                        gtag('event', 'conversion', {
+                            'send_to': 'AW-17486797834/AFehCO-DsKsdEIq4rZJB',
+                            'value': 1.0,
+                            'currency': 'GBP'
+                        });
+                    </script>
                 @endif
                 <form id="contactForm" action="{{ route('offer.contact') }}" method="POST">
                     @csrf

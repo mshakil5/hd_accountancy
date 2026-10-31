@@ -5,6 +5,14 @@
             <div class="alert alert-success">
                 {{ session('success') }}
             </div>
+
+            <script>
+                gtag('event', 'conversion', {
+                    'send_to': 'AW-17486797834/AFehCO-DsKsdEIq4rZJB',
+                    'value': 1.0,
+                    'currency': 'GBP'
+                });
+            </script>
         @endif
       <h4 class="txt-primary text-center poppins-medium text-capitalize">Please fill up the information</h4>
       <div class="card p-4 pt-5 mt-4">

@@ -145,6 +145,11 @@
                   document.getElementById('loader2').style.display = 'none';
                   document.getElementById('submitForm').disabled = false;
                   toastr.success('Submitted successfully!');
+                   gtag('event', 'conversion', {
+                       'send_to': 'AW-17486797834/AFehCO-DsKsdEIq4rZJB',
+                       'value': 1.0,
+                       'currency': 'GBP'
+                   });
                   document.getElementById('contactForm').reset();
                } else {
                   document.getElementById('loader2').style.display = 'none';

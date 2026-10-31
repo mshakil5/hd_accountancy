@@ -240,6 +240,12 @@
             success: function(response) {
                 document.getElementById('submitBtn').disabled = false;
                 toastr.success('Meeting scheduled successfully!');
+                 gtag('event', 'conversion', {
+                     'send_to': 'AW-17486797834/AFehCO-DsKsdEIq4rZJB',
+                     'value': 1.0,
+                     'currency': 'GBP'
+                 });
+
 
                 $('#date').val('');
                 $('#datepicker').datepicker('update', '');
