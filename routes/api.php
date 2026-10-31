@@ -74,12 +74,11 @@ Route::get('app/version', function () {
         $storeUrl = env('ANDROID_STORE_URL', '');
     }
 
-    $required = filter_var(env('UPDATE_REQUIRED', false), FILTER_VALIDATE_BOOLEAN);
+    $updateAvailable = $build < $latestBuild
+        || version_compare($version ?? '0', $latestVersion, '<');
 
-    $updateAvailable = false;
-    if ($build < $latestBuild || version_compare($version ?? '0', $latestVersion, '<') === 1) {
-        $updateAvailable = true;
-    }
+    $required = $updateAvailable
+        && filter_var(env('UPDATE_REQUIRED', false), FILTER_VALIDATE_BOOLEAN);
 
     return response()->json([
         'update_available' => $updateAvailable,
