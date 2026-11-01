@@ -337,7 +337,10 @@ class ReceiptController extends Controller
         }
 
         $file = ReceiptFile::where('id', $fileId)->where('receipt_id', $id)->firstOrFail();
-        if (file_exists(public_path($file->file_path))) unlink(public_path($file->file_path));
+        // Delete from S3 (DigitalOcean Spaces)
+        if (Storage::disk('s3')->exists($file->file_path)) {
+            Storage::disk('s3')->delete($file->file_path);
+        }
         $file->delete();
 
         return response()->json(['success' => true, 'message' => 'File deleted successfully.']);
@@ -513,11 +516,13 @@ class ReceiptController extends Controller
             $size     = $file->getSize();
             $fileType = $file->extension() === 'pdf' ? 'pdf' : 'image';
             $filename = time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
-            $file->move(public_path($receiptDir), $filename);
+
+            // Upload to S3 (same driver used by the mobile app API)
+            $path = Storage::disk('s3')->putFileAs($receiptDir, $file, $filename, 'public');
 
             ReceiptFile::create([
                 'receipt_id' => $receipt->id,
-                'file_path'  => $receiptDir . '/' . $filename,
+                'file_path'  => $path,
                 'file_name'  => $file->getClientOriginalName(),
                 'file_type'  => $fileType,
                 'mime_type'  => $mime,
@@ -582,12 +587,6 @@ class ReceiptController extends Controller
         $clientName = $this->sanitizeDirName($client->name ?? 'unknown');
         $businessName = $this->sanitizeDirName($client->business_name ?? $client->name ?? 'unknown');
         $year = now()->format('Y');
-
-        $path = public_path("images/receipts/{$clientName}/{$businessName}/{$year}/{$receiptId}");
-
-        if (!is_dir($path)) {
-            mkdir($path, 0755, true);
-        }
 
         return "images/receipts/{$clientName}/{$businessName}/{$year}/{$receiptId}";
     }
