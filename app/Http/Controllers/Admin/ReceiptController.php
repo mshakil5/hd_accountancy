@@ -135,6 +135,7 @@ class ReceiptController extends Controller
     public function searchClients(Request $request)
     {
         $search = $request->get('q');
+
         $query = ClientCredential::select('id', 'first_name', 'last_name', 'email', 'phone', 'status');
 
         if (auth()->user() && auth()->user()->email === 'jane@gmail.com') {
@@ -143,11 +144,15 @@ class ReceiptController extends Controller
 
         $clients = $query
             ->when($search, function ($q) use ($search) {
-                $q->where('first_name', 'LIKE', "%{$search}%")
-                    ->orWhere('last_name', 'LIKE', "%{$search}%")
-                    ->orWhere('email', 'LIKE', "%{$search}%");
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('first_name', 'LIKE', "%{$search}%")
+                        ->orWhere('last_name', 'LIKE', "%{$search}%")
+                        ->orWhere('email', 'LIKE', "%{$search}%");
+                });
             })
-            ->latest()->limit(20)->get();
+            ->latest()
+            ->limit(20)
+            ->get();
 
         $formattedClients = [];
         foreach ($clients as $client) {
@@ -159,6 +164,7 @@ class ReceiptController extends Controller
                 'status' => $client->status
             ];
         }
+
         return response()->json($formattedClients);
     }
 
