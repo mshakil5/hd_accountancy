@@ -88,7 +88,7 @@ class BankReconciliationController extends Controller
             throw ValidationException::withMessages(['file'=>'We could not read any transactions from this PDF, so your current statement has been left unchanged.']);
 
         $oldPath=$import->storage_path;
-        $newPath=$file->storeAs('bank-statements/'.$businessId,bin2hex(random_bytes(16)).'.pdf','local');
+        $newPath=$file->storeAs($businessId,bin2hex(random_bytes(16)).'.pdf','local');
         if(!$newPath)throw ValidationException::withMessages(['file'=>'The file could not be saved. Please try again.']);
 
         $bankAccountId=(int)($import->bank_account_id??0);
@@ -308,7 +308,7 @@ class BankReconciliationController extends Controller
         $rows=$analysis['rows'];
         if(count($rows)>10000)throw ValidationException::withMessages(['file'=>'Maximum 10,000 transactions per statement.']);
 
-        $storagePath=$file->storeAs('bank-statements/'.$businessId,bin2hex(random_bytes(16)).'.pdf','local');
+        $storagePath=$file->storeAs($businessId,bin2hex(random_bytes(16)).'.pdf','local');
         try {
             $result=DB::transaction(function()use($rows,$businessId,$bankAccountId,$hash,$file,$request,$storagePath,$analysis,$verification){
                 $importId=DB::table('bank_imports')->insertGetId([
