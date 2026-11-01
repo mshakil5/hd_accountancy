@@ -238,6 +238,7 @@
                 'accounting.balanceSheet',
                 'admin.bank-statements.*',
                 'admin.bank-reconciliation.index',
+                'admin.clean-accounting.*',
             ];
             $isAccountingOpen = request()->routeIs(...$accountingRoutes);
             $sidebarPerms = json_decode(optional(Auth::user()->role)->permission ?? '[]', true) ?: [];
@@ -286,6 +287,13 @@
                     <a class="nav-link" href="{{ route('admin.bank-reconciliation.index') }}">
                         <i class="bi bi-bank"></i>
                         <span>Bank Reconciliation</span>
+                    </a>
+                </li>
+
+                <li class="nav-item {{ request()->routeIs('admin.clean-accounting.*') ? 'active' : '' }}">
+                    <a class="nav-link text-danger" href="{{ route('admin.clean-accounting.index') }}">
+                        <i class="bi bi-trash"></i>
+                        <span>Clean Accounting Data</span>
                     </a>
                 </li>
 

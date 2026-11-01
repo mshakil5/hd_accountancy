@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\ChatController;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\ClientCredentialController;
 use App\Http\Controllers\Admin\ClientTypeController;
+use App\Http\Controllers\Admin\CleanAccountingController;
 use App\Http\Controllers\Admin\CompanyDetailsController;
 use App\Http\Controllers\Admin\ContactInfoController;
 use App\Http\Controllers\Admin\ContactMailController;
@@ -67,6 +68,11 @@ Route::fallback(function () {
 Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(function () {
 
     Route::get('/clean', [HomeController::class, 'clean']);
+
+    // Accounting maintenance: GET shows a confirmation page, POST wipes the
+    // chart of accounts, receipts, bank statements and reconciliation data.
+    Route::get('/clean-accounting', [CleanAccountingController::class, 'index'])->name('admin.clean-accounting.index');
+    Route::post('/clean-accounting', [CleanAccountingController::class, 'destroy'])->name('admin.clean-accounting.destroy');
 
     Route::get('/home', [HomeController::class, 'adminHome'])->name('admin.home');
 
