@@ -28,6 +28,13 @@ class ReceiptController extends Controller
     public function datatable()
     {
         $query = Receipt::with(['client.credential', 'detail.accountHead.accountType'])
+            ->when(Auth::user() && Auth::user()->email === 'jane@gmail.com', function ($q) {
+                $q->whereHas('client', function ($sub) {
+                    $sub->whereHas('credential', function ($c) {
+                        $c->where('email', 'david@gmail.com');
+                    });
+                });
+            })
             ->when(request('client_credential_id'), function ($q) {
                 $q->whereHas('client', function ($subQ) {
                     $subQ->where('client_credential_id', request('client_credential_id'));
@@ -129,6 +136,9 @@ class ReceiptController extends Controller
     {
         $search = $request->get('q');
         $clients = ClientCredential::select('id', 'first_name', 'last_name', 'email', 'phone', 'status')
+            ->when(Auth::user() && Auth::user()->email === 'jane@gmail.com', function ($q) {
+                $q->where('email', 'david@gmail.com');
+            })
             ->when($search, function ($q) use ($search) {
                 $q->where('first_name', 'LIKE', "%{$search}%")
                     ->orWhere('last_name', 'LIKE', "%{$search}%");

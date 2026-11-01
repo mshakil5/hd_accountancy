@@ -1,6 +1,49 @@
 <aside id="sidebar" class="sidebar">
+    @if (Auth::user() && Auth::user()->email === 'jane@gmail.com')
+        {{-- Exception: jane@gmail.com sees only Accounting + Logout --}}
+        <ul class="sidebar-nav">
+            @php
+                $sidebarPerms = json_decode(optional(Auth::user()->role)->permission ?? '[]', true) ?: [];
+                $hasAccounting = count(array_intersect(['21', '22', '23', '24', '25', '26', '27'], array_map('strval', (array) $sidebarPerms))) > 0;
+            @endphp
 
-    <ul class="sidebar-nav">
+            @if ($hasAccounting)
+            <li class="nav-item menu-open">
+                <a class="nav-link active" href="#" data-bs-toggle="collapse" data-bs-target="#accountingDropdown" aria-expanded="true">
+                    <i class="bi bi-calculator"></i>
+                    <span>Accounting</span>
+                    <i class="bi bi-chevron-down"></i>
+                </a>
+                <ul id="accountingDropdown" class="collapse list-unstyled show">
+                    @if (in_array('24', array_map('strval', (array) $sidebarPerms)))
+                    <li class="nav-item"><a class="nav-link" href="{{ route('accountHeads') }}"><i class="bi bi-cash-stack"></i><span>Chart of Accounts</span></a></li>
+                    @endif
+                    @if (in_array('21', array_map('strval', (array) $sidebarPerms)))
+                    <li class="nav-item"><a class="nav-link" href="{{ route('admin.receipt.index') }}"><i class="bi bi-receipt-cutoff"></i><span>Receipts</span></a></li>
+                    @endif
+                    <li class="nav-item"><a class="nav-link" href="{{ route('admin.bank-statements.index') }}"><i class="bi bi-file-earmark-spreadsheet"></i><span>Bank Statements</span></a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('admin.bank-reconciliation.index') }}"><i class="bi bi-bank"></i><span>Bank Reconciliation</span></a></li>
+                    <li class="nav-item"><a class="nav-link text-danger" href="{{ route('admin.clean-accounting.index') }}"><i class="bi bi-trash"></i><span>Clean Accounting Data</span></a></li>
+                    @if (in_array('25', array_map('strval', (array) $sidebarPerms)))
+                    <li class="nav-item"><a class="nav-link" href="{{ route('accounting.profitLoss') }}"><i class="bi bi-graph-up-arrow"></i><span>Profit & Loss</span></a></li>
+                    @endif
+                    @if (in_array('27', array_map('strval', (array) $sidebarPerms)))
+                    <li class="nav-item"><a class="nav-link" href="{{ route('accounting.balanceSheet') }}"><i class="bi bi-pie-chart"></i><span>Balance Sheet</span></a></li>
+                    @endif
+                </ul>
+            </li>
+            @endif
+
+            <li class="nav-item" style="margin-top: 250px;">
+                <a class="nav-link collapsed" href="{{ route('admin.logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form-2').submit();">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>Logout</span>
+                </a>
+                <form id="logout-form-2" action="{{ route('admin.logout') }}" method="POST" class="d-none">@csrf</form>
+            </li>
+        </ul>
+    @else
+        <ul class="sidebar-nav">
 
         <li class="nav-item {{ request()->routeIs('admin.home') ? 'active' : '' }}">
             <a class="nav-link collapsed" href="{{ route('admin.home') }}">
@@ -398,6 +441,7 @@
         </li>
 
     </ul>
+    @endif
 
 </aside>
 

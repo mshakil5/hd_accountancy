@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\BankImport;
 use App\Models\Client;
 use App\Models\ClientCredential;
+use Auth;
 use App\Services\BankLedgerPostingService;
 use App\Services\BankStatementVerificationService;
 use Illuminate\Http\Request;
@@ -22,6 +23,13 @@ class BankStatementPageController extends Controller
 
     public function index(Request $request)
     {
+        if (Auth::user() && Auth::user()->email === 'jane@gmail.com') {
+            $david = ClientCredential::where('email', 'david@gmail.com')->first();
+            if ($david) {
+                $request->merge(['client_credential_id' => $david->id]);
+            }
+        }
+
         $credentialId  = (int)$request->query('client_credential_id', 0);
         $businessId    = (int)$request->query('client_id', 0);
         $bankAccountId = (int)$request->query('bank_account_id', 0);

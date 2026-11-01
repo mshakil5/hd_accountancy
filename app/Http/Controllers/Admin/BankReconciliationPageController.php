@@ -15,12 +15,20 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Auth;
 
 class BankReconciliationPageController extends Controller
 {
     public function __construct(private BankLedgerPostingService $posting) {}
 
     public function index(Request $request) {
+        if (Auth::user() && Auth::user()->email === 'jane@gmail.com') {
+            $david = ClientCredential::where('email', 'david@gmail.com')->first();
+            if ($david) {
+                $request->merge(['client_credential_id' => $david->id]);
+            }
+        }
+
         // Same entry point as the receipts page: pick a client credential first, then a business under it.
         $credentialId=(int)$request->query('client_credential_id',0);
         $businessId=(int)$request->query('client_id',0);
