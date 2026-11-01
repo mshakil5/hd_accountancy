@@ -138,14 +138,22 @@ class InvoiceExtractorService
                 'ocr_length' => mb_strlen(trim($ocr)),
             ]);
             $result = $this->reconcileAmounts($this->parseExtractedText($text));
+            $result['supplier'] = $this->extractSupplier($text);
             Log::info('Invoice OCR fields detected', [
                 'path' => $pdfPath,
                 'net_amount_found' => $result['net_amount'] !== null,
                 'vat_amount_found' => $result['vat_amount'] !== null,
                 'total_amount_found' => $result['total_amount'] !== null,
                 'vat_percent_found' => $result['vat_percent'] !== null,
+                'supplier_found' => !empty($result['supplier']),
             ]);
-            if (!array_filter($result)) {
+            // Don't treat missing supplier as "no fields"
+            $moneyFields = array_filter([
+                $result['net_amount'] ?? null,
+                $result['vat_amount'] ?? null,
+                $result['total_amount'] ?? null,
+            ]);
+            if (!$moneyFields) {
                 $this->logUndetectedInvoiceMoneyLines($pdfPath, $text);
             }
             return $result;
@@ -795,6 +803,67 @@ class InvoiceExtractorService
      * Light ImageMagick pre-processing for phone photos of receipts.
      * Deskew/contrast helps Tesseract a lot; we avoid huge upscales that hit memory limits.
      */
+
+    /**
+     * Extract supplier / merchant name from receipt text.
+     * Prefers legal entity names (Motor Fuel Ltd, etc.) then station header.
+     */
+    private function extractSupplier(string $text): ?string
+    {
+        $lines = preg_split('/\R/u', $text) ?: [];
+        $lines = array_values(array_filter(array_map(function ($l) {
+            return trim(preg_replace('/\s+/u', ' ', $l) ?? '');
+        }, $lines), fn ($l) => $l !== ''));
+
+        // High-confidence legal entity / brand patterns (anywhere in text)
+        $entityPatterns = [
+            '/\b(Motor\s+Fuel\s+Ltd)\b/i',
+            '/\b(Motor\s+Fuel\s+Group)\b/i',
+            '/\b(MFG\s+[A-Za-z][A-Za-z0-9\'\-\s]{2,40}Service\s+Station)\b/i',
+            '/\b(Esso)\b/i',
+            '/\b(BP\s+Express)\b/i',
+            '/\b(Shell)\b/i',
+            '/\b(Tesco\s+(?:Express|Extra|Petrol))\b/i',
+            '/\b(Sainsbury\'?s?\s+Petrol)\b/i',
+            '/\b(Asda\s+Petrol)\b/i',
+            '/\b(Co-?operative)\b/i',
+            '/\b(Ranet\s+1\s+Limited)\b/i',
+            '/\b([A-Z][A-Za-z0-9\'\-\&\s]{2,40}\s+Ltd\.?)\b/',
+            '/\b([A-Z][A-Za-z0-9\'\-\&\s]{2,40}\s+Limited)\b/',
+        ];
+        foreach ($entityPatterns as $pat) {
+            if (preg_match($pat, $text, $m)) {
+                $name = trim(preg_replace('/\s+/', ' ', $m[1]));
+                // Skip if it looks like a VAT line fragment
+                if (preg_match('/\b(?:VAT|Rate|Total|Inc\.?)\b/i', $name)) {
+                    continue;
+                }
+                if (mb_strlen($name) >= 3 && mb_strlen($name) <= 60) {
+                    return $name;
+                }
+            }
+        }
+
+        // Fallback: first non-junk line near the top (station header)
+        $skip = '/^(?:tel|phone|www\.|http|store|pos|trans|op\s*name|sale|thank|please|date|mon|tue|wed|thu|fri|sat|sun|\d)/i';
+        foreach (array_slice($lines, 0, 8) as $line) {
+            if (preg_match($skip, $line)) {
+                continue;
+            }
+            if (preg_match('/\d{5,}/', $line)) { // long numbers / postcodes alone
+                continue;
+            }
+            if (preg_match('/(?:total|vat|amount|diesel|petrol|pump)/i', $line)) {
+                continue;
+            }
+            if (mb_strlen($line) >= 4 && mb_strlen($line) <= 60) {
+                return $line;
+            }
+        }
+
+        return null;
+    }
+
     private function preprocessImageForOcr(string $imagePath): string
     {
         $convert = $this->config['convert'] ?? '';

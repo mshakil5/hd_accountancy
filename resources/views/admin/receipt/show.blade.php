@@ -481,6 +481,14 @@
                             $('#tax_amount').val(vat !== null ? vat.toFixed(2) : '0');
                             $('#total_amount').val(gross !== null ? gross.toFixed(2) : '');
 
+                            // Fill supplier when OCR found one (don't overwrite if user already typed)
+                            if (data.supplier && String(data.supplier).trim() !== '') {
+                                const currentSupplier = ($('#supplier').val() || '').trim();
+                                if (!currentSupplier) {
+                                    $('#supplier').val(String(data.supplier).trim());
+                                }
+                            }
+
                             calculateAmounts();
 
                             toastr.success('Amount extracted successfully!');
