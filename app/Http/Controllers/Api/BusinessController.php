@@ -121,6 +121,12 @@ class BusinessController extends Controller
         $query = ClientCredential::where('status', 1)
             ->withCount('clients');
 
+        if ($request->user() && $request->user()->email === 'jane@gmail.com') {
+            $query->where('email', 'david@gmail.com');
+        }
+
+        \Log::info('searchClients', ['user' => auth()->user()?->email, 'check' => auth()->check()]);
+
         if ($search = $request->query('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
