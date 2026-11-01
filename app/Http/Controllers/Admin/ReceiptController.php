@@ -135,13 +135,17 @@ class ReceiptController extends Controller
     public function searchClients(Request $request)
     {
         $search = $request->get('q');
-        $clients = ClientCredential::select('id', 'first_name', 'last_name', 'email', 'phone', 'status')
-            ->when(Auth::user() && Auth::user()->email === 'jane@gmail.com', function ($q) {
-                $q->where('email', 'david@gmail.com');
-            })
+        $query = ClientCredential::select('id', 'first_name', 'last_name', 'email', 'phone', 'status');
+
+        if (auth()->user() && auth()->user()->email === 'jane@gmail.com') {
+            $query->where('email', 'david@gmail.com');
+        }
+
+        $clients = $query
             ->when($search, function ($q) use ($search) {
                 $q->where('first_name', 'LIKE', "%{$search}%")
-                    ->orWhere('last_name', 'LIKE', "%{$search}%");
+                    ->orWhere('last_name', 'LIKE', "%{$search}%")
+                    ->orWhere('email', 'LIKE', "%{$search}%");
             })
             ->latest()->limit(20)->get();
 
