@@ -50,6 +50,11 @@ class InvoiceExtractorService
                     ? ['C:/Program Files/Tesseract-OCR/tesseract.exe', 'C:/Program Files (x86)/Tesseract-OCR/tesseract.exe']
                     : ['/usr/bin/tesseract', '/usr/local/bin/tesseract', '/opt/homebrew/bin/tesseract']
             ),
+            'convert' => $this->findBinary(
+                [(string) getenv('IMAGEMAGICK_BIN')],
+                ['convert', 'magick'],
+                ['/usr/bin/convert', '/usr/local/bin/convert', '/opt/homebrew/bin/convert']
+            ),
         ];
     }
 
@@ -195,8 +200,10 @@ class InvoiceExtractorService
             }
 
             foreach ($images as $image) {
-                $outBase = $tempDir . DIRECTORY_SEPARATOR . pathinfo($image, PATHINFO_FILENAME);
-                $tessOutput = (string) @shell_exec("{$this->config['tesseract']} \"{$image}\" \"{$outBase}\" -l eng 2>&1");
+                $processed = $this->preprocessImageForOcr($image);
+                $outBase = $tempDir . DIRECTORY_SEPARATOR . pathinfo($processed, PATHINFO_FILENAME);
+                // psm 6 = assume uniform block of text (good for receipts)
+                $tessOutput = (string) @shell_exec("{$this->config['tesseract']} \"{$processed}\" \"{$outBase}\" -l eng --psm 6 --oem 3 2>&1");
                 $textFile = $outBase . '.txt';
                 if (file_exists($textFile)) {
                     $text .= file_get_contents($textFile) . "\n";
@@ -205,6 +212,9 @@ class InvoiceExtractorService
                     Log::warning('Tesseract produced no OCR text', ['path' => $pdfPath, 'output' => mb_substr($tessOutput, 0, 1000)]);
                 }
                 @unlink($image);
+                if ($processed !== $image && file_exists($processed)) {
+                    @unlink($processed);
+                }
             }
         } catch (\Throwable $e) {
             Log::error('Bank/invoice PDF OCR failed', ['error' => $e->getMessage()]);
@@ -254,8 +264,9 @@ class InvoiceExtractorService
                     $pageNo = (int) $m[1];
                 }
 
-                $outBase = $tempDir . DIRECTORY_SEPARATOR . pathinfo($image, PATHINFO_FILENAME);
-                $tessOutput = (string) @shell_exec("{$this->config['tesseract']} \"{$image}\" \"{$outBase}\" -l eng 2>&1");
+                $processed = $this->preprocessImageForOcr($image);
+                $outBase = $tempDir . DIRECTORY_SEPARATOR . pathinfo($processed, PATHINFO_FILENAME);
+                $tessOutput = (string) @shell_exec("{$this->config['tesseract']} \"{$processed}\" \"{$outBase}\" -l eng --psm 6 --oem 3 2>&1");
                 $textFile = $outBase . '.txt';
                 $pageText = '';
                 if (file_exists($textFile)) {
@@ -266,6 +277,9 @@ class InvoiceExtractorService
                 }
                 $pages[$pageNo] = $pageText;
                 @unlink($image);
+                if ($processed !== $image && file_exists($processed)) {
+                    @unlink($processed);
+                }
             }
         } catch (\Throwable $e) {
             Log::error('Bank PDF OCR by page failed', ['error' => $e->getMessage()]);
@@ -437,32 +451,8 @@ class InvoiceExtractorService
     /**
      * Parse the raw text to find specific invoice fields
      */
-    private function parseExtractedText(string $text): array
-    {
-        // 1. Clean up the text
-        $text = str_replace(['£', '€', '$', 'GBP', 'EUR'], ' ', $text);
-        $text = str_replace(['V.A.T.', 'V A T'], 'VAT', $text);
-        // Replace multiple spaces and newlines with a single space
-        $text = preg_replace('/\s+/', ' ', $text);
 
-        $data = [
-            'net_amount'    => $this->extractValue($text, ['amount excl(?:uding)?(?: vat)?', 'subtotal(?: excl(?:uding)? vat)?', 'goods value', 'goods total', 'sub total', 'order value', 'net amount', '\bnet\b']),
-            'vat_amount'    => $this->extractValue($text, ['vat value', 'total vat', 'vat total', 'vat amount', 'value added tax', 'sales tax', '\bvat\b', '\btax\b']),
-            'total_amount'  => $this->extractValue($text, ['invoice total', 'total due', 'grand total', 'total paid', 'amount paid', 'amount due', 'amount charged', 'payment total', 'payment amount', 'balance due', 'goods supplied', 'outstanding', '\btotal\b']),
-            'vat_percent'   => $this->extractPercent($text),
-            'tax_percent'   => $this->extractPercent($text),
-        ];
 
-        return $data;
-    }
-
-    /**
-     * Make the three money legs agree.
-     *
-     * Receipts print "VAT 20%" and OCR happily returns 20.00 as the VAT amount,
-     * and some PDFs only print two of net / VAT / gross. Rebuild the missing or
-     * mis-read leg so the receipt form never gets nonsense.
-     */
     private function reconcileAmounts(array $data): array
     {
         $toFloat = static function ($value) {
@@ -517,23 +507,247 @@ class InvoiceExtractorService
         return $data;
     }
 
-        /**
+    private function parseExtractedText(string $text): array
+    {
+        // Normalise common OCR artefacts first
+        $text = $this->normaliseOcrText($text);
+
+        // Try specialised fuel-station receipt layout first (MFG / Motor Fuel / Esso / Co-op petrol)
+        $fuel = $this->parseFuelStationReceipt($text);
+        if ($fuel !== null) {
+            return $fuel;
+        }
+
+        // Generic invoice / receipt parsing
+        $clean = preg_replace('/\s+/', ' ', $text);
+
+        $data = [
+            'net_amount'    => $this->extractValue($clean, [
+                'amount excl(?:uding)?(?:\s+vat)?',
+                'subtotal(?:\s+excl(?:uding)?\s+vat)?',
+                'goods value', 'goods total', 'sub[\s\-]?total',
+                'order value', 'net amount', 'net total', 'net value',
+                'ex\.?\s*vat', 'excl\.?\s*vat', '\bnet\b',
+            ]),
+            'vat_amount'    => $this->extractValue($clean, [
+                'vat value', 'total vat', 'vat total', 'vat amount',
+                'value added tax', 'sales tax', 'vat\s*@',
+            ], avoidPatterns: ['vat\s*(?:no|reg|number|registration)']),
+            'total_amount'  => $this->extractValue($clean, [
+                'invoice total', 'total due', 'grand total', 'total paid',
+                'amount paid', 'amount due', 'amount charged',
+                'payment total', 'payment amount', 'balance due',
+                'goods supplied', 'outstanding', 'total inc(?:luding)?\s*vat',
+                'total amount', '\btotal\b',
+            ]),
+            'vat_percent'   => $this->extractPercent($text),
+            'tax_percent'   => $this->extractPercent($text),
+        ];
+
+        return $data;
+    }
+
+    /**
+     * Clean OCR noise that commonly breaks money parsing on phone photos of receipts.
+     */
+    private function normaliseOcrText(string $text): string
+    {
+        $text = str_replace(["\r\n", "\r"], "\n", $text);
+        // Currency symbols -> space so numbers are easier to match
+        $text = str_replace(['£', '€', '$', 'GBP', 'EUR'], ' ', $text);
+        $text = str_replace(['V.A.T.', 'V A T', 'V.A.T'], 'VAT', $text);
+        // European decimal comma between digits: 5,00 -> 5.00  (but keep 1,234.56 style)
+        $text = preg_replace('/(\d),(\d{2})(?!\d)/', '$1.$2', $text);
+        // OCR often drops the decimal: "Diesel 3002" when it was 30.02 – fix only in fuel context later
+        // Collapse repeated punctuation / decorative lines
+        $text = preg_replace('/[-=_*~.]{3,}/', ' ', $text);
+        return $text;
+    }
+
+    /**
+     * Parse typical UK fuel-station receipts (MFG, Motor Fuel Ltd, Esso, Co-op petrol etc.).
+     * Layout usually has:
+     *   Diesel|Petrol  30.02
+     *   Total / VISA DELTA  30.02
+     *   VAT Rate  EX.VAT  VAT
+     *   20%       25.02   5.00
+     *
+     * Returns null when the document does not look like this style.
+     */
+    private function parseFuelStationReceipt(string $text): ?array
+    {
+        $isFuel = (bool) preg_match(
+            '/\b(?:diesel|petrol|unleaded|motor\s+fuel|mfg\s+|esso|pump\s*\d|service\s+station|co-?operative)\b/i',
+            $text
+        );
+        if (!$isFuel) {
+            return null;
+        }
+
+        $total = null;
+        $net   = null;
+        $vat   = null;
+        $pct   = null;
+
+        // 1) Explicit total lines (prefer card / total paid)
+        $totalPatterns = [
+            '/(?:visa\s*delta|visa|mastercard|contactless|card)\s*[^\d]{0,15}?(\d{1,4}\.\d{2})/i',
+            '/\btotal\b\s*[^\d]{0,15}?(\d{1,4}\.\d{2})/i',
+            '/amount\s*(?:paid|due|charged)?\s*[^\d]{0,15}?(\d{1,4}\.\d{2})/i',
+        ];
+        foreach ($totalPatterns as $pat) {
+            if (preg_match($pat, $text, $m)) {
+                $total = $this->toMoney($m[1]);
+                if ($total !== null && $total >= 1 && $total < 500) {
+                    break;
+                }
+                $total = null;
+            }
+        }
+
+        // 2) Fuel line amount (Diesel / Petrol)
+        if ($total === null) {
+            if (preg_match('/\b(?:diesel|petrol|unleaded)\b[^\d]{0,20}?(\d{1,4}\.\d{2})/i', $text, $m)) {
+                $total = $this->toMoney($m[1]);
+            }
+        }
+
+        // 3) OCR sometimes reads "30.02" as "3002" next to Diesel
+        if ($total === null && preg_match('/\b(?:diesel|petrol|unleaded)\b[^\d]{0,12}?(\d{3,5})\b/i', $text, $m)) {
+            $raw = $m[1];
+            // e.g. 3002 -> 30.02, 2504 -> 25.04
+            if (strlen($raw) === 4) {
+                $candidate = (float) (substr($raw, 0, 2) . '.' . substr($raw, 2));
+                if ($candidate >= 5 && $candidate <= 200) {
+                    $total = $candidate;
+                }
+            }
+        }
+
+        // 4) VAT table: "20%  25.02  5.00" or "20% 25.02 5.00 30.02"
+        if (preg_match('/(\d{1,2})\s*%\s+(\d{1,4}\.\d{2})\s+(\d{1,4}\.\d{2})(?:\s+(\d{1,4}\.\d{2}))?/', $text, $m)) {
+            $pct = (float) $m[1];
+            $a = $this->toMoney($m[2]);
+            $b = $this->toMoney($m[3]);
+            $c = isset($m[4]) ? $this->toMoney($m[4]) : null;
+
+            // Typical order: rate, EX.VAT (net), VAT, [Inc.VAT]
+            if ($a !== null && $b !== null) {
+                // Prefer the pair where net + vat ≈ total (or ≈ larger number)
+                if ($c !== null && abs(($a + $b) - $c) < 0.05) {
+                    $net = $a;
+                    $vat = $b;
+                    if ($total === null) {
+                        $total = $c;
+                    }
+                } elseif ($total !== null && abs(($a + $b) - $total) < 0.05) {
+                    $net = $a;
+                    $vat = $b;
+                } elseif ($b < $a && $b < 50) {
+                    // second number is smaller → likely VAT
+                    $net = $a;
+                    $vat = $b;
+                } else {
+                    $net = $a;
+                    $vat = $b;
+                }
+            }
+        }
+
+        // 5) "Totals 25.02 5.00"
+        if (($net === null || $vat === null) && preg_match('/totals?\s+(\d{1,4}\.\d{2})\s+(\d{1,4}\.\d{2})/i', $text, $m)) {
+            $net = $net ?? $this->toMoney($m[1]);
+            $vat = $vat ?? $this->toMoney($m[2]);
+        }
+
+        // 6) Infer missing legs from 20% UK fuel VAT
+        if ($pct === null) {
+            $pct = 20.0; // standard UK fuel VAT
+        }
+        if ($total !== null && $net === null && $vat === null && $pct > 0) {
+            $net = round($total / (1 + $pct / 100), 2);
+            $vat = round($total - $net, 2);
+        }
+        if ($total !== null && $net !== null && $vat === null) {
+            $vat = round($total - $net, 2);
+        }
+        if ($total !== null && $vat !== null && $net === null) {
+            $net = round($total - $vat, 2);
+        }
+        if ($total === null && $net !== null && $vat !== null) {
+            $total = round($net + $vat, 2);
+        }
+
+        // Sanity: if we still have nothing useful, fall back to generic
+        if ($total === null && $net === null) {
+            return null;
+        }
+
+        return [
+            'net_amount'   => $net !== null ? number_format($net, 2, '.', '') : null,
+            'vat_amount'   => $vat !== null ? number_format($vat, 2, '.', '') : null,
+            'total_amount' => $total !== null ? number_format($total, 2, '.', '') : null,
+            'vat_percent'  => $pct !== null ? (string) $pct : null,
+            'tax_percent'  => $pct !== null ? (string) $pct : null,
+        ];
+    }
+
+    private function toMoney(?string $raw): ?float
+    {
+        if ($raw === null || $raw === '') {
+            return null;
+        }
+        $raw = str_replace([',', ' '], ['', ''], $raw);
+        if (!is_numeric($raw)) {
+            return null;
+        }
+        $v = (float) $raw;
+        return $v >= 0 ? $v : null;
+    }
+
+    /**
      * Helper function to find numeric value based on keywords
      */
-    private function extractValue(string $text, array $keywords): ?string
+    private function extractValue(string $text, array $keywords, array $avoidPatterns = []): ?string
     {
         foreach ($keywords as $keyword) {
-            $amount = '(\d+(?:,\d{3})*(?:\.\d{2})?)';
-            // Most documents use "Total: 12.34", but receipt printers and
-            // OCR frequently emit the value first: "12.34 Total".
-            $pattern = '/' . $keyword . '[^\d]{0,50}?' . $amount . '/i';
-            if (preg_match($pattern, $text, $matches)) {
-                return str_replace(',', '', $matches[1]);
+            $amount = '(\d{1,5}(?:,\d{3})*(?:\.\d{2})?)';
+            // keyword then amount
+            $pattern = '/' . $keyword . '[^\d]{0,40}?' . $amount . '/i';
+            if (preg_match($pattern, $text, $matches, PREG_OFFSET_CAPTURE)) {
+                $matchedText = substr($text, max(0, $matches[0][1] - 30), 80);
+                $skip = false;
+                foreach ($avoidPatterns as $ap) {
+                    if (preg_match('/' . $ap . '/i', $matchedText)) {
+                        $skip = true;
+                        break;
+                    }
+                }
+                if (!$skip) {
+                    $val = $this->toMoney(str_replace(',', '', $matches[1][0]));
+                    if ($val !== null && $val >= 0.01 && $val < 100000) {
+                        return number_format($val, 2, '.', '');
+                    }
+                }
             }
 
-            $reversePattern = '/' . $amount . '[^\d]{0,50}?' . $keyword . '/i';
-            if (preg_match($reversePattern, $text, $matches)) {
-                return $matches[1];
+            // amount then keyword
+            $reversePattern = '/' . $amount . '[^\d]{0,40}?' . $keyword . '/i';
+            if (preg_match($reversePattern, $text, $matches, PREG_OFFSET_CAPTURE)) {
+                $matchedText = substr($text, max(0, $matches[0][1] - 10), 80);
+                $skip = false;
+                foreach ($avoidPatterns as $ap) {
+                    if (preg_match('/' . $ap . '/i', $matchedText)) {
+                        $skip = true;
+                        break;
+                    }
+                }
+                if (!$skip) {
+                    $val = $this->toMoney(str_replace(',', '', $matches[1][0]));
+                    if ($val !== null && $val >= 0.01 && $val < 100000) {
+                        return number_format($val, 2, '.', '');
+                    }
+                }
             }
         }
         return null;
@@ -545,7 +759,7 @@ class InvoiceExtractorService
         $lines = [];
         foreach (preg_split('/\R/u', $text) ?: [] as $line) {
             $line = trim(preg_replace('/\s+/u', ' ', $line) ?? '');
-            if ($line !== '' && preg_match('/(?:total|amount|paid|due|charge|vat|tax|subtotal|balance)/iu', $line)
+            if ($line !== '' && preg_match('/(?:total|amount|paid|due|charge|vat|tax|subtotal|balance|diesel|petrol)/iu', $line)
                 && preg_match('/\d+(?:,\d{3})*(?:\.\d{2})?/', $line)) {
                 $lines[] = mb_substr($line, 0, 200);
             }
@@ -565,9 +779,45 @@ class InvoiceExtractorService
      */
     private function extractPercent(string $text): ?string
     {
+        if (preg_match('/(?:vat|tax)\s*(?:rate|@|at)?\s*[:]*\s*(\d{1,2}(?:\.\d+)?)\s*%/i', $text, $matches)) {
+            return $matches[1];
+        }
+        if (preg_match('/(\d{1,2}(?:\.\d+)?)\s*%\s*(?:vat|tax)/i', $text, $matches)) {
+            return $matches[1];
+        }
         if (preg_match('/(?:@|vat\s*%|tax\s*%|vat\s*rate|tax\s*rate)\s*[:]*\s*(\d+\.?\d*)\s*%/i', $text, $matches)) {
             return $matches[1];
         }
         return null;
     }
+
+    /**
+     * Light ImageMagick pre-processing for phone photos of receipts.
+     * Deskew/contrast helps Tesseract a lot; we avoid huge upscales that hit memory limits.
+     */
+    private function preprocessImageForOcr(string $imagePath): string
+    {
+        $convert = $this->config['convert'] ?? '';
+        if ($convert === '' || $convert === 'convert' || $convert === "'convert'") {
+            // Still try bare name
+            $convert = 'convert';
+        }
+
+        $out = $imagePath . '.prep.png';
+        $cmd = "{$convert} \"{$imagePath}\" "
+             . "-auto-orient -colorspace Gray "
+             . "-contrast-stretch 1%x1% "
+             . "-sharpen 0x0.8 "
+             . "-despeckle "
+             . "\"{$out}\" 2>&1";
+
+        @shell_exec($cmd);
+
+        if (file_exists($out) && filesize($out) > 1000) {
+            return $out;
+        }
+        return $imagePath;
+    }
+
+
 }
