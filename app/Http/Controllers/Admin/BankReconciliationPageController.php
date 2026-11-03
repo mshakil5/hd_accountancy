@@ -110,6 +110,9 @@ class BankReconciliationPageController extends Controller
             });
         }
         $reconcileFilter = $request->input('reconcile_status', 'unreconciled');
+        if ($reconcileFilter === null || $reconcileFilter === '') {
+            $reconcileFilter = 'all';
+        }
         $scopeEntries = fn() => DB::table('bank_entries')
             ->whereIn('client_id', $businessIds)
             ->when($bankAccountId, fn($q) => $q->where('bank_account_id', $bankAccountId))
@@ -125,6 +128,9 @@ class BankReconciliationPageController extends Controller
             })
             ->when($reconcileFilter === 'reconciled', function ($q) {
                 $q->where('reconciliation_status', 'approved');
+            })
+            ->when($reconcileFilter === 'all', function ($q) {
+                // No additional filter - show everything
             })
             ->orderByDesc('transaction_date')
             ->orderByDesc('id')
