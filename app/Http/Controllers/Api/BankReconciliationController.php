@@ -29,6 +29,21 @@ class BankReconciliationController extends Controller
         }
         return $q->firstOrFail();
     }
+
+    /** Organised folder like receipts — s3 storage. */
+    private function getStatementDirectory($client, int $importId): string
+    {
+        $clientName   = $this->sanitizeDirName($client->name ?? 'unknown_client');
+        $businessName = $this->sanitizeDirName($client->business_name ?? $client->name ?? 'unknown_business');
+        $year         = now()->format('Y');
+
+        return "images/bank_statements/{$clientName}/{$businessName}/{$year}/{$importId}";
+    }
+
+    private function sanitizeDirName(?string $name): string
+    {
+        return preg_replace('/[^a-zA-Z0-9_-]/', '_', $name ?? 'unknown');
+    }
     public function imports(Request $request, int $businessId) {
         $this->client($request,$businessId);
         $imports=DB::table('bank_imports')
@@ -57,15 +72,22 @@ class BankReconciliationController extends Controller
     public function downloadStatement(Request $request,int $businessId,int $importId) {
         $this->client($request,$businessId);
         $item=DB::table('bank_imports')->where('client_id',$businessId)->find($importId);
-        abort_unless($item && $item->storage_path && Storage::disk('local')->exists($item->storage_path),404);
-        return Storage::disk('local')->download($item->storage_path,basename($item->filename));
+        abort_unless($item && $item->storage_path, 404, 'Statement file not found.');
+        $downloadName = $item->filename ? basename($item->filename) : 'statement.pdf';
+        if (Storage::disk('s3')->exists($item->storage_path)) {
+            return Storage::disk('s3')->download($item->storage_path, $downloadName);
+        }
+        if (Storage::disk('s3')->exists($item->storage_path)) {
+            return Storage::disk('s3')->download($item->storage_path, $downloadName);
+        }
+        abort(404, 'Statement file not found in cloud or local storage.');
     }
     /**
      * Replace the PDF of an existing import (same import id). Allowed only while the
      * statement is not verified and has no reconciled rows; verification restarts.
      */
     public function replaceStatement(Request $request,int $businessId,int $importId) {
-        $this->client($request,$businessId);
+        $client = $this->client($request,$businessId);
         $request->validate(['file'=>'required|file|mimes:pdf|max:20480']);
         $import=BankImport::where('client_id',$businessId)->findOrFail($importId);
 
@@ -93,8 +115,10 @@ class BankReconciliationController extends Controller
         if(!$analysis['rows'])
             throw ValidationException::withMessages(['file'=>'We could not read any transactions from this PDF, so your current statement has been left unchanged.']);
 
-        $oldPath=$import->storage_path;
-        $newPath=$file->storeAs($businessId,bin2hex(random_bytes(16)).'.pdf','local');
+        $oldPath = $import->storage_path;
+        $statementDir = $this->getStatementDirectory($client, $importId);
+        $filename = time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
+        $newPath  = Storage::disk('s3')->putFileAs($statementDir, $file, $filename, 'public');
         if(!$newPath)throw ValidationException::withMessages(['file'=>'The file could not be saved. Please try again.']);
 
         $bankAccountId=(int)($import->bank_account_id??0);
@@ -116,9 +140,15 @@ class BankReconciliationController extends Controller
                 DB::table('bank_imports')->where('id',$importId)->update(['transaction_count'=>$stored['added']]);
                 return $verification->refresh(BankImport::findOrFail($importId),$analysis);
             });
-        } catch(\Throwable $e) {Storage::disk('local')->delete($newPath);throw $e;}
+        } catch(\Throwable $e) {Storage::disk('s3')->delete($newPath);throw $e;}
 
-        if($oldPath && $oldPath!==$newPath)Storage::disk('local')->delete($oldPath);
+        if($oldPath && $oldPath!==$newPath) {
+            if (Storage::disk('s3')->exists($oldPath)) {
+                Storage::disk('s3')->delete($oldPath);
+            } elseif (Storage::disk('s3')->exists($oldPath)) {
+                Storage::disk('s3')->delete($oldPath);
+            }
+        }
         return response()->json([
             'import_id'=>$importId,'verification_status'=>$result['status'],
             'count'=>DB::table('bank_entries')->where('bank_import_id',$importId)->count(),
@@ -179,7 +209,9 @@ class BankReconciliationController extends Controller
     public function statementLink(Request $request,int $businessId,int $importId) {
         $this->client($request,$businessId);
         $item=DB::table('bank_imports')->where('client_id',$businessId)->find($importId);
-        abort_unless($item && $item->storage_path && Storage::disk('local')->exists($item->storage_path),404,'Statement file not found.');
+        abort_unless($item && $item->storage_path, 404, 'Statement file not found.');
+        $exists = Storage::disk('s3')->exists($item->storage_path) || Storage::disk('s3')->exists($item->storage_path);
+        abort_unless($exists, 404, 'Statement file not found in storage.');
         $token=Str::random(48);
         Cache::put('bank_pdf_link:'.$token,$importId,now()->addMinutes(10));
         $url=route('api.bank-imports.pdf-public',['token'=>$token]);
@@ -190,11 +222,20 @@ class BankReconciliationController extends Controller
         $importId=Cache::get('bank_pdf_link:'.$token);
         abort_unless($importId,404);
         $item=DB::table('bank_imports')->find($importId);
-        abort_unless($item && $item->storage_path && Storage::disk('local')->exists($item->storage_path),404);
-        return response()->file(Storage::disk('local')->path($item->storage_path),[
-            'Content-Type'=>'application/pdf',
-            'Content-Disposition'=>'inline; filename="'.addslashes(basename($item->filename)).'"',
-        ]);
+        abort_unless($item && $item->storage_path, 404, 'Statement file not found.');
+        if (Storage::disk('s3')->exists($item->storage_path)) {
+            return response(Storage::disk('s3')->get($item->storage_path), 200, [
+                'Content-Type'=>'application/pdf',
+                'Content-Disposition'=>'inline; filename="'.addslashes(basename($item->filename)).'"',
+            ]);
+        }
+        if (Storage::disk('s3')->exists($item->storage_path)) {
+            return response()->file(Storage::disk('s3')->path($item->storage_path), [
+                'Content-Type'=>'application/pdf',
+                'Content-Disposition'=>'inline; filename="'.addslashes(basename($item->filename)).'"',
+            ]);
+        }
+        abort(404, 'Statement file not found in cloud or local storage.');
     }
     public function accounts(Request $request,int $businessId) {
         $this->client($request,$businessId);
@@ -314,17 +355,25 @@ class BankReconciliationController extends Controller
         $rows=$analysis['rows'];
         if(count($rows)>10000)throw ValidationException::withMessages(['file'=>'Maximum 10,000 transactions per statement.']);
 
-        $storagePath=$file->storeAs($businessId,bin2hex(random_bytes(16)).'.pdf','local');
+        $uploadedPath = null;
         try {
-            $result=DB::transaction(function()use($rows,$businessId,$bankAccountId,$hash,$file,$request,$storagePath,$analysis,$verification){
+            $result=DB::transaction(function()use($rows,$businessId,$bankAccountId,$hash,$file,$request,$analysis,$verification,&$uploadedPath){
+                $client = $this->client($request, $businessId);
                 $importId=DB::table('bank_imports')->insertGetId([
                     'client_id'=>$businessId,'bank_account_id'=>$bankAccountId,'filename'=>mb_substr($file->getClientOriginalName(),0,255),
-                    'sha256'=>$hash,'storage_path'=>$storagePath,'file_type'=>'pdf',
+                    'sha256'=>$hash,'storage_path'=>'','file_type'=>'pdf',
                     'created_by'=>$request->user()->id,'transaction_count'=>0,
                     'processing_status'=>'awaiting_verification','verification_status'=>'pending',
                     'pages_total'=>count($analysis['pages']),
                     'created_at'=>now(),'updated_at'=>now()
                 ]);
+
+                $statementDir = $this->getStatementDirectory($client, $importId);
+                $filename = time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
+                $uploadedPath = Storage::disk('s3')->putFileAs($statementDir, $file, $filename, 'public');
+
+                DB::table('bank_imports')->where('id', $importId)->update(['storage_path' => $uploadedPath]);
+
                 // Avoid re-importing overlapping statement lines, preserving repeated identical
                 // payments inside a statement by tracking their occurrence number.
                 $stored=$this->storeStatementRows($importId,$businessId,$bankAccountId,$rows);
@@ -345,7 +394,12 @@ class BankReconciliationController extends Controller
                     'closing_balance'=>$summary['closing_balance'],'calculated_closing_balance'=>$summary['calculated_closing_balance'],
                     'balance_difference'=>$summary['balance_difference'],'message'=>$message];
             });
-        } catch(\Throwable $e) {Storage::disk('local')->delete($storagePath);throw $e;}
+        } catch(\Throwable $e) {
+            if ($uploadedPath) {
+                Storage::disk('s3')->delete($uploadedPath);
+            }
+            throw $e;
+        }
         return response()->json($result,201);
     }
 

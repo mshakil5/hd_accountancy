@@ -90,6 +90,7 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
 
 
     // Bank statements — imported statement verification & OCR management
+    Route::get('/bank-statement', fn(\Illuminate\Http\Request $request) => redirect()->route('admin.bank-statements.index', $request->query()));
     Route::get('/bank-statements', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'index'])->name('admin.bank-statements.index');
     Route::get('/bank-statements/search-clients', [ReceiptController::class, 'searchClients'])->name('admin.bank-statements.search-clients');
     Route::get('/bank-statements/businesses', [ReceiptController::class, 'getClientsByCredential'])->name('admin.bank-statements.businesses');

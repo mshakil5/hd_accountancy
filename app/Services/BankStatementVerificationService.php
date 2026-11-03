@@ -633,13 +633,41 @@ class BankStatementVerificationService
         ];
     }
 
+    /**
+     * Provide a temporary local file path for a stored statement PDF
+     * (fetching from S3 or reading local storage) and clean up after.
+     */
+    private function withLocalPdf(BankImport $import, callable $callback)
+    {
+        if (!$import->storage_path) {
+            return $callback(null);
+        }
+
+        if (Storage::disk('s3')->exists($import->storage_path)) {
+            $tmpFile = tempnam(sys_get_temp_dir(), 'stmt_') . '.pdf';
+            file_put_contents($tmpFile, Storage::disk('s3')->get($import->storage_path));
+            try {
+                return $callback($tmpFile);
+            } finally {
+                @unlink($tmpFile);
+            }
+        }
+
+        if (Storage::disk('local')->exists($import->storage_path)) {
+            return $callback(Storage::disk('local')->path($import->storage_path));
+        }
+
+        return $callback(null);
+    }
+
     private function analyseStored(BankImport $import): array
     {
-        $disk = Storage::disk('local');
-        if (!$import->storage_path || !$disk->exists($import->storage_path)) {
-            return $this->analyse('');
-        }
-        return $this->analyse($disk->path($import->storage_path));
+        return $this->withLocalPdf($import, function (?string $fullPath) {
+            if (!$fullPath || !file_exists($fullPath)) {
+                return $this->analyse('');
+            }
+            return $this->analyse($fullPath);
+        });
     }
 
     /**
@@ -648,78 +676,78 @@ class BankStatementVerificationService
      */
     public function rescanWithOcr(BankImport $import): array
     {
-        $disk = Storage::disk('local');
-        if (!$import->storage_path || !$disk->exists($import->storage_path)) {
-            throw ValidationException::withMessages(['statement' => 'Original statement file is not found on disk.']);
-        }
-
-        $fullPath = $disk->path($import->storage_path);
-        $analysis = $this->analyse($fullPath, true);
-        $rows = $analysis['rows'];
-
-        if (empty($rows)) {
-            throw ValidationException::withMessages(['ocr' => 'OCR scan completed, but no transaction rows could be parsed from the PDF.']);
-        }
-
-        DB::transaction(function () use ($import, $rows, $analysis) {
-            $approvedEntries = DB::table('bank_entries')
-                ->where('bank_import_id', $import->id)
-                ->where('reconciliation_status', 'approved')
-                ->get();
-            $approvedFingerprints = $approvedEntries->pluck('line_fingerprint')->all();
-
-            DB::table('bank_entries')
-                ->where('bank_import_id', $import->id)
-                ->where(function ($q) {
-                    $q->whereNull('reconciliation_status')
-                      ->orWhere('reconciliation_status', '<>', 'approved');
-                })
-                ->delete();
-
-            $seen = [];
-            foreach ($rows as $row) {
-                $key = hash('sha256', implode('|', [
-                    $row['transaction_date'],
-                    $row['description'],
-                    $row['reference'] ?? '',
-                    number_format((float) $row['amount'], 2, '.', '')
-                ]));
-                $occurrence = ($seen[$key] ?? 0) + 1;
-                $seen[$key] = $occurrence;
-
-                if (in_array($key, $approvedFingerprints, true)) {
-                    continue;
-                }
-
-                $row['client_id'] = $import->client_id;
-                $row['currency'] = 'GBP';
-                $row['bank_import_id'] = $import->id;
-                $row['bank_account_id'] = $import->bank_account_id;
-                $row['line_fingerprint'] = $key;
-                $row['line_occurrence'] = $occurrence;
-                $row['status'] = 'needs_review';
-                $row['original_values'] = json_encode([
-                    'transaction_date' => $row['transaction_date'],
-                    'description' => $row['description'],
-                    'amount' => $row['amount'],
-                    'balance_after' => $row['balance_after'] ?? null,
-                ]);
-                $row['created_at'] = now();
-                $row['updated_at'] = now();
-                DB::table('bank_entries')->insert($row);
+        return $this->withLocalPdf($import, function (?string $fullPath) use ($import) {
+            if (!$fullPath || !file_exists($fullPath)) {
+                throw ValidationException::withMessages(['statement' => 'Original statement file is not found in cloud or local storage.']);
             }
 
-            $totalCount = DB::table('bank_entries')->where('bank_import_id', $import->id)->count();
-            DB::table('bank_imports')->where('id', $import->id)->update([
-                'transaction_count' => $totalCount,
-                'pages_total' => count($analysis['pages']),
-                'updated_at' => now(),
-            ]);
+            $analysis = $this->analyse($fullPath, true);
+            $rows = $analysis['rows'];
 
-            $this->refresh($import, $analysis);
+            if (empty($rows)) {
+                throw ValidationException::withMessages(['ocr' => 'OCR scan completed, but no transaction rows could be parsed from the PDF.']);
+            }
+
+            DB::transaction(function () use ($import, $rows, $analysis) {
+                $approvedEntries = DB::table('bank_entries')
+                    ->where('bank_import_id', $import->id)
+                    ->where('reconciliation_status', 'approved')
+                    ->get();
+                $approvedFingerprints = $approvedEntries->pluck('line_fingerprint')->all();
+
+                DB::table('bank_entries')
+                    ->where('bank_import_id', $import->id)
+                    ->where(function ($q) {
+                        $q->whereNull('reconciliation_status')
+                          ->orWhere('reconciliation_status', '<>', 'approved');
+                    })
+                    ->delete();
+
+                $seen = [];
+                foreach ($rows as $row) {
+                    $key = hash('sha256', implode('|', [
+                        $row['transaction_date'],
+                        $row['description'],
+                        $row['reference'] ?? '',
+                        number_format((float) $row['amount'], 2, '.', '')
+                    ]));
+                    $occurrence = ($seen[$key] ?? 0) + 1;
+                    $seen[$key] = $occurrence;
+
+                    if (in_array($key, $approvedFingerprints, true)) {
+                        continue;
+                    }
+
+                    $row['client_id'] = $import->client_id;
+                    $row['currency'] = 'GBP';
+                    $row['bank_import_id'] = $import->id;
+                    $row['bank_account_id'] = $import->bank_account_id;
+                    $row['line_fingerprint'] = $key;
+                    $row['line_occurrence'] = $occurrence;
+                    $row['status'] = 'needs_review';
+                    $row['original_values'] = json_encode([
+                        'transaction_date' => $row['transaction_date'],
+                        'description' => $row['description'],
+                        'amount' => $row['amount'],
+                        'balance_after' => $row['balance_after'] ?? null,
+                    ]);
+                    $row['created_at'] = now();
+                    $row['updated_at'] = now();
+                    DB::table('bank_entries')->insert($row);
+                }
+
+                $totalCount = DB::table('bank_entries')->where('bank_import_id', $import->id)->count();
+                DB::table('bank_imports')->where('id', $import->id)->update([
+                    'transaction_count' => $totalCount,
+                    'pages_total' => count($analysis['pages']),
+                    'updated_at' => now(),
+                ]);
+
+                $this->refresh($import, $analysis);
+            });
+
+            return $analysis;
         });
-
-        return $analysis;
     }
 
     private function storePages(BankImport $import, array $analysis, $entries): void

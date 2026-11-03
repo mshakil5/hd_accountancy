@@ -56,6 +56,7 @@ class BankStatementUploadTest extends TestCase
             }
         }
 
+        Storage::fake('s3');
         $this->bankId = $this->makeBank('HSBC', '4321');
     }
 
@@ -64,6 +65,7 @@ class BankStatementUploadTest extends TestCase
         DB::rollBack();
 
         foreach ($this->storedFiles as $path) {
+            Storage::disk('s3')->delete($path);
             Storage::disk('local')->delete($path);
         }
 
@@ -353,7 +355,7 @@ class BankStatementUploadTest extends TestCase
         $this->assertSame(2, (int) $import->transaction_count);
         $this->assertNotSame($oldPath, $import->storage_path, 'The replaced file should be stored fresh.');
         $this->storedFiles[] = $import->storage_path;
-        $this->assertFalse(Storage::disk('local')->exists($oldPath), 'The superseded PDF should be deleted.');
+        $this->assertFalse(Storage::disk('s3')->exists($oldPath), 'The superseded PDF should be deleted.');
 
         $entries = DB::table('bank_entries')->where('bank_import_id', $importId)->orderBy('transaction_date')->get();
         $this->assertCount(2, $entries);

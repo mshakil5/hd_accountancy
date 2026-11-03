@@ -36,13 +36,26 @@ class BankReconciliationPageController extends Controller
         $businessIds=$credentialId
             ? Client::where('client_credential_id',$credentialId)->where('status',1)->pluck('id')->all()
             : [];
-        if($businessId)
-            $businessIds=in_array($businessId,$businessIds,true)?[$businessId]:[];
+        if ($businessId) {
+            if (in_array($businessId, $businessIds, true)) {
+                $businessIds = [$businessId];
+            } else {
+                $businessId = 0;
+                $request->query->remove('client_id');
+            }
+        }
         // Load bank accounts across every business in scope so bank names resolve on
         // each row even when viewing "All businesses" (a single selection narrows this).
         $bankAccounts=$businessIds ? DB::table('reconciliation_bank_accounts')->whereIn('client_id',$businessIds)->orderBy('bank_name')->get() : collect();
+        if ($bankAccounts->isEmpty() && $credentialId) {
+            $allClientIds = Client::where('client_credential_id', $credentialId)->where('status', 1)->pluck('id')->all();
+            if ($allClientIds) {
+                $bankAccounts = DB::table('reconciliation_bank_accounts')->whereIn('client_id', $allClientIds)->where('active', 1)->orderBy('bank_name')->get();
+            }
+        }
         if($bankAccountId && !$bankAccounts->contains('id',$bankAccountId)) {
-            abort(422,'Choose a bank account belonging to the selected business.');
+            $bankAccountId = 0;
+            $request->query->remove('bank_account_id');
         }
         if(!$credentialId||!$businessIds){
             // Nothing selected yet — render the picker with an empty workspace.
@@ -92,7 +105,9 @@ class BankReconciliationPageController extends Controller
         $reconcileFilter = $request->input('reconcile_status', 'unreconciled');
         $scopeEntries = fn() => DB::table('bank_entries')
             ->whereIn('client_id', $businessIds)
-            ->when($bankAccountId, fn($q) => $q->where('bank_account_id', $bankAccountId));
+            ->when($bankAccountId, fn($q) => $q->where('bank_account_id', $bankAccountId))
+            ->when($request->filled('date_from'), fn($q) => $q->where('transaction_date', '>=', $request->input('date_from')))
+            ->when($request->filled('date_to'), fn($q) => $q->where('transaction_date', '<=', $request->input('date_to')));
 
         $entries = $scopeEntries()
             ->when($reconcileFilter === 'unreconciled', function ($q) {
@@ -685,9 +700,17 @@ class BankReconciliationPageController extends Controller
     }
 
     public function streamStatement(int $importId) {
-        $item=BankImport::findOrFail($importId);
-        abort_unless($item->storage_path && Storage::disk('local')->exists($item->storage_path),404);
-        return response()->file(Storage::disk('local')->path($item->storage_path),['Content-Type'=>'application/pdf']);
+        $item = BankImport::findOrFail($importId);
+        if ($item->storage_path && Storage::disk('s3')->exists($item->storage_path)) {
+            return response(Storage::disk('s3')->get($item->storage_path), 200, [
+                'Content-Type'        => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="' . addslashes(basename($item->filename)) . '"',
+            ]);
+        }
+        if ($item->storage_path && Storage::disk('s3')->exists($item->storage_path)) {
+            return response()->file(Storage::disk('s3')->path($item->storage_path), ['Content-Type' => 'application/pdf']);
+        }
+        abort(404, 'Statement file not found in cloud or local storage.');
     }
 
     public function verifyImport(Request $request,int $importId) {
@@ -892,8 +915,14 @@ class BankReconciliationPageController extends Controller
             ->with('success',$approved.' transaction(s) approved'.($posted?' and '.$posted.' ledger entr'.($posted===1?'y':'ies').' posted':'').'.'.($skipped?' '.$skipped.' skipped (unreconciled or already approved).':''));
     }
     public function statement(int $importId){
-        $item=BankImport::findOrFail($importId);
-        abort_unless($item->storage_path && Storage::disk('local')->exists($item->storage_path),404);
-        return Storage::disk('local')->download($item->storage_path,basename($item->filename));
+        $item = BankImport::findOrFail($importId);
+        $downloadName = $item->filename ? basename($item->filename) : 'statement.pdf';
+        if ($item->storage_path && Storage::disk('s3')->exists($item->storage_path)) {
+            return Storage::disk('s3')->download($item->storage_path, $downloadName);
+        }
+        if ($item->storage_path && Storage::disk('s3')->exists($item->storage_path)) {
+            return Storage::disk('s3')->download($item->storage_path, $downloadName);
+        }
+        abort(404, 'Statement file not found in cloud or local storage.');
     }
 }

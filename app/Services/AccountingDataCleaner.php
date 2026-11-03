@@ -125,19 +125,20 @@ class AccountingDataCleaner
         try {
             $disk = Storage::disk('s3');
 
-            foreach ($receiptPaths as $path) {
+            foreach (array_merge($receiptPaths, $statementPaths) as $path) {
                 if ($disk->exists($path) && $disk->delete($path)) {
                     $report['files']['s3']++;
                 }
             }
 
-            // Catch files left behind by receipt rows that were already removed.
-            foreach (['images/receipts', 'receipts'] as $directory) {
+            // Catch files left behind by receipt rows or statements that were already removed.
+            foreach (['images/receipts', 'receipts', 'images/bank_statements', 'bank_statements'] as $directory) {
                 foreach ($disk->allFiles($directory) as $path) {
                     if ($disk->delete($path)) {
                         $report['files']['s3']++;
                     }
                 }
+                $disk->deleteDirectory($directory);
             }
         } catch (Throwable $e) {
             $report['errors'][] = 'S3: ' . $e->getMessage();
@@ -173,12 +174,13 @@ class AccountingDataCleaner
                 }
             }
 
-            foreach (['bank-statements', 'bank_imports'] as $directory) {
+            foreach (['bank-statements', 'bank_imports', 'images/bank_statements', 'bank_statements'] as $directory) {
                 foreach ($disk->allFiles($directory) as $path) {
                     if ($disk->delete($path)) {
                         $report['files']['local']++;
                     }
                 }
+                $disk->deleteDirectory($directory);
             }
         } catch (Throwable $e) {
             $report['errors'][] = 'Local storage: ' . $e->getMessage();

@@ -39,7 +39,12 @@ class BankStatementPageController extends Controller
             : [];
 
         if ($businessId) {
-            $businessIds = in_array($businessId, $businessIds, true) ? [$businessId] : [];
+            if (in_array($businessId, $businessIds, true)) {
+                $businessIds = [$businessId];
+            } else {
+                $businessId = 0;
+                $request->query->remove('client_id');
+            }
         }
 
         $bankAccounts = $businessIds
@@ -47,7 +52,8 @@ class BankStatementPageController extends Controller
             : collect();
 
         if ($bankAccountId && !$bankAccounts->contains('id', $bankAccountId)) {
-            abort(422, 'Choose a bank account belonging to the selected business.');
+            $bankAccountId = 0;
+            $request->query->remove('bank_account_id');
         }
 
         if (!$credentialId || !$businessIds) {
@@ -134,15 +140,29 @@ class BankStatementPageController extends Controller
     public function streamStatement(int $importId)
     {
         $item = BankImport::findOrFail($importId);
-        abort_unless($item->storage_path && Storage::disk('local')->exists($item->storage_path), 404);
-        return response()->file(Storage::disk('local')->path($item->storage_path), ['Content-Type' => 'application/pdf']);
+        if ($item->storage_path && Storage::disk('s3')->exists($item->storage_path)) {
+            return response(Storage::disk('s3')->get($item->storage_path), 200, [
+                'Content-Type'        => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="' . addslashes(basename($item->filename)) . '"',
+            ]);
+        }
+        if ($item->storage_path && Storage::disk('s3')->exists($item->storage_path)) {
+            return response()->file(Storage::disk('s3')->path($item->storage_path), ['Content-Type' => 'application/pdf']);
+        }
+        abort(404, 'Statement file not found in cloud or local storage.');
     }
 
     public function downloadStatement(int $importId)
     {
         $item = BankImport::findOrFail($importId);
-        abort_unless($item->storage_path && Storage::disk('local')->exists($item->storage_path), 404);
-        return Storage::disk('local')->download($item->storage_path, basename($item->filename));
+        $downloadName = $item->filename ? basename($item->filename) : 'statement.pdf';
+        if ($item->storage_path && Storage::disk('s3')->exists($item->storage_path)) {
+            return Storage::disk('s3')->download($item->storage_path, $downloadName);
+        }
+        if ($item->storage_path && Storage::disk('s3')->exists($item->storage_path)) {
+            return Storage::disk('s3')->download($item->storage_path, $downloadName);
+        }
+        abort(404, 'Statement file not found in cloud or local storage.');
     }
 
     public function rescanOcr(Request $request, int $importId)

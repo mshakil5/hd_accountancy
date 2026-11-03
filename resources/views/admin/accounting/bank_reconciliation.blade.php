@@ -139,9 +139,17 @@
         @endforeach
       </select>
     </div>
-    <div class="col-md-4 d-flex align-items-end gap-2" style="padding-top:18px">
-      <button class="btn btn-primary">Filter</button>
-      @if(request()->hasAny(['client_id','bank_account_id','reconcile_status']) && request('reconcile_status') !== 'unreconciled')
+    <div class="col-md-2">
+      <label class="hd-small font-weight-bold">From</label>
+      <input type="date" class="form-control" name="date_from" value="{{ request('date_from') }}" />
+    </div>
+    <div class="col-md-2">
+      <label class="hd-small font-weight-bold">To</label>
+      <input type="date" class="form-control" name="date_to" value="{{ request('date_to') }}" />
+    </div>
+    <div class="col-md-2 d-flex align-items-end gap-2" style="padding-top:18px">
+      <button type="submit" class="btn btn-primary">Filter</button>
+      @if(request()->hasAny(['client_id','bank_account_id','reconcile_status','date_from','date_to']) && request('reconcile_status') !== 'unreconciled')
         <a href="{{ route('admin.bank-reconciliation.index', ['client_credential_id'=>$presetId]) }}" class="btn btn-outline-secondary btn-sm">Reset</a>
       @endif
     </div>
@@ -169,7 +177,13 @@
 {{-- ── Reconcile-status filter tabs ── --}}
 <div class="hd-filter-tabs">
   @foreach(['unreconciled'=>'Unreconciled',''=>'All','reconciled'=>'Reconciled'] as $val=>$lbl)
-  <a href="{{ request()->fullUrlWithQuery(['reconcile_status'=>$val]) }}"
+  <a href="{{ request()->fullUrlWithQuery(array_filter([
+        'reconcile_status' => $val,
+        'client_id' => request('client_id'),
+        'bank_account_id' => request('bank_account_id'),
+        'date_from' => request('date_from'),
+        'date_to' => request('date_to'),
+    ])) }}"
      class="hd-ftab {{ ($reconcileFilter ?? 'unreconciled') === $val ? 'active' : '' }}">{{ $lbl }}</a>
   @endforeach
 </div>
