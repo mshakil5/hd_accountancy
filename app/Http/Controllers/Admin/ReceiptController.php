@@ -28,6 +28,7 @@ class ReceiptController extends Controller
     public function datatable()
     {
         $query = Receipt::with(['client.credential', 'detail.accountHead.accountType'])
+            ->where('from_reconciliation', false)
             ->when(Auth::user() && Auth::user()->email === 'jane@gmail.com', function ($q) {
                 $q->whereHas('client', function ($sub) {
                     $sub->whereHas('credential', function ($c) {
@@ -183,7 +184,8 @@ class ReceiptController extends Controller
             })
             ->orderBy('code')->get();
 
-        $baseQuery = Receipt::whereHas('client', fn($q) => $q->where('client_credential_id', $credentialId));
+        $baseQuery = Receipt::whereHas('client', fn($q) => $q->where('client_credential_id', $credentialId))
+            ->where('from_reconciliation', false);
 
         $pendingQuery = (clone $baseQuery)->whereIn('status', ['pending', 'to_review'])->orderBy('id', 'asc');
         $pendingTotal = (clone $pendingQuery)->count();
@@ -472,7 +474,7 @@ class ReceiptController extends Controller
 
     public function counts(Request $request)
     {
-        $query = Receipt::query();
+        $query = Receipt::query()->where('from_reconciliation', false);
         if ($request->client_credential_id) {
             $query->whereHas('client', function ($q) {
                 $q->where('client_credential_id', request('client_credential_id'));

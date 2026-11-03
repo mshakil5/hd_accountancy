@@ -408,6 +408,7 @@ class BankReconciliationPageController extends Controller
                         'receipt_date' => $invoiceDate,
                         'supplier' => $supplier,
                         'status' => 'ready',
+                        'from_reconciliation' => true,
                         'created_by' => auth()->id(),
                     ]);
 
@@ -478,6 +479,7 @@ class BankReconciliationPageController extends Controller
                             'receipt_date' => $invDate,
                             'supplier' => $supplier,
                             'status' => 'ready',
+                            'from_reconciliation' => true,
                             'created_by' => auth()->id(),
                         ]);
 
