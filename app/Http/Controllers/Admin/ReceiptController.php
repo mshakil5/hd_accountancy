@@ -582,12 +582,28 @@ class ReceiptController extends Controller
         ]);
     }
 
-    public function getClientsByCredential(Request $request)
+    public function getBanksByClient(Request $request)
     {
-        $clients = \App\Models\Client::where('client_credential_id', $request->client_credential_id)
-            ->where('status', 1)
-            ->with(['clientType'])
-            ->get()
+        $clientId = (int) $request->input('client_id');
+        if ($clientId > 0) {
+            $banks = DB::table('reconciliation_bank_accounts')
+                ->where('client_id', $clientId)
+                ->where('active', 1)
+                ->orderBy('bank_name')
+                ->get(['id', 'bank_name', 'account_last_four', 'client_id']);
+        } else {
+            // All businesses under credential
+            $credentialId = (int) $request->input('client_credential_id');
+            $clientIds = \App\Models\Client::where('client_credential_id', $credentialId)->where('status', 1)->pluck('id')->all();
+            $banks = DB::table('reconciliation_bank_accounts')
+                ->whereIn('client_id', $clientIds)
+                ->where('active', 1)
+                ->orderBy('bank_name')
+                ->get(['id', 'bank_name', 'account_last_four', 'client_id']);
+        }
+        return response()->json($banks);
+    }
+
             ->map(function ($c) {
                 $name     = trim(($c->name ?? '') . ' ' . ($c->last_name ?? ''));
                 $business = $c->business_name ?? $c->company_name ?? '';
