@@ -135,7 +135,7 @@
         <option value="">All bank accounts</option>
         @foreach($bankAccounts as $bank)
           @continue(strtolower(trim($bank->bank_name)) === 'unknown historical bank')
-          <option value="{{ $bank->id }}" {{ (int)$bankAccountId===(int)$bank->id?'selected':'' }}>{{ $bank->bank_name }}{{ $bank->account_last_four?' ••'.$bank->account_last_four:'' }}</option>
+          <option value="{{ $bank->id }}" data-client-id="{{ $bank->client_id }}" {{ (int)$bankAccountId===(int)$bank->id?'selected':'' }}>{{ $bank->bank_name }}{{ $bank->account_last_four?' ••'.$bank->account_last_four:'' }}</option>
         @endforeach
       </select>
     </div>
@@ -790,6 +790,25 @@ jQuery(function ($) {
         opts += '<option value="' + c.id + '"' + sel + '>' + c.name + '</option>';
       });
       $('#filterBusiness').html(opts).trigger('change.select2');
+      // Filter bank dropdown by selected business
+      function filterBanksByBusiness() {
+        var selectedBiz = $('#filterBusiness').val();
+        var $bankSelect = $('select[name="bank_account_id"]');
+        var currentBank = $bankSelect.val();
+        $bankSelect.find('option').each(function() {
+          var clientId = $(this).data('client-id');
+          if (clientId === undefined || clientId === '' || selectedBiz === '' || String(clientId) === String(selectedBiz)) {
+            $(this).show();
+          } else {
+            $(this).hide();
+          }
+        });
+        if (currentBank && $bankSelect.find('option[value="' + currentBank + '"]:visible').length === 0) {
+          $bankSelect.val('').trigger('change.select2');
+        }
+      }
+      $('#filterBusiness').on('change', filterBanksByBusiness);
+      filterBanksByBusiness();
     });
   }
 });
