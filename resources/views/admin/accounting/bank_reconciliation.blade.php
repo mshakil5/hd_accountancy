@@ -177,13 +177,13 @@
 {{-- ── Reconcile-status filter tabs ── --}}
 <div class="hd-filter-tabs">
   @foreach(['unreconciled'=>'Unreconciled',''=>'All','reconciled'=>'Reconciled'] as $val=>$lbl)
-  <a href="{{ request()->fullUrlWithQuery(array_filter([
+  <a href="{{ request()->fullUrlWithQuery([
         'reconcile_status' => $val,
         'client_id' => request('client_id'),
         'bank_account_id' => request('bank_account_id'),
         'date_from' => request('date_from'),
         'date_to' => request('date_to'),
-    ])) }}"
+    ]) }}"
      class="hd-ftab {{ ($reconcileFilter ?? 'unreconciled') === $val ? 'active' : '' }}">{{ $lbl }}</a>
   @endforeach
 </div>

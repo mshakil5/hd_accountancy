@@ -53,6 +53,13 @@ class BankReconciliationPageController extends Controller
                 $bankAccounts = DB::table('reconciliation_bank_accounts')->whereIn('client_id', $allClientIds)->where('active', 1)->orderBy('bank_name')->get();
             }
         }
+        // Always load banks for the credential so transfer dropdown never stays empty
+        if ($credentialId && $bankAccounts->isEmpty()) {
+            $allClientIds = Client::where('client_credential_id', $credentialId)->where('status', 1)->pluck('id')->all();
+            if ($allClientIds) {
+                $bankAccounts = DB::table('reconciliation_bank_accounts')->whereIn('client_id', $allClientIds)->where('active', 1)->orderBy('bank_name')->get();
+            }
+        }
         if($bankAccountId && !$bankAccounts->contains('id',$bankAccountId)) {
             $bankAccountId = 0;
             $request->query->remove('bank_account_id');
