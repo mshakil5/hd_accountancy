@@ -603,6 +603,27 @@ class ReceiptController extends Controller
         return response()->json($clients);
     }
 
+    public function getBanksByClient(Request $request)
+    {
+        $clientId = (int) $request->input('client_id');
+        if ($clientId > 0) {
+            $banks = DB::table('reconciliation_bank_accounts')
+                ->where('client_id', $clientId)
+                ->where('active', 1)
+                ->orderBy('bank_name')
+                ->get(['id', 'bank_name', 'account_last_four']);
+        } else {
+            $credentialId = (int) $request->input('client_credential_id');
+            $clientIds = \App\Models\Client::where('client_credential_id', $credentialId)->where('status', 1)->pluck('id')->all();
+            $banks = DB::table('reconciliation_bank_accounts')
+                ->whereIn('client_id', $clientIds)
+                ->where('active', 1)
+                ->orderBy('bank_name')
+                ->get(['id', 'bank_name', 'account_last_four']);
+        }
+        return response()->json($banks);
+    }
+
     private function getReceiptDirectory($client, $receiptId)
     {
         $clientName = $this->sanitizeDirName($client->name ?? 'unknown');

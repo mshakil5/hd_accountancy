@@ -92,7 +92,8 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     // Bank statements — imported statement verification & OCR management
     Route::get('/bank-statement', fn(\Illuminate\Http\Request $request) => redirect()->route('admin.bank-statements.index', $request->query()));
     Route::get('/bank-statements', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'index'])->name('admin.bank-statements.index');
-    Route::get('/bank-statements/search-clients', [ReceiptController::class, 'searchClients'])->name('admin.bank-statements.search-clients');
+    Route::get('/bank-statements/banks', [ReceiptController::class, 'getBanksByClient'])->name('admin.bank-statements.banks');
+Route::get('/bank-statements/search-clients', [ReceiptController::class, 'searchClients'])->name('admin.bank-statements.search-clients');
     Route::get('/bank-statements/businesses', [ReceiptController::class, 'getClientsByCredential'])->name('admin.bank-statements.businesses');
     Route::get('/bank-statements/{importId}/verification', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'verification'])->name('admin.bank-statements.verification');
     Route::get('/bank-statements/{importId}/pdf', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'streamStatement'])->name('admin.bank-statements.statement-view');
@@ -111,7 +112,8 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     // Bank reconciliation — authenticated accountant workspace
     Route::post('/bank-reconciliation/accounts', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'createBankAccount'])->name('admin.bank-reconciliation.accounts.create');
     Route::get('/bank-reconciliation', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'index'])->name('admin.bank-reconciliation.index');
-    Route::get('/bank-reconciliation/search-clients', [ReceiptController::class, 'searchClients'])->name('admin.bank-reconciliation.search-clients');
+    Route::get('/bank-reconciliation/banks', [ReceiptController::class, 'getBanksByClient'])->name('admin.bank-reconciliation.banks');
+Route::get('/bank-reconciliation/search-clients', [ReceiptController::class, 'searchClients'])->name('admin.bank-reconciliation.search-clients');
     Route::get('/bank-reconciliation/businesses', [ReceiptController::class, 'getClientsByCredential'])->name('admin.bank-reconciliation.businesses');
     Route::post('/bank-reconciliation/{entryId}/action', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'action'])->name('admin.bank-reconciliation.action');
     Route::get('/bank-reconciliation/import/{importId}/download', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'statement'])->name('admin.bank-reconciliation.statement');
