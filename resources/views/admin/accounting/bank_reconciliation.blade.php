@@ -790,23 +790,6 @@ jQuery(function ($) {
         opts += '<option value="' + c.id + '"' + sel + '>' + c.name + '</option>';
       });
       $('#filterBusiness').html(opts).trigger('change.select2');
-      // Dynamically load banks based on selected business
-      function loadBanksForBusiness(bizId) {
-        var credId = $('#client_credential_id').val();
-        var url = '{{ route('admin.bank-reconciliation.banks') }}' + '?client_id=' + (bizId || '') + '&client_credential_id=' + credId;
-        $.get(url, function(data){
-          var currentBank = $('select[name="bank_account_id"]').val();
-          var opts = '<option value="">All bank accounts</option>';
-          $.each(data, function(i, b){
-            if (String(b.bank_name).toLowerCase().trim() === 'unknown historical bank') return;
-            var sel = String(b.id) === String(currentBank) ? ' selected' : '';
-            opts += '<option value="' + b.id + '"' + sel + '>' + b.bank_name + (b.account_last_four ? ' ••' + b.account_last_four : '') + '</option>';
-          });
-          $('select[name="bank_account_id"]').html(opts).trigger('change.select2');
-        });
-      }
-      $('#filterBusiness').on('change', function(){ loadBanksForBusiness($(this).val()); });
-      loadBanksForBusiness($('#filterBusiness').val());
     });
   }
 });
