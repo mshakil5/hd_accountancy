@@ -304,7 +304,7 @@
             });
 
             if (presetCredentialId) {
-                $.get("{{ url('/admin/receipts/search-clients') }}", { q: '' }, function(data) {
+                $.get("{{ url('/admin/receipts/search-clients') }}", { q: '', selected_id: presetCredentialId }, function(data) {
                     var match = data.find(function(item) { return item.id == presetCredentialId; });
                     if (match) {
                         presetApplied = true;

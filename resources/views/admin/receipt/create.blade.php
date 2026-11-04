@@ -235,7 +235,7 @@ $(function () {
     var urlParams = new URLSearchParams(window.location.search);
     var presetId = urlParams.get('client_credential_id');
     if (presetId) {
-        $.get("{{ url('/admin/receipts/search-clients') }}", { q: '' }, function(data) {
+        $.get("{{ url('/admin/receipts/search-clients') }}", { q: '', selected_id: presetId }, function(data) {
             var match = data.find(function(item) { return item.id == presetId; });
             if (match) {
                 var option = new Option(match.text, match.id, true, true);

@@ -136,12 +136,18 @@ class ReceiptController extends Controller
     public function searchClients(Request $request)
     {
         $search = $request->get('q');
+        $selectedId = (int) $request->get('selected_id', 0);
 
         $query = ClientCredential::select('id', 'first_name', 'last_name', 'email', 'phone', 'status');
 
         if (auth()->user() && auth()->user()->email === 'jane@gmail.com') {
             $query->where('email', 'david@gmail.com');
         }
+
+        // The dropdown is capped to the newest 20, so an older preset credential
+        // would never be found and could not be shown as selected. Include it
+        // explicitly (while still respecting any user scoping above).
+        $selected = $selectedId ? (clone $query)->whereKey($selectedId)->first() : null;
 
         $clients = $query
             ->when($search, function ($q) use ($search) {
@@ -154,6 +160,10 @@ class ReceiptController extends Controller
             ->latest()
             ->limit(20)
             ->get();
+
+        if ($selected && !$clients->contains('id', $selected->id)) {
+            $clients->push($selected);
+        }
 
         $formattedClients = [];
         foreach ($clients as $client) {

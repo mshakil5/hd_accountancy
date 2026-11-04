@@ -328,7 +328,7 @@ $(function(){
             $('#account_type_id').val(d.account_type_id || '');
             loadSubTypes(d.account_type_id || '', d.account_sub_type_id);
             if(d.client_credential_id) {
-                $.get("{{ url('/admin/receipts/search-clients') }}", { q: '' }, function(data) {
+                $.get("{{ url('/admin/receipts/search-clients') }}", { q: '', selected_id: d.client_credential_id }, function(data) {
                     var match = data.find(function(item) { return item.id == d.client_credential_id; });
                     if(match) {
                         var option = new Option(match.text, match.id, true, true);
