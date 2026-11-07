@@ -224,7 +224,7 @@
                     @endphp
                     <tr style="{{ $hasIssue ? 'background-color: #fff1f2; border-left: 4px solid #ef4444;' : 'background-color: #ffffff;' }}">
                         <td style="text-align:center; font-size:11px; color:#64748b; white-space:nowrap;">
-                            {{ $entry->source_page ?? '—' }}@if($entry->source_position)/{{ $entry->source_position }}@endif
+                            {{ $entry->source_page ? $entry->source_page . ($entry->source_position ? '/' . $entry->source_position : '') : 'Manual' }}
                         </td>
                         <td style="white-space:nowrap; font-size:12px;">
                             {{ \Illuminate\Support\Carbon::parse($entry->transaction_date)->format('d/m/Y') }}

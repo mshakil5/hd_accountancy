@@ -867,6 +867,62 @@ class BankStatementVerificationService
         return false;
     }
 
+    /**
+     * Return entries oldest → newest for balance maths and display.
+     *
+     * Extracted rows keep their statement serial (page/position) order, reversed
+     * when the statement is printed newest-first. Manually added rows have no
+     * PDF page (source_page NULL), so page order would drop them to the top of
+     * the list regardless of date and shift every later system balance by their
+     * amount. They are therefore inserted by transaction_date instead: after
+     * every row dated on or before them, before the first later-dated row.
+     *
+     * @param  mixed  $entries  Collection or array of entry objects.
+     * @return array<int, object>
+     */
+    public function sortChronologically($entries, ?float $opening = null): array
+    {
+        $rows = (is_array($entries) ? $entries : $entries->values()->all());
+        if (count($rows) < 2) {
+            return $rows;
+        }
+
+        $statement = [];
+        $manual = [];
+        foreach ($rows as $row) {
+            if (($row->source_page ?? null) === null) {
+                $manual[] = $row;
+            } else {
+                $statement[] = $row;
+            }
+        }
+
+        $chronological = $this->isNewestFirst($statement, $opening)
+            ? array_reverse($statement)
+            : $statement;
+
+        if (!$manual) {
+            return $chronological;
+        }
+
+        usort($manual, fn ($a, $b) => strcmp(substr((string) ($a->transaction_date ?? ''), 0, 10), substr((string) ($b->transaction_date ?? ''), 0, 10))
+            ?: ((int) ($a->id ?? 0) <=> (int) ($b->id ?? 0)));
+
+        foreach ($manual as $row) {
+            $date = substr((string) ($row->transaction_date ?? ''), 0, 10);
+            $at = count($chronological);
+            foreach ($chronological as $i => $current) {
+                if (substr((string) ($current->transaction_date ?? ''), 0, 10) > $date) {
+                    $at = $i;
+                    break;
+                }
+            }
+            array_splice($chronological, $at, 0, [$row]);
+        }
+
+        return $chronological;
+    }
+
     private function calculateSystemBalancesAndAutofill(BankImport $import, array $analysis, $entries)
     {
         if ($entries->isEmpty()) {
@@ -874,15 +930,20 @@ class BankStatementVerificationService
         }
 
         $opening = $analysis['opening_balance'] ?? ($import->opening_balance !== null ? (float) $import->opening_balance : null);
-        $rows = $entries->values()->all();
-        $isNewestFirst = $this->isNewestFirst($rows, $opening);
-
-        $chronological = $isNewestFirst ? array_reverse($rows) : $rows;
+        $chronological = $this->sortChronologically($entries, $opening);
 
         if ($opening === null) {
+            // Opening = first *printed* balance − everything up to and including
+            // that row. Manual rows before it count in the cumulative total, but
+            // a manual row’s own derived balance must never anchor the opening
+            // (it was computed from the opening in the first place).
+            $cumulative = 0.0;
             foreach ($chronological as $item) {
-                if ($item->balance_after !== null && $item->amount !== null) {
-                    $opening = round((float) $item->balance_after - (float) $item->amount, 2);
+                if ($item->amount !== null) {
+                    $cumulative = round($cumulative + (float) $item->amount, 2);
+                }
+                if (($item->source_page ?? null) !== null && $item->balance_after !== null && $item->amount !== null) {
+                    $opening = round((float) $item->balance_after - $cumulative, 2);
                     break;
                 }
             }
@@ -895,9 +956,15 @@ class BankStatementVerificationService
             $hasPdfBalance = $entry->balance_after !== null;
             $pdfBalance = $hasPdfBalance ? (float) $entry->balance_after : null;
             $amt = $entry->amount !== null ? (float) $entry->amount : null;
+            $isManual = ($entry->source_page ?? null) === null;
+            $prevBefore = $prevBalance;
 
             // 1. RECONCILE SIGN & AUTOFILL AGAINST BALANCE DELTA:
-            if ($prevBalance !== null && $hasPdfBalance) {
+            // Extracted rows only. Manual rows have no printed balance to infer
+            // from — and once their balance is auto-filled, running this check
+            // would compare the derived balance against the amount and can flip
+            // a corrected amount back.
+            if (!$isManual && $prevBalance !== null && $hasPdfBalance) {
                 $delta = round($pdfBalance - $prevBalance, 2);
 
                 if ($amt === null || ($amt == 0.0 && abs($delta) >= 0.01)) {
@@ -929,11 +996,30 @@ class BankStatementVerificationService
             }
 
             $entry->system_balance = $running;
-            DB::table('bank_entries')->where('id', $entry->id)->update([
-                'system_balance' => $running,
-            ]);
 
-            $prevBalance = $hasPdfBalance ? $pdfBalance : $running;
+            // Manually added / non-PDF rows have no printed PDF balance
+            // (source_page NULL). Derive it from the *previous row’s* balance
+            // at this chronological position, so it follows its neighbours —
+            // not the opening total, which would hide an earlier gap.
+            // Recomputed every refresh (including NULL) so amount/date edits
+            // never leave a stale balance behind.
+            $update = ['system_balance' => $running];
+            if ($isManual) {
+                if ($prevBefore !== null && $amt !== null) {
+                    $manualBalance = round($prevBefore + $amt, 2);
+                } elseif ($running !== null) {
+                    $manualBalance = $running;
+                } else {
+                    $manualBalance = null;
+                }
+                $entry->balance_after = $manualBalance;
+                $update['balance_after'] = $manualBalance;
+            }
+            DB::table('bank_entries')->where('id', $entry->id)->update($update);
+
+            $prevBalance = $isManual && ($entry->balance_after !== null)
+                ? (float) $entry->balance_after
+                : ($hasPdfBalance ? $pdfBalance : $running);
         }
 
         return $entries;
@@ -941,11 +1027,7 @@ class BankStatementVerificationService
 
     private function checkRunningBalances(BankImport $import, $entries): void
     {
-        $rows = $entries->values()->all();
-        $isNewestFirst = $this->isNewestFirst($rows, $import->opening_balance !== null ? (float) $import->opening_balance : null);
-        if ($isNewestFirst) {
-            $rows = array_reverse($rows);
-        }
+        $rows = $this->sortChronologically($entries, $import->opening_balance !== null ? (float) $import->opening_balance : null);
 
         $previous = null;
         foreach ($rows as $entry) {

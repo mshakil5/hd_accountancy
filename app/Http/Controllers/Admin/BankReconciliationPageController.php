@@ -701,6 +701,8 @@ class BankReconciliationPageController extends Controller
         $import=BankImport::findOrFail($importId);
         $entries=DB::table('bank_entries')->where('bank_import_id',$importId)
             ->orderByRaw('COALESCE(source_page,1)')->orderByRaw('COALESCE(source_position,0)')->orderBy('id')->get();
+        // Display oldest → newest with manually added rows interleaved by date.
+        $entries=collect(app(BankStatementVerificationService::class)->sortChronologically($entries, $import->opening_balance !== null ? (float) $import->opening_balance : null));
         $pages=DB::table('bank_statement_pages')->where('bank_import_id',$importId)->orderBy('page_no')->get();
         $exceptions=DB::table('bank_statement_exceptions')->where('bank_import_id',$importId)
             ->orderByRaw('CASE WHEN resolved_at IS NULL THEN 0 ELSE 1 END')->orderByDesc('id')->get();
