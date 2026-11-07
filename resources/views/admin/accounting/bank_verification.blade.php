@@ -4,8 +4,12 @@
 <style>
 .hd-card{background:#fff;border:1px solid #e5eaf1;border-radius:12px;padding:18px;margin-bottom:16px}
 .hd-small{color:#64748b;font-size:12px}
-.hd-scroll{overflow-x:auto;overflow-y:visible;transform:rotateX(180deg);}
-.hd-scroll > *{transform:rotateX(180deg);}
+.hd-scroll{overflow-x:auto;overflow-y:visible;}
+.hd-scroll-wrap{position:relative;}
+.hd-scroll-top{overflow-x:auto;overflow-y:hidden;height:0;}
+.hd-scroll-top::-webkit-scrollbar{height:8px;}
+.hd-scroll-body{overflow-x:auto;overflow-y:visible;}
+.hd-scroll-body::-webkit-scrollbar{height:8px;}
 .hd-table{width:100%;font-size:13px;table-layout:auto}
 .hd-table th,.hd-table td{border-bottom:1px solid #e7ebf1;padding:9px;vertical-align:middle}
 .hd-table th{background:#f1f5f9;font-weight:600}
@@ -201,8 +205,10 @@
         <div class="hd-card">
             <h5>Extracted rows ({{ $entries->count() }})</h5>
             <div class="hd-small mb-2">Corrections are saved with the original extracted value, your corrected value, your user and the reason.</div>
-            <div class="hd-scroll">
-            <table class="hd-table">
+            <div class="hd-scroll-wrap">
+                <div class="hd-scroll-top" id="topScrollExtracted"></div>
+                <div class="hd-scroll-body" id="bodyScrollExtracted">
+                <table class="hd-table">
                 <thead>
                     <tr>
                         <th style="width:50px; text-align:center;">Page</th>
@@ -313,6 +319,7 @@
                 @endforelse
                 </tbody>
             </table>
+                </div>
             </div>
 
             <hr>
@@ -428,6 +435,19 @@
 @section('script')
 <script>
 $(document).ready(function() {
+    // Sync top and bottom scrollbars for the extracted rows table
+    var topScroll = document.getElementById('topScrollExtracted');
+    var bodyScroll = document.getElementById('bodyScrollExtracted');
+    if (topScroll && bodyScroll) {
+        function syncTopWidth() {
+            topScroll.innerHTML = '<div style="width:' + bodyScroll.scrollWidth + 'px; height:1px;"></div>';
+        }
+        topScroll.addEventListener('scroll', function() { bodyScroll.scrollLeft = topScroll.scrollLeft; });
+        bodyScroll.addEventListener('scroll', function() { topScroll.scrollLeft = bodyScroll.scrollLeft; });
+        window.addEventListener('resize', syncTopWidth);
+        syncTopWidth();
+    }
+
     $(document).on('click', '.btn-edit-row', function() {
         var id = $(this).data('id');
         var date = $(this).data('date');
