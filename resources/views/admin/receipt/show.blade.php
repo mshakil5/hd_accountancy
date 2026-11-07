@@ -343,23 +343,18 @@
                                             value="{{ $receipt->detail?->total_amount }}">
                                     </div>
                                     <div class="col-md-6 detail-field">
-                                        <label class="detail-label">Is Paid?</label>
-                                        <select class="form-control" id="paid_method">
-                                            <option value="">No / Unpaid</option>
+                                        <label class="detail-label">Payment Type</label>
+                                        <select class="form-control" id="payment_method" name="payment_method">
                                             <option value="cash"
-                                                {{ $receipt->detail?->paid && $receipt->detail?->payment_method == 'cash' ? 'selected' : '' }}>Cash
+                                                {{ ($receipt->detail?->payment_method ?? 'cash') == 'cash' ? 'selected' : '' }}>Cash
                                             </option>
                                             <option value="bank"
-                                                {{ $receipt->detail?->paid && $receipt->detail?->payment_method == 'bank' ? 'selected' : '' }}>Bank
+                                                {{ $receipt->detail?->payment_method == 'bank' ? 'selected' : '' }}>Bank
                                             </option>
                                         </select>
                                     </div>
                                 </div>
 
-                                <input type="hidden" id="paid" name="paid"
-                                    value="{{ $receipt->detail?->paid ? 'yes' : 'no' }}">
-                                <input type="hidden" id="payment_method" name="payment_method"
-                                    value="{{ $receipt->detail?->payment_method }}">
 
                                 <div class="detail-field">
                                     <label class="detail-label">Status</label>
@@ -620,12 +615,7 @@
 
             calculateAmounts();
 
-            // Single "Is Paid?" control: Cash / Bank imply paid, empty means unpaid.
-            $('#paid_method').on('change', function() {
-                const method = $(this).val();
-                $('#paid').val(method ? 'yes' : 'no');
-                $('#payment_method').val(method || '');
-            });
+            // Payment Type: Cash / Bank only.
 
             if ($.fn.select2) {
                 $('#account_head_id').select2({ width: '100%', placeholder: 'Select Account Head' });
@@ -650,7 +640,6 @@
                     invoice_number: $('#invoice_number').val(),
                     net_amount: $('#net_amount').val(),
                     tax_amount: $('#tax_amount').val(),
-                    paid: $('#paid').val(),
                     payment_method: $('#payment_method').val(),
                     description: $('#description').val()
                 };

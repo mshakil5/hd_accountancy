@@ -285,6 +285,7 @@ class ReceiptController extends Controller
         $taxAmount   = (float)($request->tax_amount ?? 0);
         $vatAmount   = (float)($request->vat_amount ?? 0);
         $totalAmount = $netAmount + $taxAmount + $vatAmount;
+        $paymentMethod = in_array($request->payment_method, ['cash', 'bank'], true) ? $request->payment_method : null;
 
         if ($request->account_head_id) {
             ReceiptDetail::updateOrCreate(
@@ -298,8 +299,8 @@ class ReceiptController extends Controller
                     'tax_amount'      => $taxAmount,
                     'vat_amount'      => $vatAmount,
                     'total_amount'    => $totalAmount ?: null,
-                    'paid'            => $request->paid == 'yes' ? 1 : 0,
-                    'payment_method'  => $request->paid == 'yes' ? $request->payment_method : null,
+                    'paid'            => $paymentMethod ? 1 : 0,
+                    'payment_method'  => $paymentMethod,
                     'description'     => $request->description,
                 ]
             );
@@ -309,8 +310,8 @@ class ReceiptController extends Controller
                 'due_date'       => $request->due_date ?: null,
                 'invoice_number' => $request->invoice_number,
                 'description'    => $request->description,
-                'paid'           => $request->paid == 'yes' ? 1 : 0,
-                'payment_method' => $request->paid == 'yes' ? $request->payment_method : null,
+                'paid'           => $paymentMethod ? 1 : 0,
+                'payment_method' => $paymentMethod,
             ]);
         }
 
@@ -567,6 +568,7 @@ class ReceiptController extends Controller
             $taxAmount   = (float)($request->tax_amount ?? 0);
             $vatAmount   = (float)($request->vat_amount ?? 0);
             $totalAmount = $netAmount + $taxAmount + $vatAmount;
+            $paymentMethod = in_array($request->payment_method, ['cash', 'bank'], true) ? $request->payment_method : null;
 
             ReceiptDetail::create([
                 'receipt_id'      => $receipt->id,
@@ -578,8 +580,8 @@ class ReceiptController extends Controller
                 'tax_amount'      => $taxAmount,
                 'vat_amount'      => $vatAmount,
                 'total_amount'    => $totalAmount ?: null,
-                'paid'            => $request->paid == 'yes' ? 1 : 0,
-                'payment_method'  => $request->paid == 'yes' ? $request->payment_method : null,
+                'paid'            => $paymentMethod ? 1 : 0,
+                'payment_method'  => $paymentMethod,
                 'description'     => $request->description,
             ]);
 

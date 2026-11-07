@@ -83,9 +83,9 @@
                                 <textarea class="form-control" id="notes" name="notes" rows="2" placeholder="Optional notes..."></textarea>
                             </div>
                             <div class="detail-field">
-                                <label class="detail-label">Files (JPG, PNG, PDF) <span class="text-danger">*</span></label>
+                                <label class="detail-label">Files (PDF) <span class="text-danger">*</span></label>
                                 <input type="file" class="form-control" id="fileInput" name="files[]" multiple accept=".pdf">
-                                <small class="text-muted">You can select multiple files.</small>
+                                <small class="text-muted">You can select multiple PDF files.</small>
                             </div>
                             <div class="file-preview-bar" id="filePreviewBar"></div>
                             <div class="mt-3 d-flex gap-2">
@@ -150,17 +150,13 @@
                                             <input type="text" class="form-control" id="total_amount" readonly value="0.00">
                                         </div>
                                         <div class="col-md-6 detail-field">
-                                            <label class="detail-label">Is Paid?</label>
-                                            <select class="form-control" id="paid_method">
-                                                <option value="">No / Unpaid</option>
-                                                <option value="cash">Cash</option>
+                                            <label class="detail-label">Payment Type</label>
+                                            <select class="form-control" id="payment_method" name="payment_method">
+                                                <option value="cash" selected>Cash</option>
                                                 <option value="bank">Bank</option>
                                             </select>
                                         </div>
                                     </div>
-
-                                    <input type="hidden" id="paid" name="paid" value="no">
-                                    <input type="hidden" id="payment_method" name="payment_method" value="">
 
                                     <div class="detail-field">
                                         <label class="detail-label">Status</label>
@@ -356,12 +352,7 @@ $(function () {
         });
     });
 
-    // Single "Is Paid?" control: Cash / Bank imply paid, empty means unpaid.
-    $('#paid_method').on('change', function () {
-        const method = $(this).val();
-        $('#paid').val(method ? 'yes' : 'no');
-        $('#payment_method').val(method || '');
-    });
+    // Payment Type: Cash / Bank only.
 
     // ── Submit ──
     $('#submitBtn').click(function () {
@@ -399,7 +390,6 @@ $(function () {
         formData.append('invoice_number',       $('#invoice_number').val());
         formData.append('net_amount',           $('#net_amount').val());
         formData.append('tax_amount',           $('#tax_amount').val());
-        formData.append('paid',                 $('#paid').val());
         formData.append('payment_method',       $('#payment_method').val());
         formData.append('description',          $('#description').val());
 
