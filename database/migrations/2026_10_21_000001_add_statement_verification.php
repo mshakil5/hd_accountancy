@@ -70,7 +70,7 @@ return new class extends Migration
         Schema::create('bank_entry_revisions', function (Blueprint $t) {
             $t->id();
             $t->foreignId('bank_entry_id')->nullable()->constrained('bank_entries')->nullOnDelete();
-            $t->unsignedBigInteger('actor_id')->nullable();
+            $t->unsignedBigInteger('author_id')->nullable();
             $t->string('action', 24);
             $t->json('original_values')->nullable();
             $t->json('corrected_values')->nullable();

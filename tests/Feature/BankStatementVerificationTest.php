@@ -383,7 +383,7 @@ class BankStatementVerificationTest extends TestCase
         $this->assertStringContainsString('ACME LTO', (string) $revision->original_values);
         $this->assertStringContainsString('ACME LTD', (string) $revision->corrected_values);
         $this->assertSame('OCR misread the supplier name', $revision->reason);
-        $this->assertSame($this->userId, (int) $revision->actor_id);
+        $this->assertSame($this->userId, (int) $revision->author_id);
 
         // The edit reopened verification: a corrected statement must be signed off again.
         $this->assertNull(DB::table('bank_imports')->where('id', $import->id)->value('verified_at'));

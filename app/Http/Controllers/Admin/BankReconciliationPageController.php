@@ -756,7 +756,7 @@ class BankReconciliationPageController extends Controller
                 'amount'=>number_format($amount,2,'.',''),'updated_at'=>now(),
             ]);
             DB::table('bank_entry_revisions')->insert([
-                'bank_entry_id'=>$entry->id,'actor_id'=>auth()->id(),'action'=>'edit',
+                'bank_entry_id'=>$entry->id,'author_id'=>auth()->id(),'action'=>'edit',
                 'original_values'=>json_encode(['transaction_date'=>$entry->transaction_date,
                     'description'=>$entry->description,'amount'=>(float)$entry->amount,'balance_after'=>$entry->balance_after]),
                 'corrected_values'=>json_encode(['transaction_date'=>$date,'description'=>$data['description'],'amount'=>$amount]),
@@ -788,7 +788,7 @@ class BankReconciliationPageController extends Controller
                 'created_at'=>now(),'updated_at'=>now(),
             ]);
             DB::table('bank_entry_revisions')->insert([
-                'bank_entry_id'=>$entryId,'actor_id'=>auth()->id(),'action'=>'add',
+                'bank_entry_id'=>$entryId,'author_id'=>auth()->id(),'action'=>'add',
                 'original_values'=>null,
                 'corrected_values'=>json_encode(['transaction_date'=>$date,'description'=>$data['description'],'amount'=>$amount]),
                 'reason'=>$data['reason']??'Row added by accountant','created_at'=>now(),'updated_at'=>now(),
@@ -809,7 +809,7 @@ class BankReconciliationPageController extends Controller
         $import=BankImport::findOrFail($entry->bank_import_id);
         DB::transaction(function()use($entry,$import,$data){
             DB::table('bank_entry_revisions')->insert([
-                'bank_entry_id'=>null,'actor_id'=>auth()->id(),'action'=>'remove',
+                'bank_entry_id'=>null,'author_id'=>auth()->id(),'action'=>'remove',
                 'original_values'=>json_encode($entry),'corrected_values'=>null,
                 'reason'=>$data['reason'],'created_at'=>now(),'updated_at'=>now(),
             ]);
@@ -864,7 +864,7 @@ class BankReconciliationPageController extends Controller
         DB::table('bank_entries')->where('id',$entryId)
             ->update(['verified_by'=>auth()->id(),'verified_at'=>now(),'updated_at'=>now(),'status'=>'unmatched']);
         DB::table('bank_entry_revisions')->insert([
-            'bank_entry_id'=>$entryId,'actor_id'=>auth()->id(),
+            'bank_entry_id'=>$entryId,'author_id'=>auth()->id(),
             'action'=>'verify','original_values'=>null,'corrected_values'=>null,'reason'=>'Row checked against the PDF',
             'created_at'=>now(),'updated_at'=>now(),
         ]);

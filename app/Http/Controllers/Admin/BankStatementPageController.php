@@ -210,14 +210,14 @@ class BankStatementPageController extends Controller
             DB::table('bank_entry_revisions')->insert([
                 'bank_entry_id' => $entry->id,
                 'author_id' => auth()->id(),
-                'change_type' => 'manual_edit',
+                'action' => 'manual_edit',
                 'reason' => $data['reason'],
-                'previous_values' => json_encode([
+                'original_values' => json_encode([
                     'transaction_date' => $entry->transaction_date,
                     'description' => $entry->description,
                     'amount' => $entry->amount,
                 ]),
-                'new_values' => json_encode([
+                'corrected_values' => json_encode([
                     'transaction_date' => $data['transaction_date'],
                     'description' => $data['description'],
                     'amount' => $data['amount'],
@@ -272,10 +272,10 @@ class BankStatementPageController extends Controller
             DB::table('bank_entry_revisions')->insert([
                 'bank_entry_id' => $entryId,
                 'author_id' => auth()->id(),
-                'change_type' => 'manual_insert',
+                'action' => 'manual_insert',
                 'reason' => $data['reason'],
-                'previous_values' => null,
-                'new_values' => json_encode($data),
+                'original_values' => null,
+                'corrected_values' => json_encode($data),
                 'created_at' => now(),
             ]);
 
@@ -297,10 +297,10 @@ class BankStatementPageController extends Controller
             DB::table('bank_entry_revisions')->insert([
                 'bank_entry_id' => $entry->id,
                 'author_id' => auth()->id(),
-                'change_type' => 'manual_deletion',
+                'action' => 'manual_deletion',
                 'reason' => request('reason', 'Removed false positive extracted line'),
-                'previous_values' => json_encode($entry),
-                'new_values' => null,
+                'original_values' => json_encode($entry),
+                'corrected_values' => null,
                 'created_at' => now(),
             ]);
 
