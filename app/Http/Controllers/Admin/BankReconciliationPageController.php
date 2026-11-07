@@ -304,6 +304,15 @@ class BankReconciliationPageController extends Controller
                 abort_unless($entry, 404, 'Transaction not found.');
                 $action = $data['action'];
 
+                // The statement must be verified before its rows can be
+                // reconciled/posted. Notes and undoing a reconciliation stay
+                // available so the accountant can tidy up while reviewing.
+                if (in_array($action, ['match', 'create', 'split', 'find_match', 'transfer', 'categorize'], true)
+                    && ($entry->bank_import_id ?? null)
+                    && DB::table('bank_imports')->where('id', $entry->bank_import_id)->value('verification_status') !== BankStatementVerificationService::VERIFIED) {
+                    throw ValidationException::withMessages(['verification' => 'Verify this statement before reconciling its transactions.']);
+                }
+
                 // 1. ADD INTERNAL NOTE
                 if ($action === 'add_note') {
                     $note = trim($data['review_note'] ?? '');

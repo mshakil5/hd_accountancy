@@ -237,6 +237,9 @@ class BankStatementPageController extends Controller
                 'updated_at' => now(),
             ]);
 
+            // Statement edits reopen verification: the accountant must confirm
+            // the corrected rows again (matches BankReconciliationPageController).
+            $this->verification->reopen($import);
             $this->verification->refresh($import);
         });
 
@@ -282,6 +285,8 @@ class BankStatementPageController extends Controller
             ]);
 
             DB::table('bank_imports')->where('id', $import->id)->increment('transaction_count');
+            // Statement edits reopen verification (see updateEntry).
+            $this->verification->reopen($import);
             $this->verification->refresh($import);
         });
 
@@ -308,6 +313,8 @@ class BankStatementPageController extends Controller
 
             DB::table('bank_entries')->where('id', $entry->id)->delete();
             DB::table('bank_imports')->where('id', $import->id)->decrement('transaction_count');
+            // Statement edits reopen verification (see updateEntry).
+            $this->verification->reopen($import);
             $this->verification->refresh($import);
         });
 

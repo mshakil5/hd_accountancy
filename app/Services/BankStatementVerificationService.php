@@ -481,6 +481,10 @@ class BankStatementVerificationService
                 $amt = -abs($amt);
             } elseif ($isCredit) {
                 $amt = abs($amt);
+            } elseif ($balance === null) {
+                // No sign, no type indicator, and no balance column to prove the
+                // layout — direction is a guess, so leave the line unparsed.
+                return null;
             }
         }
 
@@ -1172,9 +1176,12 @@ class BankStatementVerificationService
 
     public function blockingCount(BankImport $import): int
     {
+        // Every unresolved exception saved as blocking counts here.
+        // The previous allow-list (balance_mismatch / derived_balances_only /
+        // no_transactions_extracted) silently ignored blocking exceptions for
+        // unparsed rows, missing pages and broken running balances.
         return $this->exceptionQuery($import)
             ->where('severity', 'blocking')
-            ->whereIn('code', ['balance_mismatch', 'derived_balances_only', 'no_transactions_extracted'])
             ->count();
     }
 

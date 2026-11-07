@@ -71,7 +71,7 @@ class ReceiptBillTest extends TestCase
                 'description' => 'Audit fee',
             ], $detail));
         }
-        return $r->fresh()->load(['client', 'detail.accountHead.accountType', 'detail.accountHead.taxRate']);
+        return $r->fresh()->load(['client', 'detail.accountHead.accountType']);
     }
 
     protected function render(Receipt $r): string
