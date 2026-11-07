@@ -4,7 +4,8 @@
 <style>
 .hd-card{background:#fff;border:1px solid #e5eaf1;border-radius:12px;padding:18px;margin-bottom:16px}
 .hd-small{color:#64748b;font-size:12px}
-.hd-scroll{overflow-x:auto;overflow-y:visible;}
+.hd-scroll{overflow-x:auto;overflow-y:visible;transform:rotateX(180deg);}
+.hd-scroll > *{transform:rotateX(180deg);}
 .hd-table{width:100%;font-size:13px;table-layout:auto}
 .hd-table th,.hd-table td{border-bottom:1px solid #e7ebf1;padding:9px;vertical-align:middle}
 .hd-table th{background:#f1f5f9;font-weight:600}
