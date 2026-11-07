@@ -6,10 +6,11 @@
 .hd-small{color:#64748b;font-size:12px}
 .hd-scroll{overflow-x:auto;overflow-y:visible;}
 .hd-scroll-wrap{position:relative;}
-.hd-scroll-top{overflow-x:auto;overflow-y:hidden;height:14px;}
-.hd-scroll-top::-webkit-scrollbar{height:8px;}
+.hd-scroll-top{overflow-x:auto;overflow-y:visible;transform:rotateX(180deg);min-height:12px;}
+.hd-scroll-top > *{transform:rotateX(180deg);}
+.hd-scroll-top::-webkit-scrollbar{height:12px;}
 .hd-scroll-body{overflow-x:auto;overflow-y:visible;}
-.hd-scroll-body::-webkit-scrollbar{height:8px;}
+.hd-scroll-body::-webkit-scrollbar{height:12px;}
 .hd-table{width:100%;font-size:13px;table-layout:auto}
 .hd-table th,.hd-table td{border-bottom:1px solid #e7ebf1;padding:9px;vertical-align:middle}
 .hd-table th{background:#f1f5f9;font-weight:600}
@@ -440,12 +441,15 @@ $(document).ready(function() {
     var bodyScroll = document.getElementById('bodyScrollExtracted');
     if (topScroll && bodyScroll) {
         function syncTopWidth() {
-            topScroll.innerHTML = '<div style="width:' + bodyScroll.scrollWidth + 'px; height:1px;"></div>';
+            topScroll.innerHTML = '<div style="width:' + (bodyScroll.scrollWidth || 1) + 'px; height:8px;"></div>';
         }
         topScroll.addEventListener('scroll', function() { bodyScroll.scrollLeft = topScroll.scrollLeft; });
         bodyScroll.addEventListener('scroll', function() { topScroll.scrollLeft = bodyScroll.scrollLeft; });
         window.addEventListener('resize', syncTopWidth);
         syncTopWidth();
+        setTimeout(syncTopWidth, 100);
+        setTimeout(syncTopWidth, 500);
+        window.addEventListener('load', syncTopWidth);
     }
 
     $(document).on('click', '.btn-edit-row', function() {
