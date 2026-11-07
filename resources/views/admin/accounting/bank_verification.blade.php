@@ -4,7 +4,8 @@
 <style>
 .hd-card{background:#fff;border:1px solid #e5eaf1;border-radius:12px;padding:18px;margin-bottom:16px}
 .hd-small{color:#64748b;font-size:12px}
-.hd-scroll{overflow-x:auto;overflow-y:visible;}
+.hd-scroll{overflow-x:auto;overflow-y:visible;transform:rotateX(180deg);}
+.hd-scroll > *{transform:rotateX(180deg);}
 .hd-scroll-wrap{position:relative;}
 .hd-scroll-top{overflow-x:auto;overflow-y:visible;transform:rotateX(180deg);min-height:12px;}
 .hd-scroll-top > *{transform:rotateX(180deg);}
@@ -206,9 +207,7 @@
         <div class="hd-card">
             <h5>Extracted rows ({{ $entries->count() }})</h5>
             <div class="hd-small mb-2">Corrections are saved with the original extracted value, your corrected value, your user and the reason.</div>
-            <div class="hd-scroll-wrap">
-                <div class="hd-scroll-top" id="topScrollExtracted"></div>
-                <div class="hd-scroll-body" id="bodyScrollExtracted">
+            <div class="hd-scroll">
                 <table class="hd-table">
                 <thead>
                     <tr>
@@ -320,7 +319,6 @@
                 @endforelse
                 </tbody>
             </table>
-                </div>
             </div>
 
             <hr>
@@ -436,22 +434,6 @@
 @section('script')
 <script>
 $(document).ready(function() {
-    // Sync top and bottom scrollbars for the extracted rows table
-    var topScroll = document.getElementById('topScrollExtracted');
-    var bodyScroll = document.getElementById('bodyScrollExtracted');
-    if (topScroll && bodyScroll) {
-        function syncTopWidth() {
-            topScroll.innerHTML = '<div style="width:' + (bodyScroll.scrollWidth || 1) + 'px; height:8px;"></div>';
-        }
-        topScroll.addEventListener('scroll', function() { bodyScroll.scrollLeft = topScroll.scrollLeft; });
-        bodyScroll.addEventListener('scroll', function() { topScroll.scrollLeft = bodyScroll.scrollLeft; });
-        window.addEventListener('resize', syncTopWidth);
-        syncTopWidth();
-        setTimeout(syncTopWidth, 100);
-        setTimeout(syncTopWidth, 500);
-        window.addEventListener('load', syncTopWidth);
-    }
-
     $(document).on('click', '.btn-edit-row', function() {
         var id = $(this).data('id');
         var date = $(this).data('date');
