@@ -34,7 +34,8 @@
             <div class="card-body">
                 <p class="mb-3">
                     This permanently deletes the accounting records below. Clients, users, services,
-                    account types and account sub types are <strong>not</strong> touched.
+                    chart of accounts (account heads), account types and account sub types are
+                    <strong>not</strong> touched.
                     Receipt files and bank statement PDFs are deleted from storage as well.
                     This action cannot be undone.
                 </p>

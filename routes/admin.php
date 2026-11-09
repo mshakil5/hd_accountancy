@@ -69,8 +69,9 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
 
     Route::get('/clean', [HomeController::class, 'clean']);
 
-    // Accounting maintenance: GET shows a confirmation page, POST wipes the
-    // chart of accounts, receipts, bank statements and reconciliation data.
+    // Accounting maintenance: GET shows a confirmation page, POST wipes
+    // receipts, bank statements and reconciliation data. The chart of
+    // accounts is kept.
     Route::get('/clean-accounting', [CleanAccountingController::class, 'index'])->name('admin.clean-accounting.index');
     Route::post('/clean-accounting', [CleanAccountingController::class, 'destroy'])->name('admin.clean-accounting.destroy');
 

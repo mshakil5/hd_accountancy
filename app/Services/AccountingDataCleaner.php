@@ -12,9 +12,9 @@ use Throwable;
  * Wipes accounting data for a clean slate.
  *
  * Rows are deleted child-first so no foreign key is left pointing at a deleted
- * parent. account_heads is last because receipts, receipt_details, transactions
- * and bank rows all reference it. The fixed account_types and account_sub_types
- * masters are kept: they are structural and are re-seeded by the migrations.
+ * parent. The chart of accounts (account_heads) and the fixed account_types
+ * and account_sub_types masters are kept: they are structural and are
+ * re-seeded by the migrations.
  *
  * Everything runs inside one transaction, so a failure leaves the database
  * untouched. Stored files are removed afterwards; an orphaned file is harmless.
@@ -40,14 +40,12 @@ class AccountingDataCleaner
         'bank_imports',
         'reconciliation_bank_accounts',
         'receipts',
-        'account_heads',
     ];
 
     /**
      * Display grouping for the confirmation page.
      */
     public const GROUPS = [
-        'Chart of accounts' => ['account_heads'],
         'Receipts' => ['receipts', 'receipt_files', 'receipt_details'],
         'Transactions' => ['transactions'],
         'Bank statements' => [

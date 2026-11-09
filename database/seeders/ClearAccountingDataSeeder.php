@@ -8,8 +8,8 @@ use Illuminate\Database\Seeder;
 class ClearAccountingDataSeeder extends Seeder
 {
     /**
-     * Clear the chart of accounts, receipts, bank statements and
-     * reconciliation data (plus their stored files).
+     * Clear receipts, bank statements and reconciliation data (plus their
+     * stored files). The chart of accounts is kept.
      *
      * The table list lives in AccountingDataCleaner so this seeder and the
      * admin "Clean Accounting Data" page can never drift apart.
