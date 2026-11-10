@@ -151,7 +151,6 @@
                             <option value="">All Methods</option>
                             <option value="cash">Cash</option>
                             <option value="bank">Bank</option>
-                            <option value="card">Card</option>
                         </select>
                     </div>
                     <div class="col-md-1">
@@ -174,7 +173,6 @@
                                     <th style="width:40%; font-size:12px;">Account Head</th>
                                     <th class="col-amount" style="font-size:12px;">Cash</th>
                                     <th class="col-amount" style="font-size:12px;">Bank</th>
-                                    <th class="col-amount" style="font-size:12px;">Card</th>
                                     <th class="col-amount" style="font-size:12px;">Total</th>
                                 </tr>
                             </thead>
@@ -240,7 +238,7 @@
             }
 
             function excelHeadRow(label) {
-                return '<tr><td colspan="5" class="section-subhead">EXCEL: ' + label + '</td></tr>';
+                return '<tr><td colspan="4" class="section-subhead">EXCEL: ' + label + '</td></tr>';
             }
 
             function excelRows(heads, collect) {
@@ -252,7 +250,6 @@
                         '<td style="padding-left:28px;">' + label + '</td>' +
                         '<td class="col-amount">' + fmt(head.cash) + '</td>' +
                         '<td class="col-amount">' + fmt(head.bank) + '</td>' +
-                        '<td class="col-amount">' + fmt(head.card) + '</td>' +
                         '<td class="col-amount">' + fmt(head.total) + '</td>' +
                         '</tr>';
                 });
@@ -264,7 +261,6 @@
                 return '<tr class="total-row report-row"' + clickable + '><td>' + label + '</td>' +
                     '<td class="col-amount">' + fmt(t.cash) + '</td>' +
                     '<td class="col-amount">' + fmt(t.bank) + '</td>' +
-                    '<td class="col-amount">' + fmt(t.card) + '</td>' +
                     '<td class="col-amount">' + fmt(t.total) + '</td></tr>';
             }
 
@@ -273,25 +269,23 @@
                 return '<tr class="' + cls + ' report-row"' + clickable + '><td>' + label + '</td>' +
                     '<td class="col-amount">' + fmt(t.cash) + '</td>' +
                     '<td class="col-amount">' + fmt(t.bank) + '</td>' +
-                    '<td class="col-amount">' + fmt(t.card) + '</td>' +
                     '<td class="col-amount">' + fmt(t.total) + '</td></tr>';
             }
 
             function buildSection(label, sections, colorClass) {
                 var html = '';
-                html += '<tr><td colspan="5" class="section-header p-0"><div class="section-header">' + label +
+                html += '<tr><td colspan="4" class="section-header p-0"><div class="section-header">' + label +
                     '</div></td></tr>';
 
                 var sectionTotals = {
                     cash: 0,
                     bank: 0,
-                    card: 0,
                     total: 0
                 };
                 var sectionIds = [];
 
                 $.each(sections, function(i, section) {
-                    html += '<tr><td colspan="5" class="section-subhead">' + section.type_name +
+                    html += '<tr><td colspan="4" class="section-subhead">' + section.type_name +
                         '</td></tr>';
                     var typeIds = [];
                     $.each(section.heads, function(j, head) {
@@ -303,7 +297,6 @@
                             '<td style="padding-left:28px;">' + head.head_name + '</td>' +
                             '<td class="col-amount">' + fmt(head.cash) + '</td>' +
                             '<td class="col-amount">' + fmt(head.bank) + '</td>' +
-                            '<td class="col-amount">' + fmt(head.card) + '</td>' +
                             '<td class="col-amount">' + fmt(head.total) + '</td>' +
                             '</tr>';
                     });
@@ -311,11 +304,10 @@
                         '<td>Total ' + section.type_name + '</td>' +
                         '<td class="col-amount">' + fmt(section.type_total.cash) + '</td>' +
                         '<td class="col-amount">' + fmt(section.type_total.bank) + '</td>' +
-                        '<td class="col-amount">' + fmt(section.type_total.card) + '</td>' +
                         '<td class="col-amount">' + fmt(section.type_total.total) + '</td>' +
                         '</tr>';
 
-                    ['cash', 'bank', 'card', 'total'].forEach(function(m) {
+                    ['cash', 'bank', 'total'].forEach(function(m) {
                         sectionTotals[m] += section.type_total[m];
                     });
                 });
@@ -332,7 +324,7 @@
                 $.get("{{ url('/admin/accounting/profit-loss/data') }}", filters, function(d) {
                     var body = '';
 
-                    // Dynamic chart sections (rows come from the heads table). Cash/Bank/Card kept.
+                    // Dynamic chart sections (rows come from the heads table). Cash/Bank kept.
                     if (d.excel) {
                         var st = d.excel.section_titles || {};
                         var toIds = [], oiIds = [], drIds = [], adIds = [];
@@ -356,9 +348,8 @@
                         body += '<tr class="' + eCls + ' report-row" data-head-ids="' + toIds.concat(oiIds, drIds, adIds).join(',') + '" title="Click for breakdown" style="cursor:pointer;"><td>OPERATING PROFIT (E = C-D)</td>' +
                             '<td class="col-amount">' + fmt(d.excel.operating_profit_E.cash) + '</td>' +
                             '<td class="col-amount">' + fmt(d.excel.operating_profit_E.bank) + '</td>' +
-                            '<td class="col-amount">' + fmt(d.excel.operating_profit_E.card) + '</td>' +
                             '<td class="col-amount">' + fmt(d.excel.operating_profit_E.total) + '</td></tr>';
-                        body += '<tr><td colspan="5" class="small text-muted" style="padding:8px 16px;">' +
+                        body += '<tr><td colspan="4" class="small text-muted" style="padding:8px 16px;">' +
                             'Refs: A=Total Turnover, B=Total Cost of Sales, C=Gross Profit (A-B), D=Total Admin, E=Operating Profit (C-D). ' +
                             'Rows follow the live chart of accounts; totals are straight sums.' +
                             '</td></tr>';
@@ -371,7 +362,6 @@
                     body += '<tr class="grand-row report-row" data-head-ids="' + incomeResult.ids.join(',') + '" title="Click for breakdown" style="cursor:pointer;"><td>Total Trading Income</td>' +
                         '<td class="col-amount">' + fmt(d.total_income.cash) + '</td>' +
                         '<td class="col-amount">' + fmt(d.total_income.bank) + '</td>' +
-                        '<td class="col-amount">' + fmt(d.total_income.card) + '</td>' +
                         '<td class="col-amount">' + fmt(d.total_income.total) + '</td></tr>';
 
                     // Expenses
@@ -380,7 +370,6 @@
                     body += '<tr class="grand-row report-row" data-head-ids="' + expResult.ids.join(',') + '" title="Click for breakdown" style="cursor:pointer;"><td>Total Expenses</td>' +
                         '<td class="col-amount">' + fmt(d.total_expense.cash) + '</td>' +
                         '<td class="col-amount">' + fmt(d.total_expense.bank) + '</td>' +
-                        '<td class="col-amount">' + fmt(d.total_expense.card) + '</td>' +
                         '<td class="col-amount">' + fmt(d.total_expense.total) + '</td></tr>';
 
                     // Net Profit/Loss
@@ -389,7 +378,6 @@
                     body += '<tr class="' + netClass + ' report-row" data-head-ids="' + incomeResult.ids.concat(expResult.ids).join(',') + '" title="Click for breakdown" style="cursor:pointer;"><td>' + netLabel + '</td>' +
                         '<td class="col-amount">' + fmt(d.net_profit.cash) + '</td>' +
                         '<td class="col-amount">' + fmt(d.net_profit.bank) + '</td>' +
-                        '<td class="col-amount">' + fmt(d.net_profit.card) + '</td>' +
                         '<td class="col-amount">' + fmt(d.net_profit.total) + '</td></tr>';
 
                     $('#reportBody').html(body);
@@ -411,7 +399,7 @@
                 var headIds = $row.data('head-ids');
                 var code = $row.data('code');
                 if (!headId && !headIds && !code) return;
-                var $detail = $('<tr class="breakdown-row"><td colspan="5" style="background:#f8fafc; padding:8px 16px 12px 28px;"><span class="small text-muted"><i class="fa fa-spinner fa-spin"></i> Loading breakdown…</span></td></tr>');
+                var $detail = $('<tr class="breakdown-row"><td colspan="4" style="background:#f8fafc; padding:8px 16px 12px 28px;"><span class="small text-muted"><i class="fa fa-spinner fa-spin"></i> Loading breakdown…</span></td></tr>');
                 $row.after($detail);
                 $.get("{{ url('/admin/accounting/head-transactions') }}", $.extend({ mode: 'pl', head_id: headId || '', head_ids: headIds || '', code: code || '' }, currentFilters), function(res) {
                     var html = '<div class="small font-weight-bold mb-1">Breakdown: ' + (res.heads.length ? res.heads.map(function(h) { return h.code + ' - ' + h.name; }).join(', ') : '') + ' (' + res.count + ' transactions, Total £' + parseFloat(res.total || 0).toFixed(2) + ')</div>';

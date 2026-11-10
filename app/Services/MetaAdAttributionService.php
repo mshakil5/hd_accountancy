@@ -18,8 +18,18 @@ class MetaAdAttributionService
     public function enrich(Lead $lead): void
     {
         if (!$lead->ad_id || $lead->campaign_id) return;
-        $token = config('meta_whatsapp.ads_access_token') ?: config('meta_whatsapp.access_token');
-        if (!$token) return;
+
+        // Ad/campaign enrichment needs its own Marketing API token. The
+        // WhatsApp token must not be assumed to carry Marketing API
+        // permissions, and a short-lived personal token is not production safe.
+        $token = config('meta_whatsapp.ads_access_token');
+        if (!$token) {
+            Log::info('Meta ad attribution skipped: META_ADS_ACCESS_TOKEN is not configured.', [
+                'lead_id' => $lead->id,
+                'ad_id' => $lead->ad_id,
+            ]);
+            return;
+        }
 
         $url = rtrim(config('meta_whatsapp.base_url'), '/') . '/' . config('meta_whatsapp.graph_version') . '/' . $lead->ad_id;
         try {

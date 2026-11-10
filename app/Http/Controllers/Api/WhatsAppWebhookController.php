@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Jobs\ProcessIncomingLeadMessage;
 use App\Models\Lead;
 use App\Models\LeadMessage;
+use App\Services\MetaAdIntentResolver;
 use App\Services\MetaWhatsAppService;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
@@ -14,6 +15,8 @@ use Illuminate\Support\Facades\Log;
 
 class WhatsAppWebhookController extends Controller
 {
+    public function __construct(private MetaAdIntentResolver $adIntents) {}
+
     public function verify(Request $request)
     {
         $mode = $request->query('hub_mode', $request->query('hub.mode'));
@@ -76,7 +79,10 @@ class WhatsAppWebhookController extends Controller
         }
 
         if (!$lead) {
-            $inferredIntent = $isAdReferral ? $this->inferIntentFromReferral($referral) : null;
+            // Campaign intent is controlled by the explicit Ad ID mapping, never
+            // guessed from the advert's marketing copy. An unmapped advert is a
+            // general advert: intent stays empty and the bot asks question 1.
+            $mappedIntent = $isAdReferral ? $this->adIntents->forReferral($referral) : null;
             $lead = Lead::create([
                 'name' => $name,
                 'whatsapp_id' => $from,
@@ -89,8 +95,8 @@ class WhatsAppWebhookController extends Controller
                 'source_url' => $isAdReferral ? ($referral['source_url'] ?? null) : null,
                 'qualification_status' => 'NEW',
                 'sales_status' => 'NEW',
-                'conversation_step' => $inferredIntent ? 'person_type' : 'intent',
-                'intent' => $inferredIntent,
+                'conversation_step' => $mappedIntent ? 'person_type' : 'intent',
+                'intent' => $mappedIntent,
             ]);
         } elseif (!$lead->name && $name) {
             $lead->name = $name;
@@ -99,7 +105,7 @@ class WhatsAppWebhookController extends Controller
 
         if ($isAdReferral) {
             if (!$lead->intent) {
-                $lead->intent = $this->inferIntentFromReferral($referral);
+                $lead->intent = $this->adIntents->forReferral($referral);
                 if ($lead->intent && $lead->conversation_step === 'intent') {
                     $lead->conversation_step = 'person_type';
                 }
@@ -157,18 +163,6 @@ class WhatsAppWebhookController extends Controller
             return [(string) ($reply['title'] ?? ''), 'interactive', ['id' => $reply['id'] ?? null, 'title' => $reply['title'] ?? null]];
         }
         return ['[' . $type . ' message]', $type, null];
-    }
-
-    private function inferIntentFromReferral(array $referral): ?string
-    {
-        $text = mb_strtolower(trim(($referral['headline'] ?? '') . ' ' . ($referral['body'] ?? '')));
-        if ($text === '') return null;
-        if (preg_match('/change|switch|new accountant|current accountant/', $text)) return 'change_accountant';
-        if (preg_match('/landlord|property|rental/', $text)) return 'landlord_property';
-        if (preg_match('/hmrc|investigation|penalty|tax problem/', $text)) return 'hmrc_issue';
-        if (preg_match('/vat|payroll|bookkeep|tax return|accounts/', $text)) return 'tax_vat_payroll';
-        if (preg_match('/accountant/', $text)) return 'need_accountant';
-        return null;
     }
 
     private function handleStatuses(array $statuses): void

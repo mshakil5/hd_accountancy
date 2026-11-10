@@ -33,6 +33,7 @@ use App\Http\Controllers\Admin\LogoutController;
 use App\Http\Controllers\Admin\MailContentController;
 use App\Http\Controllers\Admin\ManagerController;
 use App\Http\Controllers\Admin\MasterController;
+use App\Http\Controllers\Admin\MetaAdIntentController;
 use App\Http\Controllers\Admin\MetaDataController;
 use App\Http\Controllers\Admin\NoteController;
 use App\Http\Controllers\Admin\OneTimeJobController;
@@ -80,6 +81,15 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     // Meta / WhatsApp lead qualification
     Route::get('/leads', [LeadController::class, 'index'])->name('admin.leads.index');
     Route::get('/leads/health', [LeadController::class, 'health'])->name('admin.leads.health');
+    Route::post('/leads/health/test-alert', [LeadController::class, 'sendTestAlert'])->name('admin.leads.test-alert');
+
+    // Explicit Ad ID / Campaign ID -> qualification intent mapping.
+    Route::get('/leads/ad-intents', [MetaAdIntentController::class, 'index'])->name('admin.leads.ad-intents.index');
+    Route::post('/leads/ad-intents', [MetaAdIntentController::class, 'store'])->name('admin.leads.ad-intents.store');
+    Route::put('/leads/ad-intents/{mapping}', [MetaAdIntentController::class, 'update'])->name('admin.leads.ad-intents.update');
+    Route::delete('/leads/ad-intents/{mapping}', [MetaAdIntentController::class, 'destroy'])->name('admin.leads.ad-intents.destroy');
+
+    // Maintenance purge — super-admin only (see AuthServiceProvider).
     Route::post('/leads/clear', [LeadController::class, 'clearAll'])->name('admin.leads.clear');
     Route::get('/leads/{lead}', [LeadController::class, 'show'])->name('admin.leads.show');
     Route::post('/leads/{lead}/take-over', [LeadController::class, 'takeOver'])->name('admin.leads.takeover');
@@ -117,6 +127,7 @@ Route::get('/bank-statements/search-clients', [ReceiptController::class, 'search
 Route::get('/bank-reconciliation/search-clients', [ReceiptController::class, 'searchClients'])->name('admin.bank-reconciliation.search-clients');
     Route::get('/bank-reconciliation/businesses', [ReceiptController::class, 'getClientsByCredential'])->name('admin.bank-reconciliation.businesses');
     Route::post('/bank-reconciliation/{entryId}/action', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'action'])->name('admin.bank-reconciliation.action');
+    Route::get('/bank-reconciliation/receipt/{receiptId}', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'receiptSummary'])->name('admin.bank-reconciliation.receipt-summary');
     Route::get('/bank-reconciliation/import/{importId}/download', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'statement'])->name('admin.bank-reconciliation.statement');
     Route::post('/bank-reconciliation/import/{importId}/approve', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'approveImport'])->name('admin.bank-reconciliation.approve-import');
 

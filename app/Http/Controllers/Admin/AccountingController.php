@@ -899,22 +899,22 @@ class AccountingController extends Controller
         $st = $e['section_titles'];
         $headLabel = fn($h) => trim(($h['code'] ? $h['code'] . ' - ' : '') . $h['head_name']);
         $rows = [];
-        $rows[] = ['HD Accountancy — Profit & Loss (' . $report['business_name'] . ' | ' . $from . ' to ' . $to . ')', '', '', '', '', 'title'];
-        $rows[] = ['Account', 'Cash', 'Bank', 'Card', 'Total', 'header'];
-        $rows[] = [strtoupper($st['turnover']), '', '', '', '', 'section'];
-        foreach ($e['turnover_heads'] as $h) $rows[] = [$headLabel($h), $m($h, 'cash'), $m($h, 'bank'), $m($h, 'card'), $m($h, 'total'), 'row'];
-        $rows[] = [strtoupper($st['other']), '', '', '', '', 'section'];
-        foreach ($e['other_income_heads'] as $h) $rows[] = [$headLabel($h), $m($h, 'cash'), $m($h, 'bank'), $m($h, 'card'), $m($h, 'total'), 'row'];
-        $rows[] = ['Total Turnover (A)', $m($e['total_turnover_A'], 'cash'), $m($e['total_turnover_A'], 'bank'), $m($e['total_turnover_A'], 'card'), $m($e['total_turnover_A'], 'total'), 'total'];
-        $rows[] = [strtoupper($st['direct']), '', '', '', '', 'section'];
-        foreach ($e['direct_heads'] as $h) $rows[] = [$headLabel($h), $m($h, 'cash'), $m($h, 'bank'), $m($h, 'card'), $m($h, 'total'), 'row'];
-        $rows[] = ['Total Cost of Sales (B)', $m($e['total_cost_B_excel'], 'cash'), $m($e['total_cost_B_excel'], 'bank'), $m($e['total_cost_B_excel'], 'card'), $m($e['total_cost_B_excel'], 'total'), 'total'];
-        $rows[] = ['GROSS PROFIT (C = A-B)', $m($e['gross_profit_C'], 'cash'), $m($e['gross_profit_C'], 'bank'), $m($e['gross_profit_C'], 'card'), $m($e['gross_profit_C'], 'total'), 'grand'];
-        $rows[] = [strtoupper($st['admin']), '', '', '', '', 'section'];
-        foreach ($e['admin_heads'] as $h) $rows[] = [$headLabel($h), $m($h, 'cash'), $m($h, 'bank'), $m($h, 'card'), $m($h, 'total'), 'row'];
-        $rows[] = ['Total Administrative Costs (D)', $m($e['total_admin_D'], 'cash'), $m($e['total_admin_D'], 'bank'), $m($e['total_admin_D'], 'card'), $m($e['total_admin_D'], 'total'), 'total'];
-        $rows[] = ['OPERATING PROFIT (E = C-D)', $m($e['operating_profit_E'], 'cash'), $m($e['operating_profit_E'], 'bank'), $m($e['operating_profit_E'], 'card'), $m($e['operating_profit_E'], 'total'), 'grand'];
-        $rows[] = ['Note: rows follow the live chart of accounts; totals are straight sums (A=turnover, B=direct, C=A-B, D=admin, E=C-D).', '', '', '', '', 'note'];
+        $rows[] = ['HD Accountancy — Profit & Loss (' . $report['business_name'] . ' | ' . $from . ' to ' . $to . ')', '', '', '', 'title'];
+        $rows[] = ['Account', 'Cash', 'Bank', 'Total', 'header'];
+        $rows[] = [strtoupper($st['turnover']), '', '', '', 'section'];
+        foreach ($e['turnover_heads'] as $h) $rows[] = [$headLabel($h), $m($h, 'cash'), $m($h, 'bank'), $m($h, 'total'), 'row'];
+        $rows[] = [strtoupper($st['other']), '', '', '', 'section'];
+        foreach ($e['other_income_heads'] as $h) $rows[] = [$headLabel($h), $m($h, 'cash'), $m($h, 'bank'), $m($h, 'total'), 'row'];
+        $rows[] = ['Total Turnover (A)', $m($e['total_turnover_A'], 'cash'), $m($e['total_turnover_A'], 'bank'), $m($e['total_turnover_A'], 'total'), 'total'];
+        $rows[] = [strtoupper($st['direct']), '', '', '', 'section'];
+        foreach ($e['direct_heads'] as $h) $rows[] = [$headLabel($h), $m($h, 'cash'), $m($h, 'bank'), $m($h, 'total'), 'row'];
+        $rows[] = ['Total Cost of Sales (B)', $m($e['total_cost_B_excel'], 'cash'), $m($e['total_cost_B_excel'], 'bank'), $m($e['total_cost_B_excel'], 'total'), 'total'];
+        $rows[] = ['GROSS PROFIT (C = A-B)', $m($e['gross_profit_C'], 'cash'), $m($e['gross_profit_C'], 'bank'), $m($e['gross_profit_C'], 'total'), 'grand'];
+        $rows[] = [strtoupper($st['admin']), '', '', '', 'section'];
+        foreach ($e['admin_heads'] as $h) $rows[] = [$headLabel($h), $m($h, 'cash'), $m($h, 'bank'), $m($h, 'total'), 'row'];
+        $rows[] = ['Total Administrative Costs (D)', $m($e['total_admin_D'], 'cash'), $m($e['total_admin_D'], 'bank'), $m($e['total_admin_D'], 'total'), 'total'];
+        $rows[] = ['OPERATING PROFIT (E = C-D)', $m($e['operating_profit_E'], 'cash'), $m($e['operating_profit_E'], 'bank'), $m($e['operating_profit_E'], 'total'), 'grand'];
+        $rows[] = ['Note: rows follow the live chart of accounts; totals are straight sums (A=turnover, B=direct, C=A-B, D=admin, E=C-D).', '', '', '', 'note'];
 
         if ($format === 'xlsx') {
             return $this->streamXlsx('profit-loss-' . $stamp, 'P&L', $rows);

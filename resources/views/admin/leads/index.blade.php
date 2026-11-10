@@ -19,8 +19,11 @@
                     <button class="btn btn-primary">Filter</button>
                 </form>
                 <div class="d-flex gap-2">
+                    <a class="btn btn-outline-secondary" href="{{ route('admin.leads.ad-intents.index') }}">Campaign mapping</a>
                     <a class="btn btn-outline-secondary" href="{{ route('admin.leads.health') }}">Integration health</a>
+                    @can('purge-leads')
                     <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#clearLeadsModal">Delete all leads</button>
+                    @endcan
                 </div>
             </div>
             <div class="table-responsive">
@@ -45,6 +48,7 @@
         </div>
     </div>
 
+    @can('purge-leads')
     <div class="modal fade" id="clearLeadsModal" tabindex="-1" aria-labelledby="clearLeadsModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -56,7 +60,7 @@
                     </div>
                     <div class="modal-body">
                         <p>This permanently deletes <strong>{{ $counts->sum() }}</strong> lead(s) and every WhatsApp message linked to them.</p>
-                        <p class="text-danger fw-semibold">This cannot be undone. Genuine, existing-client and won leads are included.</p>
+                        <p class="text-danger fw-semibold">Super-admin maintenance action. Genuine, existing-client and won leads are included. A full JSON archive is written to storage/app/lead-archives before anything is deleted.</p>
                         <label class="form-label" for="clear-leads-confirmation">Type <strong>DELETE</strong> to confirm</label>
                         <input class="form-control" id="clear-leads-confirmation" name="confirmation" autocomplete="off" required>
                     </div>
@@ -68,5 +72,6 @@
             </div>
         </div>
     </div>
+    @endcan
 </section>
 @endsection

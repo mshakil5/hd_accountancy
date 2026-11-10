@@ -14,6 +14,10 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')->hourly();
         $schedule->command('services:check-and-create')->everyFiveMinutes();
+
+        // Controlled retention: rejected/non-sales leads past the retention
+        // period, and raw Meta payloads past their own (shorter) retention.
+        $schedule->command('leads:prune')->dailyAt('02:30');
     }
 
     /**

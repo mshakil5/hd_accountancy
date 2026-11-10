@@ -15,6 +15,7 @@ class LeadConversationService
         private LeadQualificationService $qualifier,
         private LeadAlertService $alerts,
         private MetaAdAttributionService $attribution,
+        private ?MetaAdIntentResolver $adIntents = null,
     ) {}
 
     public function process(LeadMessage $message): void
@@ -49,6 +50,17 @@ class LeadConversationService
         $this->attribution->enrich($lead);
         $lead->refresh();
 
+        // Campaign-level mapping, used only when the ad itself is not mapped.
+        // A general/unmapped advert keeps intent empty so question 1 is asked.
+        if (!$lead->intent && $lead->campaign_id) {
+            $mapped = $this->adIntents()->forCampaign($lead->campaign_id);
+            if ($mapped) {
+                $lead->intent = $mapped;
+                if ($lead->conversation_step === 'intent') $lead->conversation_step = 'person_type';
+                $lead->save();
+            }
+        }
+
         $answer = $this->extractAnswer($message);
         $analysis = $this->interpreter->interpret($answer);
 
@@ -60,16 +72,17 @@ class LeadConversationService
             $analysis = ['summary' => $analysis['summary'] ?? ''];
         }
 
-        DB::transaction(function () use ($lead, $analysis, $answer) {
+        DB::transaction(function () use ($lead, $analysis, $answer, $message) {
             $this->applyAnalysis($lead, $analysis);
             $this->applyExpectedStepAnswer($lead, $answer);
+            $analysis = $this->applyUnclearReplyPolicy($lead, $message, $answer, $analysis);
 
             $status = $this->qualifier->classify($lead, $analysis);
             if ($status !== 'NEW') {
                 $lead->qualification_status = $status;
                 if (in_array($status, ['GENUINE','REVIEW'], true) && !$lead->qualified_at) $lead->qualified_at = now();
                 $lead->conversation_step = 'complete';
-                if (!empty($analysis['summary'])) $lead->ai_summary = $analysis['summary'];
+                if (!empty($analysis['summary'])) $lead->qualification_summary = $analysis['summary'];
                 $lead->save();
                 return;
             }
@@ -108,8 +121,56 @@ class LeadConversationService
             if ($v !== null && $v !== '' && $v !== 'unknown') $data[$k] = $v;
         }
         $lead->qualification_data = $data;
-        if (!empty($analysis['summary'])) $lead->ai_summary = $analysis['summary'];
+        if (!empty($analysis['summary'])) $lead->qualification_summary = $analysis['summary'];
         $lead->save();
+    }
+
+    /**
+     * Unrecognised free text must never be forced into a confident lead.
+     * One clarifying question is asked; a second consecutive unclear reply is
+     * sent to REVIEW for a human decision. Button/list answers are explicit
+     * and are never treated as unclear.
+     */
+    private function applyUnclearReplyPolicy(Lead $lead, LeadMessage $message, string $answer, array $analysis): array
+    {
+        if (!empty($message->interactive_payload)) {
+            $lead->unclear_replies = 0;
+            return $analysis;
+        }
+
+        $recognised = $this->isStepOption($lead->conversation_step, $answer);
+        foreach (['intent', 'person_type', 'current_accountant', 'contact_timeframe', 'name'] as $field) {
+            if (!empty($analysis[$field]) && $analysis[$field] !== 'unknown') {
+                $recognised = true;
+                break;
+            }
+        }
+        if (($analysis['classification_hint'] ?? 'unknown') !== 'unknown') {
+            $recognised = true;
+        }
+
+        if ($recognised) {
+            $lead->unclear_replies = 0;
+            return $analysis;
+        }
+
+        // The opening message is usually the advert's prefilled text, not an
+        // answer to a question, so it must not count against the prospect.
+        if (!$lead->messages()->where('direction', 'outbound')->where('sender_type', 'bot')->exists()) {
+            return $analysis;
+        }
+
+        $lead->unclear_replies = (int) $lead->unclear_replies + 1;
+        if ($lead->unclear_replies >= max(1, (int) config('lead_qualification.unclear_reply_limit', 2))) {
+            $analysis['classification_hint'] = 'review';
+        }
+
+        return $analysis;
+    }
+
+    private function adIntents(): MetaAdIntentResolver
+    {
+        return $this->adIntents ??= app(MetaAdIntentResolver::class);
     }
 
     private function applyExpectedStepAnswer(Lead $lead, string $answer): void

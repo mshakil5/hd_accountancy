@@ -18,7 +18,14 @@
                 <dt class="col-5">Campaign</dt><dd class="col-7">{{ $lead->campaign_name ?: $lead->ad_name ?: $lead->ad_headline ?: 'Direct / unknown' }}</dd>
                 <dt class="col-5">Assigned</dt><dd class="col-7">{{ optional($lead->assignee)->name ?: 'Unassigned' }}</dd>
             </dl>
-            @if($lead->ai_summary)<div class="alert alert-light border mt-3"><strong>Summary</strong><br>{{ $lead->ai_summary }}</div>@endif
+            @if($lead->qualification_summary)<div class="alert alert-light border mt-3"><strong>Summary</strong> <span class="small text-muted">(generated from the conversation rules)</span><br>{{ $lead->qualification_summary }}</div>@endif
+            <div class="mt-3">
+                <strong>Team alert:</strong>
+                @php($alertState = $lead->alert_status ?: 'not sent')
+                <span class="badge {{ in_array($lead->alert_status, ['sent','partial']) ? 'bg-success' : ($lead->alert_status === 'failed' ? 'bg-danger' : 'bg-secondary') }}">{{ str_replace('_', ' ', $alertState) }}</span>
+                @if($lead->alert_last_attempt_at)<span class="small text-muted">&middot; last attempt {{ $lead->alert_last_attempt_at->diffForHumans() }}</span>@endif
+                @if($lead->alert_last_error)<div class="small text-danger mt-1">{{ $lead->alert_last_error }}</div>@endif
+            </div>
             <div class="d-flex gap-2 flex-wrap">
                 @if(!$lead->human_takeover)<form method="POST" action="{{ route('admin.leads.takeover',$lead) }}">@csrf<button class="btn btn-primary">Take over</button></form>@else<form method="POST" action="{{ route('admin.leads.release',$lead) }}">@csrf<button class="btn btn-outline-primary">Release takeover</button></form>@endif
                 <form method="POST" action="{{ route('admin.leads.notify',$lead) }}">@csrf<button class="btn btn-outline-secondary">Resend alert</button></form>

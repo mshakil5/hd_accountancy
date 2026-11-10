@@ -14,8 +14,10 @@ class Lead extends Model
     protected $casts = [
         'qualification_data' => 'array',
         'human_takeover' => 'boolean',
+        'unclear_replies' => 'integer',
         'qualified_at' => 'datetime',
         'automation_completed_at' => 'datetime',
+        'alert_last_attempt_at' => 'datetime',
         'contacted_at' => 'datetime',
         'last_inbound_at' => 'datetime',
         'last_outbound_at' => 'datetime',

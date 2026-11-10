@@ -48,6 +48,7 @@
 .select2-container--default .select2-selection--single .select2-selection__arrow{height:36px!important}
 /* ── Match list ── */
 .hd-match-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border:1px solid #dae4ef;border-radius:8px;margin-bottom:6px;background:#f8fafc;cursor:pointer}
+.hd-match-item:hover{border-color:#93c5fd;background:#f1f9ff}
 .hd-match-item.selected{border-color:#0284c7;background:#eff8ff}
 .hd-match-item input[type=radio]{accent-color:#0284c7}
 .hd-match-meta{font-size:12px;color:#64748b}
@@ -60,6 +61,26 @@
 .hd-find-item:hover{background:#f1f9ff}
 .hd-find-item.capped{opacity:.45;pointer-events:none}
 .hd-find-counter{font-size:12px;font-weight:700;padding:5px 12px;border-radius:20px;background:#f1f5f9;margin-bottom:10px}
+/* ── Receipt details popup ── */
+.hd-receipt-eye{font-size:12px;color:#94a3b8;margin-left:6px}
+.hd-receipt-modal{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:1090}
+.hd-receipt-modal.open{display:flex}
+.hd-receipt-dialog{background:#fff;border-radius:12px;width:100%;max-width:560px;max-height:86vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(15,23,42,.35)}
+.hd-receipt-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid #e5eaf1}
+.hd-receipt-close{border:0;background:transparent;font-size:24px;line-height:1;color:#94a3b8;cursor:pointer;padding:0 4px}
+.hd-receipt-close:hover{color:#334155}
+.hd-receipt-body{padding:14px 18px;overflow-y:auto}
+.hd-receipt-amount{font-size:24px;font-weight:800;color:#15803d}
+.hd-receipt-sub{font-size:13px;color:#475569;font-weight:600;margin-bottom:10px}
+.hd-receipt-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 16px;font-size:12.5px}
+.hd-receipt-grid .hd-details-row{margin-bottom:0}
+.hd-receipt-grid .hd-details-row span:last-child{font-weight:600;text-align:right;overflow-wrap:anywhere}
+.hd-receipt-desc{margin-top:10px;font-size:12.5px;color:#334155;background:#f8fafc;border:1px solid #e5eaf1;border-radius:8px;padding:8px 10px;white-space:pre-wrap}
+.hd-receipt-files{margin-top:12px;font-size:12.5px}
+.hd-receipt-file{display:inline-flex;align-items:center;gap:4px;margin:0 8px 6px 0;padding:4px 10px;border:1px solid #dbe4ee;border-radius:20px;color:#0369a1;text-decoration:none;background:#f8fafc}
+.hd-receipt-file:hover{background:#eff8ff;text-decoration:none}
+.hd-receipt-foot{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid #e5eaf1}
+@media(max-width:520px){.hd-receipt-grid{grid-template-columns:1fr}}
 /* ── Reconciled banner ── */
 .hd-reconciled-banner{background:linear-gradient(135deg,#dcfce7,#bbf7d0);border:1px solid #86efac;border-radius:8px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
 /* ── Notes ── */
@@ -321,7 +342,7 @@
             </div>
           @else
           <p class="hd-small mb-2">
-            Receipts with exactly matching amount.
+            <strong>Suggested receipts</strong> — same amount (£{{ number_format($absAmt,2) }}), any date, nearest date first.
             @if($autoMatch)
               <strong>Auto-selected</strong> (only 1 match).
             @endif
@@ -333,7 +354,7 @@
 
             @if($autoMatch)
               <input type="hidden" name="receipt_id" value="{{ $autoMatch->id }}">
-              <div class="hd-match-item selected mb-2">
+              <div class="hd-match-item selected mb-2" data-hd-receipt="{{ $autoMatch->id }}" data-hd-client="{{ $entry->client_id }}" title="Click to view receipt details">
                 <div>
                   <div style="font-size:13px;font-weight:700">{{ $autoMatch->supplier ?: 'Unknown Supplier' }}</div>
                   <div class="hd-match-meta">
@@ -344,13 +365,22 @@
                     @if($autoMatch->detail && $autoMatch->detail->invoice_date)
                       · {{ \Carbon\Carbon::parse($autoMatch->detail->invoice_date)->format('d-m-Y') }}
                     @endif
+                    @if($autoMatch->detail && $autoMatch->detail->payment_method)
+                      · {{ ucfirst($autoMatch->detail->payment_method) }}
+                    @endif
+                    @php $gap = $suggestionMeta[(int)$entry->id][(int)$autoMatch->id]['days'] ?? null; @endphp
+                    @if($gap === 0)
+                      <span class="hd-pill" style="background:#dcfce7;color:#15803d">Same date</span>
+                    @elseif($gap !== null)
+                      <span class="hd-pill" style="background:#fef3c7;color:#b45309">{{ $gap }} day{{ $gap === 1 ? '' : 's' }} apart</span>
+                    @endif
                   </div>
                 </div>
-                <div class="hd-match-amount" style="color:#15803d">£{{ number_format((float)$autoMatch->detail->total_amount, 2) }}</div>
+                <div class="hd-match-amount" style="color:#15803d">£{{ number_format((float)$autoMatch->detail->total_amount, 2) }}<i class="fa fa-eye hd-receipt-eye" title="View receipt details"></i></div>
               </div>
             @else
               @foreach($exact->take(10) as $r)
-              <label class="hd-match-item" style="cursor:pointer;display:flex">
+              <label class="hd-match-item" style="cursor:pointer;display:flex" data-hd-receipt="{{ $r->id }}" data-hd-client="{{ $entry->client_id }}" title="Click to view receipt details">
                 <input type="radio" name="receipt_id" value="{{ $r->id }}" style="margin-right:8px;margin-top:2px" {{ $loop->first ? 'checked' : '' }}>
                 <div style="flex:1;min-width:0">
                   <div style="font-size:13px;font-weight:700">{{ $r->supplier ?: 'Unknown Supplier' }}</div>
@@ -362,9 +392,18 @@
                     @if($r->detail && $r->detail->invoice_date)
                       · {{ \Carbon\Carbon::parse($r->detail->invoice_date)->format('d-m-Y') }}
                     @endif
+                    @if($r->detail && $r->detail->payment_method)
+                      · {{ ucfirst($r->detail->payment_method) }}
+                    @endif
+                    @php $gap = $suggestionMeta[(int)$entry->id][(int)$r->id]['days'] ?? null; @endphp
+                    @if($gap === 0)
+                      <span class="hd-pill" style="background:#dcfce7;color:#15803d">Same date</span>
+                    @elseif($gap !== null)
+                      <span class="hd-pill" style="background:#fef3c7;color:#b45309">{{ $gap }} day{{ $gap === 1 ? '' : 's' }} apart</span>
+                    @endif
                   </div>
                 </div>
-                <div class="hd-match-amount" style="color:#15803d">£{{ number_format((float)$r->detail->total_amount, 2) }}</div>
+                <div class="hd-match-amount" style="color:#15803d">£{{ number_format((float)$r->detail->total_amount, 2) }}<i class="fa fa-eye hd-receipt-eye" title="View receipt details"></i></div>
               </label>
               @endforeach
             @endif
@@ -469,7 +508,7 @@
 
         {{-- ── TAB: Find & Match ── --}}
         <section class="hd-tab-panel" data-hd-panel="find" hidden>
-          <p class="hd-small mb-2">Search and select receipts to match. Selected total cannot exceed £{{ number_format($absAmt, 2) }}.</p>
+          <p class="hd-small mb-2">Search and select receipts to match. Suggested receipts (same amount, any date) are listed first, nearest date first. Selected total cannot exceed £{{ number_format($absAmt, 2) }}.</p>
           <div class="hd-find-counter" id="find-counter-{{ $entry->id }}">
             Selected: £0.00 / Target: £{{ number_format($absAmt, 2) }} · Remaining: £{{ number_format($absAmt, 2) }}
           </div>
@@ -479,9 +518,12 @@
             <input type="hidden" name="client_id" value="{{ $entry->client_id }}">
             <input type="hidden" name="action" value="find_match">
             <div class="hd-find-list" data-target="{{ number_format($absAmt, 2, '.', '') }}">
-              @forelse($receipts as $r)
+              @forelse(($findMatches[(int)$entry->id] ?? $receipts) as $r)
               @php $rAmt = (float)($r->detail->total_amount ?? 0); @endphp
               <label class="hd-find-item"
+                     data-hd-receipt="{{ $r->id }}"
+                     data-hd-client="{{ $entry->client_id }}"
+                     title="Click to view receipt details"
                      data-search="{{ strtolower(($r->receipt_number ?? '').' '.($r->supplier ?? '')) }}"
                      data-amount="{{ number_format($rAmt, 2, '.', '') }}">
                 <input type="checkbox" name="receipt_ids[]" value="{{ $r->id }}"
@@ -493,9 +535,16 @@
                   @if($r->detail && $r->detail->invoice_date)
                     <span class="hd-small ml-1">· {{ \Carbon\Carbon::parse($r->detail->invoice_date)->format('d-m-Y') }}</span>
                   @endif
+                  @if($r->detail && $r->detail->payment_method)
+                    <span class="hd-small ml-1">· {{ ucfirst($r->detail->payment_method) }}</span>
+                  @endif
                   @if($r->detail && $r->detail->accountHead)
                     <span class="hd-small ml-1">· {{ $r->detail->accountHead->code }}</span>
                   @endif
+                  @if(isset($suggestionMeta[(int)$entry->id][(int)$r->id]))
+                    <span class="hd-pill" style="background:#e0f2fe;color:#0369a1">Suggested</span>
+                  @endif
+                  <i class="fa fa-eye hd-receipt-eye" title="View receipt details"></i>
                 </div>
                 <span style="font-weight:700;color:#15803d;white-space:nowrap">£{{ number_format($rAmt, 2) }}</span>
               </label>
@@ -540,7 +589,7 @@
           <div class="mb-2">
             <div class="hd-small font-weight-bold mb-1">Internal Notes</div>
             @foreach($entryNotes as $n)
-            <div class="hd-note-pill">{{ $n->body }} <span style="opacity:.6;font-size:11px">· {{ \Carbon\Carbon::parse($n->created_at)->format('d-m-Y H:i') }}</span></div>
+            <div class="hd-note-pill">{{ $n->body }} <span style="opacity:.6;font-size:11px">· {{ $n->author_name ?? 'Unknown' }} · {{ \Carbon\Carbon::parse($n->created_at)->format('d-m-Y H:i') }}</span></div>
             @endforeach
           </div>
           @endif
@@ -566,6 +615,26 @@
 </div>
 
 @endif {{-- presetId --}}
+</div>
+
+{{-- Receipt details popup: opened by clicking a receipt row in Match / Find & Match --}}
+<div class="hd-receipt-modal" id="hd-receipt-modal" role="dialog" aria-modal="true" aria-labelledby="hd-receipt-modal-title" hidden>
+  <div class="hd-receipt-dialog">
+    <div class="hd-receipt-head">
+      <div>
+        <div class="hd-small" style="font-weight:700;text-transform:uppercase;letter-spacing:.4px">Receipt details</div>
+        <div id="hd-receipt-modal-title" style="font-size:16px;font-weight:800">Receipt</div>
+      </div>
+      <button type="button" class="hd-receipt-close" data-hd-receipt-close aria-label="Close">&times;</button>
+    </div>
+    <div class="hd-receipt-body" id="hd-receipt-modal-body"></div>
+    <div class="hd-receipt-foot">
+      <button type="button" class="btn btn-outline-secondary btn-sm" data-hd-receipt-close>Close</button>
+      <button type="button" class="btn btn-primary btn-sm" id="hd-receipt-select" hidden>
+        <i class="fa fa-check mr-1"></i> Select this receipt
+      </button>
+    </div>
+  </div>
 </div>
 
 {{-- Quick Add Account Head --}}
@@ -731,6 +800,115 @@ document.addEventListener('input', function(e){
     item.style.display = (!term || search.includes(term)) ? '' : 'none';
   });
 });
+
+// ── Receipt details popup (view a receipt before selecting it) ──
+(function(){
+  const modal = document.getElementById('hd-receipt-modal');
+  if(!modal) return;
+  const bodyEl = document.getElementById('hd-receipt-modal-body');
+  const titleEl = document.getElementById('hd-receipt-modal-title');
+  const selectBtn = document.getElementById('hd-receipt-select');
+  const baseUrl = "{{ url('/admin/bank-reconciliation/receipt') }}";
+  let activeRow = null;
+  let lastFocus = null;
+
+  const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const rowHtml = (label, value) => (value === null || value === undefined || value === '')
+    ? '' : '<div class="hd-details-row"><span>'+esc(label)+'</span><span>'+esc(value)+'</span></div>';
+  const money = v => (v === null || v === undefined || v === '') ? null : '£' + Number(v).toFixed(2);
+
+  function open(row){
+    activeRow = row;
+    lastFocus = document.activeElement;
+    modal.hidden = false;
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    titleEl.textContent = 'Receipt #' + (row.dataset.hdReceipt || '');
+    bodyEl.innerHTML = '<div class="hd-small" style="padding:12px 0">Loading receipt details…</div>';
+    selectBtn.hidden = true;
+
+    const url = baseUrl + '/' + encodeURIComponent(row.dataset.hdReceipt || '') +
+                '?client_id=' + encodeURIComponent(row.dataset.hdClient || '');
+    fetch(url, {headers: {'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest'}, credentials: 'same-origin'})
+      .then(r => {
+        if(!r.ok) throw new Error(r.status === 404 ? 'Receipt not found.' : 'Could not load receipt details.');
+        return r.json();
+      })
+      .then(d => render(d))
+      .catch(err => {
+        bodyEl.innerHTML = '<div class="hd-small" style="padding:12px 0;color:#b91c1c">'+esc(err.message)+'</div>';
+      });
+  }
+
+  function render(d){
+    titleEl.textContent = 'Receipt #' + (d.receipt_number || d.id);
+    const head = d.account_head ? (d.account_head.code + ' – ' + d.account_head.name) : null;
+    const tax = Number(d.tax_amount || 0) + Number(d.vat_amount || 0);
+    const method = d.payment_method ? d.payment_method.charAt(0).toUpperCase() + d.payment_method.slice(1) : null;
+    const files = (d.files || []).length
+      ? d.files.map(f => '<a class="hd-receipt-file" href="'+esc(f.url)+'" target="_blank" rel="noopener"><i class="fa fa-paperclip"></i> '+esc(f.name || 'File')+'</a>').join('')
+      : '<div class="hd-small">No files attached.</div>';
+
+    bodyEl.innerHTML =
+      '<div class="hd-receipt-amount">'+esc(money(d.total_amount) || '—')+'</div>' +
+      '<div class="hd-receipt-sub">'+esc(d.supplier || 'Unknown supplier')+'</div>' +
+      '<div class="hd-receipt-grid">' +
+        rowHtml('Invoice date', d.invoice_date) +
+        rowHtml('Receipt date', d.receipt_date) +
+        rowHtml('Invoice number', d.invoice_number) +
+        rowHtml('Account head', head) +
+        rowHtml('Payment method', method) +
+        rowHtml('Paid', d.paid ? 'Yes' : 'No') +
+        rowHtml('Net amount', money(d.net_amount)) +
+        rowHtml('Tax / VAT', tax > 0 ? '£' + tax.toFixed(2) : null) +
+        rowHtml('Status', d.status) +
+        rowHtml('Uploaded', d.created_at) +
+      '</div>' +
+      (d.description ? '<div class="hd-receipt-desc">'+esc(d.description)+'</div>' : '') +
+      '<div class="hd-receipt-files">' +
+        '<div class="hd-small" style="font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Attachments</div>' + files +
+      '</div>';
+
+    const input = activeRow ? activeRow.querySelector('input[type=radio], input[type=checkbox]') : null;
+    selectBtn.hidden = !input || input.checked;
+  }
+
+  function close(){
+    modal.classList.remove('open');
+    modal.hidden = true;
+    document.body.style.overflow = '';
+    activeRow = null;
+    if(lastFocus && lastFocus.focus){ try { lastFocus.focus(); } catch(e){} }
+  }
+
+  document.addEventListener('click', function(e){
+    const row = e.target.closest('.hd-match-item[data-hd-receipt], .hd-find-item[data-hd-receipt]');
+    if(row){
+      // Let the radio/checkbox keep its own select behaviour; anything else in
+      // the row opens the details popup instead of selecting the receipt.
+      if(e.target.closest('input')) return;
+      e.preventDefault();
+      open(row);
+      return;
+    }
+    if(e.target.closest('[data-hd-receipt-close]')) { close(); return; }
+    if(e.target === modal) close();
+  });
+
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && !modal.hidden) close();
+  });
+
+  selectBtn.addEventListener('click', function(){
+    if(!activeRow) return;
+    const input = activeRow.querySelector('input[type=radio], input[type=checkbox]');
+    if(input){
+      input.checked = true;
+      input.dispatchEvent(new Event('change', {bubbles: true}));
+    }
+    close();
+  });
+})();
 
 // ── Quick Add Head wiring ──
 window.openQuickHeadFor = function(btn){

@@ -71,7 +71,7 @@ class BankReconciliationPageController extends Controller
                 'entries'=>DB::table('bank_entries')->whereRaw('1 = 0')->paginate(25),
                 'heads'=>collect(),'stats'=>collect(),'approvalStats'=>collect(),
                 'imports'=>collect(),'receipts'=>collect(),'splits'=>collect(),
-                'claimedReceiptIds'=>collect(),'notes'=>collect(),'fuzzyMatches'=>[],
+                'claimedReceiptIds'=>collect(),'notes'=>collect(),'fuzzyMatches'=>[],'findMatches'=>[],'suggestionMeta'=>[],
                 'reconcileFilter'=>'unreconciled','totalCount'=>0,'unreconciledCount'=>0,'reconciledCount'=>0,'importMap'=>collect(),
             ]);
         }
@@ -167,12 +167,11 @@ class BankReconciliationPageController extends Controller
             )
             ->map(fn($id) => (int)$id)->unique()->flip();
 
-        // Eligible receipts: must be ready, paid via bank, and not already reconciled
+        // Eligible receipts: must be ready, paid, and not already reconciled
         $receipts = Receipt::whereIn('client_id', $businessIds)
             ->where('status', 'ready')
             ->whereHas('detail', function ($q) {
                 $q->where('paid', 1)
-                  ->where('payment_method', 'bank')
                   ->whereNotNull('total_amount');
             })
             ->with(['detail.accountHead', 'detail'])
@@ -183,24 +182,113 @@ class BankReconciliationPageController extends Controller
 
         $entryIds = $entries->getCollection()->pluck('id');
         $splits = DB::table('bank_allocation_lines')->whereIn('bank_entry_id', $entryIds)->get()->groupBy('bank_entry_id');
-        $notes = DB::table('bank_review_notes')->whereIn('bank_entry_id', $entryIds)->orderByDesc('id')->get()->groupBy('bank_entry_id');
+        $noteRows = DB::table('bank_review_notes')->whereIn('bank_entry_id', $entryIds)->orderByDesc('id')->get();
+        $noteAuthors = $noteRows->isNotEmpty()
+            ? DB::table('users')->whereIn('id', $noteRows->pluck('author_id')->filter()->unique())->get(['id', 'first_name', 'last_name', 'email'])->keyBy('id')
+            : collect();
+        $noteRows->each(function ($note) use ($noteAuthors) {
+            $author = $noteAuthors->get($note->author_id);
+            $note->author_name = $author ? (trim(($author->first_name ?? '') . ' ' . ($author->last_name ?? '')) ?: ($author->email ?? null)) : null;
+        });
+        $notes = $noteRows->groupBy('bank_entry_id');
 
         $importMap = DB::table('bank_imports')->whereIn('id', $entries->getCollection()->pluck('bank_import_id')->filter())->get()->keyBy('id');
 
-        // Clean match scoring: finds eligible receipts matching transaction amount & narrative
+        // Same-amount suggestions: receipts whose total equals the bank amount
+        // whatever their date, ordered by the smallest gap between statement
+        // date and receipt date. A receipt a few days off (statement date vs
+        // invoice date) therefore still ranks first, and Find & Match lists
+        // these suggested receipts at the top of its picker.
+        // Queried directly because $receipts above is capped at the 500 newest
+        // receipts, which would hide older same-amount receipts.
+        $pageAmounts = $entries->getCollection()
+            ->map(fn($e) => number_format(abs((float)$e->amount), 2, '.', ''))
+            ->unique()->values()->all();
+        $suggestedPool = $pageAmounts
+            ? Receipt::whereIn('client_id', $businessIds)
+                ->where('status', 'ready')
+                ->whereHas('detail', fn($q) => $q->where('paid', 1)->whereIn('total_amount', $pageAmounts))
+                ->with(['detail.accountHead', 'detail'])
+                ->get()
+                ->filter(fn($r) => $r->detail && $r->detail->total_amount !== null && !isset($claimedReceiptIds[$r->id]))
+            : collect();
+
         $fuzzyMatches = [];
+        $findMatches = [];
+        $suggestionMeta = [];
         foreach ($entries as $entry) {
             $absAmt = abs((float)$entry->amount);
-            $exactList = $receipts->filter(fn($r) => abs((float)$r->detail->total_amount - $absAmt) < 0.01);
+            $entryTs = strtotime((string)($entry->transaction_date ?? ''));
+            $dateDiff = function ($r) use ($entryTs) {
+                $rDate = $r->detail->invoice_date ?? $r->receipt_date ?? null;
+                $rTs = $rDate ? strtotime((string)$rDate) : false;
+                if ($entryTs === false || $rTs === false) return PHP_INT_MAX;
+                return (int) round(abs($entryTs - $rTs) / 86400);
+            };
+            $exactList = $suggestedPool
+                ->filter(fn($r) => abs((float)$r->detail->total_amount - $absAmt) < 0.01)
+                ->sort(function ($a, $b) use ($dateDiff) {
+                    return $dateDiff($a) <=> $dateDiff($b) ?: $b->id <=> $a->id;
+                })
+                ->values();
             $fuzzyMatches[(int)$entry->id] = $exactList;
+            $suggestionMeta[(int)$entry->id] = $exactList
+                ->mapWithKeys(function ($r) use ($dateDiff) {
+                    $days = $dateDiff($r);
+                    return [(int)$r->id => ['days' => $days === PHP_INT_MAX ? null : $days]];
+                })->all();
+
+            $exactIds = $exactList->pluck('id')->flip();
+            $findMatches[(int)$entry->id] = $exactList
+                ->concat($receipts->reject(fn($r) => isset($exactIds[$r->id])))
+                ->values();
         }
 
         return view('admin.accounting.bank_reconciliation', compact(
             'credentialId', 'businessId', 'bankAccountId', 'bankAccounts',
             'entries', 'heads', 'stats', 'approvalStats', 'imports', 'receipts',
-            'splits', 'notes', 'fuzzyMatches', 'claimedReceiptIds',
+            'splits', 'notes', 'fuzzyMatches', 'findMatches', 'suggestionMeta', 'claimedReceiptIds',
             'reconcileFilter', 'totalCount', 'unreconciledCount', 'reconciledCount', 'importMap'
         ));
+    }
+
+    /**
+     * Receipt details for the reconciliation popup (view before selecting).
+     * Scoped to the selected business so a receipt from another client can
+     * never be opened through this endpoint.
+     */
+    public function receiptSummary(Request $request, int $receiptId) {
+        $clientId = (int)$request->query('client_id', 0);
+        abort_unless($clientId > 0, 422, 'Select a business first.');
+        $receipt = Receipt::with(['detail.accountHead', 'files'])
+            ->where('client_id', $clientId)
+            ->findOrFail($receiptId);
+        $detail = $receipt->detail;
+        $money = fn($v) => $v === null ? null : number_format((float)$v, 2, '.', '');
+        return response()->json([
+            'id' => (int)$receipt->id,
+            'receipt_number' => $receipt->receipt_number,
+            'supplier' => $receipt->supplier,
+            'status' => $receipt->status,
+            'receipt_date' => $receipt->receipt_date ? Carbon::parse($receipt->receipt_date)->format('d-m-Y') : null,
+            'created_at' => $receipt->created_at ? Carbon::parse($receipt->created_at)->format('d-m-Y H:i') : null,
+            'total_amount' => $detail ? $money($detail->total_amount) : null,
+            'net_amount' => $detail ? $money($detail->net_amount) : null,
+            'tax_amount' => $detail ? $money($detail->tax_amount) : null,
+            'vat_amount' => $detail ? $money($detail->vat_amount) : null,
+            'invoice_number' => $detail?->invoice_number,
+            'invoice_date' => $detail && $detail->invoice_date ? Carbon::parse($detail->invoice_date)->format('d-m-Y') : null,
+            'payment_method' => $detail?->payment_method,
+            'paid' => $detail ? (bool)$detail->paid : false,
+            'description' => $detail?->description,
+            'account_head' => $detail?->accountHead
+                ? ['code' => $detail->accountHead->code, 'name' => $detail->accountHead->name] : null,
+            'files' => $receipt->files->map(fn($f) => [
+                'id' => (int)$f->id,
+                'name' => $f->file_name ?: basename((string)$f->file_path),
+                'url' => route('admin.receipt.file.download', [$receipt->id, $f->id]),
+            ])->values(),
+        ]);
     }
 
     /**
@@ -381,7 +469,7 @@ class BankReconciliationPageController extends Controller
                     abort_unless($receiptId > 0, 422, 'Select a receipt to match.');
                     $receipt = Receipt::with('detail')->where('client_id', $client->id)->findOrFail($receiptId);
                     
-                    abort_unless($receipt->detail && (int)$receipt->detail->paid === 1 && $receipt->detail->payment_method === 'bank', 422, 'Only paid bank receipts can be matched.');
+                    abort_unless($receipt->detail && (int)$receipt->detail->paid === 1, 422, 'Only paid receipts can be matched.');
                     abort_if(DB::table('bank_entries')->where('receipt_id', $receipt->id)->where('id', '!=', $entryId)->where('reconciliation_status', 'approved')->exists(), 409, 'Receipt is already reconciled to another transaction.');
 
                     $headId = $data['account_head_id'] ?? $receipt->detail->account_head_id;
@@ -548,7 +636,7 @@ class BankReconciliationPageController extends Controller
 
                     $sumPence = 0;
                     foreach ($selectedReceipts as $sr) {
-                        abort_unless($sr->detail && (int)$sr->detail->paid === 1 && $sr->detail->payment_method === 'bank', 422, 'Receipt #' . $sr->receipt_number . ' is not a paid bank receipt.');
+                        abort_unless($sr->detail && (int)$sr->detail->paid === 1, 422, 'Receipt #' . $sr->receipt_number . ' is not a paid receipt.');
                         $sumPence += (int)round((float)$sr->detail->total_amount * 100);
                     }
 

@@ -130,16 +130,16 @@ class BankReconciliationTest extends TestCase
         ]);
     }
 
-    protected function makeReceipt(float $amount): int
+    protected function makeReceipt(float $amount, string $invoiceDate = '2020-06-15', bool $paid = false): int
     {
         $rid = (int) DB::table('receipts')->insertGetId([
             'client_id' => $this->client->id, 'receipt_number' => 'TEST-' . $this->uid('R'),
-            'receipt_date' => '2020-06-15', 'status' => 'ready', 'supplier' => 'Acme Ltd',
+            'receipt_date' => $invoiceDate, 'status' => 'ready', 'supplier' => 'Acme Ltd',
             'created_at' => now(), 'updated_at' => now(),
         ]);
         DB::table('receipt_details')->insert([
-            'receipt_id' => $rid, 'account_head_id' => $this->headId, 'invoice_date' => '2020-06-15',
-            'total_amount' => $amount, 'paid' => false, 'payment_method' => 'bank',
+            'receipt_id' => $rid, 'account_head_id' => $this->headId, 'invoice_date' => $invoiceDate,
+            'total_amount' => $amount, 'paid' => $paid, 'payment_method' => 'bank',
             'created_at' => now(), 'updated_at' => now(),
         ]);
         return $rid;
@@ -212,6 +212,78 @@ class BankReconciliationTest extends TestCase
         $this->assertEqualsWithDelta(60.00, (float) $row->settled_amount, 0.001);
         $this->assertEqualsWithDelta(40.00, (float) $row->remaining_amount, 0.001);
         $this->assertSame('open', $row->status);
+    }
+
+    /** Same-amount receipts on other dates surface as suggestions, nearest date first. */
+    public function test_same_amount_receipts_on_other_dates_are_suggested_first(): void
+    {
+        DB::table('clients')->where('id', $this->client->id)->update(['status' => 1]);
+        $user = DB::table('users')->where('email', '!=', 'jane@gmail.com')->first();
+        if ($user) {
+            $this->actingAs(User::find($user->id));
+        }
+
+        $entryId = $this->makeEntry(-120.00, 'unmatched');
+        $same  = $this->makeReceipt(120.00, '2020-06-15', true);
+        $near  = $this->makeReceipt(120.00, '2020-06-18', true);
+        $far   = $this->makeReceipt(120.00, '2020-05-15', true);
+        $other = $this->makeReceipt(50.00, '2020-06-15', true);
+
+        $view = $this->controller()->index(new Request([
+            'client_credential_id' => $this->credId,
+            'client_id' => $this->client->id,
+            'bank_account_id' => $this->bankA,
+            'reconcile_status' => 'all',
+            'date_from' => '2020-06-15',
+            'date_to' => '2020-06-15',
+        ]));
+        $data = $view->getData();
+
+        // Match tab: exact amount, any date, ordered by date gap.
+        $suggestedIds = collect($data['fuzzyMatches'][$entryId] ?? [])->pluck('id')->all();
+        $this->assertSame([$same, $near, $far], array_values(array_intersect($suggestedIds, [$same, $near, $far])));
+        $this->assertSame(0, $data['suggestionMeta'][$entryId][$same]['days']);
+        $this->assertSame(3, $data['suggestionMeta'][$entryId][$near]['days']);
+        $this->assertSame(31, $data['suggestionMeta'][$entryId][$far]['days']);
+
+        // Find & Match: the same suggestions lead the list, other receipts follow.
+        $findIds = collect($data['findMatches'][$entryId] ?? [])->pluck('id')->all();
+        $this->assertSame([$same, $near, $far], array_values(array_intersect($findIds, [$same, $near, $far])));
+        $this->assertContains($other, $findIds);
+        $this->assertGreaterThan(
+            array_search($far, $findIds, true),
+            array_search($other, $findIds, true)
+        );
+    }
+
+    /** The popup endpoint returns the receipt details the accountant needs to judge a match. */
+    public function test_receipt_summary_returns_details_for_the_business(): void
+    {
+        $receiptId = $this->makeReceipt(120.00, '2020-06-18', true);
+
+        $response = $this->controller()->receiptSummary(new Request(['client_id' => $this->client->id]), $receiptId);
+        $data = json_decode($response->getContent(), true);
+
+        $this->assertSame($receiptId, $data['id']);
+        $this->assertSame('Acme Ltd', $data['supplier']);
+        $this->assertEqualsWithDelta(120.00, (float) $data['total_amount'], 0.001);
+        $this->assertSame('18-06-2020', $data['invoice_date']);
+        $this->assertTrue($data['paid']);
+        $this->assertNotNull($data['account_head']);
+        $this->assertSame([], $data['files']);
+    }
+
+    /** The popup endpoint is scoped: another business cannot open the receipt. */
+    public function test_receipt_summary_is_scoped_to_the_selected_business(): void
+    {
+        $receiptId = $this->makeReceipt(10.00, '2020-06-15', true);
+        $otherClientId = (int) DB::table('clients')->where('id', '!=', $this->client->id)->value('id');
+        if (!$otherClientId) {
+            $this->markTestSkipped('Need a second client fixture.');
+        }
+
+        $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
+        $this->controller()->receiptSummary(new Request(['client_id' => $otherClientId]), $receiptId);
     }
 
     /** Fuzzy scoring ranks an exact amount/date/supplier hit highest. */

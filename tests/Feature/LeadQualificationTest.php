@@ -6,6 +6,8 @@ use App\Http\Controllers\Admin\LeadController;
 use App\Jobs\ProcessIncomingLeadMessage;
 use App\Models\Lead;
 use App\Models\LeadMessage;
+use App\Models\MetaAdIntent;
+use App\Models\User;
 use App\Services\LeadAlertService;
 use App\Services\LeadConversationService;
 use App\Services\LeadQualificationService;
@@ -13,11 +15,14 @@ use App\Services\MetaAdAttributionService;
 use App\Services\MetaWhatsAppService;
 use App\Services\LeadInterpreter;
 use Illuminate\Http\Request;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Mockery;
 use Tests\TestCase;
@@ -40,7 +45,9 @@ class LeadQualificationTest extends TestCase
 
         if (!Schema::hasTable('leads')
             || !Schema::hasTable('lead_messages')
-            || !Schema::hasColumn('leads', 'automation_completed_at')) {
+            || !Schema::hasTable('meta_ad_intents')
+            || !Schema::hasColumn('leads', 'automation_completed_at')
+            || !Schema::hasColumn('leads', 'alert_status')) {
             $this->markTestSkipped('Run `php artisan migrate` to enable lead qualification tests.');
         }
 
@@ -87,6 +94,12 @@ class LeadQualificationTest extends TestCase
 
         $response->assertStatus(403);
         $this->assertDatabaseMissing('leads', ['whatsapp_id' => $phone]);
+    }
+
+    public function test_webhook_rejects_a_wrong_verify_token(): void
+    {
+        $this->get('/api/webhooks/whatsapp?hub.mode=subscribe&hub.verify_token=not-the-token&hub.challenge=abc123')
+            ->assertStatus(403);
     }
 
     public function test_webhook_stores_the_message_and_queues_processing(): void
@@ -189,6 +202,9 @@ class LeadQualificationTest extends TestCase
             'campaign_name' => 'Old campaign',
         ]);
 
+        // Intent comes from the explicit mapping, never the advert copy.
+        MetaAdIntent::create(['ad_id' => 'NEW-AD', 'intent' => 'change_accountant']);
+
         $referral = [
             'source_type' => 'ad',
             'source_id' => 'NEW-AD',
@@ -215,6 +231,61 @@ class LeadQualificationTest extends TestCase
         $this->assertSame('OLD-AD', $old->ad_id);
         $this->assertSame('OLD-CLID', $old->click_id);
         $this->assertSame('Old campaign', $old->campaign_name);
+    }
+
+    public function test_unknown_ad_does_not_guess_intent_from_marketing_copy(): void
+    {
+        $phone = $this->phone();
+        $referral = [
+            'source_type' => 'ad',
+            'source_id' => 'UNMAPPED-AD',
+            'ctwa_clid' => 'CLID-1',
+            // HD's current advert copy. The old regex would have routed this to
+            // tax_vat_payroll purely because it mentions VAT/payroll/accounts.
+            'headline' => 'Your accountant, sorted',
+            'body' => 'VAT registered, payroll and accounts done for £49 a month. Talk to a real accountant.',
+            'source_url' => 'https://fb.me/general',
+        ];
+
+        $this->signedPost($this->payload($phone, $this->wamid(), $referral, 'Hi, I want to know more'))->assertOk();
+
+        $lead = Lead::where('whatsapp_id', $phone)->firstOrFail();
+        $this->assertNull($lead->intent);
+        $this->assertSame('intent', $lead->conversation_step);
+        // The advert copy is still stored for attribution/audit.
+        $this->assertSame('UNMAPPED-AD', $lead->ad_id);
+        $this->assertNotNull($lead->ad_headline);
+    }
+
+    public function test_mapped_ad_skips_only_the_intent_question(): void
+    {
+        MetaAdIntent::create(['ad_id' => 'LANDLORD-AD', 'intent' => 'landlord_property']);
+        $phone = $this->phone();
+
+        $this->signedPost($this->payload($phone, $this->wamid(), [
+            'source_type' => 'ad',
+            'source_id' => 'LANDLORD-AD',
+            'headline' => 'Landlords: tax returns sorted',
+        ], 'Hi'))->assertOk();
+
+        $lead = Lead::where('whatsapp_id', $phone)->firstOrFail();
+        $this->assertSame('landlord_property', $lead->intent);
+        $this->assertSame('person_type', $lead->conversation_step);
+    }
+
+    public function test_inactive_ad_mapping_falls_back_to_the_first_question(): void
+    {
+        MetaAdIntent::create(['ad_id' => 'PAUSED-AD', 'intent' => 'change_accountant', 'is_active' => false]);
+        $phone = $this->phone();
+
+        $this->signedPost($this->payload($phone, $this->wamid(), [
+            'source_type' => 'ad',
+            'source_id' => 'PAUSED-AD',
+        ], 'Hi'))->assertOk();
+
+        $lead = Lead::where('whatsapp_id', $phone)->firstOrFail();
+        $this->assertNull($lead->intent);
+        $this->assertSame('intent', $lead->conversation_step);
     }
 
     public function test_non_ad_referrals_are_not_recorded_as_ad_attribution(): void
@@ -604,6 +675,89 @@ class LeadQualificationTest extends TestCase
         $this->assertSame('non_sales', $cv['intent']);
     }
 
+    /**
+     * Review section 6: an existing HD client is marked EXISTING_CLIENT, stops
+     * sales qualification and still alerts the team.
+     */
+    public function test_existing_client_stops_qualification_and_alerts_the_team(): void
+    {
+        $lead = $this->makeLead();
+        $message = $this->makeInbound($lead, 'I am already a client of yours');
+
+        $whatsApp = Mockery::mock(MetaWhatsAppService::class);
+        $whatsApp->shouldReceive('sendText')->once();
+        $whatsApp->shouldNotReceive('sendList');
+        $whatsApp->shouldNotReceive('sendButtons');
+
+        $alerts = Mockery::mock(LeadAlertService::class);
+        $alerts->shouldReceive('notify')->once()->with(
+            Mockery::on(fn($arg) => $arg instanceof Lead && $arg->id === $lead->id)
+        );
+
+        $attribution = Mockery::mock(MetaAdAttributionService::class);
+        $attribution->shouldReceive('enrich')->once();
+
+        $service = new LeadConversationService(
+            $whatsApp,
+            app(LeadInterpreter::class),
+            app(LeadQualificationService::class),
+            $alerts,
+            $attribution
+        );
+
+        $service->process($message);
+
+        $lead->refresh();
+        $this->assertSame('EXISTING_CLIENT', $lead->qualification_status);
+        $this->assertSame('complete', $lead->conversation_step);
+        $this->assertNotNull($lead->automation_completed_at);
+    }
+
+    /**
+     * Review test matrix: free-form staff replies are allowed inside the
+     * 24-hour service window, blocked outside it, and the approved template
+     * path still works outside the window.
+     */
+    public function test_free_form_staff_reply_needs_an_open_whatsapp_window(): void
+    {
+        $this->actingAs($this->makeUser(false));
+        config(['meta_whatsapp.reengagement_template' => 'lead_reengagement', 'meta_whatsapp.reengagement_template_language' => 'en_GB']);
+
+        $recent = $this->makeLead(['last_inbound_at' => now()->subHours(2)]);
+        $stale = $this->makeLead(['last_inbound_at' => now()->subHours(30)]);
+
+        $whatsApp = Mockery::mock(MetaWhatsAppService::class);
+        $whatsApp->shouldReceive('sendText')->once()->with(
+            Mockery::on(fn($arg) => $arg instanceof Lead && $arg->id === $recent->id),
+            'Hello from HD',
+            'staff',
+            Mockery::type('int')
+        );
+        $whatsApp->shouldReceive('sendTemplate')->once()->with(
+            Mockery::on(fn($arg) => $arg instanceof Lead && $arg->id === $stale->id),
+            'lead_reengagement',
+            'en_GB',
+            'staff',
+            Mockery::type('int')
+        );
+        $this->swap(MetaWhatsAppService::class, $whatsApp);
+
+        // Outside the window a free-form reply is refused and nothing changes.
+        $this->post(route('admin.leads.send', $stale), ['message' => 'Hello from HD'])
+            ->assertSessionHasErrors('message');
+        $this->assertFalse($stale->fresh()->human_takeover);
+
+        // Inside the window the free-form reply is delivered and takes over.
+        $this->post(route('admin.leads.send', $recent), ['message' => 'Hello from HD'])
+            ->assertSessionHas('success');
+        $this->assertTrue($recent->fresh()->human_takeover);
+
+        // The approved template is the supported path outside the window.
+        $this->post(route('admin.leads.send-template', $stale))
+            ->assertSessionHas('success');
+        $this->assertTrue($stale->fresh()->human_takeover);
+    }
+
     // ------------------------------------------------------------------
     // Retention, scheduling and provider limits
     // ------------------------------------------------------------------
@@ -628,30 +782,75 @@ class LeadQualificationTest extends TestCase
         $this->assertDatabaseHas('leads', ['id' => $recentRejected->id]);
     }
 
-    public function test_prune_is_not_registered_in_the_scheduler(): void
+    public function test_prune_is_registered_in_the_scheduler(): void
     {
         Artisan::call('schedule:list');
-        $this->assertStringNotContainsString('leads:prune', Artisan::output());
+        $this->assertStringContainsString('leads:prune', Artisan::output());
     }
 
-    public function test_admin_can_delete_all_leads_and_their_messages(): void
+    public function test_prune_clears_old_raw_payloads_but_keeps_conversation_rows(): void
     {
+        $lead = $this->makeLead();
+        $message = $this->makeInbound($lead, 'Hello');
+        $message->forceFill(['raw_payload' => ['text' => ['body' => 'Hello']]])->save();
+        DB::table('lead_messages')->where('id', $message->id)->update(['created_at' => now()->subDays(120)]);
+
+        $this->artisan('leads:prune', ['--days' => 365, '--payload-days' => 90])->assertExitCode(0);
+
+        $message->refresh();
+        $this->assertNull($message->raw_payload);
+        $this->assertSame('Hello', $message->body);
+    }
+
+    public function test_normal_admin_cannot_purge_all_leads(): void
+    {
+        $lead = $this->makeLead();
+
+        $this->actingAs($this->makeUser(false));
+
+        $this->expectException(AuthorizationException::class);
+
+        try {
+            app(LeadController::class)->clearAll(new Request(['confirmation' => 'DELETE']));
+        } finally {
+            $this->assertDatabaseHas('leads', ['id' => $lead->id]);
+        }
+    }
+
+    public function test_super_admin_purge_archives_before_deleting(): void
+    {
+        Storage::fake('local');
+
         $first = $this->makeLead();
         $this->makeInbound($first, 'Hello');
         $second = $this->makeCompletedLead();
         $this->makeInbound($second, 'Following up');
+
+        $this->actingAs($this->makeUser(true));
 
         $response = app(LeadController::class)->clearAll(new Request(['confirmation' => 'DELETE']));
 
         $this->assertSame(route('admin.leads.index'), $response->getTargetUrl());
         $this->assertSame(0, Lead::whereIn('id', [$first->id, $second->id])->count());
         $this->assertSame(0, LeadMessage::whereIn('lead_id', [$first->id, $second->id])->count());
+
+        $archives = Storage::disk('local')->allFiles('lead-archives');
+        $this->assertCount(1, $archives);
+
+        $archive = json_decode(Storage::disk('local')->get($archives[0]), true);
+        $archivedIds = array_column($archive['leads'], 'id');
+        $this->assertContains($first->id, $archivedIds);
+        $this->assertContains($second->id, $archivedIds);
+
+        $archivedFirst = collect($archive['leads'])->firstWhere('id', $first->id);
+        $this->assertSame('Hello', $archivedFirst['messages'][0]['body']);
     }
 
-    public function test_deleting_all_leads_requires_typed_confirmation(): void
+    public function test_purge_requires_typed_confirmation(): void
     {
         $lead = $this->makeLead();
         $this->makeInbound($lead, 'Hello');
+        $this->actingAs($this->makeUser(true));
 
         try {
             app(LeadController::class)->clearAll(new Request(['confirmation' => 'yes']));
@@ -661,6 +860,96 @@ class LeadQualificationTest extends TestCase
         }
 
         $this->assertDatabaseHas('leads', ['id' => $lead->id]);
+    }
+
+    public function test_alert_failure_is_recorded_on_the_lead(): void
+    {
+        config(['lead_qualification.alert_email' => 'team@hd.example']);
+        $lead = $this->makeLead(['qualification_status' => 'GENUINE']);
+
+        Mail::shouldReceive('raw')->once()->andThrow(new \RuntimeException('smtp timeout'));
+
+        $status = app(LeadAlertService::class)->notify($lead);
+
+        $lead->refresh();
+        $this->assertSame(LeadAlertService::STATUS_FAILED, $status);
+        $this->assertSame(LeadAlertService::STATUS_FAILED, $lead->alert_status);
+        $this->assertStringContainsString('smtp timeout', (string) $lead->alert_last_error);
+        $this->assertNotNull($lead->alert_last_attempt_at);
+    }
+
+    public function test_unrecognised_free_text_asks_once_then_goes_to_review(): void
+    {
+        $lead = $this->makeLead([
+            'intent' => 'change_accountant',
+            'conversation_step' => 'person_type',
+            'qualification_status' => 'QUALIFYING',
+        ]);
+        // The bot has already asked a question, so an unclear answer counts.
+        LeadMessage::create([
+            'lead_id' => $lead->id,
+            'direction' => 'outbound',
+            'sender_type' => 'bot',
+            'message_type' => 'interactive_button',
+            'body' => 'And which best describes you?',
+            'delivery_status' => 'sent',
+        ]);
+
+        $whatsApp = Mockery::mock(MetaWhatsAppService::class);
+        $whatsApp->shouldReceive('sendButtons')->once();   // one clarifying question
+        $whatsApp->shouldReceive('sendText')->once();      // REVIEW closing message
+        $alerts = Mockery::mock(LeadAlertService::class);
+        $alerts->shouldReceive('notify')->once();
+        $attribution = Mockery::mock(MetaAdAttributionService::class);
+        $attribution->shouldReceive('enrich');
+
+        $service = new LeadConversationService(
+            $whatsApp,
+            app(LeadInterpreter::class),
+            app(LeadQualificationService::class),
+            $alerts,
+            $attribution
+        );
+
+        $service->process($this->makeInbound($lead, 'umm not sure'));
+
+        $lead->refresh();
+        $this->assertSame(1, (int) $lead->unclear_replies);
+        $this->assertSame('QUALIFYING', $lead->qualification_status);
+        $this->assertSame('person_type', $lead->conversation_step);
+
+        $service->process($this->makeInbound($lead, 'no idea really'));
+
+        $lead->refresh();
+        $this->assertSame('REVIEW', $lead->qualification_status);
+        $this->assertNotNull($lead->automation_completed_at);
+    }
+
+    public function test_health_page_shows_optional_items_without_a_failure(): void
+    {
+        config([
+            'lead_qualification.alert_email' => 'team@hd.example',
+            'lead_qualification.alert_phone' => null,
+            'lead_qualification.alert_sms_enabled' => false,
+            'meta_whatsapp.reengagement_template' => null,
+        ]);
+
+        $this->actingAs($this->makeUser(false));
+
+        $response = $this->get('/admin/leads/health');
+
+        $response->assertOk();
+        $response->assertSee('Re-engagement template');
+        $response->assertSee('Optional');
+        $response->assertSee('Green means the configuration is present');
+
+        // Review 4.2: the ads token is reported separately from the WhatsApp
+        // token instead of being assumed to carry Marketing API permissions.
+        $response->assertSee('META_ADS_ACCESS_TOKEN');
+
+        // Review 4.2: the page may only promise scheduled pruning when
+        // leads:prune is really registered in App\Console\Kernel.
+        $response->assertSeeInOrder(['Retention prune scheduled', 'Ready'], false);
     }
 
     public function test_whatsapp_option_labels_fit_meta_limits(): void
@@ -681,6 +970,18 @@ class LeadQualificationTest extends TestCase
     // ------------------------------------------------------------------
     // Fixtures
     // ------------------------------------------------------------------
+
+    private function makeUser(bool $superAdmin): User
+    {
+        return User::create([
+            'first_name' => 'Test',
+            'last_name' => 'Admin',
+            'email' => 'lead-test-' . (++self::$seq) . '-' . substr((string) microtime(true), -6) . '@example.test',
+            'password' => bcrypt('secret'),
+            'type' => 1, // 1 => admin
+            'super_admin' => $superAdmin,
+        ]);
+    }
 
     private function phone(): string
     {

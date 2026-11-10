@@ -110,7 +110,22 @@ class MetaWhatsAppService
         ], $body, 'interactive_list', $senderType);
     }
 
-    private function send(Lead $lead, array $payload, string $displayBody, string $messageType, string $senderType, ?int $senderUserId = null): LeadMessage
+    /**
+     * Health-page connectivity test. Sends a real WhatsApp message to the given
+     * number without creating a lead or a conversation record.
+     */
+    public function sendTestText(string $to, string $text): void
+    {
+        $this->post([
+            'messaging_product' => 'whatsapp',
+            'recipient_type' => 'individual',
+            'to' => $to,
+            'type' => 'text',
+            'text' => ['preview_url' => false, 'body' => $text],
+        ]);
+    }
+
+    private function post(array $payload): ?string
     {
         if (!$this->configured()) {
             throw new RuntimeException('Meta WhatsApp is not configured.');
@@ -118,16 +133,22 @@ class MetaWhatsAppService
 
         $url = rtrim(config('meta_whatsapp.base_url'), '/') . '/' . config('meta_whatsapp.graph_version') . '/' . config('meta_whatsapp.phone_number_id') . '/messages';
 
+        $response = $this->client->post($url, [
+            'headers' => [
+                'Authorization' => 'Bearer ' . config('meta_whatsapp.access_token'),
+                'Content-Type' => 'application/json',
+            ],
+            'json' => $payload,
+        ]);
+        $data = json_decode((string) $response->getBody(), true) ?: [];
+
+        return data_get($data, 'messages.0.id');
+    }
+
+    private function send(Lead $lead, array $payload, string $displayBody, string $messageType, string $senderType, ?int $senderUserId = null): LeadMessage
+    {
         try {
-            $response = $this->client->post($url, [
-                'headers' => [
-                    'Authorization' => 'Bearer ' . config('meta_whatsapp.access_token'),
-                    'Content-Type' => 'application/json',
-                ],
-                'json' => $payload,
-            ]);
-            $data = json_decode((string) $response->getBody(), true) ?: [];
-            $providerId = data_get($data, 'messages.0.id');
+            $providerId = $this->post($payload);
 
             $message = LeadMessage::create([
                 'lead_id' => $lead->id,
