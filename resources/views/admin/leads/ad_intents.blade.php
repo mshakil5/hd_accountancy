@@ -16,7 +16,8 @@
 
     <div class="card">
         <div class="card-body pt-3">
-            <h5 class="card-title">Add or replace a mapping</h5>
+            <h5 class="card-title">Add a mapping</h5>
+            <p class="small text-muted">A re-used Ad ID is rejected — edit the existing row below instead.</p>
             <form method="POST" action="{{ route('admin.leads.ad-intents.store') }}" class="row g-2 align-items-end">
                 @csrf
                 <div class="col-md-3">
