@@ -56,11 +56,23 @@
 /* ── Split ── */
 .hd-split-line{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;margin-bottom:8px}
 .hd-split-meter{font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;background:#f1f5f9}
+/* ── VAT block (gross in, net derived) — shared by Create / Split / Find & Match ── */
+.hd-vat-box{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:start;background:#f8fbff;border:1px solid #e2e8f0;border-radius:8px;padding:10px;grid-column:1/-1}
+@media(max-width:900px){.hd-vat-box{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:560px){.hd-vat-box{grid-template-columns:1fr}}
+.hd-vat-box input[readonly]{background:#eef4f9;font-weight:700;color:#0f172a}
+.hd-vat-net{font-variant-numeric:tabular-nums}
+.hd-vat-amt-hint{margin-top:2px;font-variant-numeric:tabular-nums}
+.hd-vat-amt-hint .hd-vat-amt{font-weight:700;color:#0f172a}
 /* ── Find & match ── */
 .hd-find-item{display:flex;align-items:center;gap:10px;padding:7px 10px;border:1px solid #e2e8f0;border-radius:7px;margin-bottom:5px;font-size:13px;background:#fff;cursor:pointer}
 .hd-find-item:hover{background:#f1f9ff}
 .hd-find-item.capped{opacity:.45;pointer-events:none}
+.hd-find-apply{width:96px;height:32px;font-size:12.5px;margin-left:auto;padding:2px 6px}
 .hd-find-counter{font-size:12px;font-weight:700;padding:5px 12px;border-radius:20px;background:#f1f5f9;margin-bottom:10px}
+.hd-create-block{border-top:1px dashed #cbd5e1;margin-top:12px;padding-top:10px}
+.hd-create-line{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;margin-bottom:8px}
+.hd-create-meter{font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;background:#f1f5f9}
 /* ── Receipt details popup ── */
 .hd-receipt-eye{font-size:12px;color:#94a3b8;margin-left:6px}
 .hd-receipt-modal{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:1090}
@@ -417,7 +429,7 @@
 
         {{-- ── TAB: Create ── --}}
         <section class="hd-tab-panel" data-hd-panel="create" hidden>
-          <p class="hd-small mb-2">Create a new receipt from this bank transaction and reconcile immediately.</p>
+          <p class="hd-small mb-2">Create a new receipt from this bank transaction and reconcile immediately. The bank amount is the VAT-inclusive total; the net amount follows the VAT %.</p>
           <form method="POST" action="{{ route('admin.bank-reconciliation.action', $entry->id) }}" class="hd-action-form">
             @csrf
             <input type="hidden" name="client_id" value="{{ $entry->client_id }}">
@@ -431,6 +443,14 @@
                 <label class="hd-field-lbl">Invoice Date</label>
                 <input class="form-control hd-fc" type="date" name="invoice_date" value="{{ $entry->transaction_date }}" required>
               </div>
+              {{-- Net Amount · VAT Percent · Gross Amount (same block as Split / Find & Match) --}}
+              @include('admin.partials.receipt_amounts', [
+                  'gross' => number_format($absAmt, 2, '.', ''),
+                  'grossName' => 'gross',
+                  'grossClass' => '',
+                  'vatName' => 'vat_percent',
+                  'grossHint' => 'must equal the bank amount £' . number_format($absAmt, 2),
+              ])
               <div class="hd-field" style="grid-column:1/-1">
                 <label class="hd-field-lbl">
                   Account Head
@@ -465,10 +485,6 @@
               @foreach([0,1] as $i)
               <div class="hd-split-line hd-form-grid">
                 <div class="hd-field">
-                  <label class="hd-field-lbl">Amount (£)</label>
-                  <input class="form-control hd-fc hd-split-amount" type="number" name="splits[{{ $i }}][amount]" min="0.01" step="0.01" required>
-                </div>
-                <div class="hd-field">
                   <label class="hd-field-lbl">Supplier</label>
                   <input class="form-control hd-fc" name="splits[{{ $i }}][supplier]" placeholder="Supplier name">
                 </div>
@@ -476,6 +492,12 @@
                   <label class="hd-field-lbl">Invoice Date</label>
                   <input class="form-control hd-fc" type="date" name="splits[{{ $i }}][invoice_date]" value="{{ $entry->transaction_date }}">
                 </div>
+                @include('admin.partials.receipt_amounts', [
+                    'gross' => '',
+                    'grossName' => 'splits[' . $i . '][amount]',
+                    'grossClass' => 'hd-split-amount',
+                    'vatName' => 'splits[' . $i . '][vat_percent]',
+                ])
                 <div class="hd-field">
                   <label class="hd-field-lbl">
                     Account Head
@@ -508,27 +530,32 @@
 
         {{-- ── TAB: Find & Match ── --}}
         <section class="hd-tab-panel" data-hd-panel="find" hidden>
-          <p class="hd-small mb-2">Search and select receipts to match. Suggested receipts (same amount, any date) are listed first, nearest date first. Selected total cannot exceed £{{ number_format($absAmt, 2) }}.</p>
+          <p class="hd-small mb-2">Search and select receipts to match. Suggested receipts (same amount, any date) are listed first, nearest date first. An existing receipt can give only part of what is left of it, and new receipts below cover the remainder — any combination, as long as everything adds up to £{{ number_format($absAmt, 2) }}.</p>
           <div class="hd-find-counter" id="find-counter-{{ $entry->id }}">
             Selected: £0.00 / Target: £{{ number_format($absAmt, 2) }} · Remaining: £{{ number_format($absAmt, 2) }}
           </div>
           <input type="search" class="form-control mb-2 hd-find-search" placeholder="Search supplier or receipt #" aria-label="Search">
-          <form method="POST" action="{{ route('admin.bank-reconciliation.action', $entry->id) }}" class="hd-action-form" id="find-form-{{ $entry->id }}">
+          <form method="POST" action="{{ route('admin.bank-reconciliation.action', $entry->id) }}" class="hd-action-form hd-find-form" id="find-form-{{ $entry->id }}">
             @csrf
             <input type="hidden" name="client_id" value="{{ $entry->client_id }}">
             <input type="hidden" name="action" value="find_match">
             <div class="hd-find-list" data-target="{{ number_format($absAmt, 2, '.', '') }}">
               @forelse(($findMatches[(int)$entry->id] ?? $receipts) as $r)
-              @php $rAmt = (float)($r->detail->total_amount ?? 0); @endphp
+              @php
+                $rAmt = (float)($r->detail->total_amount ?? 0);
+                $rLeft = (float)($receiptRemaining[(int)$r->id] ?? $rAmt);
+              @endphp
               <label class="hd-find-item"
                      data-hd-receipt="{{ $r->id }}"
                      data-hd-client="{{ $entry->client_id }}"
                      title="Click to view receipt details"
                      data-search="{{ strtolower(($r->receipt_number ?? '').' '.($r->supplier ?? '')) }}"
-                     data-amount="{{ number_format($rAmt, 2, '.', '') }}">
+                     data-amount="{{ number_format($rAmt, 2, '.', '') }}"
+                     data-remaining="{{ number_format($rLeft, 2, '.', '') }}">
                 <input type="checkbox" name="receipt_ids[]" value="{{ $r->id }}"
                        class="hd-find-cb"
                        data-amount="{{ $rAmt }}"
+                       data-remaining="{{ $rLeft }}"
                        onchange="hdFindUpdate(this)">
                 <div style="flex:1;min-width:0">
                   <span style="font-weight:700;font-size:13px">#{{ $r->receipt_number }} — {{ $r->supplier ?: 'Unknown' }}</span>
@@ -544,16 +571,67 @@
                   @if(isset($suggestionMeta[(int)$entry->id][(int)$r->id]))
                     <span class="hd-pill" style="background:#e0f2fe;color:#0369a1">Suggested</span>
                   @endif
+                  @if($rLeft < $rAmt - 0.004)
+                    <span class="hd-pill" style="background:#fef3c7;color:#b45309">£{{ number_format($rLeft, 2) }} left</span>
+                  @endif
                   <i class="fa fa-eye hd-receipt-eye" title="View receipt details"></i>
                 </div>
                 <span style="font-weight:700;color:#15803d;white-space:nowrap">£{{ number_format($rAmt, 2) }}</span>
+                <input type="number" class="form-control hd-fc hd-find-apply"
+                       name="allocations[{{ $r->id }}]" min="0.01" max="{{ number_format($rLeft, 2, '.', '') }}" step="0.01"
+                       placeholder="Apply £" title="How much of this receipt to use" hidden disabled>
               </label>
               @empty
               <div class="hd-small text-muted">No eligible receipts found.</div>
               @endforelse
             </div>
-            <button class="btn btn-primary btn-sm mt-2 hd-find-submit" disabled onclick="return confirm('Match selected receipts to this bank transaction?')">
-              <i class="fa fa-check mr-1"></i> Match Selected
+
+            {{-- Create one or more new receipts for the uncovered remainder --}}
+            <div class="hd-create-block">
+              <div class="hd-small font-weight-bold mb-1">Create new receipt(s) for the remainder</div>
+              <div class="hd-create-lines">
+                <div class="hd-create-line hd-form-grid">
+                  <div class="hd-field">
+                    <label class="hd-field-lbl">Supplier</label>
+                    <input class="form-control hd-fc" name="creates[0][supplier]" value="{{ $entry->description }}" placeholder="Supplier name">
+                  </div>
+                  <div class="hd-field">
+                    <label class="hd-field-lbl">Invoice Date</label>
+                    <input class="form-control hd-fc" type="date" name="creates[0][invoice_date]" value="{{ $entry->transaction_date }}">
+                  </div>
+                  @include('admin.partials.receipt_amounts', [
+                      'gross' => '',
+                      'grossName' => 'creates[0][gross]',
+                      'grossClass' => 'hd-create-gross',
+                      'vatName' => 'creates[0][vat_percent]',
+                  ])
+                  <div class="hd-field" style="grid-column:1/-1">
+                    <label class="hd-field-lbl">
+                      Account Head
+                      <button type="button" class="hd-qadd-btn" onclick="openQuickHeadFor(this)"><i class="fa fa-plus-circle"></i> Quick Add</button>
+                    </label>
+                    <select class="form-control select2 hd-fc" name="creates[0][account_head_id]">
+                      <option value="">Choose head</option>
+                      @foreach($heads as $h)
+                      <option value="{{ $h->id }}">{{ $h->code }} — {{ $h->name }}</option>
+                      @endforeach
+                    </select>
+                  </div>
+                  <div class="hd-field" style="grid-column:1/-1">
+                    <label class="hd-field-lbl">Memo (optional)</label>
+                    <input class="form-control hd-fc" name="creates[0][memo]" placeholder="Note about this line">
+                  </div>
+                </div>
+              </div>
+              <div class="d-flex gap-2 align-items-center flex-wrap mt-1 mb-2">
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="hdAddCreateLine(this)"><i class="fa fa-plus"></i> Add create line</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="hdRemoveCreateLine(this)" disabled><i class="fa fa-minus"></i> Remove line</button>
+                <span class="hd-create-meter" role="status">Creating £0.00</span>
+              </div>
+            </div>
+
+            <button class="btn btn-primary btn-sm mt-2 hd-find-submit" disabled onclick="return confirm('Match the applied receipts and create any new ones, then reconcile this transaction?')">
+              <i class="fa fa-check mr-1"></i> Match / Create &amp; Reconcile
             </button>
           </form>
         </section>
@@ -673,6 +751,35 @@ document.addEventListener('click', function(e){
   }
 });
 
+// ── VAT: gross + VAT % → net (the same rule everywhere a receipt is created) ──
+function hdVatCalc(gross, pct){
+  const gPence = Math.round((parseFloat(gross) || 0) * 100);
+  const p = Math.min(100, Math.max(0, parseFloat(pct) || 0));
+  const netPence = Math.round(gPence / (1 + p / 100));
+  return { gross: gPence / 100, net: netPence / 100, vat: (gPence - netPence) / 100 };
+}
+function hdVatUpdate(box){
+  if(!box) return;
+  const grossEl = box.querySelector('.hd-vat-gross');
+  const gross = grossEl ? grossEl.value : (box.dataset.gross || 0);
+  const pctEl = box.querySelector('.hd-vat-pct');
+  const r = hdVatCalc(gross, pctEl ? pctEl.value : 0);
+  const netEl = box.querySelector('.hd-vat-net');
+  const vatEl = box.querySelector('.hd-vat-amt');
+  if(netEl) netEl.value = r.net.toFixed(2);
+  if(vatEl){
+    if(vatEl.tagName === 'INPUT') vatEl.value = r.vat.toFixed(2);
+    else vatEl.textContent = r.vat.toFixed(2);
+  }
+}
+document.addEventListener('input', function(e){
+  if(!e.target.classList.contains('hd-vat-pct') && !e.target.classList.contains('hd-vat-gross')) return;
+  hdVatUpdate(e.target.closest('.hd-vat-box'));
+});
+document.addEventListener('DOMContentLoaded', function(){
+  document.querySelectorAll('.hd-vat-box').forEach(hdVatUpdate);
+});
+
 // ── Split: live totals + auto-fill last line ──
 function hdSplitTotals(form, changedInput){
   const total = parseFloat(form.dataset.splitTotal || '0');
@@ -715,6 +822,7 @@ function hdAddSplitLine(btn){
     else el.value = '';
     if(el.name) el.name = el.name.replace(/splits\[\d+\]/, 'splits['+i+']');
   });
+  tpl.querySelectorAll('.hd-vat-pct').forEach(el => { el.value = '0'; });
   tpl.querySelectorAll('.select2-container').forEach(c => c.remove());
   tpl.querySelectorAll('select').forEach(s => {
     s.classList.remove('select2-hidden-accessible');
@@ -723,6 +831,7 @@ function hdAddSplitLine(btn){
   });
   const clone = wrap.appendChild(tpl);
   if(window.jQuery){ jQuery(clone).find('select.select2').select2({width:'100%', dropdownParent: jQuery(document.body)}); }
+  hdVatUpdate(clone.querySelector('.hd-vat-box'));
   hdSplitTotals(form);
 }
 function hdRemoveSplitLine(btn){
@@ -749,45 +858,141 @@ document.addEventListener('DOMContentLoaded', function(){
   document.querySelectorAll('.hd-split-form').forEach(hdSplitTotals);
 });
 
-// ── Find & Match: checkbox handler ──
+// ── Find & Match: applied amounts + new receipts for the remainder ──
 function hdFindUpdate(cb){
-  const list = cb.closest('.hd-find-list');
-  const target = parseFloat(list.dataset.target || '0');
-  const panel = cb.closest('.hd-tab-panel');
-  const counter = panel ? panel.querySelector('.hd-find-counter') : null;
-  const submitBtn = cb.closest('form').querySelector('.hd-find-submit');
+  const form = cb.closest('form'), list = form.querySelector('.hd-find-list');
+  const target = Math.round(parseFloat(list.dataset.target || '0') * 100) / 100;
 
-  let selected = 0;
-  list.querySelectorAll('.hd-find-cb').forEach(c => {
-    if(c.checked) selected += parseFloat(c.dataset.amount || '0');
-  });
-  selected = Math.round(selected * 100) / 100;
-  const remaining = Math.round((target - selected) * 100) / 100;
-
-  if(counter){
-    counter.textContent = 'Selected: £'+selected.toFixed(2)+' / Target: £'+target.toFixed(2)+' · Remaining: £'+Math.max(0,remaining).toFixed(2);
-    counter.style.background = Math.abs(remaining) < 0.005 ? '#dcfce7' : (selected > target ? '#fee2e2' : '#f1f5f9');
-    counter.style.color = Math.abs(remaining) < 0.005 ? '#15803d' : (selected > target ? '#b91c1c' : '#334155');
-  }
-
-  // Disable unchecked items if adding them would exceed target
+  // Ticking a receipt reveals its "Apply £" box and defaults it to what the
+  // bank line still needs, never more than the receipt has left.
   list.querySelectorAll('.hd-find-item').forEach(item => {
-    const itemCb = item.querySelector('.hd-find-cb');
-    if(!itemCb || itemCb.checked) return;
-    const itemAmt = parseFloat(itemCb.dataset.amount || '0');
-    item.classList.toggle('capped', selected + itemAmt > target + 0.005);
+    const row = item.querySelector('.hd-find-cb');
+    const apply = item.querySelector('.hd-find-apply');
+    if(!row || !apply) return;
+    apply.hidden = !row.checked;
+    // A disabled input is never submitted, so unticking cannot send a stale amount.
+    apply.disabled = !row.checked;
+    const left = parseFloat(item.dataset.remaining || '0');
+    if(!row.checked) return;
+    if(apply.value !== '' && !(parseFloat(apply.value) > left + 0.004)) return;
+    let otherApplied = 0, otherCreated = 0;
+    list.querySelectorAll('.hd-find-item').forEach(other => {
+      const ocb = other.querySelector('.hd-find-cb');
+      if(!ocb || ocb === row || !ocb.checked) return;
+      const oap = other.querySelector('.hd-find-apply');
+      const ov = oap && oap.value !== '' ? parseFloat(oap.value) : parseFloat(other.dataset.remaining || '0');
+      if(!isNaN(ov)) otherApplied += ov;
+    });
+    form.querySelectorAll('.hd-create-gross').forEach(i => { const v = parseFloat(i.value); if(!isNaN(v)) otherCreated += v; });
+    const outstanding = Math.max(0, Math.round((target - otherApplied - otherCreated) * 100) / 100);
+    apply.value = Math.min(left, outstanding > 0 ? outstanding : left).toFixed(2);
   });
 
-  if(submitBtn){
-    submitBtn.disabled = !(Math.abs(selected - target) < 0.005 && selected > 0);
+  hdFindTotals(form, true);
+}
+
+function hdFindTotals(form, autoFill){
+  const list = form.querySelector('.hd-find-list');
+  if(!list) return;
+  const target = Math.round(parseFloat(list.dataset.target || '0') * 100) / 100;
+
+  let applied = 0;
+  list.querySelectorAll('.hd-find-item').forEach(item => {
+    const row = item.querySelector('.hd-find-cb');
+    if(!row || !row.checked) return;
+    const apply = item.querySelector('.hd-find-apply');
+    const left = parseFloat(item.dataset.remaining || '0');
+    let v = apply && apply.value !== '' ? parseFloat(apply.value) : left;
+    if(isNaN(v) || v < 0) v = 0;
+    if(v > left + 0.004) v = left;
+    applied += v;
+  });
+  let created = 0;
+  form.querySelectorAll('.hd-create-gross').forEach(i => { const v = parseFloat(i.value); if(!isNaN(v) && v > 0) created += v; });
+  applied = Math.round(applied * 100) / 100;
+  created = Math.round(created * 100) / 100;
+  let remaining = Math.round((target - applied - created) * 100) / 100;
+
+  // Whatever is still uncovered is offered in the first empty create line.
+  if(autoFill && remaining > 0.004){
+    const empty = Array.from(form.querySelectorAll('.hd-create-gross')).find(i => i.value === '');
+    if(empty){
+      empty.value = remaining.toFixed(2);
+      hdVatUpdate(empty.closest('.hd-vat-box'));
+      created = Math.round((created + remaining) * 100) / 100;
+      remaining = 0;
+    }
   }
 
-  // If checked would exceed, undo
-  if(selected > target + 0.005){
-    cb.checked = false;
-    hdFindUpdate(cb);
+  const ok = Math.abs(remaining) < 0.005 && (applied + created) > 0;
+  const panel = form.closest('.hd-tab-panel');
+  const counter = panel ? panel.querySelector('.hd-find-counter') : null;
+  if(counter){
+    counter.textContent = 'Bank £'+target.toFixed(2)+' = Applied £'+applied.toFixed(2)+' + Creating £'+created.toFixed(2)+' · Remaining £'+Math.max(0, remaining).toFixed(2);
+    counter.style.background = ok ? '#dcfce7' : (remaining < -0.004 ? '#fee2e2' : '#f1f5f9');
+    counter.style.color = ok ? '#15803d' : (remaining < -0.004 ? '#b91c1c' : '#334155');
   }
+  const meter = form.querySelector('.hd-create-meter');
+  if(meter){
+    meter.textContent = 'Creating £'+created.toFixed(2)+(Math.abs(remaining) < 0.005 ? ' ✓ balanced' : (remaining < 0 ? ' ✗ over by £'+Math.abs(remaining).toFixed(2) : ' · £'+remaining.toFixed(2)+' still to cover'));
+    meter.style.background = Math.abs(remaining) < 0.005 ? '#dcfce7' : (remaining < 0 ? '#fee2e2' : '#f1f5f9');
+    meter.style.color = Math.abs(remaining) < 0.005 ? '#15803d' : (remaining < 0 ? '#b91c1c' : '#334155');
+  }
+  const submitBtn = form.querySelector('.hd-find-submit');
+  if(submitBtn) submitBtn.disabled = !ok;
+  const rm = form.querySelector('button[onclick*="hdRemoveCreateLine"]');
+  if(rm) rm.disabled = form.querySelectorAll('.hd-create-line').length <= 1;
 }
+
+function hdAddCreateLine(btn){
+  const form = btn.closest('form'), wrap = form.querySelector('.hd-create-lines');
+  const lines = wrap.querySelectorAll('.hd-create-line'), i = lines.length;
+  const tpl = lines[0].cloneNode(true);
+  // Re-number the cloned field names for the new line.
+  tpl.querySelectorAll('[name]').forEach(el => { el.name = el.name.replace(/creates\[\d+\]/, 'creates['+i+']'); });
+  // Fresh amounts, but keep the supplier / invoice-date defaults for speed.
+  tpl.querySelectorAll('.hd-create-gross, input[name*="[memo]"]').forEach(el => { el.value = ''; });
+  tpl.querySelectorAll('.hd-vat-pct').forEach(el => { el.value = '0'; });
+  tpl.querySelectorAll('select').forEach(el => { el.value = ''; });
+  tpl.querySelectorAll('.select2-container').forEach(c => c.remove());
+  tpl.querySelectorAll('select').forEach(s => {
+    s.classList.remove('select2-hidden-accessible');
+    s.removeAttribute('data-select2-id'); s.removeAttribute('tabindex');
+    s.removeAttribute('aria-hidden'); s.style.display = '';
+  });
+  const clone = wrap.appendChild(tpl);
+  if(window.jQuery){ jQuery(clone).find('select.select2').select2({width:'100%', dropdownParent: jQuery(document.body)}); }
+  hdVatUpdate(clone.querySelector('.hd-vat-box'));
+  hdFindTotals(form, true);
+}
+
+function hdRemoveCreateLine(btn){
+  const form = btn.closest('form'), wrap = form.querySelector('.hd-create-lines');
+  const lines = wrap.querySelectorAll('.hd-create-line');
+  if(lines.length <= 1) return;
+  lines[lines.length - 1].remove();
+  wrap.querySelectorAll('.hd-create-line').forEach((line, idx) => {
+    line.querySelectorAll('[name]').forEach(el => { el.name = el.name.replace(/creates\[\d+\]/, 'creates['+idx+']'); });
+  });
+  hdFindTotals(form, false);
+}
+
+document.addEventListener('input', function(e){
+  if(!e.target.classList.contains('hd-find-apply') && !e.target.classList.contains('hd-create-gross')) return;
+  const form = e.target.closest('form');
+  if(form && form.classList.contains('hd-find-form')) hdFindTotals(form, false);
+});
+document.addEventListener('DOMContentLoaded', function(){
+  document.querySelectorAll('.hd-find-form').forEach(function(form){
+    // Keep unticked rows out of the payload from the first paint.
+    form.querySelectorAll('.hd-find-item').forEach(function(item){
+      const row = item.querySelector('.hd-find-cb');
+      const apply = item.querySelector('.hd-find-apply');
+      if(row && apply) apply.disabled = !row.checked;
+    });
+    hdFindTotals(form, false);
+  });
+});
 
 // ── Find & Match: search filter ──
 document.addEventListener('input', function(e){
@@ -861,6 +1066,8 @@ document.addEventListener('input', function(e){
         rowHtml('Paid', d.paid ? 'Yes' : 'No') +
         rowHtml('Net amount', money(d.net_amount)) +
         rowHtml('Tax / VAT', tax > 0 ? '£' + tax.toFixed(2) : null) +
+        rowHtml('Used so far', money(d.used_amount)) +
+        rowHtml('Remaining', money(d.remaining_amount)) +
         rowHtml('Status', d.status) +
         rowHtml('Uploaded', d.created_at) +
       '</div>' +
@@ -918,7 +1125,9 @@ window.openQuickHeadFor = function(btn){
 function hdHeadSelectFor(btn){
   var scope = btn.closest('.hd-field') || btn.closest('label') || btn.closest('.hd-tab-panel');
   if(!scope) return null;
-  var sel = scope.querySelector('select[name="account_head_id"]') || scope.querySelector('select[name^="splits["]');
+  var sel = scope.querySelector('select[name="account_head_id"]')
+        || scope.querySelector('select[name^="splits["]')
+        || scope.querySelector('select[name^="creates["]');
   return sel;
 }
 </script>
@@ -1008,6 +1217,8 @@ jQuery(function($){
             window.scrollTo(0, scrollY);
             $newWs.find('select.select2:not(.select2-hidden-accessible)').select2({width:'100%'});
             $newWs.find('.hd-split-form').each(function(){ hdSplitTotals(this); });
+            $newWs.find('.hd-vat-box').each(function(){ hdVatUpdate(this); });
+            $newWs.find('.hd-find-form').each(function(){ hdFindTotals(this, false); });
           }
         });
       } else {

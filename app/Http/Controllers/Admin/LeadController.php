@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Getway;
 use App\Models\Lead;
 use App\Models\LeadMessage;
 use App\Models\MetaAdIntent;
@@ -38,12 +39,15 @@ class LeadController extends Controller
     }
 
     /**
-     * Maintenance purge of the entire lead history.
+     * "Archive & Clear Lead Database".
+     *
+     * Deliberately not called a purge: a full JSON archive of every lead and
+     * message is written first, so the personal data still exists on disk and
+     * follows its own retention clock (LEAD_ARCHIVE_RETENTION_DAYS).
      *
      * This is NOT a routine admin action: it is gated behind the dedicated
-     * `purge-leads` super-admin permission, requires a typed confirmation, and
-     * always writes a full JSON archive before anything is removed. Routine
-     * retention is handled by the scheduled `leads:prune` command instead.
+     * `purge-leads` super-admin permission and requires a typed confirmation.
+     * Routine retention is handled by the scheduled `leads:prune` command.
      */
     public function clearAll(Request $request)
     {
@@ -69,7 +73,7 @@ class LeadController extends Controller
             Lead::query()->delete();
         });
 
-        Log::warning('All WhatsApp leads were deleted by a super-admin', [
+        Log::warning('Lead database archived and cleared by a super-admin', [
             'admin_id' => auth()->id(),
             'leads_deleted' => $deleted,
             'archive' => $archive,
@@ -78,8 +82,9 @@ class LeadController extends Controller
 
         return redirect()->route('admin.leads.index')
             ->with('success', $deleted === 0
-                ? 'There were no leads to delete.'
-                : "All {$deleted} lead(s) and their WhatsApp messages were archived to {$archive} and deleted.");
+                ? 'There were no leads to archive.'
+                : "Archived {$deleted} lead(s) to {$archive} and cleared the lead database. The archive follows the archive retention policy ("
+                    . (int) config('lead_qualification.archive_retention_days', 365) . ' days).');
     }
 
     private function archiveAllLeads(): string
@@ -238,8 +243,11 @@ class LeadController extends Controller
     {
         $emailConfigured = filled(config('lead_qualification.alert_email'));
         $smsEnabled = (bool) config('lead_qualification.alert_sms_enabled');
-        $smsComplete = filled(config('lead_qualification.alert_phone')) && filled(config('lead_qualification.twilio_from'));
-        $activeAlertChannel = $emailConfigured || ($smsEnabled && $smsComplete);
+        // The health row must use the same requirements as sendSms(), not a
+        // subset: a present phone number proves nothing when Twilio credentials
+        // are missing and every alert would fail at send time.
+        $sms = $this->smsReadiness();
+        $activeAlertChannel = $emailConfigured || ($smsEnabled && $sms['ready']);
         $mappingConfigured = $this->hasAdIntentMappings();
 
         $checks = [
@@ -250,7 +258,7 @@ class LeadController extends Controller
             $this->check('Re-engagement template', filled(config('meta_whatsapp.reengagement_template')) ? 'ready' : 'optional', 'Optional — only needed for outreach after the 24-hour window.'),
             $this->check('Lead alert channel', $activeAlertChannel ? 'ready' : 'missing', 'At least one active channel: alert email, or SMS with Twilio.'),
             $this->check('Lead alert email', $emailConfigured ? 'ready' : ($activeAlertChannel ? 'optional' : 'missing'), 'LEAD_ALERT_EMAIL.'),
-            $this->check('Lead alert SMS (Twilio)', !$smsEnabled ? 'optional' : ($smsComplete ? 'ready' : 'missing'), $smsEnabled ? 'LEAD_ALERT_PHONE and TWILIO_SMS_FROM are required.' : 'SMS alerts are disabled.'),
+            $this->check('Lead alert SMS (Twilio)', !$smsEnabled ? 'optional' : ($sms['ready'] ? 'ready' : 'missing'), $smsEnabled ? $sms['detail'] : 'SMS alerts are disabled.'),
             $this->check('Mail configuration (SMTP)', $this->mailConfigured() ? 'ready' : 'missing', 'Used for lead alert emails.'),
             $this->check('META_ADS_ACCESS_TOKEN', filled(config('meta_whatsapp.ads_access_token')) ? 'ready' : 'optional', 'Optional — campaign/ad name attribution. Must be a dedicated Marketing API token.'),
             $this->check('Campaign/ad intent mapping', $mappingConfigured ? 'ready' : 'optional', $mappingConfigured ? 'Known adverts route to their intended qualification path.' : 'No adverts mapped: every advert asks the first question.'),
@@ -293,6 +301,36 @@ class LeadController extends Controller
     private function check(string $label, string $state, ?string $detail = null): array
     {
         return ['label' => $label, 'state' => $state, 'detail' => $detail];
+    }
+
+    /**
+     * Mirrors LeadAlertService::sendSms() requirements exactly, including the
+     * `getways` fallback used when the env credentials are absent.
+     */
+    private function smsReadiness(): array
+    {
+        $missing = [];
+
+        if (!filled(config('lead_qualification.alert_phone'))) $missing[] = 'LEAD_ALERT_PHONE';
+        if (!filled(config('lead_qualification.twilio_from'))) $missing[] = 'TWILIO_SMS_FROM';
+
+        $sid = config('lead_qualification.twilio_sid');
+        $token = config('lead_qualification.twilio_token');
+        if (!$sid || !$token) {
+            $gateway = Schema::hasTable('getways') ? Getway::where('name', 'Twilio')->first() : null;
+            $sid = $sid ?: data_get($gateway, 'clientid');
+            $token = $token ?: data_get($gateway, 'secretid');
+        }
+
+        if (!$sid) $missing[] = 'TWILIO_ACCOUNT_SID';
+        if (!$token) $missing[] = 'TWILIO_AUTH_TOKEN';
+
+        return [
+            'ready' => $missing === [],
+            'detail' => $missing
+                ? 'Missing: ' . implode(', ', $missing) . '.'
+                : 'Phone, sender and Twilio credentials are all present.',
+        ];
     }
 
     private function mailConfigured(): bool

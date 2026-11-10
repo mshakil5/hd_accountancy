@@ -71,7 +71,7 @@ class BankReconciliationPageController extends Controller
                 'entries'=>DB::table('bank_entries')->whereRaw('1 = 0')->paginate(25),
                 'heads'=>collect(),'stats'=>collect(),'approvalStats'=>collect(),
                 'imports'=>collect(),'receipts'=>collect(),'splits'=>collect(),
-                'claimedReceiptIds'=>collect(),'notes'=>collect(),'fuzzyMatches'=>[],'findMatches'=>[],'suggestionMeta'=>[],
+                'claimedReceiptIds'=>collect(),'notes'=>collect(),'fuzzyMatches'=>[],'findMatches'=>[],'suggestionMeta'=>[],'receiptRemaining'=>[],
                 'reconcileFilter'=>'unreconciled','totalCount'=>0,'unreconciledCount'=>0,'reconciledCount'=>0,'importMap'=>collect(),
             ]);
         }
@@ -153,21 +153,31 @@ class BankReconciliationPageController extends Controller
         $approvalStats = $scopeEntries()->selectRaw('reconciliation_status, count(*) as total')->groupBy('reconciliation_status')->pluck('total', 'reconciliation_status');
         $imports = DB::table('bank_imports')->whereIn('client_id', $businessIds)->when($bankAccountId, fn($q) => $q->where('bank_account_id', $bankAccountId))->latest()->limit(10)->get();
 
-        // Claimed receipts that are already reconciled
-        $claimedReceiptIds = DB::table('bank_entries')->whereIn('client_id', $businessIds)
-            ->whereNotNull('receipt_id')
-            ->where('reconciliation_status', 'approved')
-            ->pluck('receipt_id')
-            ->merge(
+        // How much of each receipt is already consumed by reconciled bank lines.
+        // A full match (bank_entries.receipt_id) and a partial allocation
+        // (bank_allocation_lines) both reduce the remaining balance, so a partly
+        // used receipt stays available for the rest of its value.
+        $allocatedRows = DB::table('bank_entries')->whereIn('client_id', $businessIds)
+                ->whereNotNull('receipt_id')->where('reconciliation_status', 'approved')
+                ->get(['receipt_id', 'amount'])
+                ->map(fn($e) => ['id' => (int)$e->receipt_id, 'amount' => abs((float)$e->amount)])
+            ->concat(
                 DB::table('bank_allocation_lines as l')->join('bank_entries as b', 'b.id', '=', 'l.bank_entry_id')
-                    ->whereIn('b.client_id', $businessIds)
-                    ->where('b.reconciliation_status', 'approved')
+                    ->whereIn('b.client_id', $businessIds)->where('b.reconciliation_status', 'approved')
                     ->whereNotNull('l.receipt_id')
-                    ->pluck('l.receipt_id')
-            )
-            ->map(fn($id) => (int)$id)->unique()->flip();
+                    ->get(['l.receipt_id as id', 'l.amount'])
+                    ->map(fn($l) => ['id' => (int)$l->id, 'amount' => (float)$l->amount])
+            );
+        $allocatedByReceipt = $allocatedRows->groupBy('id')->map(fn($rows) => round((float)$rows->sum('amount'), 2));
 
-        // Eligible receipts: must be ready, paid, and not already reconciled
+        $receiptRemaining = [];
+        $remainingOf = function ($r) use ($allocatedByReceipt, &$receiptRemaining) {
+            $total = round((float)$r->detail->total_amount, 2);
+            return $receiptRemaining[(int)$r->id] = max(0.0, round($total - (float)($allocatedByReceipt[$r->id] ?? 0), 2));
+        };
+
+        // Eligible receipts: ready and paid. Fully consumed receipts drop out;
+        // partly used ones keep their remaining balance.
         $receipts = Receipt::whereIn('client_id', $businessIds)
             ->where('status', 'ready')
             ->whereHas('detail', function ($q) {
@@ -178,7 +188,8 @@ class BankReconciliationPageController extends Controller
             ->latest('id')
             ->limit(500)
             ->get()
-            ->filter(fn($r) => $r->detail && $r->detail->total_amount !== null && !isset($claimedReceiptIds[$r->id]));
+            ->filter(fn($r) => $r->detail && $r->detail->total_amount !== null && $remainingOf($r) > 0.004)
+            ->values();
 
         $entryIds = $entries->getCollection()->pluck('id');
         $splits = DB::table('bank_allocation_lines')->whereIn('bank_entry_id', $entryIds)->get()->groupBy('bank_entry_id');
@@ -210,8 +221,11 @@ class BankReconciliationPageController extends Controller
                 ->whereHas('detail', fn($q) => $q->where('paid', 1)->whereIn('total_amount', $pageAmounts))
                 ->with(['detail.accountHead', 'detail'])
                 ->get()
-                ->filter(fn($r) => $r->detail && $r->detail->total_amount !== null && !isset($claimedReceiptIds[$r->id]))
+                ->filter(fn($r) => $r->detail && $r->detail->total_amount !== null && $remainingOf($r) > 0.004)
             : collect();
+
+        // A receipt only counts as claimed once nothing of it is left.
+        $claimedReceiptIds = collect($receiptRemaining)->filter(fn($left) => $left <= 0.004)->keys()->flip();
 
         $fuzzyMatches = [];
         $findMatches = [];
@@ -226,7 +240,9 @@ class BankReconciliationPageController extends Controller
                 return (int) round(abs($entryTs - $rTs) / 86400);
             };
             $exactList = $suggestedPool
-                ->filter(fn($r) => abs((float)$r->detail->total_amount - $absAmt) < 0.01)
+                // Only an untouched receipt can cover the bank line in full.
+                ->filter(fn($r) => abs((float)$r->detail->total_amount - $absAmt) < 0.01
+                    && $remainingOf($r) >= (float)$r->detail->total_amount - 0.004)
                 ->sort(function ($a, $b) use ($dateDiff) {
                     return $dateDiff($a) <=> $dateDiff($b) ?: $b->id <=> $a->id;
                 })
@@ -247,7 +263,7 @@ class BankReconciliationPageController extends Controller
         return view('admin.accounting.bank_reconciliation', compact(
             'credentialId', 'businessId', 'bankAccountId', 'bankAccounts',
             'entries', 'heads', 'stats', 'approvalStats', 'imports', 'receipts',
-            'splits', 'notes', 'fuzzyMatches', 'findMatches', 'suggestionMeta', 'claimedReceiptIds',
+            'splits', 'notes', 'fuzzyMatches', 'findMatches', 'suggestionMeta', 'claimedReceiptIds', 'receiptRemaining',
             'reconcileFilter', 'totalCount', 'unreconciledCount', 'reconciledCount', 'importMap'
         ));
     }
@@ -265,7 +281,11 @@ class BankReconciliationPageController extends Controller
             ->findOrFail($receiptId);
         $detail = $receipt->detail;
         $money = fn($v) => $v === null ? null : number_format((float)$v, 2, '.', '');
+        $used = $detail ? self::receiptUsed((int)$receipt->id) : 0.0;
+        $total = $detail ? round((float)$detail->total_amount, 2) : 0.0;
         return response()->json([
+            'used_amount' => $detail ? $money($used) : null,
+            'remaining_amount' => $detail ? $money(max(0, $total - $used)) : null,
             'id' => (int)$receipt->id,
             'receipt_number' => $receipt->receipt_number,
             'supplier' => $receipt->supplier,
@@ -379,6 +399,20 @@ class BankReconciliationPageController extends Controller
             'splits.*.supplier' => 'nullable|string|max:255',
             'splits.*.invoice_date' => 'nullable|date',
             'splits.*.memo' => 'nullable|string|max:500',
+            'splits.*.vat_percent' => 'nullable|numeric|min:0|max:100',
+            'vat_percent' => 'nullable|numeric|min:0|max:100',
+            'gross' => 'nullable|numeric|min:0',
+            // Find & Match: part of an existing receipt can be applied, and the
+            // rest of the bank line can be covered by new receipts.
+            'allocations' => 'nullable|array',
+            'allocations.*' => 'nullable|numeric|min:0',
+            'creates' => 'nullable|array',
+            'creates.*.gross' => 'nullable|numeric|min:0',
+            'creates.*.vat_percent' => 'nullable|numeric|min:0|max:100',
+            'creates.*.account_head_id' => 'nullable|integer',
+            'creates.*.supplier' => 'nullable|string|max:255',
+            'creates.*.invoice_date' => 'nullable|date',
+            'creates.*.memo' => 'nullable|string|max:500',
         ]);
 
         $client = Client::findOrFail($data['client_id']);
@@ -497,7 +531,15 @@ class BankReconciliationPageController extends Controller
                     $headId = (int)($data['account_head_id'] ?? 0);
                     abort_unless($headId > 0, 422, 'Please select an account head.');
                     $supplier = trim($data['supplier'] ?? '') ?: ($entry->description ?: 'Vendor');
-                    $invoiceDate = $data['invoice_date'] ?: $entry->transaction_date;
+                    $invoiceDate = ($data['invoice_date'] ?? null) ?: $entry->transaction_date;
+
+                    // Same rule as Split and Find & Match: the accountant types the
+                    // VAT-inclusive gross (and the VAT %), and the net is derived.
+                    // A single receipt created here has to cover the bank line exactly;
+                    // part payments belong to Split or Find & Match.
+                    $gross = (isset($data['gross']) && $data['gross'] !== '') ? round((float)$data['gross'], 2) : $absAmount;
+                    abort_if(abs($gross - $absAmount) > 0.004, 422,
+                        'Gross amount must equal the bank amount (£' . number_format($absAmount, 2) . '). Use Split or Find & Match to reconcile it in parts.');
 
                     $receipt = Receipt::create([
                         'client_id' => $client->id,
@@ -509,14 +551,15 @@ class BankReconciliationPageController extends Controller
                         'created_by' => auth()->id(),
                     ]);
 
+                    $vat = $this->vatSplit($gross, (float)($data['vat_percent'] ?? 0));
                     ReceiptDetail::create([
                         'receipt_id' => $receipt->id,
                         'account_head_id' => $headId,
                         'invoice_date' => $invoiceDate,
-                        'net_amount' => $absAmount,
+                        'net_amount' => $vat['net'],
                         'tax_amount' => 0,
-                        'vat_amount' => 0,
-                        'total_amount' => $absAmount,
+                        'vat_amount' => $vat['vat'],
+                        'total_amount' => $vat['gross'],
                         'paid' => 1,
                         'payment_method' => 'bank',
                         'description' => $entry->description,
@@ -568,7 +611,7 @@ class BankReconciliationPageController extends Controller
                         $headId = (int)($line['account_head_id'] ?? 0);
                         abort_unless($headId > 0, 422, 'Select an account head for each split line.');
                         $supplier = trim($line['supplier'] ?? '') ?: ($entry->description ?: 'Vendor');
-                        $invDate = $line['invoice_date'] ?: $entry->transaction_date;
+                        $invDate = ($line['invoice_date'] ?? null) ?: $entry->transaction_date;
 
                         $r = Receipt::create([
                             'client_id' => $client->id,
@@ -580,14 +623,18 @@ class BankReconciliationPageController extends Controller
                             'created_by' => auth()->id(),
                         ]);
 
+                        // Same gross + VAT% rule as the Create tab: the line
+                        // amount is VAT-inclusive and the net is derived.
+                        $vat = $this->vatSplit($lineAmt, (float)($line['vat_percent'] ?? 0));
+
                         ReceiptDetail::create([
                             'receipt_id' => $r->id,
                             'account_head_id' => $headId,
                             'invoice_date' => $invDate,
-                            'net_amount' => $lineAmt,
+                            'net_amount' => $vat['net'],
                             'tax_amount' => 0,
-                            'vat_amount' => 0,
-                            'total_amount' => $lineAmt,
+                            'vat_amount' => $vat['vat'],
+                            'total_amount' => $vat['gross'],
                             'paid' => 1,
                             'payment_method' => 'bank',
                             'description' => $line['memo'] ?? $entry->description,
@@ -597,11 +644,11 @@ class BankReconciliationPageController extends Controller
                             'bank_entry_id' => $entryId,
                             'account_head_id' => $headId,
                             'receipt_id' => $r->id,
-                            'amount' => number_format($lineAmt, 2, '.', ''),
+                            'amount' => number_format($vat['gross'], 2, '.', ''),
                             'memo' => $line['memo'] ?? null,
-                            'tax_percent' => 0,
+                            'tax_percent' => $vat['percent'],
                             'tax_amount' => 0,
-                            'vat_amount' => 0,
+                            'vat_amount' => $vat['vat'],
                             'created_by' => auth()->id(),
                             'created_at' => now(),
                             'updated_at' => now(),
@@ -626,35 +673,140 @@ class BankReconciliationPageController extends Controller
                     return;
                 }
 
-                // 6. FIND & MATCH (MULTI-RECEIPT MATCH)
+                // 6. FIND & MATCH (EXISTING RECEIPTS, PARTIAL APPLICATIONS, NEW RECEIPTS)
                 if ($action === 'find_match') {
-                    $receiptIds = $data['receipt_ids'] ?? [];
-                    abort_if(empty($receiptIds), 422, 'Select at least one receipt to match.');
+                    // Any combination is allowed: existing receipts can be applied
+                    // in full or only for part of what is left of them, and one or
+                    // more new receipts can cover the remainder of the bank line.
+                    $rawAllocations = $data['allocations'] ?? [];
+                    // Only boxes holding an amount count; a ticked receipt with an
+                    // empty box is rejected below rather than silently assumed.
+                    $givenAllocations = collect($rawAllocations)
+                        ->filter(fn($v) => $v !== null && $v !== '' && round((float)$v, 2) > 0)
+                        ->map(fn($v) => round((float)$v, 2))->all();
+                    $ticked = collect($data['receipt_ids'] ?? [])->map(fn($id) => (int)$id)->filter()->unique()->values()->all();
+                    $creates = array_values(array_filter(
+                        $data['creates'] ?? [],
+                        fn($line) => round((float)($line['gross'] ?? 0), 2) > 0
+                    ));
 
-                    $selectedReceipts = Receipt::with('detail')->where('client_id', $client->id)->whereIn('id', $receiptIds)->get();
+                    // Ticked receipts are the selected set; an apply amount overrides the
+                    // full total, which is what older forms (no apply boxes) send.
+                    $receiptIds = collect($ticked)->merge(array_keys($givenAllocations))
+                        ->map(fn($id) => (int)$id)->filter()->unique()->values()->all();
+
+                    abort_if(empty($receiptIds) && empty($creates), 422,
+                        'Select at least one receipt, or create a receipt for the remainder.');
+
+                    $selectedReceipts = $receiptIds
+                        ? Receipt::with('detail')->where('client_id', $client->id)->whereIn('id', $receiptIds)->lockForUpdate()->get()->keyBy('id')
+                        : collect();
                     abort_unless($selectedReceipts->count() === count($receiptIds), 422, 'One or more selected receipts could not be found.');
 
-                    $sumPence = 0;
-                    foreach ($selectedReceipts as $sr) {
+                    // Applied amounts: a receipt can only give what is left of it.
+                    $applied = [];
+                    foreach ($selectedReceipts as $srId => $sr) {
                         abort_unless($sr->detail && (int)$sr->detail->paid === 1, 422, 'Receipt #' . $sr->receipt_number . ' is not a paid receipt.');
-                        $sumPence += (int)round((float)$sr->detail->total_amount * 100);
+                        $receiptTotal = round((float)$sr->detail->total_amount, 2);
+                        $left = max(0.0, round($receiptTotal - self::receiptUsed((int)$sr->id, $entryId), 2));
+                        abort_if($left <= 0.004, 422, 'Receipt #' . $sr->receipt_number . ' is already fully used by another transaction.');
+                        if (array_key_exists($srId, $givenAllocations)) {
+                            $wanted = $givenAllocations[$srId];
+                        } elseif (in_array($srId, $ticked, true) && array_key_exists($srId, $rawAllocations)) {
+                            abort(422, 'Enter how much of receipt #' . $sr->receipt_number . ' to apply, or untick it.');
+                        } else {
+                            $wanted = $receiptTotal;
+                        }
+                        abort_if($wanted > $left + 0.004, 422,
+                            'Receipt #' . $sr->receipt_number . ' only has £' . number_format($left, 2) . ' left, so £' . number_format($wanted, 2) . ' cannot be applied from it.');
+                        $applied[$srId] = $wanted;
                     }
+
+                    $sumPence = 0;
+                    foreach ($applied as $amount) $sumPence += (int)round($amount * 100);
+                    foreach ($creates as $line) $sumPence += (int)round(round((float)$line['gross'], 2) * 100);
 
                     if ($sumPence !== $expectedPence) {
                         $diff = ($sumPence - $expectedPence) / 100;
                         if ($diff > 0) {
-                            throw ValidationException::withMessages(['receipt_ids' => 'Selected receipts total (£' . number_format($sumPence / 100, 2) . ') exceeds bank amount (£' . number_format($absAmount, 2) . ') by £' . number_format($diff, 2) . '. Total cannot exceed!']);
-                        } else {
-                            throw ValidationException::withMessages(['receipt_ids' => 'Selected receipts total (£' . number_format($sumPence / 100, 2) . ') falls short of bank amount (£' . number_format($absAmount, 2) . ') by £' . number_format(abs($diff), 2) . '.']);
+                            throw ValidationException::withMessages(['allocations' => 'Allocated £' . number_format($sumPence / 100, 2) . ' exceeds the bank amount (£' . number_format($absAmount, 2) . ') by £' . number_format($diff, 2) . '. Reduce an applied amount or a new receipt.']);
                         }
+                        throw ValidationException::withMessages(['allocations' => 'Allocated £' . number_format($sumPence / 100, 2) . ' falls short of the bank amount (£' . number_format($absAmount, 2) . ') by £' . number_format(abs($diff), 2) . '. Create a receipt for the remainder or apply more.']);
                     }
 
-                    if ($selectedReceipts->count() === 1) {
-                        $r = $selectedReceipts->first();
+                    DB::table('bank_allocation_lines')->where('bank_entry_id', $entryId)->delete();
+                    $lines = [];
+                    foreach ($applied as $receiptId => $amount) {
+                        $sr = $selectedReceipts->get($receiptId);
+                        $lines[] = [
+                            'bank_entry_id' => $entryId,
+                            'account_head_id' => $sr->detail->account_head_id,
+                            'receipt_id' => $sr->id,
+                            'amount' => number_format($amount, 2, '.', ''),
+                            'memo' => '#' . $sr->receipt_number . ' ' . $sr->supplier,
+                            'tax_percent' => 0,
+                            'tax_amount' => 0,
+                            'vat_amount' => 0,
+                            'created_by' => auth()->id(),
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ];
+                    }
+
+                    // New receipts for the uncovered remainder follow the same
+                    // gross + VAT% rule as the Create and Split tabs.
+                    foreach ($creates as $line) {
+                        $headId = (int)($line['account_head_id'] ?? 0);
+                        abort_unless($headId > 0, 422, 'Select an account head for each new receipt.');
+                        $vat = $this->vatSplit((float)$line['gross'], (float)($line['vat_percent'] ?? 0));
+                        $invDate = ($line['invoice_date'] ?? null) ?: $entry->transaction_date;
+                        $supplier = trim((string)($line['supplier'] ?? '')) ?: ($entry->description ?: 'Vendor');
+
+                        $newReceipt = Receipt::create([
+                            'client_id' => $client->id,
+                            'receipt_number' => 'RCT-' . now()->format('Ymd') . '-' . strtoupper(\Illuminate\Support\Str::random(4)),
+                            'receipt_date' => $invDate,
+                            'supplier' => $supplier,
+                            'status' => 'ready',
+                            'from_reconciliation' => true,
+                            'created_by' => auth()->id(),
+                        ]);
+
+                        ReceiptDetail::create([
+                            'receipt_id' => $newReceipt->id,
+                            'account_head_id' => $headId,
+                            'invoice_date' => $invDate,
+                            'net_amount' => $vat['net'],
+                            'tax_amount' => 0,
+                            'vat_amount' => $vat['vat'],
+                            'total_amount' => $vat['gross'],
+                            'paid' => 1,
+                            'payment_method' => 'bank',
+                            'description' => $line['memo'] ?? $entry->description,
+                        ]);
+
+                        $lines[] = [
+                            'bank_entry_id' => $entryId,
+                            'account_head_id' => $headId,
+                            'receipt_id' => $newReceipt->id,
+                            'amount' => number_format($vat['gross'], 2, '.', ''),
+                            'memo' => $line['memo'] ?? null,
+                            'tax_percent' => $vat['percent'],
+                            'tax_amount' => 0,
+                            'vat_amount' => $vat['vat'],
+                            'created_by' => auth()->id(),
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ];
+                    }
+
+                    if (count($lines) === 1) {
+                        // One receipt covers the whole bank line: plain match.
+                        $only = $lines[0];
                         $change = [
                             'status' => 'matched',
-                            'receipt_id' => $r->id,
-                            'account_head_id' => $r->detail->account_head_id,
+                            'receipt_id' => $only['receipt_id'],
+                            'account_head_id' => $only['account_head_id'],
                             'matched_by' => auth()->id(),
                             'matched_at' => now(),
                             'reconciliation_status' => 'approved',
@@ -663,23 +815,6 @@ class BankReconciliationPageController extends Controller
                             'updated_at' => now(),
                         ];
                     } else {
-                        DB::table('bank_allocation_lines')->where('bank_entry_id', $entryId)->delete();
-                        $lines = [];
-                        foreach ($selectedReceipts as $sr) {
-                            $lines[] = [
-                                'bank_entry_id' => $entryId,
-                                'account_head_id' => $sr->detail->account_head_id,
-                                'receipt_id' => $sr->id,
-                                'amount' => number_format((float)$sr->detail->total_amount, 2, '.', ''),
-                                'memo' => '#' . $sr->receipt_number . ' ' . $sr->supplier,
-                                'tax_percent' => 0,
-                                'tax_amount' => 0,
-                                'vat_amount' => 0,
-                                'created_by' => auth()->id(),
-                                'created_at' => now(),
-                                'updated_at' => now(),
-                            ];
-                        }
                         DB::table('bank_allocation_lines')->insert($lines);
                         $change = [
                             'status' => 'split',
@@ -784,6 +919,49 @@ class BankReconciliationPageController extends Controller
         }
         return redirect()->back()->with('success', $message);
     }
+    /**
+     * Split a VAT-inclusive gross amount into net + VAT, penny-exact: the net is
+     * derived from the gross and the VAT is whatever is left, so the two always
+     * add back to the gross (and therefore to the bank amount).
+     *
+     * @return array{gross:float,percent:float,net:float,vat:float}
+     */
+    private function vatSplit(float $gross, float $vatPercent): array {
+        $grossPence = (int)round($gross * 100);
+        $percent = max(0.0, min(100.0, $vatPercent));
+        $netPence = (int)round($grossPence / (1 + $percent / 100));
+        if ($netPence < 0) $netPence = 0;
+        if ($netPence > $grossPence) $netPence = $grossPence;
+        return [
+            'gross' => $grossPence / 100,
+            'percent' => round($percent, 2),
+            'net' => $netPence / 100,
+            'vat' => ($grossPence - $netPence) / 100,
+        ];
+    }
+
+    /**
+     * How much of a receipt is already consumed by reconciled bank lines — both
+     * whole matches (bank_entries.receipt_id) and partial allocations
+     * (bank_allocation_lines). Pass an entry id to leave that one bank line out.
+     */
+    private static function receiptUsed(int $receiptId, ?int $excludeEntryId = null): float {
+        $direct = (float)DB::table('bank_entries')
+            ->where('receipt_id', $receiptId)
+            ->where('reconciliation_status', 'approved')
+            ->when($excludeEntryId, fn($q) => $q->where('id', '!=', $excludeEntryId))
+            ->selectRaw('COALESCE(SUM(ABS(amount)), 0) AS used')
+            ->value('used');
+        $allocated = (float)DB::table('bank_allocation_lines as l')
+            ->join('bank_entries as b', 'b.id', '=', 'l.bank_entry_id')
+            ->where('l.receipt_id', $receiptId)
+            ->where('b.reconciliation_status', 'approved')
+            ->when($excludeEntryId, fn($q) => $q->where('l.bank_entry_id', '!=', $excludeEntryId))
+            ->selectRaw('COALESCE(SUM(l.amount), 0) AS used')
+            ->value('used');
+        return round($direct + $allocated, 2);
+    }
+
     private function splitBalances(object $entry):bool {
         $lines=DB::table('bank_allocation_lines')->where('bank_entry_id',$entry->id)->get();
         if($lines->count()<2)return false;

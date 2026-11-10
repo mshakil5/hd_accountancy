@@ -16,8 +16,15 @@ class LeadInterpreter
 
         if (preg_match('/already (have )?(an? )?(hd )?(client|customer)|existing (hd )?(client|customer)|(?:i am|i\'m) an? (?:hd )?(?:client|customer)|your client/', $m)) {
             $out['intent'] = 'existing_client'; $out['classification_hint'] = 'existing_client';
-        } elseif (preg_match('/\bseo\b|digital marketing|recruit|job vacancy|job application|\bcv\b|supplier|web design|marketing services/', $m)) {
+        } elseif (preg_match('/\bseo\b|digital marketing|recruit|job vacancy|job application|\bcv\b|supplier|web design|marketing services|\bvacanc(?:y|ies)\b|\blooking for work\b|\bjob available\b|\binternship\b|employment agency|recruitment agency/', $m)) {
             $out['intent'] = 'non_sales'; $out['classification_hint'] = 'non_sales';
+        } elseif (preg_match('/\bhiring\b|\b(?<!self-)employment\b|\bcareer\b/', $m)) {
+            // Deliberately NOT non_sales: these words also appear in genuine
+            // client enquiries ("we are hiring and need payroll help", "help
+            // with employment status for my staff", "career change and a new
+            // company"). Auto-rejecting them would silently bin real work, so
+            // they go to REVIEW and a human decides.
+            $out['classification_hint'] = 'review';
         } elseif (preg_match('/change.*accountant|switch.*accountant|new accountant|current accountant|accountant.*not respond|accountant.*expensive/', $m)) {
             $out['intent'] = 'change_accountant'; $out['current_accountant'] = 'yes_change';
         } elseif (preg_match('/need.*accountant|looking for.*accountant|find.*accountant/', $m)) {

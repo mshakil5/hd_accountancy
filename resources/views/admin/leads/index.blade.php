@@ -22,7 +22,7 @@
                     <a class="btn btn-outline-secondary" href="{{ route('admin.leads.ad-intents.index') }}">Campaign mapping</a>
                     <a class="btn btn-outline-secondary" href="{{ route('admin.leads.health') }}">Integration health</a>
                     @can('purge-leads')
-                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#clearLeadsModal">Delete all leads</button>
+                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#clearLeadsModal">Archive &amp; clear database</button>
                     @endcan
                 </div>
             </div>
@@ -55,18 +55,20 @@
                 <form method="POST" action="{{ route('admin.leads.clear') }}">
                     @csrf
                     <div class="modal-header">
-                        <h5 class="modal-title" id="clearLeadsModalLabel">Delete all leads?</h5>
+                        <h5 class="modal-title" id="clearLeadsModalLabel">Archive &amp; clear lead database?</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <p>This permanently deletes <strong>{{ $counts->sum() }}</strong> lead(s) and every WhatsApp message linked to them.</p>
-                        <p class="text-danger fw-semibold">Super-admin maintenance action. Genuine, existing-client and won leads are included. A full JSON archive is written to storage/app/lead-archives before anything is deleted.</p>
+                        <p>This removes <strong>{{ $counts->sum() }}</strong> lead(s) and every WhatsApp message linked to them from the database.</p>
+                        <p class="text-danger fw-semibold">Super-admin maintenance action. Genuine, existing-client and won leads are included.</p>
+                        <p class="small text-muted mb-0">A complete JSON archive is written to <code>storage/app/lead-archives</code> first, so the data is copied — not erased. The archive is personal data and is deleted automatically after
+                            <strong>{{ (int) config('lead_qualification.archive_retention_days', 365) }} days</strong> (<code>LEAD_ARCHIVE_RETENTION_DAYS</code>).</p>
                         <label class="form-label" for="clear-leads-confirmation">Type <strong>DELETE</strong> to confirm</label>
                         <input class="form-control" id="clear-leads-confirmation" name="confirmation" autocomplete="off" required>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button class="btn btn-danger">Delete all leads</button>
+                        <button class="btn btn-danger">Archive &amp; clear</button>
                     </div>
                 </form>
             </div>

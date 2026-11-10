@@ -286,6 +286,224 @@ class BankReconciliationTest extends TestCase
         $this->controller()->receiptSummary(new Request(['client_id' => $otherClientId]), $receiptId);
     }
 
+    /** Every create keeps the gross fixed and derives the net from the VAT %. */
+    public function test_create_applies_vat_to_the_fixed_gross(): void
+    {
+        $entryId = $this->makeEntry(-120.00, 'unmatched');
+
+        $this->controller()->action(new Request([
+            'client_id' => $this->client->id, 'action' => 'create',
+            'account_head_id' => $this->headId, 'supplier' => 'VAT Supplier',
+            'invoice_date' => '2020-06-15', 'vat_percent' => 20,
+        ]), $entryId);
+
+        $receiptId = (int) DB::table('bank_entries')->where('id', $entryId)->value('receipt_id');
+        $this->assertGreaterThan(0, $receiptId);
+
+        $detail = DB::table('receipt_details')->where('receipt_id', $receiptId)->first();
+        // Gross stays at the bank amount; net + VAT come from the percentage.
+        $this->assertEqualsWithDelta(120.00, (float) $detail->total_amount, 0.001);
+        $this->assertEqualsWithDelta(100.00, (float) $detail->net_amount, 0.001);
+        $this->assertEqualsWithDelta(20.00, (float) $detail->vat_amount, 0.001);
+    }
+
+    /** Create refuses a gross that is not the bank amount; part payments use Split / Find & Match. */
+    public function test_create_rejects_a_gross_that_is_not_the_bank_amount(): void
+    {
+        $entryId = $this->makeEntry(-120.00, 'unmatched');
+
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        $this->controller()->action(new Request([
+            'client_id' => $this->client->id, 'action' => 'create',
+            'account_head_id' => $this->headId, 'supplier' => 'VAT Supplier',
+            'invoice_date' => '2020-06-15', 'gross' => 100.00, 'vat_percent' => 20,
+        ]), $entryId);
+    }
+
+    /** Split lines use the same rule: gross in, VAT % applied, net derived. */
+    public function test_split_lines_apply_vat_per_line(): void
+    {
+        $entryId = $this->makeEntry(-120.00, 'unmatched');
+
+        $this->controller()->action(new Request([
+            'client_id' => $this->client->id, 'action' => 'split',
+            'splits' => [
+                ['amount' => 100.00, 'account_head_id' => $this->headId, 'vat_percent' => 0],
+                ['amount' => 20.00, 'account_head_id' => $this->headId, 'vat_percent' => 20],
+            ],
+        ]), $entryId);
+
+        $lines = DB::table('bank_allocation_lines')->where('bank_entry_id', $entryId)->orderBy('id')->get();
+        $this->assertCount(2, $lines);
+        $this->assertEqualsWithDelta(20.00, (float) $lines[1]->amount, 0.001);
+        $this->assertEqualsWithDelta(20.00, (float) $lines[1]->tax_percent, 0.001);
+        $this->assertEqualsWithDelta(3.33, (float) $lines[1]->vat_amount, 0.001);
+
+        $detail = DB::table('receipt_details')->where('receipt_id', $lines[1]->receipt_id)->first();
+        $this->assertEqualsWithDelta(20.00, (float) $detail->total_amount, 0.001);
+        $this->assertEqualsWithDelta(16.67, (float) $detail->net_amount, 0.001);
+        $this->assertEqualsWithDelta(3.33, (float) $detail->vat_amount, 0.001);
+    }
+
+    /** Find & Match: part of an existing receipt plus a new receipt for the rest. */
+    public function test_find_match_applies_part_of_a_receipt_and_creates_the_remainder(): void
+    {
+        $entryId = $this->makeEntry(-34.00, 'unmatched');
+        $receiptId = $this->makeReceipt(40.00, '2020-06-15', true);
+
+        $this->controller()->action(new Request([
+            'client_id' => $this->client->id, 'action' => 'find_match',
+            'allocations' => [$receiptId => 20.00],
+            'creates' => [[
+                'gross' => 14.00, 'vat_percent' => 0, 'account_head_id' => $this->headId,
+                'supplier' => 'Remainder Ltd', 'invoice_date' => '2020-06-15',
+            ]],
+        ]), $entryId);
+
+        $entry = DB::table('bank_entries')->find($entryId);
+        $this->assertSame('approved', $entry->reconciliation_status);
+        $this->assertSame('split', $entry->status);
+
+        $lines = DB::table('bank_allocation_lines')->where('bank_entry_id', $entryId)->get();
+        $this->assertCount(2, $lines);
+        $partial = $lines->firstWhere('receipt_id', $receiptId);
+        $this->assertNotNull($partial);
+        $this->assertEqualsWithDelta(20.00, (float) $partial->amount, 0.001);
+
+        // Only £20 of the £40 receipt was used, so the other £20 is still usable.
+        $second = $this->makeEntry(-20.00, 'unmatched');
+        $this->controller()->action(new Request([
+            'client_id' => $this->client->id, 'action' => 'find_match',
+            'allocations' => [$receiptId => 20.00],
+        ]), $second);
+        $this->assertSame($receiptId, (int) DB::table('bank_entries')->where('id', $second)->value('receipt_id'));
+    }
+
+    /** A receipt can never give more than what is left of it. */
+    public function test_find_match_rejects_more_than_a_receipt_has_left(): void
+    {
+        $first = $this->makeEntry(-34.00, 'unmatched');
+        $receiptId = $this->makeReceipt(40.00, '2020-06-15', true);
+        $this->controller()->action(new Request([
+            'client_id' => $this->client->id, 'action' => 'find_match',
+            'allocations' => [$receiptId => 20.00],
+            'creates' => [['gross' => 14.00, 'account_head_id' => $this->headId]],
+        ]), $first);
+
+        $second = $this->makeEntry(-34.00, 'unmatched');
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        $this->controller()->action(new Request([
+            'client_id' => $this->client->id, 'action' => 'find_match',
+            'allocations' => [$receiptId => 25.00],
+            'creates' => [['gross' => 9.00, 'account_head_id' => $this->headId]],
+        ]), $second);
+    }
+
+    /** The applied receipts plus new receipts must cover the bank line exactly. */
+    public function test_find_match_rejects_an_unbalanced_combination(): void
+    {
+        $entryId = $this->makeEntry(-34.00, 'unmatched');
+        $receiptId = $this->makeReceipt(40.00, '2020-06-15', true);
+
+        $this->expectException(ValidationException::class);
+        $this->controller()->action(new Request([
+            'client_id' => $this->client->id, 'action' => 'find_match',
+            'allocations' => [$receiptId => 20.00],
+            'creates' => [['gross' => 13.00, 'account_head_id' => $this->headId]],
+        ]), $entryId);
+    }
+
+    /** Every reconcile tab renders the controls the VAT + Find & Match flows need. */
+    public function test_reconcile_tabs_render_the_vat_and_find_match_controls(): void
+    {
+        DB::table('clients')->where('id', $this->client->id)->update(['status' => 1]);
+        $user = DB::table('users')->where('email', '!=', 'jane@gmail.com')->first();
+        if ($user) {
+            $this->actingAs(User::find($user->id));
+        }
+
+        $this->makeEntry(-34.00, 'unmatched');
+        $this->makeReceipt(40.00, '2020-06-15', true);
+
+        $html = $this->controller()->index(new Request([
+            'client_credential_id' => $this->credId,
+            'client_id' => $this->client->id,
+            'bank_account_id' => $this->bankA,
+            'reconcile_status' => 'all',
+            'date_from' => '2020-06-15',
+            'date_to' => '2020-06-15',
+        ]))->render();
+
+        // All six tabs and their panels are present.
+        foreach (['match', 'create', 'split', 'find', 'transfer', 'discuss'] as $tab) {
+            $this->assertStringContainsString('data-hd-tab="' . $tab . '"', $html);
+            $this->assertStringContainsString('data-hd-panel="' . $tab . '"', $html);
+        }
+
+        // Create: the same amount block as Split / Find & Match — net derived, VAT %
+        // and gross typed.
+        $this->assertStringContainsString('Net Amount', $html);
+        $this->assertStringContainsString('VAT Percent', $html);
+        $this->assertStringContainsString('Gross Amount', $html);
+        $this->assertStringContainsString('name="vat_percent"', $html);
+        $this->assertStringContainsString('name="gross"', $html);
+        $this->assertStringContainsString('hd-vat-box', $html);
+        $this->assertStringContainsString('hd-vat-net', $html);
+        $this->assertStringContainsString('hd-vat-amt', $html);
+        // Create + 2 split lines + 1 find-&-match create line.
+        $this->assertGreaterThanOrEqual(4, substr_count($html, 'class="hd-vat-box"'));
+
+        // Split: each line carries its own gross + VAT %.
+        $this->assertStringContainsString('splits[0][vat_percent]', $html);
+        $this->assertStringContainsString('splits[1][vat_percent]', $html);
+        $this->assertStringContainsString('hd-vat-gross', $html);
+
+        // Find & Match: apply amount per receipt + new receipts for the remainder.
+        $this->assertStringContainsString('hd-find-apply', $html);
+        $this->assertStringContainsString('name="allocations[', $html);
+        $this->assertStringContainsString('data-remaining=', $html);
+        $this->assertStringContainsString('creates[0][gross]', $html);
+        $this->assertStringContainsString('creates[0][vat_percent]', $html);
+        $this->assertStringContainsString('hd-create-meter', $html);
+        $this->assertStringContainsString('hd-find-submit', $html);
+
+        // The wiring that makes those buttons work.
+        foreach (['hdVatCalc', 'hdVatUpdate', 'hdFindUpdate', 'hdFindTotals', 'hdAddCreateLine', 'hdRemoveCreateLine', 'hdAddSplitLine', 'hdSplitTotals'] as $fn) {
+            $this->assertStringContainsString('function ' . $fn, $html);
+        }
+    }
+
+    /** A plain multi/single receipt selection (no apply boxes) still matches in full. */
+    public function test_find_match_accepts_a_plain_full_receipt_selection(): void
+    {
+        $entryId = $this->makeEntry(-40.00, 'unmatched');
+        $receiptId = $this->makeReceipt(40.00, '2020-06-15', true);
+
+        $this->controller()->action(new Request([
+            'client_id' => $this->client->id, 'action' => 'find_match',
+            'receipt_ids' => [$receiptId],
+        ]), $entryId);
+
+        $entry = DB::table('bank_entries')->find($entryId);
+        $this->assertSame('matched', $entry->status);
+        $this->assertSame($receiptId, (int) $entry->receipt_id);
+        $this->assertSame('approved', $entry->reconciliation_status);
+    }
+
+    /** A ticked receipt with no apply amount is refused instead of assuming full. */
+    public function test_find_match_rejects_a_ticked_receipt_without_an_apply_amount(): void
+    {
+        $entryId = $this->makeEntry(-34.00, 'unmatched');
+        $receiptId = $this->makeReceipt(40.00, '2020-06-15', true);
+
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        $this->controller()->action(new Request([
+            'client_id' => $this->client->id, 'action' => 'find_match',
+            'receipt_ids' => [$receiptId],
+            'allocations' => [$receiptId => ''],
+        ]), $entryId);
+    }
+
     /** Fuzzy scoring ranks an exact amount/date/supplier hit highest. */
     public function test_fuzzy_scoring_ranks_exact_match_highest(): void
     {

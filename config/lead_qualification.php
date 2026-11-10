@@ -15,6 +15,11 @@ return [
     // troubleshoot delivery. It is stripped from older messages by leads:prune.
     'raw_payload_retention_days' => (int) env('LEAD_RAW_PAYLOAD_RETENTION_DAYS', 90),
 
+    // "Archive & clear" writes the full lead dataset to disk before deleting
+    // the rows, so the archive is still personal data and needs its own clock.
+    // 0 disables automatic removal (archives are then kept until deleted by hand).
+    'archive_retention_days' => (int) env('LEAD_ARCHIVE_RETENTION_DAYS', 365),
+
     'follow_up_alert_throttle_minutes' => (int) env('LEAD_FOLLOW_UP_THROTTLE_MINUTES', 15),
 
     // One clarifying question for unrecognised free text, then REVIEW.

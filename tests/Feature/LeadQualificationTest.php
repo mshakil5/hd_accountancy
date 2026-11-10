@@ -673,6 +673,32 @@ class LeadQualificationTest extends TestCase
 
         $cv = $interpreter->interpret('Can you review my CV?');
         $this->assertSame('non_sales', $cv['intent']);
+
+        // Review R1: unambiguous job-seeker / supplier wording is NON_SALES.
+        foreach ([
+            'We have a vacancy in our sales team',
+            'Several vacancies available',
+            'I am looking for work',
+            'Is there a job available?',
+            'I would like an internship',
+            'I run an employment agency',
+        ] as $phrase) {
+            $this->assertSame('non_sales', $interpreter->interpret($phrase)['intent'], $phrase);
+        }
+
+        // Ambiguous wording must never auto-reject a possible client: REVIEW.
+        foreach ([
+            'We are hiring and need help with payroll',
+            'I need help with employment status for my staff',
+            'I want to change career and set up a company',
+        ] as $phrase) {
+            $result = $interpreter->interpret($phrase);
+            $this->assertNotSame('non_sales', $result['intent'], $phrase);
+            $this->assertSame('review', $result['classification_hint'], $phrase);
+        }
+
+        // "self-employment" must stay a genuine prospect, not a job seeker.
+        $this->assertSame('unknown', $interpreter->interpret('I have income from self-employment')['intent']);
     }
 
     /**
@@ -786,6 +812,42 @@ class LeadQualificationTest extends TestCase
     {
         Artisan::call('schedule:list');
         $this->assertStringContainsString('leads:prune', Artisan::output());
+    }
+
+    /**
+     * Review P0-1: lead_messages.lead_id is ON DELETE CASCADE, so removing an
+     * expired non-sales lead also removes its conversation. The documentation
+     * must say this, and this test proves the actual database behaviour.
+     */
+    public function test_prune_deleting_an_expired_lead_also_deletes_its_messages(): void
+    {
+        $lead = $this->makeLead(['qualification_status' => 'NON_SALES']);
+        $first = $this->makeInbound($lead, 'We sell SEO services');
+        $second = $this->makeInbound($lead, 'Still interested in selling you SEO');
+        DB::table('leads')->where('id', $lead->id)->update(['updated_at' => now()->subDays(400)]);
+
+        $this->artisan('leads:prune', ['--days' => 365])->assertExitCode(0);
+
+        $this->assertDatabaseMissing('leads', ['id' => $lead->id]);
+        $this->assertDatabaseMissing('lead_messages', ['id' => $first->id]);
+        $this->assertDatabaseMissing('lead_messages', ['id' => $second->id]);
+    }
+
+    /**
+     * Review P0-2: an archive holds personal data, so it needs its own clock.
+     */
+    public function test_prune_removes_expired_lead_archives(): void
+    {
+        Storage::fake('local');
+        $disk = Storage::disk('local');
+        $disk->put('lead-archives/leads-old.json', '{"lead_count":1}');
+        $disk->put('lead-archives/leads-new.json', '{"lead_count":1}');
+        touch($disk->path('lead-archives/leads-old.json'), now()->subDays(400)->getTimestamp());
+
+        $this->artisan('leads:prune', ['--days' => 365, '--archive-days' => 365])->assertExitCode(0);
+
+        $disk->assertMissing('lead-archives/leads-old.json');
+        $disk->assertExists('lead-archives/leads-new.json');
     }
 
     public function test_prune_clears_old_raw_payloads_but_keeps_conversation_rows(): void
@@ -950,6 +1012,42 @@ class LeadQualificationTest extends TestCase
         // Review 4.2: the page may only promise scheduled pruning when
         // leads:prune is really registered in App\Console\Kernel.
         $response->assertSeeInOrder(['Retention prune scheduled', 'Ready'], false);
+    }
+
+    /**
+     * Review P1-1: the SMS row must use the same requirements as sendSms(),
+     * so a configured phone number cannot look Ready while Twilio credentials
+     * are missing.
+     */
+    public function test_health_sms_row_requires_the_twilio_credentials_used_to_send(): void
+    {
+        $this->actingAs($this->makeUser(false));
+
+        // The getways row is a fallback credential source; clear it in this
+        // transaction so the assertion is deterministic.
+        DB::table('getways')->where('name', 'Twilio')->delete();
+
+        config([
+            'lead_qualification.alert_email' => 'team@hd.example',
+            'lead_qualification.alert_sms_enabled' => true,
+            'lead_qualification.alert_phone' => '+447700900123',
+            'lead_qualification.twilio_from' => '+441234567890',
+            'lead_qualification.twilio_sid' => null,
+            'lead_qualification.twilio_token' => null,
+        ]);
+
+        $this->get('/admin/leads/health')
+            ->assertOk()
+            ->assertSee('Missing: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN.');
+
+        config([
+            'lead_qualification.twilio_sid' => 'ACxxx',
+            'lead_qualification.twilio_token' => 'token',
+        ]);
+
+        $this->get('/admin/leads/health')
+            ->assertOk()
+            ->assertSee('Phone, sender and Twilio credentials are all present.');
     }
 
     public function test_whatsapp_option_labels_fit_meta_limits(): void
