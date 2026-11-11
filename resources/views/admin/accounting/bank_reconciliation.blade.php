@@ -510,10 +510,6 @@
                     @endforeach
                   </select>
                 </div>
-                <div class="hd-field" style="grid-column:1/-1">
-                  <label class="hd-field-lbl">Memo (optional)</label>
-                  <input class="form-control hd-fc" name="splits[{{ $i }}][memo]" placeholder="Note about this line">
-                </div>
               </div>
               @endforeach
             </div>
@@ -616,10 +612,6 @@
                       <option value="{{ $h->id }}">{{ $h->code }} — {{ $h->name }}</option>
                       @endforeach
                     </select>
-                  </div>
-                  <div class="hd-field" style="grid-column:1/-1">
-                    <label class="hd-field-lbl">Memo (optional)</label>
-                    <input class="form-control hd-fc" name="creates[0][memo]" placeholder="Note about this line">
                   </div>
                 </div>
               </div>
@@ -951,7 +943,7 @@ function hdAddCreateLine(btn){
   // Re-number the cloned field names for the new line.
   tpl.querySelectorAll('[name]').forEach(el => { el.name = el.name.replace(/creates\[\d+\]/, 'creates['+i+']'); });
   // Fresh amounts, but keep the supplier / invoice-date defaults for speed.
-  tpl.querySelectorAll('.hd-create-gross, input[name*="[memo]"]').forEach(el => { el.value = ''; });
+  tpl.querySelectorAll('.hd-create-gross').forEach(el => { el.value = ''; });
   tpl.querySelectorAll('.hd-vat-pct').forEach(el => { el.value = '0'; });
   tpl.querySelectorAll('select').forEach(el => { el.value = ''; });
   tpl.querySelectorAll('.select2-container').forEach(c => c.remove());
