@@ -23,11 +23,11 @@ class MetaAdIntentController extends Controller
     {
         $data = $this->validated($request);
 
-        $existing = MetaAdIntent::where('ad_id', $data['ad_id'])->first();
+        // Validation already rejects a duplicate ad_id, so this either creates
+        // the mapping or (if the rule ever changes) updates the existing row.
         $mapping = MetaAdIntent::updateOrCreate(['ad_id' => $data['ad_id']], $data);
 
         $this->resolver->forget($mapping->ad_id, $mapping->campaign_id);
-        if ($existing) $this->resolver->forget($existing->ad_id, $existing->campaign_id);
 
         return back()->with('success', "Ad {$mapping->ad_id} now routes to {$mapping->intent}.");
     }

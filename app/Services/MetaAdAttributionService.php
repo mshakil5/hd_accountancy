@@ -40,13 +40,24 @@ class MetaAdAttributionService
                 ],
             ]);
             $data = json_decode((string) $response->getBody(), true) ?: [];
-            $lead->update([
+            $update = [
                 'ad_name' => $data['name'] ?? $lead->ad_name,
                 'adset_id' => data_get($data, 'adset.id', $lead->adset_id),
                 'adset_name' => data_get($data, 'adset.name', $lead->adset_name),
                 'campaign_id' => data_get($data, 'campaign.id', $lead->campaign_id),
                 'campaign_name' => data_get($data, 'campaign.name', $lead->campaign_name),
-            ]);
+            ];
+
+            // The campaign of the ad that was clicked first is part of the
+            // immutable first-touch acquisition record.
+            if (!$lead->original_ad_id) {
+                $update['original_ad_id'] = $lead->ad_id;
+            }
+            if (!$lead->original_campaign_id && data_get($data, 'campaign.id')) {
+                $update['original_campaign_id'] = data_get($data, 'campaign.id');
+            }
+
+            $lead->update($update);
         } catch (\Throwable $e) {
             Log::info('Meta ad attribution enrichment unavailable', ['lead_id' => $lead->id, 'ad_id' => $lead->ad_id, 'error' => $e->getMessage()]);
         }

@@ -18,6 +18,7 @@ class Lead extends Model
         'qualified_at' => 'datetime',
         'automation_completed_at' => 'datetime',
         'alert_last_attempt_at' => 'datetime',
+        'latest_touch_at' => 'datetime',
         'contacted_at' => 'datetime',
         'last_inbound_at' => 'datetime',
         'last_outbound_at' => 'datetime',

@@ -9,6 +9,12 @@ use Illuminate\Support\Facades\DB;
 
 class LeadConversationService
 {
+    /**
+     * WhatsApp messages a button/list question cannot answer. They go to a
+     * human instead of being counted as an "unclear reply".
+     */
+    private const MEDIA_MESSAGE_TYPES = ['image', 'audio', 'video', 'document', 'sticker', 'location', 'contacts'];
+
     public function __construct(
         private MetaWhatsAppService $whatsApp,
         private LeadInterpreter $interpreter,
@@ -42,8 +48,17 @@ class LeadConversationService
 
         // A previous attempt saved the terminal status but did not finish the
         // handover (for example the outbound send failed and the job retried).
+        // This must run before the media check: an already-finished lead is
+        // never re-classified because the customer sent a photo next.
         if (in_array($lead->qualification_status, $terminal, true)) {
             $this->finish($lead);
+            return;
+        }
+
+        // A voice note, a photo of an HMRC letter or a shared contact cannot be
+        // answered with buttons. A human must look at it.
+        if ($this->isMediaMessage($message)) {
+            $this->escalateMedia($lead, $message);
             return;
         }
 
@@ -56,6 +71,7 @@ class LeadConversationService
             $mapped = $this->adIntents()->forCampaign($lead->campaign_id);
             if ($mapped) {
                 $lead->intent = $mapped;
+                $lead->intent_source = 'ad_mapping';
                 if ($lead->conversation_step === 'intent') $lead->conversation_step = 'person_type';
                 $lead->save();
             }
@@ -102,6 +118,16 @@ class LeadConversationService
 
         $lead->refresh();
 
+        // Take Over can land while this turn is already running (the check at
+        // the top of process() happened before the analysis). Never send a bot
+        // question or closing text over a human's reply.
+        if ($lead->human_takeover) {
+            if (in_array($lead->qualification_status, $terminal, true) && !$lead->automation_completed_at) {
+                $lead->update(['automation_completed_at' => now()]);
+            }
+            return;
+        }
+
         if (in_array($lead->qualification_status, $terminal, true)) {
             $this->finish($lead);
             return;
@@ -110,14 +136,64 @@ class LeadConversationService
         $this->askNext($lead);
     }
 
+    private function isMediaMessage(LeadMessage $message): bool
+    {
+        return in_array((string) $message->message_type, self::MEDIA_MESSAGE_TYPES, true);
+    }
+
+    /**
+     * Media needs eyes, not a question. Escalate once, tell the prospect a human
+     * will look, and stop automation so the same attachment is never "unclear".
+     */
+    private function escalateMedia(Lead $lead, LeadMessage $message): void
+    {
+        $note = 'Sent a ' . $message->message_type . ' — needs a human to review';
+
+        $lead->update([
+            'qualification_status' => 'REVIEW',
+            'conversation_step' => 'complete',
+            'qualified_at' => $lead->qualified_at ?: now(),
+            'qualification_summary' => trim(((string) $lead->qualification_summary) . ' ' . $note),
+        ]);
+
+        $this->whatsApp->sendText(
+            $lead,
+            'Thanks — I’ve passed that to the HD Accountancy team, and someone will look at it and reply here.'
+        );
+
+        $this->alerts->notify($lead);
+
+        // Only after the outbound send succeeded, so a failure stays retryable.
+        $lead->update(['automation_completed_at' => now()]);
+    }
+
     private function applyAnalysis(Lead $lead, array $analysis): void
     {
         foreach (['intent','person_type','current_accountant','contact_timeframe'] as $field) {
-            if (!empty($analysis[$field]) && $analysis[$field] !== 'unknown') $lead->{$field} = $analysis[$field];
+            if (empty($analysis[$field]) || $analysis[$field] === 'unknown') continue;
+
+            // An explicit Ad ID / Campaign ID mapping is the authoritative
+            // campaign route. The advert's pre-filled WhatsApp text must never
+            // silently reroute it ("I need help with payroll" on a
+            // Change-Accountant advert stays Change Accountant). What the
+            // customer mentioned is kept as context instead.
+            if ($field === 'intent' && $lead->intent_source === 'ad_mapping') {
+                if ($analysis['intent'] !== $lead->intent) {
+                    $data = $lead->qualification_data ?: [];
+                    $data['mentioned_intent'] = $analysis['intent'];
+                    $lead->qualification_data = $data;
+                }
+                continue;
+            }
+
+            $lead->{$field} = $analysis[$field];
         }
         if (!$lead->name && !empty($analysis['name'])) $lead->name = $analysis['name'];
         $data = $lead->qualification_data ?: [];
         foreach ($analysis as $k => $v) {
+            // A mapped route is never duplicated under qualification_data.intent,
+            // where it would contradict the authoritative lead.intent.
+            if ($k === 'intent' && $lead->intent_source === 'ad_mapping') continue;
             if ($v !== null && $v !== '' && $v !== 'unknown') $data[$k] = $v;
         }
         $lead->qualification_data = $data;

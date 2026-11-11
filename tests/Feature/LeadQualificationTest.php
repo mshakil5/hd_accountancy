@@ -570,6 +570,40 @@ class LeadQualificationTest extends TestCase
         $this->assertSame('QUALIFYING', $lead->qualification_status);
     }
 
+    public function test_reopening_mapped_lead_clears_intent_source_and_allows_free_text_intent(): void
+    {
+        // A lead created from an explicit ad mapping has intent_source = 'ad_mapping'
+        $lead = $this->makeCompletedLead([
+            'intent' => 'change_accountant',
+            'intent_source' => 'ad_mapping',
+            'qualification_data' => ['intent' => 'change_accountant'],
+        ]);
+
+        // Admin reopens qualification
+        app(LeadController::class)->update(new Request([
+            'qualification_status' => 'QUALIFYING',
+        ]), $lead);
+
+        $lead->refresh();
+        // Both intent and intent_source must be cleared
+        $this->assertNull($lead->intent);
+        $this->assertNull($lead->intent_source);
+        $this->assertSame('intent', $lead->conversation_step);
+        $this->assertSame('QUALIFYING', $lead->qualification_status);
+
+        // Now process a free-text inbound answer to Q1
+        $message = $this->makeInbound($lead, 'I need help with payroll');
+        $whatsApp = Mockery::mock(MetaWhatsAppService::class);
+        $whatsApp->shouldReceive('sendButtons')->once(); // advances to person_type step
+        $alerts = Mockery::mock(LeadAlertService::class);
+        $alerts->shouldNotReceive('notify');
+        $this->conversation($whatsApp, $alerts)->process($message);
+
+        $lead->refresh();
+        // The ad_mapping guard must NOT block free-text intent assignment
+        $this->assertSame('tax_vat_payroll', $lead->intent);
+    }
+
     public function test_button_answer_does_not_overwrite_other_qualification_fields(): void
     {
         $lead = $this->makeLead([
@@ -686,9 +720,9 @@ class LeadQualificationTest extends TestCase
             $this->assertSame('non_sales', $interpreter->interpret($phrase)['intent'], $phrase);
         }
 
-        // Ambiguous wording must never auto-reject a possible client: REVIEW.
+        // Ambiguous wording with no accounting need must never auto-reject a
+        // possible client: REVIEW, so a human decides.
         foreach ([
-            'We are hiring and need help with payroll',
             'I need help with employment status for my staff',
             'I want to change career and set up a company',
         ] as $phrase) {
@@ -696,6 +730,9 @@ class LeadQualificationTest extends TestCase
             $this->assertNotSame('non_sales', $result['intent'], $phrase);
             $this->assertSame('review', $result['classification_hint'], $phrase);
         }
+
+        // Ambiguous wording WITH a clear accounting need is a genuine enquiry.
+        $this->assertSame('tax_vat_payroll', $interpreter->interpret('We are hiring and need help with payroll')['intent']);
 
         // "self-employment" must stay a genuine prospect, not a job seeker.
         $this->assertSame('unknown', $interpreter->interpret('I have income from self-employment')['intent']);
@@ -705,6 +742,146 @@ class LeadQualificationTest extends TestCase
      * Review section 6: an existing HD client is marked EXISTING_CLIENT, stops
      * sales qualification and still alerts the team.
      */
+    /**
+     * Review 10 Nov, section 3: a genuine business can mention recruitment,
+     * suppliers or vacancies and still need accounting help. Those must never
+     * be rejected as non-sales.
+     */
+    public function test_genuine_businesses_mentioning_recruitment_or_vacancies_are_not_non_sales(): void
+    {
+        $interpreter = app(LeadInterpreter::class);
+        $qualifier = app(LeadQualificationService::class);
+
+        foreach ([
+            'I run a recruitment agency and need an accountant.',
+            'I am a food supplier and need bookkeeping.',
+            'We have several vacancies and need help with payroll.',
+        ] as $phrase) {
+            $result = $interpreter->interpret($phrase);
+            $this->assertNotSame('non_sales', $result['intent'], $phrase);
+
+            $lead = new Lead(['intent' => $result['intent']]);
+            $this->assertNotSame('NON_SALES', $qualifier->classify($lead, $result), $phrase);
+        }
+
+        // Real job seekers are still closed politely.
+        foreach (['Do you have any vacancies?', 'I am looking for work.'] as $phrase) {
+            $result = $interpreter->interpret($phrase);
+            $this->assertSame('non_sales', $result['intent'], $phrase);
+            $this->assertSame('NON_SALES', $qualifier->classify(new Lead(), $result), $phrase);
+        }
+    }
+
+    /**
+     * Review 10 Nov, section 2: the explicit Ad ID mapping is the authoritative
+     * campaign route and the pre-filled WhatsApp text must not overwrite it.
+     */
+    public function test_mapped_ad_intent_survives_the_prefilled_whatsapp_text(): void
+    {
+        MetaAdIntent::create(['ad_id' => 'MAPPED-12345', 'intent' => 'change_accountant']);
+
+        $phone = $this->phone();
+        $referral = [
+            'source_type' => 'ad',
+            'source_id' => 'MAPPED-12345',
+            'ctwa_clid' => 'CLID-MAPPED',
+        ];
+
+        // The advert is mapped to Change Accountant, but the pre-filled text
+        // mentions payroll and accounts; the old regex took it over.
+        $this->signedPost($this->payload($phone, $this->wamid(), $referral, 'I need help with payroll and accounts'))->assertOk();
+
+        $lead = Lead::where('whatsapp_id', $phone)->firstOrFail();
+        $message = LeadMessage::where('lead_id', $lead->id)->firstOrFail();
+
+        $whatsApp = Mockery::mock(MetaWhatsAppService::class);
+        $whatsApp->shouldReceive('sendButtons')->once();
+        $alerts = Mockery::mock(LeadAlertService::class);
+
+        $service = new LeadConversationService(
+            $whatsApp,
+            app(LeadInterpreter::class),
+            app(LeadQualificationService::class),
+            $alerts,
+            app(MetaAdAttributionService::class)
+        );
+        $service->process($message);
+
+        $lead->refresh();
+        $this->assertSame('change_accountant', $lead->intent);
+        $this->assertSame('ad_mapping', $lead->intent_source);
+        $this->assertSame('MAPPED-12345', $lead->ad_id);
+        $this->assertSame('MAPPED-12345', $lead->original_ad_id);
+        // What the customer mentioned is kept as context, not as the route.
+        $this->assertSame('tax_vat_payroll', $lead->qualification_data['mentioned_intent'] ?? null);
+    }
+
+    /**
+     * Review 10 Nov, section 4: a later click on a different advert must not
+     * rewrite the first-touch acquisition of an existing conversation.
+     */
+    public function test_later_ad_click_does_not_overwrite_first_touch_attribution(): void
+    {
+        $phone = $this->phone();
+
+        // First touch: Campaign A / Ad 111.
+        $this->signedPost($this->payload($phone, $this->wamid(), [
+            'source_type' => 'ad', 'source_id' => '111', 'ctwa_clid' => 'CLID-A',
+        ], 'Hi, I need an accountant'))->assertOk();
+
+        $lead = Lead::where('whatsapp_id', $phone)->firstOrFail();
+        $lead->update([
+            'ad_id' => '111',
+            'original_ad_id' => '111',
+            'campaign_id' => 'CAMP-A',
+            'original_campaign_id' => 'CAMP-A',
+            'qualification_status' => 'GENUINE',
+            'conversation_step' => 'complete',
+            'automation_completed_at' => now(),
+            'human_takeover' => true,
+        ]);
+
+        // Later touch by the same person: Campaign B / Ad 222.
+        $this->signedPost($this->payload($phone, $this->wamid(), [
+            'source_type' => 'ad', 'source_id' => '222', 'ctwa_clid' => 'CLID-B',
+        ], 'Another question'))->assertOk();
+
+        $lead->refresh();
+        $this->assertSame('111', $lead->ad_id);
+        $this->assertSame('111', $lead->original_ad_id);
+        $this->assertSame('CAMP-A', $lead->campaign_id);
+        $this->assertSame('CAMP-A', $lead->original_campaign_id);
+        // The second referral is retained without corrupting first touch.
+        $this->assertSame('222', $lead->latest_touch_ad_id);
+        $this->assertSame('CLID-B', $lead->latest_touch_click_id);
+        $this->assertSame('CLID-A', $lead->click_id);
+        $this->assertNotNull($lead->latest_touch_at);
+
+        // A lead that predates these columns keeps the attribution it already
+        // has: the existing ad becomes the first touch, not the new click.
+        $legacyPhone = $this->phone();
+        $legacy = Lead::create([
+            'name' => 'Legacy',
+            'whatsapp_id' => $legacyPhone,
+            'phone' => $legacyPhone,
+            'source' => 'meta_ad_whatsapp',
+            'ad_id' => '111',
+            'click_id' => 'CLID-A',
+            'campaign_id' => 'CAMP-A',
+        ]);
+
+        $this->signedPost($this->payload($legacyPhone, $this->wamid(), [
+            'source_type' => 'ad', 'source_id' => '222', 'ctwa_clid' => 'CLID-B',
+        ], 'Hello again'))->assertOk();
+
+        $legacy->refresh();
+        $this->assertSame('111', $legacy->ad_id);
+        $this->assertSame('111', $legacy->original_ad_id);
+        $this->assertSame('CLID-A', $legacy->original_click_id);
+        $this->assertSame('CAMP-A', $legacy->original_campaign_id);
+        $this->assertSame('222', $legacy->latest_touch_ad_id);
+    }
+
     public function test_existing_client_stops_qualification_and_alerts_the_team(): void
     {
         $lead = $this->makeLead();
@@ -782,6 +959,166 @@ class LeadQualificationTest extends TestCase
         $this->post(route('admin.leads.send-template', $stale))
             ->assertSessionHas('success');
         $this->assertTrue($stale->fresh()->human_takeover);
+    }
+
+    /**
+     * A voice note or a photo of an HMRC letter cannot be answered with
+     * buttons. It must reach a human instead of being counted as an unclear
+     * answer and re-prompted.
+     */
+    public function test_media_messages_go_to_review_instead_of_being_re_prompted(): void
+    {
+        $lead = $this->makeLead([
+            'intent' => 'tax_vat_payroll',
+            'person_type' => 'owner_director',
+            'current_accountant' => 'not_applicable',
+            'conversation_step' => 'contact_timeframe',
+            'last_inbound_at' => now(),
+        ]);
+
+        $message = LeadMessage::create([
+            'lead_id' => $lead->id,
+            'provider_message_id' => $this->wamid(),
+            'direction' => 'inbound',
+            'sender_type' => 'prospect',
+            'message_type' => 'image',
+            'body' => '[image message]',
+            'delivery_status' => 'received',
+            'provider_timestamp' => now(),
+        ]);
+
+        $whatsApp = Mockery::mock(MetaWhatsAppService::class);
+        $whatsApp->shouldReceive('sendText')->once();
+        $whatsApp->shouldNotReceive('sendButtons');
+        $whatsApp->shouldNotReceive('sendList');
+        $alerts = Mockery::mock(LeadAlertService::class);
+        $alerts->shouldReceive('notify')->once();
+
+        $this->conversation($whatsApp, $alerts)->process($message);
+
+        $lead->refresh();
+        $this->assertSame('REVIEW', $lead->qualification_status);
+        $this->assertSame('complete', $lead->conversation_step);
+        $this->assertSame(0, (int) $lead->unclear_replies);
+        $this->assertNotNull($lead->automation_completed_at);
+        $this->assertStringContainsString('needs a human', (string) $lead->qualification_summary);
+    }
+
+    /**
+     * Take Over can land while a turn is already running. The bot must not send
+     * a question or closing text over the human's reply.
+     */
+    public function test_takeover_during_a_running_turn_stops_the_bot_immediately(): void
+    {
+        $lead = $this->makeLead([
+            'intent' => 'change_accountant',
+            'person_type' => 'owner_director',
+            'current_accountant' => 'yes_change',
+            'contact_timeframe' => 'asap',
+            'conversation_step' => 'contact_timeframe',
+            'last_inbound_at' => now(),
+        ]);
+        $message = $this->makeInbound($lead, 'Owner, ASAP please');
+
+        // The operator takes the conversation over in the middle of the turn.
+        $interpreter = Mockery::mock(LeadInterpreter::class);
+        $interpreter->shouldReceive('interpret')->once()->andReturnUsing(function () use ($lead) {
+            $lead->update(['human_takeover' => true]);
+            return ['intent' => 'unknown', 'person_type' => 'unknown', 'current_accountant' => 'unknown', 'contact_timeframe' => 'unknown', 'classification_hint' => 'unknown', 'summary' => '']; 
+        });
+
+        $whatsApp = Mockery::mock(MetaWhatsAppService::class);
+        $whatsApp->shouldNotReceive('sendText');
+        $whatsApp->shouldNotReceive('sendButtons');
+        $whatsApp->shouldNotReceive('sendList');
+        $alerts = Mockery::mock(LeadAlertService::class);
+        $alerts->shouldNotReceive('notify');
+
+        $service = new LeadConversationService(
+            $whatsApp,
+            $interpreter,
+            app(LeadQualificationService::class),
+            $alerts,
+            app(MetaAdAttributionService::class)
+        );
+        $service->process($message);
+
+        $lead->refresh();
+        $this->assertTrue($lead->human_takeover);
+        // The turn is closed out so it can never restart later, but silently.
+        $this->assertSame('GENUINE', $lead->qualification_status);
+        $this->assertNotNull($lead->automation_completed_at);
+    }
+
+    /**
+     * A failed staff send must not silently disable the assistant.
+     */
+    public function test_a_failed_staff_send_does_not_enable_takeover(): void
+    {
+        $this->actingAs($this->makeUser(false));
+        $lead = $this->makeLead(['last_inbound_at' => now()->subHour()]);
+
+        $whatsApp = Mockery::mock(MetaWhatsAppService::class);
+        $whatsApp->shouldReceive('sendText')->once()->andThrow(new \RuntimeException('Graph API is down'));
+        $this->swap(MetaWhatsAppService::class, $whatsApp);
+
+        $this->post(route('admin.leads.send', $lead), ['message' => 'Hello from HD'])
+            ->assertSessionHasErrors('message');
+
+        $this->assertFalse($lead->fresh()->human_takeover);
+        $this->assertNull($lead->fresh()->assigned_to);
+    }
+
+    /**
+     * The stored context must be visible to staff: the extra service the
+     * customer mentioned and a later advert click, without either of them
+     * replacing the campaign route.
+     */
+    public function test_lead_page_shows_the_extra_service_and_later_click(): void
+    {
+        $this->actingAs($this->makeUser(false));
+
+        $lead = $this->makeLead([
+            'intent' => 'change_accountant',
+            'intent_source' => 'ad_mapping',
+            'ad_id' => '111',
+            'original_ad_id' => '111',
+            'latest_touch_ad_id' => '222',
+            'qualification_data' => ['mentioned_intent' => 'tax_vat_payroll'],
+        ]);
+
+        $this->get(route('admin.leads.show', $lead))
+            ->assertOk()
+            ->assertSee('Change accountant')
+            ->assertSee('Tax / VAT / Payroll')
+            ->assertSee('Later click');
+    }
+
+    /**
+     * Marking a lead as finished by hand means the assistant is done: the next
+     * reply must not send the closing text or re-alert the team.
+     */
+    public function test_manually_finished_lead_does_not_resend_the_closing_message(): void
+    {
+        $lead = $this->makeLead(['conversation_step' => 'person_type']);
+
+        app(LeadController::class)->update(new Request(['qualification_status' => 'GENUINE']), $lead);
+
+        $lead->refresh();
+        $this->assertNotNull($lead->automation_completed_at);
+        $this->assertNotNull($lead->qualified_at);
+        $this->assertSame('complete', $lead->conversation_step);
+
+        // A later reply is a follow-up alert, never a second closing message.
+        $message = $this->makeInbound($lead, 'Thanks, one more question');
+        $whatsApp = Mockery::mock(MetaWhatsAppService::class);
+        $whatsApp->shouldNotReceive('sendText');
+        $alerts = Mockery::mock(LeadAlertService::class);
+        $alerts->shouldReceive('notifyFollowUp')->once();
+
+        $this->conversation($whatsApp, $alerts)->process($message);
+
+        $this->assertSame('GENUINE', $lead->fresh()->qualification_status);
     }
 
     // ------------------------------------------------------------------
@@ -1113,6 +1450,17 @@ class LeadQualificationTest extends TestCase
             'conversation_step' => 'complete',
             'automation_completed_at' => now(),
         ], $overrides));
+    }
+
+    private function conversation(?MetaWhatsAppService $whatsApp = null, ?LeadAlertService $alerts = null): LeadConversationService
+    {
+        return new LeadConversationService(
+            $whatsApp ?: Mockery::mock(MetaWhatsAppService::class),
+            app(LeadInterpreter::class),
+            app(LeadQualificationService::class),
+            $alerts ?: Mockery::mock(LeadAlertService::class),
+            app(MetaAdAttributionService::class)
+        );
     }
 
     private function makeInbound(Lead $lead, string $body): LeadMessage

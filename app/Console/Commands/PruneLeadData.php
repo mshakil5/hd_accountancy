@@ -14,14 +14,14 @@ class PruneLeadData extends Command
 
     public function handle(): int
     {
-        $days = (int) ($this->option('days') ?: config('lead_qualification.retention_days'));
+        $days = $this->intOption('days', 'retention_days');
         $count = Lead::whereIn('qualification_status', ['REJECTED','NON_SALES'])
             ->where('updated_at', '<', now()->subDays($days))->delete();
         $this->info("Deleted {$count} expired lead record(s) and their messages (lead_messages cascades on delete).");
 
         // Data minimisation: keep qualification/audit data but stop holding the
         // full Meta payload (which can contain personal data) indefinitely.
-        $payloadDays = (int) ($this->option('payload-days') ?: config('lead_qualification.raw_payload_retention_days'));
+        $payloadDays = $this->intOption('payload-days', 'raw_payload_retention_days');
         if ($payloadDays > 0) {
             $cleared = LeadMessage::query()
                 ->whereNotNull('raw_payload')
@@ -32,7 +32,7 @@ class PruneLeadData extends Command
 
         // "Archive & clear" leaves the personal data on disk, so archives get
         // their own retention clock instead of accumulating forever.
-        $archiveDays = (int) ($this->option('archive-days') ?: config('lead_qualification.archive_retention_days'));
+        $archiveDays = $this->intOption('archive-days', 'archive_retention_days');
         if ($archiveDays > 0) {
             $disk = Storage::disk('local');
             $cutoff = now()->subDays($archiveDays)->getTimestamp();
@@ -49,5 +49,18 @@ class PruneLeadData extends Command
         }
 
         return self::SUCCESS;
+    }
+
+    /**
+     * An explicit `--option=0` must mean zero (retention disabled), not
+     * "fall back to the config default". `?:` treated "0" as falsy.
+     */
+    private function intOption(string $option, string $configKey): int
+    {
+        $value = $this->option($option);
+
+        return $value === null || $value === ''
+            ? (int) config('lead_qualification.' . $configKey)
+            : (int) $value;
     }
 }

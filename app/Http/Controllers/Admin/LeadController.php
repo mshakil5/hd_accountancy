@@ -139,13 +139,17 @@ class LeadController extends Controller
         if (!$lead->isWithinWhatsAppWindow()) {
             return back()->withErrors(['message' => 'The 24-hour WhatsApp customer-service window has expired. Send an approved WhatsApp template from Meta before sending free-form messages.']);
         }
-        $lead->update(['human_takeover' => true, 'assigned_to' => auth()->id()]);
         try {
             $whatsApp->sendText($lead, $request->message, 'staff', auth()->id());
         } catch (\Throwable $e) {
             Log::warning('Admin WhatsApp send failed', ['lead_id' => $lead->id, 'error' => $e->getMessage()]);
             return back()->withErrors(['message' => 'WhatsApp could not send this message. Check the integration health page and try again.']);
         }
+
+        // Only a delivered staff message hands the conversation to a human. A
+        // failed send must never silently switch the assistant off.
+        $lead->update(['human_takeover' => true, 'assigned_to' => auth()->id()]);
+
         return back()->with('success', 'WhatsApp message sent.');
     }
 
@@ -155,13 +159,15 @@ class LeadController extends Controller
         if (!$template) {
             return back()->withErrors(['message' => 'No approved re-engagement template is configured.']);
         }
-        $lead->update(['human_takeover' => true, 'assigned_to' => auth()->id()]);
         try {
             $whatsApp->sendTemplate($lead, $template, config('meta_whatsapp.reengagement_template_language'), 'staff', auth()->id());
         } catch (\Throwable $e) {
             Log::warning('Admin WhatsApp template send failed', ['lead_id' => $lead->id, 'error' => $e->getMessage()]);
             return back()->withErrors(['message' => 'The WhatsApp template could not be sent. Check the integration health page and try again.']);
         }
+
+        $lead->update(['human_takeover' => true, 'assigned_to' => auth()->id()]);
+
         return back()->with('success', 'Approved WhatsApp template sent.');
     }
 
@@ -201,6 +207,7 @@ class LeadController extends Controller
             $data['automation_completed_at'] = null;
             $data['qualified_at'] = null;
             $data['intent'] = null;
+            $data['intent_source'] = null;
             $data['person_type'] = null;
             $data['current_accountant'] = null;
             $data['contact_timeframe'] = null;
@@ -209,8 +216,21 @@ class LeadController extends Controller
             $data['unclear_replies'] = 0;
         }
 
+        // Choosing a finished status by hand means the assistant is done with
+        // this lead. Record the completion, otherwise the next inbound message
+        // re-sends the closing text and re-alerts the team about work that has
+        // already been handled.
+        if (array_key_exists('qualification_status', $data)
+            && in_array($data['qualification_status'], ['GENUINE','REVIEW','REJECTED','EXISTING_CLIENT','NON_SALES'], true)) {
+            if (!$lead->automation_completed_at) $data['automation_completed_at'] = now();
+            if (in_array($data['qualification_status'], ['GENUINE','REVIEW'], true) && !$lead->qualified_at) {
+                $data['qualified_at'] = now();
+            }
+            $data['conversation_step'] = 'complete';
+        }
+
         $attributes = array_filter($data, fn($v) => $v !== null);
-        foreach (['closed_at', 'automation_completed_at', 'qualified_at', 'intent', 'person_type', 'current_accountant', 'contact_timeframe', 'qualification_data', 'unclear_replies'] as $nullableField) {
+        foreach (['closed_at', 'automation_completed_at', 'qualified_at', 'intent', 'intent_source', 'person_type', 'current_accountant', 'contact_timeframe', 'qualification_data', 'unclear_replies'] as $nullableField) {
             if (array_key_exists($nullableField, $data) && $data[$nullableField] === null) {
                 $attributes[$nullableField] = null;
             }

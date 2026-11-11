@@ -9,8 +9,10 @@ use App\Models\LeadMessage;
 use App\Services\MetaAdIntentResolver;
 use App\Services\MetaWhatsAppService;
 use Carbon\Carbon;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class WhatsAppWebhookController extends Controller
@@ -68,57 +70,52 @@ class WhatsAppWebhookController extends Controller
         $referral = $message['referral'] ?? [];
         $isAdReferral = !empty($referral) && ($referral['source_type'] ?? 'ad') === 'ad';
 
-        $lead = Lead::where('whatsapp_id', $from)->open()->latest('id')->first();
-
-        // A new ad click after the bot finished is a fresh enquiry. Never
-        // overwrite the completed lead's campaign attribution with it. While a
-        // human has the old conversation open, keep the reply there instead of
-        // starting a second qualification thread.
-        if ($lead && $lead->automation_completed_at && !$lead->human_takeover && $isAdReferral) {
-            $lead = null;
-        }
-
-        if (!$lead) {
-            // Campaign intent is controlled by the explicit Ad ID mapping, never
-            // guessed from the advert's marketing copy. An unmapped advert is a
-            // general advert: intent stays empty and the bot asks question 1.
-            $mappedIntent = $isAdReferral ? $this->adIntents->forReferral($referral) : null;
-            $lead = Lead::create([
-                'name' => $name,
-                'whatsapp_id' => $from,
-                'phone' => $from,
-                'source' => $isAdReferral ? 'meta_ad_whatsapp' : 'whatsapp',
-                'click_id' => $isAdReferral ? ($referral['ctwa_clid'] ?? null) : null,
-                'ad_id' => $isAdReferral ? ($referral['source_id'] ?? null) : null,
-                'ad_headline' => $isAdReferral ? ($referral['headline'] ?? null) : null,
-                'ad_body' => $isAdReferral ? ($referral['body'] ?? null) : null,
-                'source_url' => $isAdReferral ? ($referral['source_url'] ?? null) : null,
-                'qualification_status' => 'NEW',
-                'sales_status' => 'NEW',
-                'conversation_step' => $mappedIntent ? 'person_type' : 'intent',
-                'intent' => $mappedIntent,
-            ]);
-        } elseif (!$lead->name && $name) {
-            $lead->name = $name;
-            $lead->save();
-        }
+        $lead = $this->resolveLead($from, $name, $referral, $isAdReferral);
 
         if ($isAdReferral) {
+            $adId = $referral['source_id'] ?? null;
+
             if (!$lead->intent) {
                 $lead->intent = $this->adIntents->forReferral($referral);
-                if ($lead->intent && $lead->conversation_step === 'intent') {
-                    $lead->conversation_step = 'person_type';
+                if ($lead->intent) {
+                    $lead->intent_source = 'ad_mapping';
+                    if ($lead->conversation_step === 'intent') {
+                        $lead->conversation_step = 'person_type';
+                    }
                 }
             }
 
-            $lead->fill(array_filter([
-                'source' => 'meta_ad_whatsapp',
-                'click_id' => $referral['ctwa_clid'] ?? $lead->click_id,
-                'ad_id' => $referral['source_id'] ?? $lead->ad_id,
-                'ad_headline' => $referral['headline'] ?? $lead->ad_headline,
-                'ad_body' => $referral['body'] ?? $lead->ad_body,
-                'source_url' => $referral['source_url'] ?? $lead->source_url,
-            ], fn($v) => $v !== null && $v !== ''));
+            if ($adId && $lead->ad_id && $adId !== $lead->ad_id) {
+                // A different advert than the one that acquired this contact.
+                if (!$lead->original_ad_id) {
+                    // The lead predates the original_* columns: the attribution
+                    // already on the record IS the first touch, so preserve it
+                    // before the later click is recorded.
+                    $lead->original_ad_id = $lead->ad_id;
+                    $lead->original_click_id = $lead->click_id;
+                    $lead->original_campaign_id = $lead->campaign_id;
+                    $lead->original_source_url = $lead->source_url;
+                }
+                // Never rewrite the original acquisition; keep the extra click
+                // separately so campaign reporting still credits advert one.
+                $lead->latest_touch_ad_id = $adId;
+                $lead->latest_touch_click_id = $referral['ctwa_clid'] ?? null;
+                $lead->latest_touch_at = now();
+            } elseif ($adId && !$lead->original_ad_id) {
+                // First touch: this contact had no acquisition source yet, so
+                // it is safe to record it now.
+                $lead->fill(array_filter([
+                    'source' => 'meta_ad_whatsapp',
+                    'click_id' => $referral['ctwa_clid'] ?? $lead->click_id,
+                    'ad_id' => $adId,
+                    'ad_headline' => $referral['headline'] ?? $lead->ad_headline,
+                    'ad_body' => $referral['body'] ?? $lead->ad_body,
+                    'source_url' => $referral['source_url'] ?? $lead->source_url,
+                    'original_ad_id' => $adId,
+                    'original_click_id' => $referral['ctwa_clid'] ?? null,
+                    'original_source_url' => $referral['source_url'] ?? null,
+                ], fn($v) => $v !== null && $v !== ''));
+            }
         }
         $lead->last_inbound_at = now();
         $lead->save();
@@ -150,6 +147,87 @@ class WhatsAppWebhookController extends Controller
         if (!$lead->human_takeover) {
             ProcessIncomingLeadMessage::dispatch($leadMessage->id, $lead->id)->onQueue('leads');
         }
+    }
+
+    /**
+     * Find the open lead for this number, or create it.
+     *
+     * Meta can deliver several messages from a brand new contact at the same
+     * time. Without a per-number lock two webhook requests can both miss the
+     * row and create two leads, splitting one conversation down the middle, so
+     * the whole find-or-create runs under a short cache lock.
+     */
+    private function resolveLead(string $from, ?string $name, array $referral, bool $isAdReferral): Lead
+    {
+        $resolve = function () use ($from, $name, $referral, $isAdReferral): Lead {
+            $lead = Lead::where('whatsapp_id', $from)->open()->latest('id')->first();
+
+            // A new ad click after the bot finished is a fresh enquiry. Never
+            // overwrite the completed lead's campaign attribution with it. While
+            // a human has the old conversation open, keep the reply there
+            // instead of starting a second qualification thread.
+            if ($lead && $lead->automation_completed_at && !$lead->human_takeover && $isAdReferral) {
+                $lead = null;
+            }
+
+            if (!$lead) {
+                return $this->createLead($from, $name, $referral, $isAdReferral);
+            }
+
+            if (!$lead->name && $name) {
+                $lead->name = $name;
+                $lead->save();
+            }
+
+            return $lead;
+        };
+
+        try {
+            $lock = Cache::lock('whatsapp-lead:' . $from, 10);
+        } catch (\Throwable $e) {
+            // A cache store without lock support must never block inbound leads.
+            Log::warning('Lead creation lock unavailable; continuing without it', ['error' => $e->getMessage()]);
+            return $resolve();
+        }
+
+        try {
+            return $lock->block(3, $resolve);
+        } catch (LockTimeoutException $e) {
+            // The other request is still creating the lead; a plain retry of the
+            // lookup is better than failing the webhook.
+            return $resolve();
+        }
+    }
+
+    private function createLead(string $from, ?string $name, array $referral, bool $isAdReferral): Lead
+    {
+        // Campaign intent is controlled by the explicit Ad ID mapping, never
+        // guessed from the advert's marketing copy. An unmapped advert is a
+        // general advert: intent stays empty and the bot asks question 1.
+        $mappedIntent = $isAdReferral ? $this->adIntents->forReferral($referral) : null;
+
+        return Lead::create([
+            'name' => $name,
+            'whatsapp_id' => $from,
+            'phone' => $from,
+            'source' => $isAdReferral ? 'meta_ad_whatsapp' : 'whatsapp',
+            'click_id' => $isAdReferral ? ($referral['ctwa_clid'] ?? null) : null,
+            'ad_id' => $isAdReferral ? ($referral['source_id'] ?? null) : null,
+            'ad_headline' => $isAdReferral ? ($referral['headline'] ?? null) : null,
+            'ad_body' => $isAdReferral ? ($referral['body'] ?? null) : null,
+            'source_url' => $isAdReferral ? ($referral['source_url'] ?? null) : null,
+            'qualification_status' => 'NEW',
+            'sales_status' => 'NEW',
+            'conversation_step' => $mappedIntent ? 'person_type' : 'intent',
+            'intent' => $mappedIntent,
+            // The explicit Ad ID mapping is authoritative. Recording where the
+            // intent came from lets the conversation refuse to overwrite it
+            // with the pre-filled advert text.
+            'intent_source' => $mappedIntent ? 'ad_mapping' : null,
+            'original_ad_id' => $isAdReferral ? ($referral['source_id'] ?? null) : null,
+            'original_click_id' => $isAdReferral ? ($referral['ctwa_clid'] ?? null) : null,
+            'original_source_url' => $isAdReferral ? ($referral['source_url'] ?? null) : null,
+        ]);
     }
 
     private function normaliseMessage(array $message): array

@@ -16,6 +16,9 @@
                 <dt class="col-5">Current accountant</dt><dd class="col-7">{{ config('lead_qualification.accountant_options.'.$lead->current_accountant, $lead->current_accountant ?: '—') }}</dd>
                 <dt class="col-5">Timeframe</dt><dd class="col-7">{{ config('lead_qualification.timeframe_options.'.$lead->contact_timeframe, $lead->contact_timeframe ?: '—') }}</dd>
                 <dt class="col-5">Campaign</dt><dd class="col-7">{{ $lead->campaign_name ?: $lead->ad_name ?: $lead->ad_headline ?: 'Direct / unknown' }}</dd>
+                @php($mentioned = data_get($lead->qualification_data, 'mentioned_intent'))
+                @if($mentioned)<dt class="col-5">Also mentioned</dt><dd class="col-7">{{ config('lead_qualification.intent_options.'.$mentioned, $mentioned) }} <span class="small text-muted">(the advert's route is kept)</span></dd>@endif
+                @if($lead->latest_touch_ad_id && $lead->latest_touch_ad_id !== $lead->ad_id)<dt class="col-5">Later click</dt><dd class="col-7">Ad {{ $lead->latest_touch_ad_id }} <span class="small text-muted">&middot; first-touch campaign kept</span></dd>@endif
                 <dt class="col-5">Assigned</dt><dd class="col-7">{{ optional($lead->assignee)->name ?: 'Unassigned' }}</dd>
             </dl>
             @if($lead->qualification_summary)<div class="alert alert-light border mt-3"><strong>Summary</strong> <span class="small text-muted">(generated from the conversation rules)</span><br>{{ $lead->qualification_summary }}</div>@endif
