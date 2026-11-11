@@ -123,6 +123,7 @@ Route::get('/bank-statements/search-clients', [ReceiptController::class, 'search
     // Bank reconciliation — authenticated accountant workspace
     Route::post('/bank-reconciliation/accounts', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'createBankAccount'])->name('admin.bank-reconciliation.accounts.create');
     Route::get('/bank-reconciliation', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'index'])->name('admin.bank-reconciliation.index');
+    Route::get('/bank-reconciliation/rows', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'rows'])->name('admin.bank-reconciliation.rows');
     Route::get('/bank-reconciliation/banks', [ReceiptController::class, 'getBanksByClient'])->name('admin.bank-reconciliation.banks');
 Route::get('/bank-reconciliation/search-clients', [ReceiptController::class, 'searchClients'])->name('admin.bank-reconciliation.search-clients');
     Route::get('/bank-reconciliation/businesses', [ReceiptController::class, 'getClientsByCredential'])->name('admin.bank-reconciliation.businesses');

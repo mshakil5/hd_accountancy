@@ -12,6 +12,10 @@
 .hd-stat{background:#fff;border:1px solid #e5eaf1;border-radius:10px;padding:12px 20px;min-width:130px;text-align:center}
 .hd-stat__label{font-size:11px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
 .hd-stat__val{font-size:26px;font-weight:800;line-height:1.1;margin-top:2px}
+.hd-stat--filter{font:inherit;cursor:pointer;background:#fff;transition:border-color .15s,box-shadow .15s}
+.hd-stat--filter:hover{border-color:#93c5fd}
+.hd-stat--filter.active{border-color:#0284c7;box-shadow:0 0 0 2px #bae6fd}
+.hd-stat--filter .hd-stat__label,.hd-stat--filter .hd-stat__val{display:block}
 .hd-filter-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
 .hd-ftab{border:1px solid #dbe4ee;background:#f8fafc;border-radius:20px;padding:5px 16px;font-size:13px;cursor:pointer;text-decoration:none;color:#334155;font-weight:600}
 .hd-ftab.active{background:#0284c7;border-color:#0284c7;color:#fff}
@@ -154,8 +158,9 @@
 
 {{-- ── Filter form ── --}}
 <div class="hd-card">
-  <form method="GET" action="{{ route('admin.bank-reconciliation.index') }}" class="row align-items-end g-2">
+  <form method="GET" action="{{ route('admin.bank-reconciliation.index') }}" class="row align-items-end g-2" id="hd-filter-form">
     <input type="hidden" name="client_credential_id" value="{{ $presetId }}">
+    <input type="hidden" name="reconcile_status" value="{{ $reconcileFilter ?? 'unreconciled' }}">
     <div class="col-md-3">
       <label class="hd-small font-weight-bold">Business</label>
       <select class="form-control select2" name="client_id" id="filterBusiness" style="width:100%">
@@ -191,497 +196,29 @@
 
 <input type="hidden" id="client_credential_id" value="{{ $credentialId ?? $presetId }}">
 
-{{-- ── Stats bar ── --}}
-<div class="hd-stat-bar">
-  <div class="hd-stat">
-    <div class="hd-stat__label">Unreconciled</div>
-    <div class="hd-stat__val" style="color:#b91c1c">{{ $unreconciledCount }}</div>
-  </div>
-  <div class="hd-stat">
-    <div class="hd-stat__label">Reconciled</div>
-    <div class="hd-stat__val" style="color:#15803d">{{ $reconciledCount }}</div>
-  </div>
-  <div class="hd-stat">
-    <div class="hd-stat__label">Total</div>
-    <div class="hd-stat__val" style="color:#0369a1">{{ $totalCount }}</div>
-  </div>
-</div>
-
-{{-- ── Reconcile-status filter tabs ── --}}
-<div class="hd-filter-tabs">
-  @foreach(['unreconciled'=>'Unreconciled','reconciled'=>'Reconciled','all'=>'Total'] as $val=>$lbl)
-  <a href="{{ request()->url() . '?' . http_build_query(array_merge(request()->all(), ['reconcile_status' => $val === 'all' ? '' : $val])) }}"
-     class="hd-ftab {{ ($reconcileFilter ?? 'unreconciled') === $val ? 'active' : '' }}">{{ $lbl }}</a>
+{{-- ── Status cards: the count IS the filter (kept live by JS) ── --}}
+<div class="hd-stat-bar" id="hd-status-cards">
+  @foreach(['unreconciled' => ['Unreconciled', '#b91c1c', $unreconciledCount], 'reconciled' => ['Reconciled', '#15803d', $reconciledCount], 'all' => ['Total', '#0369a1', $totalCount]] as $val => $card)
+  @php $isActive = ($reconcileFilter ?? 'unreconciled') === $val; @endphp
+  <button type="button" class="hd-stat hd-stat--filter{{ $isActive ? ' active' : '' }}" data-hd-status="{{ $val }}" aria-pressed="{{ $isActive ? 'true' : 'false' }}">
+    <span class="hd-stat__label">{{ $card[0] }}</span>
+    <span class="hd-stat__val" style="color:{{ $card[1] }}" data-hd-count="{{ $val }}">{{ $card[2] }}</span>
+  </button>
   @endforeach
 </div>
 
-{{-- ── Workspace ── --}}
-<div class="hd-card hd-workspace" id="hd-reconciliation-workspace">
+{{-- ── Workspace: server-rendered fragments, swapped in place by JS ── --}}
+<div class="hd-card hd-workspace" id="hd-reconciliation-workspace"
+     data-rows-url="{{ route('admin.bank-reconciliation.rows') }}"
+     data-reconcile-status="{{ $reconcileFilter ?? 'unreconciled' }}">
   <div class="d-flex justify-content-between align-items-center flex-wrap mb-2">
-    <h5 class="mb-0">Bank Transactions <span class="badge badge-secondary" style="font-size:13px">{{ $entries->total() }}</span></h5>
+    <h5 class="mb-0">Bank Transactions <span class="badge badge-secondary" id="hd-rows-total" style="font-size:13px">{{ $entries->total() }}</span></h5>
+    <span class="hd-small" id="hd-rows-range"></span>
   </div>
-
-  @forelse($entries as $entry)
-  @php
-    $absAmt     = abs((float)$entry->amount);
-    $isCredit   = (float)$entry->amount >= 0;
-    $approved   = ($entry->reconciliation_status ?? '') === 'approved';
-    $dateFormatted = \Carbon\Carbon::parse($entry->transaction_date)->format('d-m-Y');
-    $bankName   = optional($bankAccounts->firstWhere('id', $entry->bank_account_id))->bank_name ?? 'Unassigned';
-    $importInfo = $importMap[$entry->bank_import_id] ?? null;
-
-    // Exact-amount matches from the eligible receipts collection
-    $exact = $fuzzyMatches[(int)$entry->id] ?? collect();
-    // Auto-select if only one match
-    $autoMatch = $exact->count() === 1 ? $exact->first() : null;
-  @endphp
-
-  <div class="hd-reconcile-row" id="bank-entry-{{ $entry->id }}">
-    {{-- ── LEFT: bank transaction details ── --}}
-    <div class="hd-bank-side">
-      <div class="hd-entry-date">{{ $dateFormatted }}</div>
-      <div class="hd-entry-desc">{{ $entry->description }}</div>
-      <div class="hd-entry-bank"><i class="bi bi-bank mr-1"></i>{{ $bankName }}</div>
-
-      <span class="hd-credit-label {{ $isCredit ? 'hd-credit' : 'hd-debit' }}">
-        @if($isCredit)
-          <i class="fa fa-arrow-down mr-1"></i>Credit
-        @else
-          <i class="fa fa-arrow-up mr-1"></i>Debit
-        @endif
-      </span>
-      <span class="hd-amount-big" style="color:{{ $isCredit ? '#15803d' : '#b91c1c' }}">
-        {{ $isCredit ? '+' : '-' }}£{{ number_format($absAmt, 2) }}
-      </span>
-
-      @if($approved)
-        <span class="hd-pill" style="background:#dcfce7;color:#15803d">✓ Reconciled</span>
-      @else
-        <span class="hd-pill" style="background:#fee2e2;color:#b91c1c">Unreconciled</span>
-      @endif
-
-      {{-- View Details toggle --}}
-      <button type="button" class="hd-details-toggle" onclick="hdToggleDetails(this)">
-        <i class="fa fa-chevron-right fa-xs"></i> View Details
-      </button>
-      <div class="hd-details-panel">
-        @if($entry->reference)
-        <div class="hd-details-row"><span>Reference</span><span>{{ $entry->reference }}</span></div>
-        @endif
-        <div class="hd-details-row"><span>Transaction ID</span><span>#{{ $entry->id }}</span></div>
-        @if($entry->balance_after !== null)
-        <div class="hd-details-row"><span>PDF Balance</span><span>£{{ number_format((float)$entry->balance_after, 2) }}</span></div>
-        @endif
-        @if($entry->system_balance !== null)
-        <div class="hd-details-row"><span>System Balance</span><span>£{{ number_format((float)$entry->system_balance, 2) }}</span></div>
-        @endif
-        @if($importInfo)
-        <div class="hd-details-row"><span>Statement</span><span>{{ $importInfo->original_filename ?? '#'.$importInfo->id }}</span></div>
-        @endif
-        @if($entry->source_page || $entry->source_position)
-        <div class="hd-details-row"><span>Page / Row</span><span>{{ $entry->source_page }}/{{ $entry->source_position }}</span></div>
-        @endif
-        @if($entry->extraction_source)
-        <div class="hd-details-row"><span>Extraction</span><span>{{ ucfirst($entry->extraction_source) }}</span></div>
-        @endif
-        @if($entry->approved_at)
-        <div class="hd-details-row"><span>Reconciled at</span><span>{{ \Carbon\Carbon::parse($entry->approved_at)->format('d-m-Y H:i') }}</span></div>
-        @endif
-      </div>
-    </div>
-
-    {{-- ── RIGHT: action area ── --}}
-    <div class="hd-action-side">
-      @if($approved)
-        {{-- Reconciled state --}}
-        <div class="hd-reconciled-banner mb-3">
-          <div>
-            <strong style="color:#15803d">✓ Reconciled</strong>
-            @if($entry->approved_at)
-              <span class="hd-small ml-2">on {{ \Carbon\Carbon::parse($entry->approved_at)->format('d-m-Y') }}</span>
-            @endif
-            @if($entry->receipt_id)
-              <span class="hd-small ml-2">· Receipt #{{ $entry->receipt_id }}</span>
-            @endif
-            @if($entry->journal_posted_at)
-              <span class="hd-pill ml-2" style="background:#dbeafe;color:#1d4ed8">Posted to ledger</span>
-            @endif
-          </div>
-          <form method="POST" action="{{ route('admin.bank-reconciliation.action', $entry->id) }}" class="hd-action-form">
-            @csrf
-            <input type="hidden" name="client_id" value="{{ $entry->client_id }}">
-            <input type="hidden" name="action" value="unmatch">
-            <button class="btn btn-outline-danger btn-sm" onclick="return confirm('Undo this reconciliation?')">Undo</button>
-          </form>
-        </div>
-
-        {{-- Show split allocations if any --}}
-        @php $entrySplits = $splits[$entry->id] ?? collect(); @endphp
-        @if($entrySplits->isNotEmpty())
-        <div class="hd-small font-weight-bold mb-1">Split allocations ({{ $entrySplits->count() }}):</div>
-        <div class="hd-scroll mb-2">
-          <table class="hd-table" style="background:#f8fafc;border-radius:6px">
-            <thead><tr><th>Amount</th><th>Receipt</th><th>Memo</th></tr></thead>
-            <tbody>
-              @foreach($entrySplits as $sp)
-              <tr>
-                <td><strong>£{{ number_format((float)$sp->amount, 2) }}</strong></td>
-                <td>{{ $sp->receipt_id ? '#'.$sp->receipt_id : '—' }}</td>
-                <td>{{ $sp->memo ?: '—' }}</td>
-              </tr>
-              @endforeach
-            </tbody>
-          </table>
-        </div>
-        @endif
-
-      @else
-        {{-- ── TABS ── --}}
-        <div class="hd-row-tabs" role="tablist">
-          <button type="button" class="hd-tab active" data-hd-tab="match">Match</button>
-          <button type="button" class="hd-tab" data-hd-tab="create">Create</button>
-          <button type="button" class="hd-tab" data-hd-tab="split">Split</button>
-          <button type="button" class="hd-tab" data-hd-tab="find">Find &amp; Match</button>
-          <button type="button" class="hd-tab" data-hd-tab="transfer">Transfer</button>
-          <button type="button" class="hd-tab" data-hd-tab="discuss">Discuss</button>
-        </div>
-
-        {{-- ── TAB: Match ── --}}
-        <section class="hd-tab-panel" data-hd-panel="match">
-          @if($exact->isEmpty())
-            <div class="alert alert-light py-2 mb-2" style="border:1px solid #e2e8f0;font-size:13px">
-              <i class="fa fa-info-circle mr-1 text-muted"></i> No receipts with an exact matching amount (£{{ number_format($absAmt,2) }}) found. Use <strong>Find &amp; Match</strong> to search manually, or <strong>Create</strong> a new receipt.
-            </div>
-          @else
-          <p class="hd-small mb-2">
-            <strong>Suggested receipts</strong> — same amount (£{{ number_format($absAmt,2) }}), any date, nearest date first.
-            @if($autoMatch)
-              <strong>Auto-selected</strong> (only 1 match).
-            @endif
-          </p>
-          <form method="POST" action="{{ route('admin.bank-reconciliation.action', $entry->id) }}" class="hd-action-form" id="match-form-{{ $entry->id }}">
-            @csrf
-            <input type="hidden" name="client_id" value="{{ $entry->client_id }}">
-            <input type="hidden" name="action" value="match">
-
-            @if($autoMatch)
-              <input type="hidden" name="receipt_id" value="{{ $autoMatch->id }}">
-              <div class="hd-match-item selected mb-2" data-hd-receipt="{{ $autoMatch->id }}" data-hd-client="{{ $entry->client_id }}" title="Click to view receipt details">
-                <div>
-                  <div style="font-size:13px;font-weight:700">{{ $autoMatch->supplier ?: 'Unknown Supplier' }}</div>
-                  <div class="hd-match-meta">
-                    #{{ $autoMatch->receipt_number }}
-                    @if($autoMatch->detail && $autoMatch->detail->accountHead)
-                      · {{ $autoMatch->detail->accountHead->code }} – {{ $autoMatch->detail->accountHead->name }}
-                    @endif
-                    @if($autoMatch->detail && $autoMatch->detail->invoice_date)
-                      · {{ \Carbon\Carbon::parse($autoMatch->detail->invoice_date)->format('d-m-Y') }}
-                    @endif
-                    @if($autoMatch->detail && $autoMatch->detail->payment_method)
-                      · {{ ucfirst($autoMatch->detail->payment_method) }}
-                    @endif
-                    @php $gap = $suggestionMeta[(int)$entry->id][(int)$autoMatch->id]['days'] ?? null; @endphp
-                    @if($gap === 0)
-                      <span class="hd-pill" style="background:#dcfce7;color:#15803d">Same date</span>
-                    @elseif($gap !== null)
-                      <span class="hd-pill" style="background:#fef3c7;color:#b45309">{{ $gap }} day{{ $gap === 1 ? '' : 's' }} apart</span>
-                    @endif
-                  </div>
-                </div>
-                <div class="hd-match-amount" style="color:#15803d">£{{ number_format((float)$autoMatch->detail->total_amount, 2) }}<i class="fa fa-eye hd-receipt-eye" title="View receipt details"></i></div>
-              </div>
-            @else
-              @foreach($exact->take(10) as $r)
-              <label class="hd-match-item" style="cursor:pointer;display:flex" data-hd-receipt="{{ $r->id }}" data-hd-client="{{ $entry->client_id }}" title="Click to view receipt details">
-                <input type="radio" name="receipt_id" value="{{ $r->id }}" style="margin-right:8px;margin-top:2px" {{ $loop->first ? 'checked' : '' }}>
-                <div style="flex:1;min-width:0">
-                  <div style="font-size:13px;font-weight:700">{{ $r->supplier ?: 'Unknown Supplier' }}</div>
-                  <div class="hd-match-meta">
-                    #{{ $r->receipt_number }}
-                    @if($r->detail && $r->detail->accountHead)
-                      · {{ $r->detail->accountHead->code }} – {{ $r->detail->accountHead->name }}
-                    @endif
-                    @if($r->detail && $r->detail->invoice_date)
-                      · {{ \Carbon\Carbon::parse($r->detail->invoice_date)->format('d-m-Y') }}
-                    @endif
-                    @if($r->detail && $r->detail->payment_method)
-                      · {{ ucfirst($r->detail->payment_method) }}
-                    @endif
-                    @php $gap = $suggestionMeta[(int)$entry->id][(int)$r->id]['days'] ?? null; @endphp
-                    @if($gap === 0)
-                      <span class="hd-pill" style="background:#dcfce7;color:#15803d">Same date</span>
-                    @elseif($gap !== null)
-                      <span class="hd-pill" style="background:#fef3c7;color:#b45309">{{ $gap }} day{{ $gap === 1 ? '' : 's' }} apart</span>
-                    @endif
-                  </div>
-                </div>
-                <div class="hd-match-amount" style="color:#15803d">£{{ number_format((float)$r->detail->total_amount, 2) }}<i class="fa fa-eye hd-receipt-eye" title="View receipt details"></i></div>
-              </label>
-              @endforeach
-            @endif
-
-            <button class="btn btn-primary btn-sm mt-2" onclick="return confirm('Match this receipt to the bank transaction?')">
-              <i class="fa fa-link mr-1"></i> Match &amp; Reconcile
-            </button>
-          </form>
-          @endif
-        </section>
-
-        {{-- ── TAB: Create ── --}}
-        <section class="hd-tab-panel" data-hd-panel="create" hidden>
-          <p class="hd-small mb-2">Create a new receipt from this bank transaction and reconcile immediately. The bank amount is the VAT-inclusive total; the net amount follows the VAT %.</p>
-          <form method="POST" action="{{ route('admin.bank-reconciliation.action', $entry->id) }}" class="hd-action-form">
-            @csrf
-            <input type="hidden" name="client_id" value="{{ $entry->client_id }}">
-            <input type="hidden" name="action" value="create">
-            <div class="hd-form-grid">
-              <div class="hd-field">
-                <label class="hd-field-lbl">Supplier</label>
-                <input class="form-control hd-fc" name="supplier" value="{{ $entry->description }}" placeholder="Supplier name" required>
-              </div>
-              <div class="hd-field">
-                <label class="hd-field-lbl">Invoice Date</label>
-                <input class="form-control hd-fc" type="date" name="invoice_date" value="{{ $entry->transaction_date }}" required>
-              </div>
-              {{-- Net Amount · VAT Percent · Gross Amount (same block as Split / Find & Match) --}}
-              @include('admin.partials.receipt_amounts', [
-                  'gross' => number_format($absAmt, 2, '.', ''),
-                  'grossName' => 'gross',
-                  'grossClass' => '',
-                  'vatName' => 'vat_percent',
-                  'grossHint' => 'must equal the bank amount £' . number_format($absAmt, 2),
-              ])
-              <div class="hd-field" style="grid-column:1/-1">
-                <label class="hd-field-lbl">
-                  Account Head
-                  <button type="button" class="hd-qadd-btn" onclick="openQuickHeadFor(this)"><i class="fa fa-plus-circle"></i> Quick Add</button>
-                </label>
-                <select class="form-control select2 hd-fc" name="account_head_id" required>
-                  <option value="">Choose account head</option>
-                  @foreach($heads as $h)
-                  <option value="{{ $h->id }}">{{ $h->code }} — {{ $h->name }}</option>
-                  @endforeach
-                </select>
-              </div>
-              <div style="grid-column:1/-1">
-                <button class="btn btn-success btn-sm" onclick="return confirm('Create receipt and reconcile for £{{ number_format($absAmt,2) }}?')">
-                  <i class="fa fa-plus mr-1"></i> Create &amp; Reconcile
-                </button>
-              </div>
-            </div>
-          </form>
-        </section>
-
-        {{-- ── TAB: Split ── --}}
-        <section class="hd-tab-panel" data-hd-panel="split" hidden>
-          <p class="hd-small mb-2">Split this £{{ number_format($absAmt, 2) }} transaction across multiple receipts. All lines must total exactly £{{ number_format($absAmt, 2) }}.</p>
-          <form method="POST" action="{{ route('admin.bank-reconciliation.action', $entry->id) }}"
-                class="hd-split-form hd-action-form"
-                data-split-total="{{ number_format($absAmt, 2, '.', '') }}">
-            @csrf
-            <input type="hidden" name="client_id" value="{{ $entry->client_id }}">
-            <input type="hidden" name="action" value="split">
-            <div class="hd-split-lines">
-              @foreach([0,1] as $i)
-              <div class="hd-split-line hd-form-grid">
-                <div class="hd-field">
-                  <label class="hd-field-lbl">Supplier</label>
-                  <input class="form-control hd-fc" name="splits[{{ $i }}][supplier]" placeholder="Supplier name">
-                </div>
-                <div class="hd-field">
-                  <label class="hd-field-lbl">Invoice Date</label>
-                  <input class="form-control hd-fc" type="date" name="splits[{{ $i }}][invoice_date]" value="{{ $entry->transaction_date }}">
-                </div>
-                @include('admin.partials.receipt_amounts', [
-                    'gross' => '',
-                    'grossName' => 'splits[' . $i . '][amount]',
-                    'grossClass' => 'hd-split-amount',
-                    'vatName' => 'splits[' . $i . '][vat_percent]',
-                ])
-                <div class="hd-field">
-                  <label class="hd-field-lbl">
-                    Account Head
-                    <button type="button" class="hd-qadd-btn" onclick="openQuickHeadFor(this)"><i class="fa fa-plus-circle"></i> Quick Add</button>
-                  </label>
-                  <select class="form-control select2 hd-fc" name="splits[{{ $i }}][account_head_id]" required>
-                    <option value="">Choose head</option>
-                    @foreach($heads as $h)
-                    <option value="{{ $h->id }}">{{ $h->code }} — {{ $h->name }}</option>
-                    @endforeach
-                  </select>
-                </div>
-              </div>
-              @endforeach
-            </div>
-            <div class="d-flex gap-2 align-items-center flex-wrap mt-2 mb-2">
-              <button type="button" class="btn btn-outline-secondary btn-sm" onclick="hdAddSplitLine(this)"><i class="fa fa-plus"></i> Add line</button>
-              <button type="button" class="btn btn-outline-secondary btn-sm" onclick="hdRemoveSplitLine(this)" disabled><i class="fa fa-minus"></i> Remove line</button>
-              <span class="hd-split-meter" role="status">Allocated £0.00 of £{{ number_format($absAmt, 2) }}</span>
-            </div>
-            <button class="btn btn-primary btn-sm" onclick="return hdConfirmSplit(this.closest('form'))">
-              <i class="fa fa-scissors mr-1"></i> Save Split &amp; Reconcile
-            </button>
-          </form>
-        </section>
-
-        {{-- ── TAB: Find & Match ── --}}
-        <section class="hd-tab-panel" data-hd-panel="find" hidden>
-          <p class="hd-small mb-2">Search and select receipts to match. Suggested receipts (same amount, any date) are listed first, nearest date first. An existing receipt can give only part of what is left of it, and new receipts below cover the remainder — any combination, as long as everything adds up to £{{ number_format($absAmt, 2) }}.</p>
-          <div class="hd-find-counter" id="find-counter-{{ $entry->id }}">
-            Selected: £0.00 / Target: £{{ number_format($absAmt, 2) }} · Remaining: £{{ number_format($absAmt, 2) }}
-          </div>
-          <input type="search" class="form-control mb-2 hd-find-search" placeholder="Search supplier or receipt #" aria-label="Search">
-          <form method="POST" action="{{ route('admin.bank-reconciliation.action', $entry->id) }}" class="hd-action-form hd-find-form" id="find-form-{{ $entry->id }}">
-            @csrf
-            <input type="hidden" name="client_id" value="{{ $entry->client_id }}">
-            <input type="hidden" name="action" value="find_match">
-            <div class="hd-find-list" data-target="{{ number_format($absAmt, 2, '.', '') }}">
-              @forelse(($findMatches[(int)$entry->id] ?? $receipts) as $r)
-              @php
-                $rAmt = (float)($r->detail->total_amount ?? 0);
-                $rLeft = (float)($receiptRemaining[(int)$r->id] ?? $rAmt);
-              @endphp
-              <label class="hd-find-item"
-                     data-hd-receipt="{{ $r->id }}"
-                     data-hd-client="{{ $entry->client_id }}"
-                     title="Click to view receipt details"
-                     data-search="{{ strtolower(($r->receipt_number ?? '').' '.($r->supplier ?? '')) }}"
-                     data-amount="{{ number_format($rAmt, 2, '.', '') }}"
-                     data-remaining="{{ number_format($rLeft, 2, '.', '') }}">
-                <input type="checkbox" name="receipt_ids[]" value="{{ $r->id }}"
-                       class="hd-find-cb"
-                       data-amount="{{ $rAmt }}"
-                       data-remaining="{{ $rLeft }}"
-                       onchange="hdFindUpdate(this)">
-                <div style="flex:1;min-width:0">
-                  <span style="font-weight:700;font-size:13px">#{{ $r->receipt_number }} — {{ $r->supplier ?: 'Unknown' }}</span>
-                  @if($r->detail && $r->detail->invoice_date)
-                    <span class="hd-small ml-1">· {{ \Carbon\Carbon::parse($r->detail->invoice_date)->format('d-m-Y') }}</span>
-                  @endif
-                  @if($r->detail && $r->detail->payment_method)
-                    <span class="hd-small ml-1">· {{ ucfirst($r->detail->payment_method) }}</span>
-                  @endif
-                  @if($r->detail && $r->detail->accountHead)
-                    <span class="hd-small ml-1">· {{ $r->detail->accountHead->code }}</span>
-                  @endif
-                  @if(isset($suggestionMeta[(int)$entry->id][(int)$r->id]))
-                    <span class="hd-pill" style="background:#e0f2fe;color:#0369a1">Suggested</span>
-                  @endif
-                  @if($rLeft < $rAmt - 0.004)
-                    <span class="hd-pill" style="background:#fef3c7;color:#b45309">£{{ number_format($rLeft, 2) }} left</span>
-                  @endif
-                  <i class="fa fa-eye hd-receipt-eye" title="View receipt details"></i>
-                </div>
-                <span style="font-weight:700;color:#15803d;white-space:nowrap">£{{ number_format($rAmt, 2) }}</span>
-                <input type="number" class="form-control hd-fc hd-find-apply"
-                       name="allocations[{{ $r->id }}]" min="0.01" max="{{ number_format($rLeft, 2, '.', '') }}" step="0.01"
-                       placeholder="Apply £" title="How much of this receipt to use" hidden disabled>
-              </label>
-              @empty
-              <div class="hd-small text-muted">No eligible receipts found.</div>
-              @endforelse
-            </div>
-
-            {{-- Create one or more new receipts for the uncovered remainder --}}
-            <div class="hd-create-block">
-              <div class="hd-small font-weight-bold mb-1">Create new receipt(s) for the remainder</div>
-              <div class="hd-create-lines">
-                <div class="hd-create-line hd-form-grid">
-                  <div class="hd-field">
-                    <label class="hd-field-lbl">Supplier</label>
-                    <input class="form-control hd-fc" name="creates[0][supplier]" value="{{ $entry->description }}" placeholder="Supplier name">
-                  </div>
-                  <div class="hd-field">
-                    <label class="hd-field-lbl">Invoice Date</label>
-                    <input class="form-control hd-fc" type="date" name="creates[0][invoice_date]" value="{{ $entry->transaction_date }}">
-                  </div>
-                  @include('admin.partials.receipt_amounts', [
-                      'gross' => '',
-                      'grossName' => 'creates[0][gross]',
-                      'grossClass' => 'hd-create-gross',
-                      'vatName' => 'creates[0][vat_percent]',
-                  ])
-                  <div class="hd-field" style="grid-column:1/-1">
-                    <label class="hd-field-lbl">
-                      Account Head
-                      <button type="button" class="hd-qadd-btn" onclick="openQuickHeadFor(this)"><i class="fa fa-plus-circle"></i> Quick Add</button>
-                    </label>
-                    <select class="form-control select2 hd-fc" name="creates[0][account_head_id]">
-                      <option value="">Choose head</option>
-                      @foreach($heads as $h)
-                      <option value="{{ $h->id }}">{{ $h->code }} — {{ $h->name }}</option>
-                      @endforeach
-                    </select>
-                  </div>
-                </div>
-              </div>
-              <div class="d-flex gap-2 align-items-center flex-wrap mt-1 mb-2">
-                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="hdAddCreateLine(this)"><i class="fa fa-plus"></i> Add create line</button>
-                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="hdRemoveCreateLine(this)" disabled><i class="fa fa-minus"></i> Remove line</button>
-                <span class="hd-create-meter" role="status">Creating £0.00</span>
-              </div>
-            </div>
-
-            <button class="btn btn-primary btn-sm mt-2 hd-find-submit" disabled onclick="return confirm('Match the applied receipts and create any new ones, then reconcile this transaction?')">
-              <i class="fa fa-check mr-1"></i> Match / Create &amp; Reconcile
-            </button>
-          </form>
-        </section>
-
-        {{-- ── TAB: Transfer ── --}}
-        <section class="hd-tab-panel" data-hd-panel="transfer" hidden>
-          <p class="hd-small mb-2">Mark this movement as an internal transfer to another bank account.</p>
-          <form method="POST" action="{{ route('admin.bank-reconciliation.action', $entry->id) }}" class="hd-action-form">
-            @csrf
-            <input type="hidden" name="client_id" value="{{ $entry->client_id }}">
-            <input type="hidden" name="action" value="transfer">
-            <div class="hd-field mb-3">
-              <label class="hd-field-lbl">Destination Bank Account</label>
-              <select class="form-control select2 hd-fc" name="destination_bank_account_id" required>
-                <option value="">Choose destination</option>
-                @foreach($bankAccounts as $bank)
-                  @continue((int)$bank->id === (int)$entry->bank_account_id)
-                  @continue(strtolower(trim($bank->bank_name)) === 'unknown historical bank')
-                  <option value="{{ $bank->id }}">{{ $bank->bank_name }}{{ $bank->account_last_four?' ••'.$bank->account_last_four:'' }}</option>
-                @endforeach
-              </select>
-            </div>
-            <button class="btn btn-primary btn-sm" onclick="return confirm('Record this as an internal bank transfer?')">
-              <i class="fa fa-exchange mr-1"></i> Save Transfer
-            </button>
-          </form>
-        </section>
-
-        {{-- ── TAB: Discuss ── --}}
-        <section class="hd-tab-panel" data-hd-panel="discuss" hidden>
-          @php $entryNotes = $notes[$entry->id] ?? collect(); @endphp
-          @if($entryNotes->isNotEmpty())
-          <div class="mb-2">
-            <div class="hd-small font-weight-bold mb-1">Internal Notes</div>
-            @foreach($entryNotes as $n)
-            <div class="hd-note-pill">{{ $n->body }} <span style="opacity:.6;font-size:11px">· {{ $n->author_name ?? 'Unknown' }} · {{ \Carbon\Carbon::parse($n->created_at)->format('d-m-Y H:i') }}</span></div>
-            @endforeach
-          </div>
-          @endif
-          <form method="POST" action="{{ route('admin.bank-reconciliation.action', $entry->id) }}" class="hd-action-form">
-            @csrf
-            <input type="hidden" name="client_id" value="{{ $entry->client_id }}">
-            <input type="hidden" name="action" value="add_note">
-            <div class="hd-field mb-2">
-              <label class="hd-field-lbl">Add Internal Note</label>
-              <textarea class="form-control hd-fc" name="review_note" rows="2" maxlength="2000" placeholder="Accountant note…" required></textarea>
-            </div>
-            <button class="btn btn-outline-primary btn-sm"><i class="fa fa-comment mr-1"></i> Save Note</button>
-          </form>
-        </section>
-      @endif
-    </div>
+  <div id="hd-rows">
+    @include('admin.accounting.partials.reconcile_rows')
   </div>
-  @empty
-  <div class="alert alert-info"><strong>No bank transactions found.</strong> Import a statement for this client and business to begin reconciliation.</div>
-  @endforelse
-
-  <div class="mt-3">{{ $entries->links('vendor.pagination.bootstrap-5') }}</div>
+  <div class="mt-3" id="hd-pagination"></div>
 </div>
 
 @endif {{-- presetId --}}
@@ -1191,34 +728,190 @@ jQuery(function ($) {
 });
 </script>
 
-{{-- 2) AJAX action handler --}}
+{{-- 2) Workspace: rows, counters and pager are server-rendered fragments that JS swaps in place --}}
+<script>
+// Re-attach the interactive bits after a fragment is injected.
+function hdInitWorkspace(root){
+  if(!root) return;
+  root.querySelectorAll('.hd-vat-box').forEach(function(box){ hdVatUpdate(box); });
+  root.querySelectorAll('.hd-split-form').forEach(function(f){ hdSplitTotals(f); });
+  root.querySelectorAll('.hd-find-form').forEach(function(f){
+    // Unticked rows must never send a stale "Apply".
+    f.querySelectorAll('.hd-find-item').forEach(function(item){
+      const cb = item.querySelector('.hd-find-cb'), ap = item.querySelector('.hd-find-apply');
+      if(cb && ap){ ap.hidden = !cb.checked; ap.disabled = !cb.checked; }
+    });
+    hdFindTotals(f, false);
+  });
+  if(window.jQuery){
+    jQuery(root).find('select.select2').each(function(){
+      const $s = jQuery(this);
+      if($s.data('select2')) return;
+      $s.select2({width:'100%', dropdownParent: jQuery(document.body)});
+    });
+  }
+}
+window.hdInitWorkspace = hdInitWorkspace;
+document.addEventListener('DOMContentLoaded', function(){ hdInitWorkspace(document.getElementById('hd-rows')); });
+
+(function(){
+  const ws = document.getElementById('hd-reconciliation-workspace');
+  if(!ws) return;
+  const rowsEl  = document.getElementById('hd-rows');
+  const pagerEl = document.getElementById('hd-pagination');
+  const totalEl = document.getElementById('hd-rows-total');
+  const rangeEl = document.getElementById('hd-rows-range');
+  const form    = document.getElementById('hd-filter-form');
+  const rowsUrl = ws.dataset.rowsUrl;
+
+  function statusCards(){ return Array.prototype.slice.call(document.querySelectorAll('[data-hd-status]')); }
+  function activeStatus(){
+    const on = document.querySelector('[data-hd-status].active');
+    return on ? on.dataset.hdStatus : (ws.dataset.reconcileStatus || 'unreconciled');
+  }
+  function filterParams(){
+    const p = new URLSearchParams();
+    if(form){
+      new FormData(form).forEach(function(v, k){ p.set(k, v == null ? '' : v); });
+    }
+    p.set('reconcile_status', activeStatus() === 'all' ? '' : activeStatus());
+    return p;
+  }
+  function syncUrl(params, page){
+    const p = new URLSearchParams(params);
+    if(page > 1) p.set('page', page); else p.delete('page');
+    const qs = p.toString();
+    try { history.replaceState(null, '', location.pathname + (qs ? '?' + qs : '')); } catch(e){}
+  }
+
+  function paintCards(stats){
+    if(!stats) return;
+    document.querySelectorAll('[data-hd-count]').forEach(function(el){
+      const v = stats[el.dataset.hdCount];
+      if(v !== undefined && v !== null) el.textContent = v;
+    });
+    const active = activeStatus();
+    statusCards().forEach(function(c){
+      const on = c.dataset.hdStatus === active;
+      c.classList.toggle('active', on);
+      c.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+
+  function paintPager(pg){
+    if(!pagerEl) return;
+    if(rangeEl) rangeEl.textContent = (pg && pg.total) ? ('Showing ' + pg.from + '–' + pg.to + ' of ' + pg.total) : '';
+    pagerEl.innerHTML = '';
+    if(!pg || pg.last_page <= 1) return;
+    const ul = document.createElement('ul');
+    ul.className = 'pagination mb-0';
+    function add(label, target, opts){
+      opts = opts || {};
+      const li = document.createElement('li');
+      li.className = 'page-item' + (opts.active ? ' active' : '') + (opts.disabled ? ' disabled' : '');
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'page-link';
+      btn.innerHTML = label;
+      if(!opts.disabled && !opts.active) btn.addEventListener('click', function(){ load(target); });
+      li.appendChild(btn);
+      ul.appendChild(li);
+    }
+    add('&laquo;', pg.page - 1, {disabled: pg.page <= 1});
+    const start = Math.max(1, pg.page - 2), end = Math.min(pg.last_page, pg.page + 2);
+    if(start > 1){ add('1', 1); if(start > 2) add('&hellip;', pg.page, {disabled: true}); }
+    for(let i = start; i <= end; i++) add(String(i), i, {active: i === pg.page});
+    if(end < pg.last_page){ if(end < pg.last_page - 1) add('&hellip;', pg.page, {disabled: true}); add(String(pg.last_page), pg.last_page); }
+    add('&raquo;', pg.page + 1, {disabled: pg.page >= pg.last_page});
+    pagerEl.appendChild(ul);
+  }
+
+  // Paint one server response: rows HTML + counters + pager.
+  function paint(data){
+    if(!rowsEl) return;
+    if(typeof data.html === 'string') rowsEl.innerHTML = data.html;
+    else if(!rowsEl.querySelector('.hd-reconcile-row') && !rowsEl.textContent.trim()) rowsEl.innerHTML = data.empty_html || '';
+    if(totalEl && data.stats) totalEl.textContent = data.stats.total;
+    paintCards(data.stats);
+    paintPager(data.pagination);
+    hdInitWorkspace(rowsEl);
+  }
+  window.hdWorkspacePaint = paint;
+
+  function load(page){
+    const params = filterParams();
+    if(page > 1) params.set('page', page);
+    rowsEl.style.opacity = '0.45';
+    fetch(rowsUrl + '?' + params.toString(), {
+      headers: {'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest'},
+      credentials: 'same-origin'
+    })
+      .then(function(r){ if(!r.ok) throw new Error('Could not load transactions.'); return r.json(); })
+      .then(function(d){ paint(d); syncUrl(params, page || 1); })
+      .catch(function(err){ if(window.toastr) toastr.error(err.message); })
+      .then(function(){ rowsEl.style.opacity = ''; });
+  }
+  window.hdWorkspaceLoad = load;
+
+  if(form) form.addEventListener('submit', function(e){ e.preventDefault(); load(1); });
+
+  statusCards().forEach(function(c){
+    c.addEventListener('click', function(){
+      if(c.classList.contains('active')) return;
+      statusCards().forEach(function(o){ o.classList.remove('active'); o.setAttribute('aria-pressed', 'false'); });
+      c.classList.add('active'); c.setAttribute('aria-pressed', 'true');
+      load(1);
+    });
+  });
+
+  // Keep the address bar in step with what is on screen.
+  syncUrl(filterParams(), parseInt(new URLSearchParams(location.search).get('page') || '1', 10) || 1);
+})();
+</script>
+
+{{-- 3) Actions: the server returns the one row it changed, nothing else is reloaded --}}
 <script>
 jQuery(function($){
   $(document).on('submit', '.hd-action-form', function(e){
-    var $form = $(this);
     e.preventDefault();
-    $.post($form.attr('action'), $form.serialize(), function(resp){
-      if(resp && resp.success){
-        toastr.success(resp.message || 'Saved');
-        var scrollY = window.scrollY;
-        $.get(window.location.href, function(html){
-          var $parsed = $('<div>').html(html);
-          var $newWs = $parsed.find('#hd-reconciliation-workspace');
-          if($newWs.length){
-            $('#hd-reconciliation-workspace').replaceWith($newWs);
-            window.scrollTo(0, scrollY);
-            $newWs.find('select.select2:not(.select2-hidden-accessible)').select2({width:'100%'});
-            $newWs.find('.hd-split-form').each(function(){ hdSplitTotals(this); });
-            $newWs.find('.hd-vat-box').each(function(){ hdVatUpdate(this); });
-            $newWs.find('.hd-find-form').each(function(){ hdFindTotals(this, false); });
-          }
-        });
-      } else {
-        toastr.error(resp && resp.message ? resp.message : 'Failed');
+    var $form = $(this);
+    $.ajax({
+      url: $form.attr('action') + window.location.search,
+      method: 'POST',
+      data: $form.serialize(),
+      dataType: 'json',
+      headers: {'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json'}
+    }).done(function(resp){
+      if(!resp || !resp.success){
+        var bad = (resp && resp.message) ? resp.message : 'Failed';
+        if(window.toastr) toastr.error(bad); else alert(bad);
+        return;
+      }
+      if(window.toastr) toastr.success(resp.message || 'Saved');
+
+      var id = resp.entry_id;
+      if(resp.row){
+        var $row = id ? $('#bank-entry-' + id) : $();
+        if(resp.row.visible && resp.row.html){
+          if($row.length) $row.replaceWith(resp.row.html);
+          else $('#hd-rows').prepend(resp.row.html);
+          $row = id ? $('#bank-entry-' + id) : $();
+        } else if($row.length){
+          $row.remove();
+        }
+        if(!$('#hd-rows .hd-reconcile-row').length){
+          $('#hd-rows').html(resp.empty_html || '');
+        }
+        if(window.hdWorkspacePaint){
+          window.hdWorkspacePaint({html: null, stats: resp.stats, pagination: resp.pagination});
+        }
+        hdInitWorkspace($row.length ? $row[0] : document.getElementById('hd-rows'));
+      } else if(window.hdWorkspaceLoad){
+        window.hdWorkspaceLoad(parseInt(new URLSearchParams(location.search).get('page') || '1', 10) || 1);
       }
     }).fail(function(xhr){
       var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Request failed';
-      toastr.error(msg);
+      if(window.toastr) toastr.error(msg); else alert(msg);
     });
   });
 });

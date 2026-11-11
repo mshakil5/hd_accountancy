@@ -22,13 +22,123 @@ class BankReconciliationPageController extends Controller
     public function __construct(private BankLedgerPostingService $posting) {}
 
     public function index(Request $request) {
-        if (Auth::user() && Auth::user()->email === 'jane@gmail.com') {
-            $david = ClientCredential::where('email', 'david@gmail.com')->first();
-            if ($david) {
-                $request->merge(['client_credential_id' => $david->id]);
+        $scope = $this->resolveScope($request);
+        $shared = [
+            'credentialId' => $scope['credentialId'],
+            'businessId' => $scope['businessId'],
+            'bankAccountId' => $scope['bankAccountId'],
+            'bankAccounts' => $scope['bankAccounts'],
+        ];
+        if (!$scope['credentialId'] || !$scope['businessIds']) {
+            // Nothing selected yet — render the picker with an empty workspace.
+            return view('admin.accounting.bank_reconciliation', $shared + $this->emptyWorkspace());
+        }
+        return view('admin.accounting.bank_reconciliation', $shared + $this->workspaceData($request, $scope));
+    }
+
+    /**
+     * Fragment endpoint for the workspace. Rows are still rendered by Blade (the
+     * same partial the first paint uses); this only decides which rows the current
+     * filter/page shows and hands back the HTML with the counters and pager state,
+     * so the browser never reloads the page to change page or status.
+     */
+    public function rows(Request $request) {
+        $scope = $this->resolveScope($request);
+        if (!$scope['credentialId'] || !$scope['businessIds']) {
+            return response()->json($this->workspacePayload($this->emptyWorkspace()));
+        }
+        return response()->json($this->workspacePayload($this->workspaceData($request, $scope)));
+    }
+
+    /** Workspace data when no client is chosen: empty rows, zero counters. */
+    private function emptyWorkspace(): array {
+        return [
+            'entries' => DB::table('bank_entries')->whereRaw('1 = 0')->paginate(25),
+            'bankAccounts' => collect(),
+            'heads' => collect(),
+            'receipts' => collect(),
+            'splits' => collect(),
+            'notes' => collect(),
+            'fuzzyMatches' => [],
+            'findMatches' => [],
+            'suggestionMeta' => [],
+            'receiptRemaining' => [],
+            'importMap' => collect(),
+            'reconcileFilter' => 'unreconciled',
+            'totalCount' => 0,
+            'unreconciledCount' => 0,
+            'reconciledCount' => 0,
+            'filteredCount' => 0,
+            'currentPage' => 1,
+            'lastPage' => 1,
+            'onlyEntry' => null,
+        ];
+    }
+
+    /** Counters + pager + rendered rows: one shape for every JS caller. */
+    private function workspacePayload(array $data): array {
+        $perPage = 25;
+        $total = (int) $data['filteredCount'];
+        $page = max(1, (int) $data['currentPage']);
+        return [
+            'html' => view('admin.accounting.partials.reconcile_rows', $data)->render(),
+            'empty_html' => view('admin.accounting.partials.reconcile_empty')->render(),
+            'stats' => [
+                'unreconciled' => (int) $data['unreconciledCount'],
+                'reconciled' => (int) $data['reconciledCount'],
+                'total' => (int) $data['totalCount'],
+            ],
+            'pagination' => [
+                'page' => $page,
+                'last_page' => max(1, (int) $data['lastPage']),
+                'per_page' => $perPage,
+                'total' => $total,
+                'from' => $total ? (($page - 1) * $perPage) + 1 : null,
+                'to' => $total ? min($total, $page * $perPage) : null,
+            ],
+            'reconcile_status' => $data['reconcileFilter'],
+        ];
+    }
+
+    /**
+     * Just-finished action: re-render the one row it touched (plus refreshed
+     * counters) so the browser swaps a single row instead of reloading the list.
+     */
+    private function actionPayload(Request $request, int $entryId): array {
+        $scope = $this->resolveScope($request);
+        if (!$scope['businessIds']) {
+            $clientId = (int) $request->input('client_id', 0);
+            if ($clientId) {
+                $scope['businessIds'] = [$clientId];
+                if (!$scope['credentialId']) {
+                    $scope['credentialId'] = (int) Client::whereKey($clientId)->value('client_credential_id');
+                }
             }
         }
+        if ($scope['bankAccounts']->isEmpty() && $scope['businessIds']) {
+            $scope['bankAccounts'] = DB::table('reconciliation_bank_accounts')
+                ->whereIn('client_id', $scope['businessIds'])->orderBy('bank_name')->get();
+        }
+        $data = $this->workspaceData($request, $scope, $entryId);
+        $entry = $data['onlyEntry'];
+        $approved = $entry && ((string) ($entry->reconciliation_status ?? '') === 'approved');
+        $visible = (bool) $entry && (
+            $data['reconcileFilter'] === 'all'
+            || (($data['reconcileFilter'] === 'reconciled') === $approved)
+        );
+        $payload = $this->workspacePayload($data);
+        $payload['html'] = null;
+        $payload['row'] = [
+            'visible' => $visible,
+            'html' => $visible
+                ? view('admin.accounting.partials.reconcile_row', $data + ['entry' => $entry])->render()
+                : null,
+        ];
+        return $payload;
+    }
 
+    /** Resolves credential → businesses → bank accounts, then normalises the filters. */
+    private function resolveScope(Request $request): array {
         // Same entry point as the receipts page: pick a client credential first, then a business under it.
         $credentialId=(int)$request->query('client_credential_id',0);
         $businessId=(int)$request->query('client_id',0);
@@ -64,51 +174,20 @@ class BankReconciliationPageController extends Controller
             $bankAccountId = 0;
             $request->query->remove('bank_account_id');
         }
-        if(!$credentialId||!$businessIds){
-            // Nothing selected yet — render the picker with an empty workspace.
-            return view('admin.accounting.bank_reconciliation',[
-                'credentialId'=>$credentialId,'businessId'=>$businessId,'bankAccounts'=>$bankAccounts,'bankAccountId'=>$bankAccountId,
-                'entries'=>DB::table('bank_entries')->whereRaw('1 = 0')->paginate(25),
-                'heads'=>collect(),'stats'=>collect(),'approvalStats'=>collect(),
-                'imports'=>collect(),'receipts'=>collect(),'splits'=>collect(),
-                'claimedReceiptIds'=>collect(),'notes'=>collect(),'fuzzyMatches'=>[],'findMatches'=>[],'suggestionMeta'=>[],'receiptRemaining'=>[],
-                'reconcileFilter'=>'unreconciled','totalCount'=>0,'unreconciledCount'=>0,'reconciledCount'=>0,'importMap'=>collect(),
-            ]);
-        }
-        // Overview is calculated across ALL bank accounts for this business, regardless of
-        // the current account/status filter. One row per bank; no cross-business totals.
-        $bankOverview=collect();
-        if ($businessId && count($businessIds) === 1) {
-            $entryTotals=DB::table('bank_entries')->where('client_id',$businessId)
-                ->whereNotNull('bank_account_id')
-                ->select('bank_account_id')
-                ->selectRaw('COUNT(*) AS total')
-                ->selectRaw("SUM(CASE WHEN reconciliation_status = 'approved' THEN 1 ELSE 0 END) AS approved")
-                ->selectRaw("SUM(CASE WHEN status = 'matched' THEN 1 ELSE 0 END) AS matched")
-                ->selectRaw("SUM(CASE WHEN status = 'unmatched' THEN 1 ELSE 0 END) AS unmatched")
-                ->selectRaw("SUM(CASE WHEN status = 'needs_review' THEN 1 ELSE 0 END) AS needs_review")
-                ->selectRaw("SUM(CASE WHEN reconciliation_status IS NULL OR reconciliation_status <> 'approved' THEN 1 ELSE 0 END) AS pending")
-                ->groupBy('bank_account_id')->get()->keyBy('bank_account_id');
-            $importTotals=DB::table('bank_imports')->where('client_id',$businessId)
-                ->whereNotNull('bank_account_id')->select('bank_account_id')
-                ->selectRaw('COUNT(*) AS statement_count')
-                ->selectRaw('MAX(created_at) AS last_upload')
-                ->groupBy('bank_account_id')->get()->keyBy('bank_account_id');
-            $bankOverview=$bankAccounts->map(function($bank)use($entryTotals,$importTotals){
-                $counts=$entryTotals->get($bank->id);
-                $imports=$importTotals->get($bank->id);
-                return (object)[
-                    'bank'=>$bank,'total'=>(int)($counts->total??0),
-                    'approved'=>(int)($counts->approved??0),
-                    'matched'=>(int)($counts->matched??0),
-                    'unmatched'=>(int)($counts->unmatched??0),
-                    'needs_review'=>(int)($counts->needs_review??0),
-                    'pending'=>(int)($counts->pending??0),
-                    'statement_count'=>(int)($imports->statement_count??0),
-                    'last_upload'=>$imports->last_upload??null,
-                ];
-            });
-        }
+        return compact('credentialId', 'businessId', 'bankAccountId', 'businessIds', 'bankAccounts');
+    }
+
+    /**
+     * Everything one workspace view needs: the rows (paged, or a single one after an
+     * action), the split/note/match context those rows render from, and the counts.
+     */
+    private function workspaceData(Request $request, array $scope, ?int $onlyEntryId = null): array {
+        $credentialId = $scope['credentialId'];
+        $businessId = $scope['businessId'];
+        $bankAccountId = $scope['bankAccountId'];
+        $businessIds = $scope['businessIds'];
+        $bankAccounts = $scope['bankAccounts'];
+
         $reconcileFilter = $request->input('reconcile_status', 'unreconciled');
         if ($reconcileFilter === null || $reconcileFilter === '') {
             $reconcileFilter = 'all';
@@ -119,7 +198,7 @@ class BankReconciliationPageController extends Controller
             ->when($request->filled('date_from'), fn($q) => $q->where('transaction_date', '>=', $request->input('date_from')))
             ->when($request->filled('date_to'), fn($q) => $q->where('transaction_date', '<=', $request->input('date_to')));
 
-        $entries = $scopeEntries()
+        $filteredScope = fn() => $scopeEntries()
             ->when($reconcileFilter === 'unreconciled', function ($q) {
                 $q->where(function ($sub) {
                     $sub->whereNull('reconciliation_status')
@@ -131,11 +210,27 @@ class BankReconciliationPageController extends Controller
             })
             ->when($reconcileFilter === 'all', function ($q) {
                 // No additional filter - show everything
-            })
-            ->orderByDesc('transaction_date')
-            ->orderByDesc('id')
-            ->paginate(25)
-            ->withQueryString();
+            });
+
+        if ($onlyEntryId) {
+            // Single-row mode (action response): this row plus the filtered counts,
+            // so the pager the browser is showing can be corrected in place.
+            $rows = $filteredScope()->where('id', $onlyEntryId)->get();
+            $filteredCount = $filteredScope()->count();
+            $lastPage = max(1, (int) ceil($filteredCount / 25));
+            $currentPage = min($lastPage, max(1, (int) $request->query('page', 1)));
+            $entries = new \Illuminate\Pagination\LengthAwarePaginator($rows, $filteredCount, 25, $currentPage);
+        } else {
+            $entries = $filteredScope()
+                ->orderByDesc('transaction_date')
+                ->orderByDesc('id')
+                ->paginate(25)
+                ->withQueryString();
+            $filteredCount = $entries->total();
+            $lastPage = max(1, $entries->lastPage());
+            $currentPage = $entries->currentPage();
+        }
+        $onlyEntry = $onlyEntryId ? $entries->first() : null;
 
         $totalCount = $scopeEntries()->count();
         $reconciledCount = $scopeEntries()->where('reconciliation_status', 'approved')->count();
@@ -149,9 +244,6 @@ class BankReconciliationPageController extends Controller
             })
             ->orderBy('code')->get(['id', 'code', 'name']);
 
-        $stats = $scopeEntries()->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
-        $approvalStats = $scopeEntries()->selectRaw('reconciliation_status, count(*) as total')->groupBy('reconciliation_status')->pluck('total', 'reconciliation_status');
-        $imports = DB::table('bank_imports')->whereIn('client_id', $businessIds)->when($bankAccountId, fn($q) => $q->where('bank_account_id', $bankAccountId))->latest()->limit(10)->get();
 
         // How much of each receipt is already consumed by reconciled bank lines.
         // A full match (bank_entries.receipt_id) and a partial allocation
@@ -224,9 +316,6 @@ class BankReconciliationPageController extends Controller
                 ->filter(fn($r) => $r->detail && $r->detail->total_amount !== null && $remainingOf($r) > 0.004)
             : collect();
 
-        // A receipt only counts as claimed once nothing of it is left.
-        $claimedReceiptIds = collect($receiptRemaining)->filter(fn($left) => $left <= 0.004)->keys()->flip();
-
         $fuzzyMatches = [];
         $findMatches = [];
         $suggestionMeta = [];
@@ -260,12 +349,27 @@ class BankReconciliationPageController extends Controller
                 ->values();
         }
 
-        return view('admin.accounting.bank_reconciliation', compact(
-            'credentialId', 'businessId', 'bankAccountId', 'bankAccounts',
-            'entries', 'heads', 'stats', 'approvalStats', 'imports', 'receipts',
-            'splits', 'notes', 'fuzzyMatches', 'findMatches', 'suggestionMeta', 'claimedReceiptIds', 'receiptRemaining',
-            'reconcileFilter', 'totalCount', 'unreconciledCount', 'reconciledCount', 'importMap'
-        ));
+        return [
+            'entries' => $entries,
+            'bankAccounts' => $bankAccounts,
+            'heads' => $heads,
+            'receipts' => $receipts,
+            'splits' => $splits,
+            'notes' => $notes,
+            'fuzzyMatches' => $fuzzyMatches,
+            'findMatches' => $findMatches,
+            'suggestionMeta' => $suggestionMeta,
+            'receiptRemaining' => $receiptRemaining,
+            'importMap' => $importMap,
+            'reconcileFilter' => $reconcileFilter,
+            'totalCount' => $totalCount,
+            'unreconciledCount' => $unreconciledCount,
+            'reconciledCount' => $reconciledCount,
+            'filteredCount' => $filteredCount,
+            'currentPage' => $currentPage,
+            'lastPage' => $lastPage,
+            'onlyEntry' => $onlyEntry,
+        ];
     }
 
     /**
@@ -915,7 +1019,19 @@ class BankReconciliationPageController extends Controller
         };
 
         if ($isAjax) {
-            return response()->json(['success' => true, 'message' => $message, 'entry_id' => $entryId, 'action' => $data['action']]);
+            $payload = ['success' => true, 'message' => $message, 'entry_id' => $entryId, 'action' => $data['action'], 'row' => null];
+            try {
+                // The browser swaps this one row (and the counters) in place.
+                $rendered = $this->actionPayload($request, $entryId);
+                $payload['row'] = $rendered['row'];
+                $payload['stats'] = $rendered['stats'];
+                $payload['pagination'] = $rendered['pagination'];
+                $payload['empty_html'] = $rendered['empty_html'];
+            } catch (\Throwable $e) {
+                // The action itself succeeded; the JS falls back to reloading the page.
+                report($e);
+            }
+            return response()->json($payload);
         }
         return redirect()->back()->with('success', $message);
     }
