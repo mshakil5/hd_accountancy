@@ -2,12 +2,6 @@
 
 @section('content')
     <style>
-        .report-card {
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
-        }
-
         .filter-section {
             background: #f8f9fa;
             border-radius: 10px;
@@ -15,87 +9,144 @@
             margin-bottom: 20px;
         }
 
-        .bs-section-header {
-            background: #0f2544;
-            color: #fff;
+        /* Report body follows the exported Balance Sheet: plain, print-like. */
+        .statement {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            padding: 34px 40px 26px;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #1f2937;
+        }
+
+        .stmt-title {
+            font-size: 21px;
             font-weight: 700;
-            font-size: 12px;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            padding: 9px 16px;
+            margin: 0;
         }
 
-        .bs-row td {
-            font-size: 12px;
-            padding: 8px 16px;
-            border-bottom: 1px solid #f0f4f8;
-        }
-
-        .bs-row:hover td {
-            background: #f8fafc;
-        }
-
-        .bs-total td {
-            font-weight: 700;
-            font-size: 13px;
-            padding: 10px 16px;
-            background: #f0f4f8;
-            border-top: 2px solid #dee2e6;
-        }
-
-        .bs-net-profit td {
-            font-weight: 700;
-            font-size: 12px;
-            padding: 8px 16px;
-            background: #f0fdf4;
-            color: #15803d;
-            border-bottom: 1px solid #f0f4f8;
-        }
-
-        .bs-net-loss td {
-            font-weight: 700;
-            font-size: 12px;
-            padding: 8px 16px;
-            background: #fff1f2;
-            color: #b91c1c;
-            border-bottom: 1px solid #f0f4f8;
-        }
-
-        .bs-grand td {
-            font-weight: 800;
+        .stmt-business {
             font-size: 14px;
-            padding: 12px 16px;
-            background: #0f2544;
-            color: #fff;
+            margin-top: 14px;
         }
 
-        .col-amount {
+        .stmt-period {
+            font-size: 13px;
+            color: #4b5563;
+            margin-top: 2px;
+        }
+
+        .stmt-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 22px;
+        }
+
+        .stmt-table th {
+            font-size: 13px;
+            font-weight: 400;
+            color: #374151;
+            padding: 0 0 6px;
+            border-bottom: 1px solid #9ca3af;
+        }
+
+        .stmt-table th.num,
+        .stmt-table td.num {
             text-align: right;
-            min-width: 130px;
+            white-space: nowrap;
+            width: 150px;
         }
 
-        .bs-divider td {
-            border: none;
-            padding: 0;
-            background: transparent;
+        .stmt-table td {
+            font-size: 13px;
+            padding: 5px 0;
+            vertical-align: top;
         }
 
-        .balanced-badge {
-            background: #dcfce7;
-            color: #15803d;
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 12px;
+        .stmt-table tr.sec td {
             font-weight: 700;
+            padding-top: 18px;
         }
 
-        .unbalanced-badge {
-            background: #fee2e2;
+        .stmt-table tr.head {
+            cursor: pointer;
+        }
+
+        .stmt-table tr.head td:first-child {
+            padding-left: 18px;
+        }
+
+        .stmt-table tr.head:hover td {
+            background: #f9fafb;
+        }
+
+        .stmt-table tr.tot td {
+            font-weight: 700;
+            border-top: 1px solid #d1d5db;
+            padding-top: 7px;
+        }
+
+        .stmt-table tr.grand td {
+            font-weight: 700;
+            border-top: 1px solid #6b7280;
+            border-bottom: 3px double #6b7280;
+            padding: 7px 0;
+        }
+
+        .stmt-table tr.empty td {
+            color: #9ca3af;
+            font-style: italic;
+            padding-left: 18px;
+        }
+
+        .stmt-foot {
+            margin-top: 30px;
+            padding-top: 10px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 12px;
+            color: #6b7280;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .stmt-note {
+            margin-top: 12px;
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .stmt-warning {
+            margin-top: 10px;
+            font-size: 12px;
             color: #b91c1c;
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 12px;
             font-weight: 700;
+        }
+
+        .drill-wrap {
+            background: #f9fafb;
+            padding: 6px 10px 10px 18px;
+            border-left: 3px solid #d1d5db;
+        }
+
+        .drill-wrap table {
+            width: 100%;
+            font-size: 12px;
+        }
+
+        .drill-wrap th {
+            font-weight: 600;
+            color: #4b5563;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 4px 6px;
+        }
+
+        .drill-wrap td {
+            padding: 4px 6px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        #reportOutput {
+            display: none;
         }
 
         .select2-container .select2-selection--single {
@@ -113,23 +164,10 @@
             height: 36px !important;
         }
 
-        #reportOutput {
-            display: none;
-        }
-
         @media print {
             @page {
                 size: A4;
                 margin: 14mm;
-            }
-
-            body * {
-                visibility: hidden;
-            }
-
-            #reportOutput,
-            #reportOutput * {
-                visibility: visible;
             }
 
             .filter-section,
@@ -144,16 +182,9 @@
                 display: none !important;
             }
 
-            body,
-            .wrapper,
-            .content-wrapper {
-                background: #fff !important;
-                margin: 0 !important;
-                padding: 0 !important;
-            }
-
-            .report-card {
-                box-shadow: none;
+            .statement {
+                border: none;
+                padding: 0;
             }
         }
     </style>
@@ -169,7 +200,7 @@
                     <button class="btn btn-sm btn-outline-success" id="exportXlsxBtn"><i class="fa fa-file-excel"></i>
                         Excel</button>
                     <button class="btn btn-sm btn-outline-secondary" onclick="window.print()"><i class="fa fa-print"></i>
-                    Print</button>
+                        Print</button>
                 </div>
             </div>
 
@@ -180,23 +211,31 @@
                         <input type="date" class="form-control" id="asOf"
                             value="{{ now()->format('Y-m-d') }}">
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="small font-weight-bold">Client</label>
                         <select class="form-control select2" id="clientSelect" style="width:100%">
-                            <option value="">All Clients</option>
+                            <option value="">Select Client</option>
                             @foreach ($clients as $c)
                                 <option value="{{ $c->id }}">{{ trim($c->first_name . ' ' . $c->last_name) }}
                                 </option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="small font-weight-bold">Business</label>
                         <select class="form-control" id="businessSelect">
-                            <option value="">All Businesses</option>
+                            <option value="">Select Business</option>
                         </select>
                     </div>
                     <div class="col-md-3">
+                        <label class="small font-weight-bold">Payment Method</label>
+                        <select class="form-control" id="paymentMethod">
+                            <option value="">Total</option>
+                            <option value="cash">Cash</option>
+                            <option value="bank">Bank</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
                         <button class="btn btn-primary mt-3" id="generateBtn" style="width:50%; white-space:nowrap;"><i class="fa fa-search"></i>
                             Search</button>
                     </div>
@@ -204,30 +243,26 @@
             </div>
 
             <div id="reportOutput">
-                <div class="card report-card">
-                    <div class="card-body p-0">
-                        <div class="text-center py-3 border-bottom d-flex align-items-center justify-content-between px-4">
-                            <div>
-                                <h5 class="mb-0 font-weight-bold">Balance Sheet</h5>
-                                <p class="small text-muted mb-0" id="reportMeta"></p>
-                            </div>
-                            <div id="balanceBadge"></div>
-                        </div>
+                <div class="statement">
+                    <h4 class="stmt-title">Balance Sheet</h4>
+                    <div class="stmt-business" id="stmtBusiness"></div>
+                    <div class="stmt-period" id="stmtPeriod"></div>
 
-                        <div class="row no-gutters">
-                            {{-- LEFT: Assets --}}
-                            <div class="col-md-6" style="border-right: 2px solid #dee2e6;">
-                                <table class="table mb-0" id="assetsTable">
-                                    <tbody></tbody>
-                                </table>
-                            </div>
-                            {{-- RIGHT: Liabilities + Equity --}}
-                            <div class="col-md-6">
-                                <table class="table mb-0" id="liabEquityTable">
-                                    <tbody></tbody>
-                                </table>
-                            </div>
-                        </div>
+                    <table class="stmt-table">
+                        <thead>
+                            <tr id="stmtHeadRow">
+                                <th class="stmt-account"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportBody"></tbody>
+                    </table>
+
+                    <div class="stmt-note" id="stmtNote"></div>
+                    <div class="stmt-warning" id="stmtWarning" style="display:none;"></div>
+
+                    <div class="stmt-foot">
+                        <span id="stmtFootLeft"></span>
+                        <span id="stmtFootRight"></span>
                     </div>
                 </div>
             </div>
@@ -239,210 +274,239 @@
 @section('script')
     <script>
         $(function() {
+            var currentFilters = {};
+
+            function asOfDate() {
+                return $('#asOf').val() || new Date().toISOString().slice(0, 10);
+            }
+
             $('#clientSelect').select2({
                 placeholder: 'Select Client',
                 allowClear: true
             }).on('change', function() {
                 var credId = $(this).val();
-                $('#businessSelect').html('<option value="">All Businesses</option>');
+                $('#businessSelect').html('<option value="">Select Business</option>');
                 if (!credId) return;
                 $.get("{{ url('/admin/accounting/get-businesses') }}", {
                     credential_id: credId
                 }, function(data) {
                     $.each(data, function(i, b) {
-                        $('#businessSelect').append('<option value="' + b.id + '">' + b
-                            .text + '</option>');
+                        $('#businessSelect').append('<option value="' + b.id + '">' + b.text +
+                            '</option>');
                     });
                 });
             });
 
-            function fmt(n) {
-                return '£' + parseFloat(n || 0).toFixed(2);
-            }
-
-            function xRows(rows, collect) {
-                var html = '';
-                $.each(rows || [], function(i, row) {
-                    if (collect && row.head_id) collect.push(row.head_id);
-                    var clickable = row.head_id || row.code ? ' data-head-id="' + (row.head_id || '') + '" data-code="' + (row.code || '') + '" title="Click for breakdown" style="cursor:pointer;"' : '';
-                    html += '<tr class="bs-row"' + clickable + '><td>' + row.name +
-                        '</td><td class="col-amount">' + fmt(row.balance) +
-                        '</td></tr>';
-                });
-                return html;
-            }
-
-            function xSection(label) {
-                return '<tr><td colspan="2" class="bs-section-header">EXCEL: ' + label + '</td></tr>';
-            }
-
-            function xTotal(label, val, cls, ids) {
-                var clickable = (ids && ids.length) ? ' data-head-ids="' + ids.join(',') + '" title="Click for breakdown" style="cursor:pointer;"' : '';
-                return '<tr class="bs-row ' + (cls || 'bs-total') + '"' + clickable + '><td>' + label +
-                    '</td><td class="col-amount">' + fmt(val) + '</td></tr>';
-            }
-
-            function bsExportUrl(format) {
-                return "{{ url('/admin/accounting/balance-sheet/export') }}?format=" + format + '&' + $.param({
-                    as_of: $('#asOf').val(),
-                    client_credential_id: $('#clientSelect').val(),
-                    client_id: $('#businessSelect').val()
-                });
-            }
-
-            $('#exportCsvBtn').click(function() { window.location = bsExportUrl('csv'); });
-            $('#exportXlsxBtn').click(function() { window.location = bsExportUrl('xlsx'); });
-
-            $('#generateBtn').click(function() {
-                $(this).prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
-                $.get("{{ url('/admin/accounting/balance-sheet/data') }}", {
-                    as_of: $('#asOf').val(),
+            function filters() {
+                return {
+                    as_of: asOfDate(),
+                    from: '1900-01-01',
+                    to: asOfDate(),
                     client_credential_id: $('#clientSelect').val(),
                     client_id: $('#businessSelect').val(),
-                }, function(d) {
-                    // Assets table
-                    var aBody = '';
-                    aBody += '<tr><td colspan="2" class="bs-section-header">ASSETS</td></tr>';
-                    var assetIds = [];
-                    $.each(d.assets, function(i, row) {
-                        if (row.head_id) assetIds.push(row.head_id);
-                        aBody += '<tr class="bs-row" data-head-id="' + (row.head_id || '') + '" data-code="' + (row.code || '') + '" title="Click for breakdown" style="cursor:pointer;"><td>' + row.name +
-                            '</td><td class="col-amount">' + fmt(row.balance) +
-                            '</td></tr>';
-                    });
-                    if (!d.assets.length) {
-                        aBody +=
-                            '<tr class="bs-row"><td colspan="2" class="text-muted" style="padding-left:28px;">No asset accounts</td></tr>';
-                    }
-                    aBody += '<tr class="bs-row bs-grand" data-head-ids="' + assetIds.join(',') + '" title="Click for breakdown" style="cursor:pointer;"><td>TOTAL ASSETS</td><td class="col-amount">' +
-                        fmt(d.total_assets) + '</td></tr>';
-                    if (d.excel) {
-                        var st = d.excel.section_titles || {};
-                        var fixedIds = [], currentIds = [];
-                        aBody += xSection(((st.fixed || 'FIXED ASSETS')).toUpperCase());
-                        aBody += xRows(d.excel.fixed_heads, fixedIds);
-                        aBody += xTotal('Total Fixed Assets (A)', d.excel.total_fixed_A, 'bs-total', fixedIds);
-                        aBody += xSection(((st.current || 'CURRENT ASSETS')).toUpperCase());
-                        aBody += xRows(d.excel.current_heads, currentIds);
-                        aBody += xTotal('Total Current Assets (B)', d.excel.total_current_B_excel, 'bs-total', currentIds);
-                    }
-                    $('#assetsTable tbody').html(aBody);
+                    payment_method: $('#paymentMethod').val(),
+                };
+            }
 
-                    // Liabilities + Equity table
-                    var leBody = '';
-                    leBody += '<tr><td colspan="2" class="bs-section-header">LIABILITIES</td></tr>';
-                    var liabIds = [];
-                    $.each(d.liabilities, function(i, row) {
-                        if (row.head_id) liabIds.push(row.head_id);
-                        leBody += '<tr class="bs-row" data-head-id="' + (row.head_id || '') + '" data-code="' + (row.code || '') + '" title="Click for breakdown" style="cursor:pointer;"><td>' + row.name +
-                            '</td><td class="col-amount">' + fmt(row.balance) +
-                            '</td></tr>';
-                    });
-                    if (!d.liabilities.length) {
-                        leBody +=
-                            '<tr class="bs-row"><td colspan="2" class="text-muted" style="padding-left:28px;">No liability accounts</td></tr>';
-                    }
-                    leBody +=
-                        '<tr class="bs-row bs-total" data-head-ids="' + liabIds.join(',') + '" title="Click for breakdown" style="cursor:pointer;"><td>Total Liabilities</td><td class="col-amount">' +
-                        fmt(d.total_liabilities) + '</td></tr>';
-
-                    leBody +=
-                        '<tr><td colspan="2" class="bs-section-header" style="margin-top:8px;">EQUITY</td></tr>';
-                    var equityIds = [];
-                    $.each(d.equity, function(i, row) {
-                        if (row.head_id) equityIds.push(row.head_id);
-                        leBody += '<tr class="bs-row" data-head-id="' + (row.head_id || '') + '" data-code="' + (row.code || '') + '" title="Click for breakdown" style="cursor:pointer;"><td>' + row.name +
-                            '</td><td class="col-amount">' + fmt(row.balance) +
-                            '</td></tr>';
-                    });
-
-                    // Net Profit / Loss as part of equity
-                    var netClass = d.net_profit >= 0 ? 'bs-net-profit' : 'bs-net-loss';
-                    var netLabel = d.net_profit >= 0 ? 'Retained Earnings (Net Profit)' :
-                        'Retained Earnings (Net Loss)';
-                    leBody += '<tr class="' + netClass + '"><td>' + netLabel +
-                        '</td><td class="col-amount">' + fmt(d.net_profit) + '</td></tr>';
-                    leBody += '<tr class="bs-row bs-total" data-head-ids="' + equityIds.join(',') + '" title="Click for breakdown" style="cursor:pointer;"><td>Total Equity</td><td class="col-amount">' +
-                        fmt(d.total_equity) + '</td></tr>';
-
-                    leBody +=
-                        '<tr class="bs-row bs-grand" data-head-ids="' + liabIds.concat(equityIds).join(',') + '" title="Click for breakdown" style="cursor:pointer;"><td>TOTAL LIABILITIES + EQUITY</td><td class="col-amount">' +
-                        fmt(d.total_liab_equity) + '</td></tr>';
-                    if (d.excel) {
-                        var st2 = d.excel.section_titles || {};
-                        var clIds = [], ncIds = [], capIds = [];
-                        leBody += xSection(((st2.curr_liab || 'CURRENT LIABILITIES')).toUpperCase());
-                        leBody += xRows(d.excel.current_liab_heads, clIds);
-                        leBody += xTotal('Total Current Liabilities (C)', d.excel.total_current_C, 'bs-total', clIds);
-                        leBody += xTotal('Net Current Assets (B-C)', d.excel.net_current_BC, 'bs-total', currentIds.concat(clIds));
-                        leBody += xTotal('Total Assets less Current Liabilities (A+B-C)', d.excel.total_assets_less_current_excel, 'bs-total', fixedIds.concat(currentIds, clIds));
-                        leBody += xSection(((st2.noncurrent || 'NON-CURRENT LIABILITIES')).toUpperCase());
-                        leBody += xRows(d.excel.noncurrent_heads, ncIds);
-                        leBody += xTotal('Total Non-Current Liabilities (D)', d.excel.total_noncurrent_D, 'bs-total', ncIds);
-                        leBody += xTotal('Net Assets (A+B-C-D)', d.excel.net_assets_excel, 'bs-grand', fixedIds.concat(currentIds, clIds, ncIds));
-                        leBody += xSection(((st2.capital || 'CAPITAL AND RESERVES')).toUpperCase());
-                        leBody += xRows(d.excel.capital_heads, capIds);
-                        leBody += xTotal('Total Capital and Reserves', d.excel.total_capital_excel, 'bs-total', capIds);
-                        leBody += '<tr class="bs-row"><td colspan="2" class="small text-muted">Refs: A=Fixed, B=Current, C=Current Liab, B-C=Net Current, A+B-C=Assets less Current, D=Non-current, A+B-C-D=Net Assets. Rows follow the live chart of accounts; totals are straight sums.</td></tr>';
-                    }
-                    $('#liabEquityTable tbody').html(leBody);
-
-                    // Balance check badge
-                    $('#balanceBadge').html(
-                        '<span class="balanced-badge"><i class="fa fa-info-circle"></i> Single Entry System</span>'
-                    );
-
-                    $('#reportMeta').text(d.business_name + '  |  As of ' + d.as_of + '  |  Click a row for breakdown');
-                    $('#reportOutput').fadeIn();
-
-                }).always(function() {
-                    $('#generateBtn').prop('disabled', false).html(
-                        '<i class="fa fa-search"></i> Search');
+            // Print-style amounts: 1,234.56 / (1,234.56) / -
+            function amt(n) {
+                var v = parseFloat(n || 0);
+                if (Math.abs(v) < 0.005) return '-';
+                var s = Math.abs(v).toLocaleString('en-GB', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
                 });
+                return v < 0 ? '(' + s + ')' : s;
+            }
+
+            function cells(values) {
+                var out = '';
+                $.each(values, function(i, v) {
+                    out += '<td class="num">' + amt(v) + '</td>';
+                });
+                return out;
+            }
+
+            function sectionRow(title, cols) {
+                return '<tr class="sec"><td>' + title + '</td>' + '<td></td>'.repeat(cols) + '</tr>';
+            }
+
+            function headRow(head) {
+                var clickable = head.head_id ? ' data-head-id="' + head.head_id +
+                    '" title="Click for the bank transactions behind this head"' : '';
+                return '<tr class="head"' + clickable + '><td>' + head.name + '</td>' + cells(head.amounts) +
+                    '</tr>';
+            }
+
+            function receiptCard(r) {
+                if (!r) return '<span class="text-muted">No receipt attached to this bank line.</span>';
+                return '<strong>Receipt ' + (r.number || ('#' + r.id)) + '</strong>' +
+                    ' &middot; ' + (r.supplier || '-') +
+                    ' &middot; Invoice date ' + (r.invoice_date || '-') +
+                    ' &middot; Status ' + (r.status || '-') +
+                    '<br>Net £' + parseFloat(r.net || 0).toFixed(2) +
+                    ' &middot; VAT £' + parseFloat(r.vat || 0).toFixed(2) +
+                    ' &middot; Gross £' + parseFloat(r.gross || 0).toFixed(2) +
+                    ' &middot; Applied £' + parseFloat(r.applied || 0).toFixed(2) +
+                    ' &middot; <a href="' + r.url + '" target="_blank">Open receipt</a>';
+            }
+
+            function render(s) {
+                var cols = s.columns.length;
+
+                var head = '<th class="stmt-account"></th>';
+                $.each(s.columns, function(i, label) {
+                    var d = s.dates[i] || {};
+                    head += '<th class="num" title="As at ' + (d.as_of || '') + '">' + label + '</th>';
+                });
+                $('#stmtHeadRow').html(head);
+
+                var body = '';
+                $.each(s.sections, function(i, section) {
+                    body += sectionRow(section.title, cols);
+                    if (!section.heads.length) {
+                        body += '<tr class="empty"><td colspan="' + (cols + 1) +
+                            '">No reconciled transactions.</td></tr>';
+                    }
+                    $.each(section.heads, function(j, h) {
+                        body += headRow(h);
+                    });
+
+                    if (section.key === 'capital') {
+                        // The year's earnings sit inside capital, like the export.
+                        body += '<tr class="head" style="cursor:default;"><td>Current Year Earnings</td>' +
+                            cells(s.net_profit) + '</tr>';
+                        body += '<tr class="grand"><td>Total Capital and Reserves</td>' + cells(s
+                            .total_capital_and_profit) + '</tr>';
+                        return;
+                    }
+
+                    body += '<tr class="tot"><td>Total ' + section.title + '</td>' + cells(section
+                        .totals) + '</tr>';
+
+                    if (section.key === 'current_liab') {
+                        body += '<tr class="tot"><td>Net Current Assets (Liabilities)</td>' + cells(s
+                            .net_current) + '</tr>';
+                        body += '<tr class="grand"><td>Total Assets less Current Liabilities</td>' + cells(
+                            s.assets_less_current) + '</tr>';
+                    }
+                    if (section.key === 'noncurrent') {
+                        body += '<tr class="grand"><td>Net Assets</td>' + cells(s.net_assets) + '</tr>';
+                    }
+                });
+
+                $('#reportBody').html(body);
+
+                var diff = s.net_assets.map(function(v, i) {
+                    return Math.abs(v - (s.total_capital_and_profit[i] || 0));
+                });
+                var unbalanced = diff.some(function (d) { return d >= 0.005; });
+                if (unbalanced) {
+                    $('#stmtWarning').text(
+                        'Net Assets and Total Capital and Reserves do not agree for at least one column.'
+                    ).show();
+                } else {
+                    $('#stmtWarning').hide();
+                }
+            }
+
+            function loadReport(f) {
+                $('#generateBtn').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+                $.get("{{ url('/admin/accounting/balance-sheet/data') }}", f, function(d) {
+                    var s = d.statement;
+                    if (!s) {
+                        $('#reportBody').html(
+                            '<tr><td colspan="3" class="text-center text-muted py-4">Select a client and a business.</td></tr>'
+                        );
+                        $('#reportOutput').fadeIn();
+                        return;
+                    }
+                    render(s);
+                    $('#stmtBusiness').text(d.business_name);
+                    $('#stmtPeriod').text('As at ' + d.as_of);
+                    $('#stmtNote').text(
+                        'Statement-based: only bank statement lines reconciled to a receipt. Net of VAT; the VAT portion sits on the VAT head.'
+                    );
+                    $('#stmtFootLeft').text('Balance Sheet  ' + d.business_name);
+                    $('#stmtFootRight').text(@json(now()->format('d/m/Y')));
+                    $('#reportOutput').fadeIn();
+                }).always(function() {
+                    $('#generateBtn').prop('disabled', false).html('<i class="fa fa-search"></i> Search');
+                });
+            }
+
+            $('#generateBtn').click(function() {
+                if (!$('#clientSelect').val() || !$('#businessSelect').val()) {
+                    toastr.warning('Select a client and a business first.');
+                    return;
+                }
+                currentFilters = filters();
+                loadReport(currentFilters);
             });
 
-            // Drill-down: click any head or total row → expandable breakdown (as-of basis).
-            $('#assetsTable, #liabEquityTable').on('click', 'tr.bs-row[data-head-id], tr.bs-row[data-code], tr.bs-row[data-head-ids]', function() {
+            function bsExportUrl(format) {
+                return "{{ url('/admin/accounting/balance-sheet/export') }}?format=" + format + '&' + $.param(
+                    filters());
+            }
+
+            $('#exportCsvBtn').click(function() {
+                window.location = bsExportUrl('csv');
+            });
+            $('#exportXlsxBtn').click(function() {
+                window.location = bsExportUrl('xlsx');
+            });
+
+            // Level 1: head row -> the bank transactions behind it.
+            // Level 2: a bank transaction -> the receipt it was matched to.
+            $('#reportBody').on('click', 'tr.head[data-head-id]', function() {
                 var $row = $(this);
                 if ($row.next().hasClass('breakdown-row')) {
                     $row.next().toggle();
                     return;
                 }
                 var headId = $row.data('head-id');
-                var headIds = $row.data('head-ids');
-                var code = $row.data('code');
-                if (!headId && !headIds && !code) return;
-                var $detail = $('<tr class="breakdown-row"><td colspan="2" style="background:#f8fafc; padding:8px 16px 12px 28px;"><span class="small text-muted"><i class="fa fa-spinner fa-spin"></i> Loading breakdown…</span></td></tr>');
+                var span = $row.children('td').length;
+                var $detail = $('<tr class="breakdown-row"><td colspan="' + span +
+                    '"><div class="drill-wrap"><span class="text-muted"><i class="fa fa-spinner fa-spin"></i> Loading transactions…</span></div></td></tr>'
+                );
                 $row.after($detail);
-                $.get("{{ url('/admin/accounting/head-transactions') }}", {
-                    mode: 'bs',
-                    head_id: headId || '',
-                    head_ids: headIds || '',
-                    code: code || '',
-                    as_of: $('#asOf').val(),
-                    client_credential_id: $('#clientSelect').val(),
-                    client_id: $('#businessSelect').val()
-                }, function(res) {
-                    var html = '<div class="small font-weight-bold mb-1">Breakdown: ' + (res.heads.length ? res.heads.map(function(h) { return h.code + ' - ' + h.name; }).join(', ') : '') + ' (' + res.count + ' transactions, Total £' + parseFloat(res.total || 0).toFixed(2) + ')</div>';
-                    if (!res.rows.length) {
-                        html += '<div class="small text-muted">No transactions as of this date.</div>';
+                $.get("{{ url('/admin/accounting/statement-drill') }}", $.extend({
+                    head_id: headId
+                }, currentFilters), function(res) {
+                    var html = '<div class="font-weight-bold mb-1">' + (res.head.code ? res.head
+                            .code + ' - ' : '') + res.head.name + ' — ' + res.count +
+                        ' bank transaction(s), £' + parseFloat(res.total || 0).toFixed(2) + '</div>';
+                    if (!res.transactions.length) {
+                        html += '<div class="text-muted">No reconciled transactions in this period.</div>';
                     } else {
-                        html += '<table class="table table-sm mb-0"><thead><tr><th>Date</th><th>Receipt</th><th>Business</th><th>Method</th><th>Side</th><th class="text-right">Amount</th></tr></thead><tbody>';
-                        $.each(res.rows, function(i, r) {
-                            var link = r.bill_url ? '<a href="' + r.bill_url + '" target="_blank">' + (r.receipt_number || ('#' + r.receipt_id)) + '</a>' : (r.receipt_number || ('#' + r.receipt_id));
-                            html += '<tr><td>' + (r.date || '-') + '</td>' +
-                                '<td>' + link + '</td>' +
-                                '<td>' + (r.business || '-') + '</td>' +
-                                '<td>' + (r.payment_method || '-') + '</td>' +
-                                '<td>' + (r.type || '-') + '</td>' +
-                                '<td class="text-right">£' + parseFloat(r.signed_amount ?? r.amount ?? 0).toFixed(2) + '</td></tr>';
+                        html +=
+                            '<table><thead><tr><th>Date</th><th>Bank account</th><th>Description</th><th>Receipt</th><th class="text-right">Amount</th></tr></thead><tbody>';
+                        $.each(res.transactions, function(i, t) {
+                            html += '<tr class="drill-txn" data-txn="' + i +
+                                '" style="cursor:pointer;">' +
+                                '<td>' + (t.date || '-') + '</td>' +
+                                '<td>' + (t.bank_account || '-') + '</td>' +
+                                '<td>' + (t.description || '-') + '</td>' +
+                                '<td>' + (t.receipt ? (t.receipt.number || ('#' + t.receipt.id)) : '-') +
+                                '</td>' +
+                                '<td class="text-right">£' + parseFloat(t.amount || 0).toFixed(2) +
+                                '</td></tr>';
+                            html += '<tr class="drill-receipt" data-txn="' + i +
+                                '" style="display:none;"><td colspan="5" style="background:#fff;">' +
+                                receiptCard(t.receipt) + '</td></tr>';
                         });
                         html += '</tbody></table>';
                     }
-                    $detail.find('td').html(html);
+                    $detail.find('.drill-wrap').html(html);
                 }).fail(function() {
-                    $detail.find('td').html('<span class="small text-danger">Failed to load breakdown.</span>');
+                    $detail.find('.drill-wrap').html(
+                        '<span class="text-danger">Failed to load transactions.</span>');
                 });
+            });
+
+            $('#reportBody').on('click', 'tr.drill-txn', function() {
+                var i = $(this).data('txn');
+                $('tr.drill-receipt[data-txn="' + i + '"]').toggle();
             });
         });
     </script>

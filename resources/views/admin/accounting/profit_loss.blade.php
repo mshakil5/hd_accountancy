@@ -2,84 +2,140 @@
 
 @section('content')
     <style>
-        .report-card {
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
-        }
-
-        .section-header {
-            background: #0f2544;
-            color: #fff;
-            padding: 10px 16px;
-            font-weight: 700;
-            font-size: 13px;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        .section-subhead {
-            background: #f0f4f8;
-            padding: 8px 16px;
-            font-weight: 600;
-            font-size: 12px;
-            color: #374151;
-            border-bottom: 1px solid #e4e9ee;
-        }
-
-        .report-row td {
-            font-size: 12px;
-            padding: 8px 16px;
-            border-bottom: 1px solid #f0f4f8;
-            cursor: pointer;
-        }
-
-        .report-row:hover td {
-            background: #f8fafc;
-        }
-
-        .total-row td {
-            font-weight: 700;
-            font-size: 13px;
-            padding: 10px 16px;
-            background: #f8f9fa;
-            border-top: 2px solid #dee2e6;
-        }
-
-        .grand-row td {
-            font-weight: 800;
-            font-size: 14px;
-            padding: 12px 16px;
-            background: #0f2544;
-            color: #fff;
-        }
-
-        .profit-row td {
-            font-weight: 800;
-            font-size: 14px;
-            padding: 12px 16px;
-            background: #1a9e78;
-            color: #fff;
-        }
-
-        .loss-row td {
-            font-weight: 800;
-            font-size: 14px;
-            padding: 12px 16px;
-            background: #dc3545;
-            color: #fff;
-        }
-
-        .col-amount {
-            text-align: right;
-            min-width: 90px;
-        }
-
         .filter-section {
             background: #f8f9fa;
             border-radius: 10px;
             padding: 18px;
             margin-bottom: 20px;
+        }
+
+        /* Report body follows the exported P&L: plain, print-like. */
+        .statement {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            padding: 34px 40px 26px;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #1f2937;
+        }
+
+        .stmt-title {
+            font-size: 21px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .stmt-business {
+            font-size: 14px;
+            margin-top: 14px;
+        }
+
+        .stmt-period {
+            font-size: 13px;
+            color: #4b5563;
+            margin-top: 2px;
+        }
+
+        .stmt-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 22px;
+        }
+
+        .stmt-table th {
+            font-size: 13px;
+            font-weight: 400;
+            color: #374151;
+            padding: 0 0 6px;
+            border-bottom: 1px solid #9ca3af;
+        }
+
+        .stmt-table th.num,
+        .stmt-table td.num {
+            text-align: right;
+            white-space: nowrap;
+            width: 150px;
+        }
+
+        .stmt-table td {
+            font-size: 13px;
+            padding: 5px 0;
+            vertical-align: top;
+        }
+
+        .stmt-table tr.sec td {
+            font-weight: 700;
+            padding-top: 18px;
+        }
+
+        .stmt-table tr.head td:first-child {
+            padding-left: 18px;
+        }
+
+        .stmt-table tr.head {
+            cursor: pointer;
+        }
+
+        .stmt-table tr.head:hover td {
+            background: #f9fafb;
+        }
+
+        .stmt-table tr.tot td {
+            font-weight: 700;
+            border-top: 1px solid #d1d5db;
+            padding-top: 7px;
+        }
+
+        .stmt-table tr.grand td {
+            font-weight: 700;
+            border-top: 1px solid #6b7280;
+            border-bottom: 3px double #6b7280;
+            padding: 7px 0;
+        }
+
+        .stmt-table tr.empty td {
+            color: #9ca3af;
+            font-style: italic;
+            padding-left: 18px;
+        }
+
+        .stmt-foot {
+            margin-top: 30px;
+            padding-top: 10px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 12px;
+            color: #6b7280;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .stmt-note {
+            margin-top: 12px;
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .drill-wrap {
+            background: #f9fafb;
+            padding: 6px 10px 10px 18px;
+            border-left: 3px solid #d1d5db;
+        }
+
+        .drill-wrap table {
+            width: 100%;
+            font-size: 12px;
+        }
+
+        .drill-wrap th {
+            font-weight: 600;
+            color: #4b5563;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 4px 6px;
+        }
+
+        .drill-wrap td {
+            padding: 4px 6px;
+            border-bottom: 1px solid #f3f4f6;
         }
 
         #reportOutput {
@@ -100,12 +156,25 @@
         .select2-container--default .select2-selection--single .select2-selection__arrow {
             height: 36px !important;
         }
+
+        @media print {
+
+            .filter-section,
+            .no-print {
+                display: none !important;
+            }
+
+            .statement {
+                border: none;
+                padding: 0;
+            }
+        }
     </style>
 
     <section class="content py-4">
         <div class="container-fluid">
 
-            <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="d-flex align-items-center justify-content-between mb-3 no-print">
                 <h4 class="mb-0"><i class="fa fa-chart-line mr-2"></i> Profit & Loss</h4>
                 <div>
                     <button class="btn btn-sm btn-outline-success" id="exportCsvBtn"><i class="fa fa-file-csv"></i>
@@ -117,22 +186,20 @@
                 </div>
             </div>
 
-            <div class="filter-section">
+            <div class="filter-section no-print">
                 <div class="row align-items-end">
                     <div class="col-md-2">
-                        <label class="small font-weight-bold">From</label>
-                        <input type="date" class="form-control" id="from"
-                            value="{{ now()->startOfMonth()->format('Y-m-d') }}">
-                    </div>
-                    <div class="col-md-2">
-                        <label class="small font-weight-bold">To</label>
-                        <input type="date" class="form-control" id="to"
-                            value="{{ now()->endOfMonth()->format('Y-m-d') }}">
+                        <label class="small font-weight-bold">Period</label>
+                        <select class="form-control" id="periodSelect">
+                            <option value="3m">Last 3 months</option>
+                            <option value="6m">Last 6 months</option>
+                            <option value="1y" selected>Last 1 year</option>
+                        </select>
                     </div>
                     <div class="col-md-2">
                         <label class="small font-weight-bold">Client</label>
                         <select class="form-control select2" id="clientSelect" style="width:100%">
-                            <option value="">All Clients</option>
+                            <option value="">Select Client</option>
                             @foreach ($clients as $c)
                                 <option value="{{ $c->id }}">{{ trim($c->first_name . ' ' . $c->last_name) }}
                                 </option>
@@ -142,15 +209,22 @@
                     <div class="col-md-2">
                         <label class="small font-weight-bold">Business</label>
                         <select class="form-control" id="businessSelect">
-                            <option value="">All Businesses</option>
+                            <option value="">Select Business</option>
                         </select>
                     </div>
                     <div class="col-md-2">
                         <label class="small font-weight-bold">Payment Method</label>
                         <select class="form-control" id="paymentMethod">
-                            <option value="">All Methods</option>
+                            <option value="">Total</option>
                             <option value="cash">Cash</option>
                             <option value="bank">Bank</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="small font-weight-bold">Amount</label>
+                        <select class="form-control" id="basisSelect">
+                            <option value="gross">Gross (with VAT)</option>
+                            <option value="net">Net (without VAT)</option>
                         </select>
                     </div>
                     <div class="col-md-2">
@@ -161,23 +235,25 @@
             </div>
 
             <div id="reportOutput">
-                <div class="card report-card">
-                    <div class="card-body p-0">
-                        <div class="text-center py-3 border-bottom">
-                            <h5 class="mb-0 font-weight-bold">Profit & Loss Statement</h5>
-                            <p class="small text-muted mb-0" id="reportMeta"></p>
-                        </div>
-                        <table class="table mb-0" id="reportTable">
-                            <thead>
-                                <tr style="background:#f8f9fa;">
-                                    <th style="width:40%; font-size:12px;">Account Head</th>
-                                    <th class="col-amount" style="font-size:12px;">Cash</th>
-                                    <th class="col-amount" style="font-size:12px;">Bank</th>
-                                    <th class="col-amount" style="font-size:12px;">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody id="reportBody"></tbody>
-                        </table>
+                <div class="statement">
+                    <h4 class="stmt-title">Profit and Loss</h4>
+                    <div class="stmt-business" id="stmtBusiness"></div>
+                    <div class="stmt-period" id="stmtPeriod"></div>
+
+                    <table class="stmt-table">
+                        <thead>
+                            <tr id="stmtHeadRow">
+                                <th class="stmt-account"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportBody"></tbody>
+                    </table>
+
+                    <div class="stmt-note" id="stmtNote"></div>
+
+                    <div class="stmt-foot">
+                        <span id="stmtFootLeft"></span>
+                        <span id="stmtFootRight"></span>
                     </div>
                 </div>
             </div>
@@ -191,237 +267,231 @@
         $(function() {
             var currentFilters = {};
 
+            function periodRange() {
+                var p = $('#periodSelect').val();
+                var to = new Date();
+                var from = new Date();
+                if (p === '3m') {
+                    from.setMonth(from.getMonth() - 3);
+                } else if (p === '6m') {
+                    from.setMonth(from.getMonth() - 6);
+                } else {
+                    from.setFullYear(from.getFullYear() - 1);
+                }
+                var iso = function(d) {
+                    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d
+                        .getDate()).padStart(2, '0');
+                };
+                return {
+                    from: iso(from),
+                    to: iso(to)
+                };
+            }
+
             $('#clientSelect').select2({
                 placeholder: 'Select Client',
                 allowClear: true
             }).on('change', function() {
                 var credId = $(this).val();
-                $('#businessSelect').html('<option value="">All Businesses</option>');
+                $('#businessSelect').html('<option value="">Select Business</option>');
                 if (!credId) return;
                 $.get("{{ url('/admin/accounting/get-businesses') }}", {
                     credential_id: credId
                 }, function(data) {
                     $.each(data, function(i, b) {
-                        $('#businessSelect').append('<option value="' + b.id + '">' + b
-                            .text + '</option>');
+                        $('#businessSelect').append('<option value="' + b.id + '">' + b.text +
+                            '</option>');
                     });
                 });
             });
 
-            $('#generateBtn').click(function() {
-                currentFilters = {
-                    from: $('#from').val(),
-                    to: $('#to').val(),
+            function filters() {
+                var r = periodRange();
+                return {
+                    from: r.from,
+                    to: r.to,
                     client_credential_id: $('#clientSelect').val(),
                     client_id: $('#businessSelect').val(),
                     payment_method: $('#paymentMethod').val(),
+                    basis: $('#basisSelect').val(),
                 };
+            }
+
+            $('#generateBtn').click(function() {
+                if (!$('#clientSelect').val() || !$('#businessSelect').val()) {
+                    toastr.warning('Select a client and a business first.');
+                    return;
+                }
+                currentFilters = filters();
                 loadReport(currentFilters);
             });
 
             function exportUrl(format) {
-                var p = $.extend({
-                    from: $('#from').val(),
-                    to: $('#to').val(),
-                    client_credential_id: $('#clientSelect').val(),
-                    client_id: $('#businessSelect').val(),
-                    payment_method: $('#paymentMethod').val(),
-                }, {});
-                return "{{ url('/admin/accounting/profit-loss/export') }}?format=" + format + '&' + $.param(p);
+                return "{{ url('/admin/accounting/profit-loss/export') }}?format=" + format + '&' + $.param(
+                    filters());
             }
 
-            $('#exportCsvBtn').click(function() { window.location = exportUrl('csv'); });
-            $('#exportXlsxBtn').click(function() { window.location = exportUrl('xlsx'); });
+            $('#exportCsvBtn').click(function() {
+                window.location = exportUrl('csv');
+            });
+            $('#exportXlsxBtn').click(function() {
+                window.location = exportUrl('xlsx');
+            });
 
-            function fmt(n) {
-                return '£' + parseFloat(n || 0).toFixed(2);
-            }
-
-            function excelHeadRow(label) {
-                return '<tr><td colspan="4" class="section-subhead">EXCEL: ' + label + '</td></tr>';
-            }
-
-            function excelRows(heads, collect) {
-                var html = '';
-                $.each(heads || [], function(i, head) {
-                    if (collect && head.head_id) collect.push(head.head_id);
-                    var label = (head.code ? head.code + ' - ' : '') + head.head_name;
-                    html += '<tr class="report-row" data-head-id="' + (head.head_id || '') + '" data-code="' + (head.code || '') + '" title="Click for breakdown">' +
-                        '<td style="padding-left:28px;">' + label + '</td>' +
-                        '<td class="col-amount">' + fmt(head.cash) + '</td>' +
-                        '<td class="col-amount">' + fmt(head.bank) + '</td>' +
-                        '<td class="col-amount">' + fmt(head.total) + '</td>' +
-                        '</tr>';
+            // Print-style amounts: 1,234.56 / (1,234.56) / -
+            function amt(n) {
+                var v = parseFloat(n || 0);
+                if (Math.abs(v) < 0.005) return '-';
+                var s = Math.abs(v).toLocaleString('en-GB', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
                 });
-                return html;
+                return v < 0 ? '(' + s + ')' : s;
             }
 
-            function excelTotalRow(label, t, ids) {
-                var clickable = (ids && ids.length) ? ' data-head-ids="' + ids.join(',') + '" title="Click for breakdown" style="cursor:pointer;"' : '';
-                return '<tr class="total-row report-row"' + clickable + '><td>' + label + '</td>' +
-                    '<td class="col-amount">' + fmt(t.cash) + '</td>' +
-                    '<td class="col-amount">' + fmt(t.bank) + '</td>' +
-                    '<td class="col-amount">' + fmt(t.total) + '</td></tr>';
-            }
-
-            function excelEmphRow(label, t, cls, ids) {
-                var clickable = (ids && ids.length) ? ' data-head-ids="' + ids.join(',') + '" title="Click for breakdown" style="cursor:pointer;"' : '';
-                return '<tr class="' + cls + ' report-row"' + clickable + '><td>' + label + '</td>' +
-                    '<td class="col-amount">' + fmt(t.cash) + '</td>' +
-                    '<td class="col-amount">' + fmt(t.bank) + '</td>' +
-                    '<td class="col-amount">' + fmt(t.total) + '</td></tr>';
-            }
-
-            function buildSection(label, sections, colorClass) {
-                var html = '';
-                html += '<tr><td colspan="4" class="section-header p-0"><div class="section-header">' + label +
-                    '</div></td></tr>';
-
-                var sectionTotals = {
-                    cash: 0,
-                    bank: 0,
-                    total: 0
-                };
-                var sectionIds = [];
-
-                $.each(sections, function(i, section) {
-                    html += '<tr><td colspan="4" class="section-subhead">' + section.type_name +
-                        '</td></tr>';
-                    var typeIds = [];
-                    $.each(section.heads, function(j, head) {
-                        if (head.head_id) {
-                            typeIds.push(head.head_id);
-                            sectionIds.push(head.head_id);
-                        }
-                        html += '<tr class="report-row" data-head-id="' + head.head_id + '" title="Click for breakdown">' +
-                            '<td style="padding-left:28px;">' + head.head_name + '</td>' +
-                            '<td class="col-amount">' + fmt(head.cash) + '</td>' +
-                            '<td class="col-amount">' + fmt(head.bank) + '</td>' +
-                            '<td class="col-amount">' + fmt(head.total) + '</td>' +
-                            '</tr>';
-                    });
-                    html += '<tr class="total-row report-row" data-head-ids="' + typeIds.join(',') + '" title="Click for breakdown" style="cursor:pointer;">' +
-                        '<td>Total ' + section.type_name + '</td>' +
-                        '<td class="col-amount">' + fmt(section.type_total.cash) + '</td>' +
-                        '<td class="col-amount">' + fmt(section.type_total.bank) + '</td>' +
-                        '<td class="col-amount">' + fmt(section.type_total.total) + '</td>' +
-                        '</tr>';
-
-                    ['cash', 'bank', 'total'].forEach(function(m) {
-                        sectionTotals[m] += section.type_total[m];
-                    });
+            function cells(values, cls) {
+                var out = '';
+                $.each(values, function(i, v) {
+                    out += '<td class="num' + (cls ? ' ' + cls : '') + '">' + amt(v) + '</td>';
                 });
-
-                return {
-                    html: html,
-                    totals: sectionTotals,
-                    ids: sectionIds
-                };
+                return out;
             }
 
-            function loadReport(filters) {
+            function headRow(head) {
+                var clickable = head.head_id ? ' data-head-id="' + head.head_id +
+                    '" title="Click for the bank transactions behind this head"' : '';
+                return '<tr class="head"' + clickable + '><td>' + head.name + '</td>' + cells(head.amounts) +
+                    '</tr>';
+            }
+
+            function sectionRow(title, cols) {
+                return '<tr class="sec"><td>' + title + '</td>' + '<td></td>'.repeat(cols) + '</tr>';
+            }
+
+            function receiptCard(r) {
+                if (!r) return '<span class="text-muted">No receipt attached to this bank line.</span>';
+                return '<strong>Receipt ' + (r.number || ('#' + r.id)) + '</strong>' +
+                    ' &middot; ' + (r.supplier || '-') +
+                    ' &middot; Invoice date ' + (r.invoice_date || '-') +
+                    ' &middot; Status ' + (r.status || '-') +
+                    '<br>Net £' + parseFloat(r.net || 0).toFixed(2) +
+                    ' &middot; VAT £' + parseFloat(r.vat || 0).toFixed(2) +
+                    ' &middot; Gross £' + parseFloat(r.gross || 0).toFixed(2) +
+                    ' &middot; Applied £' + parseFloat(r.applied || 0).toFixed(2) +
+                    ' &middot; <a href="' + r.url + '" target="_blank">Open receipt</a>';
+            }
+
+            function loadReport(f) {
                 $('#generateBtn').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
-                $.get("{{ url('/admin/accounting/profit-loss/data') }}", filters, function(d) {
-                    var body = '';
-
-                    // Dynamic chart sections (rows come from the heads table). Cash/Bank kept.
-                    if (d.excel) {
-                        var st = d.excel.section_titles || {};
-                        var toIds = [], oiIds = [], drIds = [], adIds = [];
-                        body += excelHeadRow((st.turnover || 'TURNOVER').toUpperCase());
-                        body += excelRows(d.excel.turnover_heads, toIds);
-                        body += excelHeadRow((st.other || 'OTHER INCOME').toUpperCase());
-                        body += excelRows(d.excel.other_income_heads, oiIds);
-                        body += excelTotalRow('Total Turnover (A)', d.excel.total_turnover_A, toIds.concat(oiIds));
-
-                        body += excelHeadRow((st.direct || 'DIRECT EXPENSES').toUpperCase());
-                        body += excelRows(d.excel.direct_heads, drIds);
-                        body += excelTotalRow('Total Cost of Sales (B)', d.excel.total_cost_B_excel, drIds);
-
-                        body += excelEmphRow('GROSS PROFIT (C = A-B)', d.excel.gross_profit_C, 'grand-row', toIds.concat(oiIds, drIds));
-
-                        body += excelHeadRow((st.admin || 'ADMINISTRATIVE COSTS').toUpperCase());
-                        body += excelRows(d.excel.admin_heads, adIds);
-                        body += excelTotalRow('Total Administrative Costs (D)', d.excel.total_admin_D, adIds);
-
-                        var eCls = d.excel.operating_profit_E.total >= 0 ? 'profit-row' : 'loss-row';
-                        body += '<tr class="' + eCls + ' report-row" data-head-ids="' + toIds.concat(oiIds, drIds, adIds).join(',') + '" title="Click for breakdown" style="cursor:pointer;"><td>OPERATING PROFIT (E = C-D)</td>' +
-                            '<td class="col-amount">' + fmt(d.excel.operating_profit_E.cash) + '</td>' +
-                            '<td class="col-amount">' + fmt(d.excel.operating_profit_E.bank) + '</td>' +
-                            '<td class="col-amount">' + fmt(d.excel.operating_profit_E.total) + '</td></tr>';
-                        body += '<tr><td colspan="4" class="small text-muted" style="padding:8px 16px;">' +
-                            'Refs: A=Total Turnover, B=Total Cost of Sales, C=Gross Profit (A-B), D=Total Admin, E=Operating Profit (C-D). ' +
-                            'Rows follow the live chart of accounts; totals are straight sums.' +
-                            '</td></tr>';
+                $.get("{{ url('/admin/accounting/profit-loss/data') }}", f, function(d) {
+                    var s = d.statement;
+                    if (!s) {
+                        $('#reportBody').html(
+                            '<tr><td colspan="3" class="text-center text-muted py-4">Select a client and a business.</td></tr>'
+                        );
+                        $('#reportOutput').fadeIn();
+                        return;
                     }
 
-                    // Legacy dynamic grouping (kept for reference below Excel sections)
-                    // Income
-                    var incomeResult = buildSection('TRADING INCOME', d.income, 'bg-success');
-                    body += incomeResult.html;
-                    body += '<tr class="grand-row report-row" data-head-ids="' + incomeResult.ids.join(',') + '" title="Click for breakdown" style="cursor:pointer;"><td>Total Trading Income</td>' +
-                        '<td class="col-amount">' + fmt(d.total_income.cash) + '</td>' +
-                        '<td class="col-amount">' + fmt(d.total_income.bank) + '</td>' +
-                        '<td class="col-amount">' + fmt(d.total_income.total) + '</td></tr>';
+                    // Column headers: one per period (current + comparative).
+                    var head = '<th class="stmt-account"></th>';
+                    $.each(s.columns, function(i, label) {
+                        var p = s.periods[i] || {};
+                        head += '<th class="num" title="' + (p.from || '') + ' to ' + (p.to || '') +
+                            '">' + label + '</th>';
+                    });
+                    $('#stmtHeadRow').html(head);
 
-                    // Expenses
-                    var expResult = buildSection('OPERATING EXPENSES', d.expenses, 'bg-danger');
-                    body += expResult.html;
-                    body += '<tr class="grand-row report-row" data-head-ids="' + expResult.ids.join(',') + '" title="Click for breakdown" style="cursor:pointer;"><td>Total Expenses</td>' +
-                        '<td class="col-amount">' + fmt(d.total_expense.cash) + '</td>' +
-                        '<td class="col-amount">' + fmt(d.total_expense.bank) + '</td>' +
-                        '<td class="col-amount">' + fmt(d.total_expense.total) + '</td></tr>';
+                    var body = '';
+                    $.each(s.sections, function(i, section) {
+                        body += sectionRow(section.title, s.columns.length);
+                        if (!section.heads.length) {
+                            body += '<tr class="empty"><td colspan="' + (s.columns.length + 1) +
+                                '">No reconciled transactions.</td></tr>';
+                        }
+                        $.each(section.heads, function(j, h) {
+                            body += headRow(h);
+                        });
+                        body += '<tr class="tot"><td>Total ' + section.title + '</td>' + cells(
+                            section.totals) + '</tr>';
+                        if (section.key === 'direct') {
+                            body += '<tr class="grand"><td>Gross Profit</td>' + cells(s.gross_profit) +
+                                '</tr>';
+                        }
+                    });
 
-                    // Net Profit/Loss
-                    var netClass = d.net_profit.total >= 0 ? 'profit-row' : 'loss-row';
-                    var netLabel = d.net_profit.total >= 0 ? 'NET PROFIT' : 'NET LOSS';
-                    body += '<tr class="' + netClass + ' report-row" data-head-ids="' + incomeResult.ids.concat(expResult.ids).join(',') + '" title="Click for breakdown" style="cursor:pointer;"><td>' + netLabel + '</td>' +
-                        '<td class="col-amount">' + fmt(d.net_profit.cash) + '</td>' +
-                        '<td class="col-amount">' + fmt(d.net_profit.bank) + '</td>' +
-                        '<td class="col-amount">' + fmt(d.net_profit.total) + '</td></tr>';
+                    body += '<tr class="grand"><td>Operating Profit</td>' + cells(s.operating_profit) +
+                        '</tr>';
+                    body += '<tr class="tot"><td>Profit on Ordinary Activities Before Taxation</td>' + cells(
+                        s.profit_before_tax) + '</tr>';
+                    body += '<tr class="grand"><td>Profit after Taxation</td>' + cells(s.profit_after_tax) +
+                        '</tr>';
 
                     $('#reportBody').html(body);
-                    $('#reportMeta').text(d.business_name + '  |  ' + d.from + ' – ' + d.to + '  |  Click a row for breakdown');
+                    $('#stmtBusiness').text(d.business_name);
+                    $('#stmtPeriod').text('For the period ' + d.from + ' to ' + d.to);
+                    $('#stmtNote').text(
+                        'Statement-based: only bank statement lines reconciled to a receipt. Amounts are ' +
+                        (s.basis === 'net' ? 'net of VAT.' : 'gross, including VAT.'));
+                    $('#stmtFootLeft').text('Profit and Loss  ' + d.business_name);
+                    $('#stmtFootRight').text(@json(now()->format('d/m/Y')));
                     $('#reportOutput').fadeIn();
                 }).always(function() {
                     $('#generateBtn').prop('disabled', false).html('<i class="fa fa-search"></i> Search');
                 });
             }
 
-            // Drill-down: click any head or total row → expandable breakdown of its transactions.
-            $('#reportBody').on('click', 'tr.report-row[data-head-id], tr.report-row[data-code], tr.report-row[data-head-ids]', function() {
+            // Level 1: head row -> the bank transactions behind it.
+            // Level 2: a bank transaction -> the receipt it was matched to.
+            $('#reportBody').on('click', 'tr.head[data-head-id]', function() {
                 var $row = $(this);
                 if ($row.next().hasClass('breakdown-row')) {
                     $row.next().toggle();
                     return;
                 }
                 var headId = $row.data('head-id');
-                var headIds = $row.data('head-ids');
-                var code = $row.data('code');
-                if (!headId && !headIds && !code) return;
-                var $detail = $('<tr class="breakdown-row"><td colspan="4" style="background:#f8fafc; padding:8px 16px 12px 28px;"><span class="small text-muted"><i class="fa fa-spinner fa-spin"></i> Loading breakdown…</span></td></tr>');
+                var span = $row.children('td').length;
+                var $detail = $('<tr class="breakdown-row"><td colspan="' + span +
+                    '"><div class="drill-wrap"><span class="text-muted"><i class="fa fa-spinner fa-spin"></i> Loading transactions…</span></div></td></tr>'
+                );
                 $row.after($detail);
-                $.get("{{ url('/admin/accounting/head-transactions') }}", $.extend({ mode: 'pl', head_id: headId || '', head_ids: headIds || '', code: code || '' }, currentFilters), function(res) {
-                    var html = '<div class="small font-weight-bold mb-1">Breakdown: ' + (res.heads.length ? res.heads.map(function(h) { return h.code + ' - ' + h.name; }).join(', ') : '') + ' (' + res.count + ' transactions, Total £' + parseFloat(res.total || 0).toFixed(2) + ')</div>';
-                    if (!res.rows.length) {
-                        html += '<div class="small text-muted">No transactions in this period.</div>';
+                $.get("{{ url('/admin/accounting/statement-drill') }}", $.extend({
+                    head_id: headId
+                }, currentFilters), function(res) {
+                    var html = '<div class="font-weight-bold mb-1">' + (res.head.code ? res.head
+                            .code + ' - ' : '') + res.head.name + ' — ' + res.count +
+                        ' bank transaction(s), £' + parseFloat(res.total || 0).toFixed(2) + '</div>';
+                    if (!res.transactions.length) {
+                        html += '<div class="text-muted">No reconciled transactions in this period.</div>';
                     } else {
-                        html += '<table class="table table-sm mb-0"><thead><tr><th>Date</th><th>Receipt</th><th>Business</th><th>Method</th><th>Side</th><th class="text-right">Amount</th></tr></thead><tbody>';
-                        $.each(res.rows, function(i, r) {
-                            var link = r.bill_url ? '<a href="' + r.bill_url + '" target="_blank">' + (r.receipt_number || ('#' + r.receipt_id)) + '</a>' : (r.receipt_number || ('#' + r.receipt_id));
-                            html += '<tr><td>' + (r.date || '-') + '</td>' +
-                                '<td>' + link + '</td>' +
-                                '<td>' + (r.business || '-') + '</td>' +
-                                '<td>' + (r.payment_method || '-') + '</td>' +
-                                '<td>' + (r.type || '-') + '</td>' +
-                                '<td class="text-right">£' + parseFloat(r.signed_amount ?? r.amount ?? 0).toFixed(2) + '</td></tr>';
+                        html +=
+                            '<table><thead><tr><th>Date</th><th>Bank account</th><th>Description</th><th>Receipt</th><th class="text-right">Amount</th></tr></thead><tbody>';
+                        $.each(res.transactions, function(i, t) {
+                            html += '<tr class="drill-txn" data-txn="' + i +
+                                '" style="cursor:pointer;">' +
+                                '<td>' + (t.date || '-') + '</td>' +
+                                '<td>' + (t.bank_account || '-') + '</td>' +
+                                '<td>' + (t.description || '-') + '</td>' +
+                                '<td>' + (t.receipt ? (t.receipt.number || ('#' + t.receipt.id)) : '-') +
+                                '</td>' +
+                                '<td class="text-right">£' + parseFloat(t.amount || 0).toFixed(2) +
+                                '</td></tr>';
+                            html += '<tr class="drill-receipt" data-txn="' + i +
+                                '" style="display:none;"><td colspan="5" style="background:#fff;">' +
+                                receiptCard(t.receipt) + '</td></tr>';
                         });
                         html += '</tbody></table>';
                     }
-                    $detail.find('td').html(html);
+                    $detail.find('.drill-wrap').html(html);
                 }).fail(function() {
-                    $detail.find('td').html('<span class="small text-danger">Failed to load breakdown.</span>');
+                    $detail.find('.drill-wrap').html(
+                        '<span class="text-danger">Failed to load transactions.</span>');
                 });
+            });
+
+            $('#reportBody').on('click', 'tr.drill-txn', function() {
+                var i = $(this).data('txn');
+                $('tr.drill-receipt[data-txn="' + i + '"]').toggle();
             });
         });
     </script>

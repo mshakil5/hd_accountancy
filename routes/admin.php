@@ -826,6 +826,7 @@ Route::get('/bank-reconciliation/search-clients', [ReceiptController::class, 'se
 
     Route::get('/accounting/get-businesses',         [AccountingController::class, 'getBusinesses'])->name('accounting.getBusinesses');
     Route::get('/accounting/head-transactions',      [AccountingController::class, 'headTransactions'])->name('accounting.headTransactions');
+    Route::get('/accounting/statement-drill',        [AccountingController::class, 'statementDrill'])->name('accounting.statementDrill');
 });
 
 Route::get('/get-active-jobs', [AdminController::class, 'getActiveJobs'])->name('get.active.jobs');

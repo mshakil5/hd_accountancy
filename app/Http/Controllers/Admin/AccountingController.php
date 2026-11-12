@@ -7,6 +7,7 @@ use App\Models\AccountHead;
 use App\Models\Client;
 use App\Models\ClientCredential;
 use App\Models\Transaction;
+use App\Services\Reporting\StatementReportService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -124,16 +125,59 @@ class AccountingController extends Controller
         $credentialId  = $request->client_credential_id;
         $businessId    = $request->client_id;
         $paymentMethod = $request->payment_method;
+        $basis         = $request->basis === 'net' ? 'net' : 'gross';
 
         \Log::info('PL Request', ['from' => $from, 'to' => $to, 'cred' => $credentialId, 'biz' => $businessId]);
 
         $report = $this->buildProfitLoss($from, $to, $credentialId, $businessId, $paymentMethod);
 
+        // Statement-based report: only bank lines reconciled to a receipt.
+        // Columns are the chosen period plus the same period a year earlier.
+        $statement = null;
+        if ($businessId) {
+            $currentTo = Carbon::parse($to);
+            $currentFrom = Carbon::parse($from);
+            $statement = app(StatementReportService::class)->profitLossColumns(
+                (int) $businessId,
+                [
+                    ['label' => $currentTo->year, 'from' => $currentFrom->toDateString(), 'to' => $currentTo->toDateString()],
+                    ['label' => $currentTo->copy()->subYear()->year, 'from' => $currentFrom->copy()->subYear()->toDateString(), 'to' => $currentTo->copy()->subYear()->toDateString()],
+                ],
+                $paymentMethod,
+                $basis
+            );
+        }
+
         return response()->json([
             'from'          => Carbon::parse($from)->format('d/m/Y'),
             'to'            => Carbon::parse($to)->format('d/m/Y'),
+            'basis'         => $basis,
+            'statement'     => $statement,
             ...$report,
         ]);
+    }
+
+    /**
+     * Drill-down for a statement-based report row: the bank transactions
+     * behind one account head, each carrying the receipt it was matched to.
+     */
+    public function statementDrill(Request $request)
+    {
+        $businessId = (int) $request->client_id;
+        abort_unless($businessId > 0, 422, 'Select a business first.');
+
+        $from = $request->from ?? Carbon::now()->startOfMonth()->toDateString();
+        $to   = $request->to   ?? Carbon::now()->endOfMonth()->toDateString();
+        $basis = $request->basis === 'net' ? 'net' : 'gross';
+
+        return response()->json(app(StatementReportService::class)->drill(
+            $businessId,
+            $from,
+            $to,
+            $request->payment_method,
+            $basis,
+            (int) $request->head_id
+        ));
     }
 
     /**
@@ -602,8 +646,24 @@ class AccountingController extends Controller
 
         $report = $this->buildBalanceSheet($asOf, $credentialId, $businessId);
 
+        // Statement-based report: only bank lines reconciled to a receipt.
+        // Columns are the as-at date plus the same date a year earlier.
+        $statement = null;
+        if ($businessId) {
+            $asOfDate = Carbon::parse($asOf);
+            $statement = app(StatementReportService::class)->balanceSheetColumns(
+                (int) $businessId,
+                [
+                    ['label' => $asOfDate->format('d/m/Y'), 'as_of' => $asOfDate->toDateString()],
+                    ['label' => $asOfDate->copy()->subYear()->format('d/m/Y'), 'as_of' => $asOfDate->copy()->subYear()->toDateString()],
+                ],
+                $request->payment_method
+            );
+        }
+
         return response()->json([
             'as_of'         => Carbon::parse($asOf)->format('d/m/Y'),
+            'statement'     => $statement,
             ...$report,
         ]);
     }
@@ -892,29 +952,48 @@ class AccountingController extends Controller
         $format = strtolower($request->format ?? 'csv');
         $from = $request->from ?? Carbon::now()->startOfMonth()->toDateString();
         $to = $request->to ?? Carbon::now()->endOfMonth()->toDateString();
-        $report = $this->buildProfitLoss($from, $to, $request->client_credential_id, $request->client_id, $request->payment_method);
+        $basis = $request->basis === 'net' ? 'net' : 'gross';
+        $businessId = (int) $request->client_id;
+        abort_unless($businessId > 0, 422, 'Select a business first.');
+
+        $currentTo = Carbon::parse($to);
+        $currentFrom = Carbon::parse($from);
+        $report = app(StatementReportService::class)->profitLossColumns(
+            $businessId,
+            [
+                ['label' => $currentTo->year, 'from' => $currentFrom->toDateString(), 'to' => $currentTo->toDateString()],
+                ['label' => $currentTo->copy()->subYear()->year, 'from' => $currentFrom->copy()->subYear()->toDateString(), 'to' => $currentTo->copy()->subYear()->toDateString()],
+            ],
+            $request->payment_method,
+            $basis
+        );
+        $businessName = $this->businessName($businessId);
         $stamp = Carbon::parse($from)->format('Ymd') . '-' . Carbon::parse($to)->format('Ymd');
-        $e = $report['excel'];
-        $m = fn($t, $k) => round((float) ($t[$k] ?? 0), 2);
-        $st = $e['section_titles'];
-        $headLabel = fn($h) => trim(($h['code'] ? $h['code'] . ' - ' : '') . $h['head_name']);
+        $v = fn($n) => round((float) $n, 2);
+        $blank = array_fill(0, count($report['columns']), '');
+        $nums = fn(array $values) => array_map($v, $values);
+
         $rows = [];
-        $rows[] = ['HD Accountancy — Profit & Loss (' . $report['business_name'] . ' | ' . Carbon::parse($from)->format('d/m/Y') . ' to ' . Carbon::parse($to)->format('d/m/Y') . ')', '', '', '', 'title'];
-        $rows[] = ['Account', 'Cash', 'Bank', 'Total', 'header'];
-        $rows[] = [strtoupper($st['turnover']), '', '', '', 'section'];
-        foreach ($e['turnover_heads'] as $h) $rows[] = [$headLabel($h), $m($h, 'cash'), $m($h, 'bank'), $m($h, 'total'), 'row'];
-        $rows[] = [strtoupper($st['other']), '', '', '', 'section'];
-        foreach ($e['other_income_heads'] as $h) $rows[] = [$headLabel($h), $m($h, 'cash'), $m($h, 'bank'), $m($h, 'total'), 'row'];
-        $rows[] = ['Total Turnover (A)', $m($e['total_turnover_A'], 'cash'), $m($e['total_turnover_A'], 'bank'), $m($e['total_turnover_A'], 'total'), 'total'];
-        $rows[] = [strtoupper($st['direct']), '', '', '', 'section'];
-        foreach ($e['direct_heads'] as $h) $rows[] = [$headLabel($h), $m($h, 'cash'), $m($h, 'bank'), $m($h, 'total'), 'row'];
-        $rows[] = ['Total Cost of Sales (B)', $m($e['total_cost_B_excel'], 'cash'), $m($e['total_cost_B_excel'], 'bank'), $m($e['total_cost_B_excel'], 'total'), 'total'];
-        $rows[] = ['GROSS PROFIT (C = A-B)', $m($e['gross_profit_C'], 'cash'), $m($e['gross_profit_C'], 'bank'), $m($e['gross_profit_C'], 'total'), 'grand'];
-        $rows[] = [strtoupper($st['admin']), '', '', '', 'section'];
-        foreach ($e['admin_heads'] as $h) $rows[] = [$headLabel($h), $m($h, 'cash'), $m($h, 'bank'), $m($h, 'total'), 'row'];
-        $rows[] = ['Total Administrative Costs (D)', $m($e['total_admin_D'], 'cash'), $m($e['total_admin_D'], 'bank'), $m($e['total_admin_D'], 'total'), 'total'];
-        $rows[] = ['OPERATING PROFIT (E = C-D)', $m($e['operating_profit_E'], 'cash'), $m($e['operating_profit_E'], 'bank'), $m($e['operating_profit_E'], 'total'), 'grand'];
-        $rows[] = ['Note: rows follow the live chart of accounts; totals are straight sums (A=turnover, B=direct, C=A-B, D=admin, E=C-D).', '', '', '', 'note'];
+        $rows[] = array_merge(['HD Accountancy — Profit & Loss (' . $businessName . ' | '
+            . Carbon::parse($from)->format('d/m/Y') . ' to ' . Carbon::parse($to)->format('d/m/Y')
+            . ' | ' . strtoupper($basis) . ')'], $blank, ['title']);
+        $rows[] = array_merge(['Account'], $report['columns'], ['header']);
+
+        foreach ($report['sections'] as $section) {
+            $rows[] = array_merge([strtoupper($section['title'])], $blank, ['section']);
+            foreach ($section['heads'] as $head) {
+                $rows[] = array_merge([$head['name']], $nums($head['amounts']), ['row']);
+            }
+            $rows[] = array_merge(['Total ' . $section['title']], $nums($section['totals']), ['total']);
+            if ($section['key'] === 'direct') {
+                $rows[] = array_merge(['GROSS PROFIT'], $nums($report['gross_profit']), ['grand']);
+            }
+        }
+
+        $rows[] = array_merge(['OPERATING PROFIT'], $nums($report['operating_profit']), ['grand']);
+        $rows[] = array_merge(['Profit on Ordinary Activities Before Taxation'], $nums($report['profit_before_tax']), ['total']);
+        $rows[] = array_merge(['Profit after Taxation'], $nums($report['profit_after_tax']), ['grand']);
+        $rows[] = array_merge(['Note: statement-based — only bank lines reconciled to a receipt. Amounts are ' . $basis . ' of VAT.'], $blank, ['note']);
 
         if ($format === 'xlsx') {
             return $this->streamXlsx('profit-loss-' . $stamp, 'P&L', $rows);
@@ -926,38 +1005,64 @@ class AccountingController extends Controller
     {
         $format = strtolower($request->format ?? 'csv');
         $asOf = $request->as_of ?? Carbon::now()->toDateString();
-        $report = $this->buildBalanceSheet($asOf, $request->client_credential_id, $request->client_id);
+        $businessId = (int) $request->client_id;
+        abort_unless($businessId > 0, 422, 'Select a business first.');
+
+        $asOfDate = Carbon::parse($asOf);
+        $report = app(StatementReportService::class)->balanceSheetColumns(
+            $businessId,
+            [
+                ['label' => $asOfDate->format('d/m/Y'), 'as_of' => $asOfDate->toDateString()],
+                ['label' => $asOfDate->copy()->subYear()->format('d/m/Y'), 'as_of' => $asOfDate->copy()->subYear()->toDateString()],
+            ],
+            $request->payment_method
+        );
+        $businessName = $this->businessName($businessId);
         $stamp = Carbon::parse($asOf)->format('Ymd');
-        $e = $report['excel'];
         $v = fn($n) => round((float) $n, 2);
-        $st = $e['section_titles'];
+        $blank = array_fill(0, count($report['columns']), '');
+        $nums = fn(array $values) => array_map($v, $values);
+
         $rows = [];
-        $rows[] = ['HD Accountancy — Balance Sheet (' . $report['business_name'] . ' | As at ' . Carbon::parse($asOf)->format('d/m/Y') . ')', '', 'title'];
-        $rows[] = ['Account', 'Amount', 'header'];
-        $rows[] = [strtoupper($st['fixed']), '', 'section'];
-        foreach ($e['fixed_heads'] as $r) $rows[] = [$r['name'], $v($r['balance']), 'row'];
-        $rows[] = ['Total Fixed Assets (A)', $v($e['total_fixed_A']), 'total'];
-        $rows[] = [strtoupper($st['current']), '', 'section'];
-        foreach ($e['current_heads'] as $r) $rows[] = [$r['name'], $v($r['balance']), 'row'];
-        $rows[] = ['Total Current Assets (B)', $v($e['total_current_B_excel']), 'total'];
-        $rows[] = [strtoupper($st['curr_liab']), '', 'section'];
-        foreach ($e['current_liab_heads'] as $r) $rows[] = [$r['name'], $v($r['balance']), 'row'];
-        $rows[] = ['Total Current Liabilities (C)', $v($e['total_current_C']), 'total'];
-        $rows[] = ['Net Current Assets (B-C)', $v($e['net_current_BC']), 'total'];
-        $rows[] = ['Total Assets less Current Liabilities (A+B-C)', $v($e['total_assets_less_current_excel']), 'grand'];
-        $rows[] = [strtoupper($st['noncurrent']), '', 'section'];
-        foreach ($e['noncurrent_heads'] as $r) $rows[] = [$r['name'], $v($r['balance']), 'row'];
-        $rows[] = ['Total Non-Current Liabilities (D)', $v($e['total_noncurrent_D']), 'total'];
-        $rows[] = ['Net Assets (A+B-C-D)', $v($e['net_assets_excel']), 'grand'];
-        $rows[] = [strtoupper($st['capital']), '', 'section'];
-        foreach ($e['capital_heads'] as $r) $rows[] = [$r['name'], $v($r['balance']), 'row'];
-        $rows[] = ['Total Capital and Reserves', $v($e['total_capital_excel']), 'total'];
-        $rows[] = ['Note: rows follow the live chart of accounts; totals are straight sums.', '', 'note'];
+        $rows[] = array_merge(['HD Accountancy — Balance Sheet (' . $businessName . ' | As at '
+            . Carbon::parse($asOf)->format('d/m/Y') . ')'], $blank, ['title']);
+        $rows[] = array_merge(['Account'], $report['columns'], ['header']);
+
+        foreach ($report['sections'] as $section) {
+            $rows[] = array_merge([strtoupper($section['title'])], $blank, ['section']);
+            foreach ($section['heads'] as $head) {
+                $rows[] = array_merge([$head['name']], $nums($head['amounts']), ['row']);
+            }
+
+            if ($section['key'] === 'capital') {
+                $rows[] = array_merge(['Current Year Earnings'], $nums($report['net_profit']), ['row']);
+                $rows[] = array_merge(['Total Capital and Reserves'], $nums($report['total_capital_and_profit']), ['grand']);
+                continue;
+            }
+
+            $rows[] = array_merge(['Total ' . $section['title']], $nums($section['totals']), ['total']);
+
+            if ($section['key'] === 'current_liab') {
+                $rows[] = array_merge(['Net Current Assets'], $nums($report['net_current']), ['total']);
+                $rows[] = array_merge(['Total Assets less Current Liabilities'], $nums($report['assets_less_current']), ['grand']);
+            }
+            if ($section['key'] === 'noncurrent') {
+                $rows[] = array_merge(['Net Assets'], $nums($report['net_assets']), ['grand']);
+            }
+        }
+
+        $rows[] = array_merge(['Note: statement-based — only bank lines reconciled to a receipt. Always net of VAT.'], $blank, ['note']);
 
         if ($format === 'xlsx') {
             return $this->streamXlsx('balance-sheet-' . $stamp, 'Balance Sheet', $rows);
         }
         return $this->streamCsv('balance-sheet-' . $stamp . '.csv', $rows);
+    }
+
+    private function businessName(int $businessId): string
+    {
+        $client = Client::find($businessId);
+        return $client ? trim(($client->name ?? '') . ' ' . ($client->last_name ?? '')) : 'Unknown';
     }
 
     private function streamCsv($filename, array $rows)
