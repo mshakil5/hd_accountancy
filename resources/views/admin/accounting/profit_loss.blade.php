@@ -121,17 +121,17 @@
                 <div class="row align-items-end">
                     <div class="col-md-2">
                         <label class="small font-weight-bold">From</label>
-                        <input type="date" class="form-control form-control-sm" id="from"
+                        <input type="date" class="form-control" id="from"
                             value="{{ now()->startOfMonth()->format('Y-m-d') }}">
                     </div>
                     <div class="col-md-2">
                         <label class="small font-weight-bold">To</label>
-                        <input type="date" class="form-control form-control-sm" id="to"
+                        <input type="date" class="form-control" id="to"
                             value="{{ now()->endOfMonth()->format('Y-m-d') }}">
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="small font-weight-bold">Client</label>
-                        <select class="form-control form-control-sm select2" id="clientSelect" style="width:100%">
+                        <select class="form-control select2" id="clientSelect" style="width:100%">
                             <option value="">All Clients</option>
                             @foreach ($clients as $c)
                                 <option value="{{ $c->id }}">{{ trim($c->first_name . ' ' . $c->last_name) }}
@@ -141,21 +141,21 @@
                     </div>
                     <div class="col-md-2">
                         <label class="small font-weight-bold">Business</label>
-                        <select class="form-control form-control-sm" id="businessSelect">
+                        <select class="form-control" id="businessSelect">
                             <option value="">All Businesses</option>
                         </select>
                     </div>
                     <div class="col-md-2">
                         <label class="small font-weight-bold">Payment Method</label>
-                        <select class="form-control form-control-sm" id="paymentMethod">
+                        <select class="form-control" id="paymentMethod">
                             <option value="">All Methods</option>
                             <option value="cash">Cash</option>
                             <option value="bank">Bank</option>
                         </select>
                     </div>
-                    <div class="col-md-1">
-                        <button class="btn btn-primary btn-sm btn-block mt-3" id="generateBtn"><i class="fa fa-refresh"></i>
-                            Run</button>
+                    <div class="col-md-2">
+                        <button class="btn btn-primary mt-3" id="generateBtn" style="width:50%; white-space:nowrap;"><i class="fa fa-search"></i>
+                            Search</button>
                     </div>
                 </div>
             </div>
@@ -384,7 +384,7 @@
                     $('#reportMeta').text(d.business_name + '  |  ' + d.from + ' – ' + d.to + '  |  Click a row for breakdown');
                     $('#reportOutput').fadeIn();
                 }).always(function() {
-                    $('#generateBtn').prop('disabled', false).html('<i class="fa fa-refresh"></i> Run');
+                    $('#generateBtn').prop('disabled', false).html('<i class="fa fa-search"></i> Search');
                 });
             }
 

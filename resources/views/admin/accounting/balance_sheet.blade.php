@@ -177,12 +177,12 @@
                 <div class="row align-items-end">
                     <div class="col-md-3">
                         <label class="small font-weight-bold">As of Date</label>
-                        <input type="date" class="form-control form-control-sm" id="asOf"
+                        <input type="date" class="form-control" id="asOf"
                             value="{{ now()->format('Y-m-d') }}">
                     </div>
                     <div class="col-md-3">
                         <label class="small font-weight-bold">Client</label>
-                        <select class="form-control form-control-sm select2" id="clientSelect" style="width:100%">
+                        <select class="form-control select2" id="clientSelect" style="width:100%">
                             <option value="">All Clients</option>
                             @foreach ($clients as $c)
                                 <option value="{{ $c->id }}">{{ trim($c->first_name . ' ' . $c->last_name) }}
@@ -192,13 +192,13 @@
                     </div>
                     <div class="col-md-3">
                         <label class="small font-weight-bold">Business</label>
-                        <select class="form-control form-control-sm" id="businessSelect">
+                        <select class="form-control" id="businessSelect">
                             <option value="">All Businesses</option>
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-primary btn-sm btn-block mt-3" id="generateBtn"><i class="fa fa-refresh"></i>
-                            Generate</button>
+                        <button class="btn btn-primary mt-3" id="generateBtn" style="width:50%; white-space:nowrap;"><i class="fa fa-search"></i>
+                            Search</button>
                     </div>
                 </div>
             </div>
@@ -397,7 +397,7 @@
 
                 }).always(function() {
                     $('#generateBtn').prop('disabled', false).html(
-                        '<i class="fa fa-refresh"></i> Generate');
+                        '<i class="fa fa-search"></i> Search');
                 });
             });
 
