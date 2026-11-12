@@ -193,7 +193,7 @@
             @endphp
             <tr>
               <td>
-                <div class="font-weight-bold">{{ \Carbon\Carbon::parse($imp->created_at)->format('d M Y') }}</div>
+                <div class="font-weight-bold">{{ \Carbon\Carbon::parse($imp->created_at)->format('d/m/Y') }}</div>
                 <div class="hd-small text-muted">{{ \Carbon\Carbon::parse($imp->created_at)->format('H:i') }}</div>
               </td>
               <td>

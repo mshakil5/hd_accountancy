@@ -130,8 +130,8 @@ class AccountingController extends Controller
         $report = $this->buildProfitLoss($from, $to, $credentialId, $businessId, $paymentMethod);
 
         return response()->json([
-            'from'          => Carbon::parse($from)->format('d M Y'),
-            'to'            => Carbon::parse($to)->format('d M Y'),
+            'from'          => Carbon::parse($from)->format('d/m/Y'),
+            'to'            => Carbon::parse($to)->format('d/m/Y'),
             ...$report,
         ]);
     }
@@ -576,8 +576,8 @@ class AccountingController extends Controller
         }
 
         return response()->json([
-            'from'          => Carbon::parse($from)->format('d M Y'),
-            'to'            => Carbon::parse($to)->format('d M Y'),
+            'from'          => Carbon::parse($from)->format('d/m/Y'),
+            'to'            => Carbon::parse($to)->format('d/m/Y'),
             'business_name' => $businessName,
             'rows'          => array_values($grouped),
             'total_debit'   => $totalDebit,
@@ -603,7 +603,7 @@ class AccountingController extends Controller
         $report = $this->buildBalanceSheet($asOf, $credentialId, $businessId);
 
         return response()->json([
-            'as_of'         => Carbon::parse($asOf)->format('d M Y'),
+            'as_of'         => Carbon::parse($asOf)->format('d/m/Y'),
             ...$report,
         ]);
     }
@@ -899,7 +899,7 @@ class AccountingController extends Controller
         $st = $e['section_titles'];
         $headLabel = fn($h) => trim(($h['code'] ? $h['code'] . ' - ' : '') . $h['head_name']);
         $rows = [];
-        $rows[] = ['HD Accountancy — Profit & Loss (' . $report['business_name'] . ' | ' . $from . ' to ' . $to . ')', '', '', '', 'title'];
+        $rows[] = ['HD Accountancy — Profit & Loss (' . $report['business_name'] . ' | ' . Carbon::parse($from)->format('d/m/Y') . ' to ' . Carbon::parse($to)->format('d/m/Y') . ')', '', '', '', 'title'];
         $rows[] = ['Account', 'Cash', 'Bank', 'Total', 'header'];
         $rows[] = [strtoupper($st['turnover']), '', '', '', 'section'];
         foreach ($e['turnover_heads'] as $h) $rows[] = [$headLabel($h), $m($h, 'cash'), $m($h, 'bank'), $m($h, 'total'), 'row'];
@@ -932,7 +932,7 @@ class AccountingController extends Controller
         $v = fn($n) => round((float) $n, 2);
         $st = $e['section_titles'];
         $rows = [];
-        $rows[] = ['HD Accountancy — Balance Sheet (' . $report['business_name'] . ' | As at ' . $asOf . ')', '', 'title'];
+        $rows[] = ['HD Accountancy — Balance Sheet (' . $report['business_name'] . ' | As at ' . Carbon::parse($asOf)->format('d/m/Y') . ')', '', 'title'];
         $rows[] = ['Account', 'Amount', 'header'];
         $rows[] = [strtoupper($st['fixed']), '', 'section'];
         foreach ($e['fixed_heads'] as $r) $rows[] = [$r['name'], $v($r['balance']), 'row'];

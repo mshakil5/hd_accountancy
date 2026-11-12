@@ -2,7 +2,7 @@
     $absAmt     = abs((float)$entry->amount);
     $isCredit   = (float)$entry->amount >= 0;
     $approved   = ($entry->reconciliation_status ?? '') === 'approved';
-    $dateFormatted = \Carbon\Carbon::parse($entry->transaction_date)->format('d-m-Y');
+    $dateFormatted = \Carbon\Carbon::parse($entry->transaction_date)->format('d/m/Y');
     $bankName   = optional($bankAccounts->firstWhere('id', $entry->bank_account_id))->bank_name ?? 'Unassigned';
     $importInfo = $importMap[$entry->bank_import_id] ?? null;
 
@@ -61,7 +61,7 @@
         <div class="hd-details-row"><span>Extraction</span><span>{{ ucfirst($entry->extraction_source) }}</span></div>
         @endif
         @if($entry->approved_at)
-        <div class="hd-details-row"><span>Reconciled at</span><span>{{ \Carbon\Carbon::parse($entry->approved_at)->format('d-m-Y H:i') }}</span></div>
+        <div class="hd-details-row"><span>Reconciled at</span><span>{{ \Carbon\Carbon::parse($entry->approved_at)->format('d/m/Y H:i') }}</span></div>
         @endif
       </div>
     </div>
@@ -74,7 +74,7 @@
           <div>
             <strong style="color:#15803d">✓ Reconciled</strong>
             @if($entry->approved_at)
-              <span class="hd-small ml-2">on {{ \Carbon\Carbon::parse($entry->approved_at)->format('d-m-Y') }}</span>
+              <span class="hd-small ml-2">on {{ \Carbon\Carbon::parse($entry->approved_at)->format('d/m/Y') }}</span>
             @endif
             @if($entry->receipt_id)
               <span class="hd-small ml-2">· Receipt #{{ $entry->receipt_id }}</span>
@@ -151,7 +151,7 @@
                       · {{ $autoMatch->detail->accountHead->code }} – {{ $autoMatch->detail->accountHead->name }}
                     @endif
                     @if($autoMatch->detail && $autoMatch->detail->invoice_date)
-                      · {{ \Carbon\Carbon::parse($autoMatch->detail->invoice_date)->format('d-m-Y') }}
+                      · {{ \Carbon\Carbon::parse($autoMatch->detail->invoice_date)->format('d/m/Y') }}
                     @endif
                     @if($autoMatch->detail && $autoMatch->detail->payment_method)
                       · {{ ucfirst($autoMatch->detail->payment_method) }}
@@ -178,7 +178,7 @@
                       · {{ $r->detail->accountHead->code }} – {{ $r->detail->accountHead->name }}
                     @endif
                     @if($r->detail && $r->detail->invoice_date)
-                      · {{ \Carbon\Carbon::parse($r->detail->invoice_date)->format('d-m-Y') }}
+                      · {{ \Carbon\Carbon::parse($r->detail->invoice_date)->format('d/m/Y') }}
                     @endif
                     @if($r->detail && $r->detail->payment_method)
                       · {{ ucfirst($r->detail->payment_method) }}
@@ -227,7 +227,7 @@
                   'vatName' => 'vat_percent',
                   'grossHint' => 'must equal the bank amount £' . number_format($absAmt, 2),
               ])
-              <div class="hd-field" style="grid-column:1/-1">
+              <div class="hd-field">
                 <label class="hd-field-lbl">
                   Account Head
                   <button type="button" class="hd-qadd-btn" onclick="openQuickHeadFor(this)"><i class="fa fa-plus-circle"></i> Quick Add</button>
@@ -332,7 +332,7 @@
                 <div style="flex:1;min-width:0">
                   <span style="font-weight:700;font-size:13px">#{{ $r->receipt_number }} — {{ $r->supplier ?: 'Unknown' }}</span>
                   @if($r->detail && $r->detail->invoice_date)
-                    <span class="hd-small ml-1">· {{ \Carbon\Carbon::parse($r->detail->invoice_date)->format('d-m-Y') }}</span>
+                    <span class="hd-small ml-1">· {{ \Carbon\Carbon::parse($r->detail->invoice_date)->format('d/m/Y') }}</span>
                   @endif
                   @if($r->detail && $r->detail->payment_method)
                     <span class="hd-small ml-1">· {{ ucfirst($r->detail->payment_method) }}</span>
@@ -435,7 +435,7 @@
           <div class="mb-2">
             <div class="hd-small font-weight-bold mb-1">Internal Notes</div>
             @foreach($entryNotes as $n)
-            <div class="hd-note-pill">{{ $n->body }} <span style="opacity:.6;font-size:11px">· {{ $n->author_name ?? 'Unknown' }} · {{ \Carbon\Carbon::parse($n->created_at)->format('d-m-Y H:i') }}</span></div>
+            <div class="hd-note-pill">{{ $n->body }} <span style="opacity:.6;font-size:11px">· {{ $n->author_name ?? 'Unknown' }} · {{ \Carbon\Carbon::parse($n->created_at)->format('d/m/Y H:i') }}</span></div>
             @endforeach
           </div>
           @endif

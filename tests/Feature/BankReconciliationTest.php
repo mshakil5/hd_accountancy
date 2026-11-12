@@ -267,7 +267,7 @@ class BankReconciliationTest extends TestCase
         $this->assertSame($receiptId, $data['id']);
         $this->assertSame('Acme Ltd', $data['supplier']);
         $this->assertEqualsWithDelta(120.00, (float) $data['total_amount'], 0.001);
-        $this->assertSame('18-06-2020', $data['invoice_date']);
+        $this->assertSame('18/06/2020', $data['invoice_date']);
         $this->assertTrue($data['paid']);
         $this->assertNotNull($data['account_head']);
         $this->assertSame([], $data['files']);
@@ -466,6 +466,10 @@ class BankReconciliationTest extends TestCase
         $this->assertStringContainsString('creates[0][vat_percent]', $html);
         $this->assertStringContainsString('hd-create-meter', $html);
         $this->assertStringContainsString('hd-find-submit', $html);
+
+        // Dates are shown day/month/year throughout the accounting module.
+        $this->assertStringContainsString('15/06/2020', $html);
+        $this->assertStringNotContainsString('15-06-2020', $html);
 
         // The wiring that makes those buttons work.
         foreach (['hdVatCalc', 'hdVatUpdate', 'hdFindUpdate', 'hdFindTotals', 'hdAddCreateLine', 'hdRemoveCreateLine', 'hdAddSplitLine', 'hdSplitTotals'] as $fn) {

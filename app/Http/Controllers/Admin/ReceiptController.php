@@ -101,7 +101,7 @@ class ReceiptController extends Controller
             })
             ->addColumn('invoice_date', function ($r) {
                 $date = $r->detail?->invoice_date ?? $r->receipt_date;
-                return $date ? Carbon::parse($date)->format('d M y') : '-';
+                return $date ? Carbon::parse($date)->format('d/m/Y') : '-';
             })
             ->addColumn('invoice_number', fn($r) => $r->detail?->invoice_number ?? '-')
             ->addColumn('net_amount', fn($r) => $r->detail?->net_amount ? '£' . $r->detail->net_amount : '-')

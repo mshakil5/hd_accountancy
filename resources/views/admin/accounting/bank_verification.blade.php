@@ -72,7 +72,7 @@
                 <strong>{{ $import->filename }}</strong>
                 · {{ $bankName }} {{ $bankLast ? '••••'.e($bankLast) : '' }}
                 · Client: {{ $clientName }}
-                · Uploaded {{ \Illuminate\Support\Carbon::parse($import->created_at)->format('d M Y H:i') }}
+                · Uploaded {{ \Illuminate\Support\Carbon::parse($import->created_at)->format('d/m/Y H:i') }}
                 · {{ (int) $import->pages_total }} page(s), {{ (int) $import->pages_processed }} with text
             </div>
         </div>
@@ -86,7 +86,7 @@
             <div class="text-end">
                 <span class="badge bg-{{ $statusClass }}" style="font-size:13px;">{{ $statusLabel }}</span>
                 @if($import->verified_at)
-                    <div class="hd-small mt-1">Verified {{ \Illuminate\Support\Carbon::parse($import->verified_at)->format('d M Y H:i') }}</div>
+                    <div class="hd-small mt-1">Verified {{ \Illuminate\Support\Carbon::parse($import->verified_at)->format('d/m/Y H:i') }}</div>
                 @endif
             </div>
         </div>
@@ -344,7 +344,7 @@
                     <tbody>
                     @foreach($revisions as $revision)
                         <tr>
-                            <td style="white-space:nowrap;">{{ \Illuminate\Support\Carbon::parse($revision->created_at)->format('d/m H:i') }}</td>
+                            <td style="white-space:nowrap;">{{ \Illuminate\Support\Carbon::parse($revision->created_at)->format('d/m/Y H:i') }}</td>
                             <td>{{ $revision->bank_entry_id ?? 'removed' }}</td>
                             <td>{{ $revision->action }}</td>
                             <td class="hd-small" style="max-width:320px;white-space:pre-wrap;">{{ \Illuminate\Support\Str::limit((string) $revision->original_values, 140) }} → {{ \Illuminate\Support\Str::limit((string) $revision->corrected_values, 140) }}</td>

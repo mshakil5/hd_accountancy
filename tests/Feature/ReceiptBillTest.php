@@ -86,8 +86,8 @@ class ReceiptBillTest extends TestCase
         // refs + dates
         $this->assertStringContainsString('TEST-BILL-', $html);
         $this->assertStringContainsString('INV-999', $html);
-        $this->assertStringContainsString('15 Jun 2020', $html);
-        $this->assertStringContainsString('15 Jul 2020', $html);
+        $this->assertStringContainsString('15/06/2020', $html);
+        $this->assertStringContainsString('15/07/2020', $html);
         // totals math: 1234.56 + 10 (+ hidden vat 246.91) = 1491.47
         $this->assertStringContainsString('£1,234.56', $html);
         $this->assertStringContainsString('£10.00', $html);

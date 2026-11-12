@@ -41,10 +41,10 @@
     $client = $receipt->client;
     $clientName = $client ? trim(($client->name ?? '') . ' ' . ($client->last_name ?? '')) : '—';
     $invoiceDate = $detail?->invoice_date
-        ? \Carbon\Carbon::parse($detail->invoice_date)->format('d M Y')
-        : ($receipt->receipt_date ? $receipt->receipt_date->format('d M Y') : '—');
+        ? \Carbon\Carbon::parse($detail->invoice_date)->format('d/m/Y')
+        : ($receipt->receipt_date ? $receipt->receipt_date->format('d/m/Y') : '—');
     $dueDate = $detail?->due_date
-        ? \Carbon\Carbon::parse($detail->due_date)->format('d M Y')
+        ? \Carbon\Carbon::parse($detail->due_date)->format('d/m/Y')
         : '—';
     $cAddr = [];
     foreach (['address_line1','address_line2','address_line3'] as $f) { if (!empty($client?->$f)) $cAddr[] = $client->$f; }
@@ -241,7 +241,7 @@
 
     <div class="inv-foot">
         HD Accountancy &middot; Professional Accounting Services &middot; United Kingdom<br>
-        Ref {{ $receipt->receipt_number }} &middot; Generated {{ now()->format('d M Y H:i') }}
+        Ref {{ $receipt->receipt_number }} &middot; Generated {{ now()->format('d/m/Y H:i') }}
     </div>
 
 </div>
