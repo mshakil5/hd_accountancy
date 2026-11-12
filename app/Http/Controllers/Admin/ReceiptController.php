@@ -470,19 +470,6 @@ class ReceiptController extends Controller
         return response()->json(['success' => true, 'message' => 'Receipt cancelled successfully.']);
     }
 
-    public function bill($id)
-    {
-        $receipt = Receipt::with([
-            'files',
-            'detail.accountHead.accountType',
-            'detail.accountHead.accountSubType',
-            'client',
-            'transactions'
-        ])->findOrFail($id);
-
-        return view('admin.receipt.bill', compact('receipt'));
-    }
-
     public function counts(Request $request)
     {
         $query = Receipt::query()->where('from_reconciliation', false);

@@ -126,10 +126,6 @@
                     @endif
                 </div>
                 <div>
-                    <a href="{{ route('admin.receipt.bill', $receipt->id) }}"
-                       class="btn btn-primary btn-sm" style="background:linear-gradient(45deg,#007bff,#0056b3);border:none;box-shadow:0 2px 6px rgba(0,123,255,.4);">
-                        <i class="fa fa-file-text-o"></i> Bill
-                    </a>
                     @if ($prev)
                         <a href="{{ route('admin.receipt.show', $prev) }}" class="btn btn-default btn-sm"><i
                                 class="fa fa-chevron-left"></i> Prev</a>

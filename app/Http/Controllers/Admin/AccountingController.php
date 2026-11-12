@@ -1087,7 +1087,7 @@ class AccountingController extends Controller
                 'date' => $t->receipt?->detail?->invoice_date ?? optional($t->entry_date)->format('Y-m-d'),
                 'receipt_id' => $t->receipt_id,
                 'receipt_number' => $t->receipt?->receipt_number ?? ($t->bank_entry_id ? 'Bank entry #' . $t->bank_entry_id : null),
-                'bill_url' => $t->receipt_id ? url('/admin/receipts/' . $t->receipt_id . '/bill') : null,
+                'bill_url' => $t->receipt_id ? url('/admin/receipts/' . $t->receipt_id) : null,
                 'business' => trim(($t->receipt?->client?->name ?? $t->client?->name ?? '') . ' ' . ($t->receipt?->client?->last_name ?? $t->client?->last_name ?? '')),
                 'head' => $t->accountHead ? ($t->accountHead->code . ' - ' . $t->accountHead->name) : '',
                 'type' => $t->type,

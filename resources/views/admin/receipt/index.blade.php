@@ -360,7 +360,7 @@
                     createdRow: function(row, data) {
                         $(row).css('cursor', 'pointer').click(function(e) {
                             if ($(e.target).closest('td').index() === 1) return;
-                            window.location.href = "{{ url('/admin/receipts') }}/" + data.id + "/bill";
+                            window.location.href = "{{ url('/admin/receipts') }}/" + data.id;
                         });
                     },
                     columns: [

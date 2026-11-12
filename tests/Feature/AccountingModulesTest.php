@@ -616,15 +616,15 @@ class AccountingModulesTest extends TestCase
         $pl = $this->ac->headTransactions(new Request(['code' => '451'] + $w))->getData(true);
         $this->assertEqualsWithDelta(700, $pl['total'], 0.01);
 
-        // every breakdown row carries display fields incl. the printable bill link
+        // every breakdown row carries display fields incl. the receipt link
         foreach ($bs['rows'] as $row) {
             $this->assertArrayHasKey('signed_amount', $row);
             $this->assertArrayHasKey('payment_method', $row);
             $this->assertArrayHasKey('type', $row);
-            $this->assertStringContainsString('/bill', $row['bill_url']);
+            $this->assertStringContainsString('/admin/receipts/', $row['bill_url']);
             $this->assertStringContainsString((string) $row['receipt_id'], $row['bill_url']);
         }
-        $this->assertTrue(\Illuminate\Support\Facades\Route::has('admin.receipt.bill'));
+        $this->assertFalse(\Illuminate\Support\Facades\Route::has('admin.receipt.bill'));
     }
 
     public function test_drill_accepts_multiple_head_ids(): void

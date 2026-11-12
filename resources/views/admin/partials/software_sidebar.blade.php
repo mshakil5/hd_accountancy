@@ -275,7 +275,6 @@
                 'accountHeads',
                 'admin.receipt.index',
                 'admin.receipt.show',
-                'admin.receipt.bill',
                 'accounting.profitLoss',
                 'accounting.trialBalance',
                 'accounting.balanceSheet',
@@ -311,7 +310,7 @@
                 @endif
 
                 @if (in_array('21', array_map('strval', (array) $sidebarPerms)))
-                <li class="nav-item {{ request()->routeIs('admin.receipt.index', 'admin.receipt.show', 'admin.receipt.bill') ? 'active' : '' }}">
+                <li class="nav-item {{ request()->routeIs('admin.receipt.index', 'admin.receipt.show') ? 'active' : '' }}">
                     <a class="nav-link" href="{{ route('admin.receipt.index') }}">
                         <i class="bi bi-receipt-cutoff"></i>
                         <span>Receipts</span>
