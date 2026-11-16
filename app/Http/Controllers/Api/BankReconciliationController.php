@@ -88,7 +88,7 @@ class BankReconciliationController extends Controller
      */
     public function replaceStatement(Request $request,int $businessId,int $importId) {
         $client = $this->client($request,$businessId);
-        $request->validate(['file'=>'required|file|mimes:pdf|max:20480']);
+        $request->validate(['file'=>'required|file|mimes:pdf|max:51200']);
         $import=BankImport::where('client_id',$businessId)->findOrFail($importId);
 
         $locked=DB::table('bank_entries')->where('bank_import_id',$importId)
@@ -287,7 +287,7 @@ class BankReconciliationController extends Controller
     }
     public function recogniseStatement(Request $request,int $businessId, BankStatementRecognitionService $recognizer) {
         $this->client($request,$businessId);
-        $request->validate(['file'=>'required|file|mimes:pdf|max:20480']);
+        $request->validate(['file'=>'required|file|mimes:pdf|max:51200']);
         $accounts=DB::table('reconciliation_bank_accounts')->where('client_id',$businessId)->get()->all();
         $text=$recognizer->extractPdfTextWithOcr($request->file('file')->getRealPath());
         if (mb_strlen(trim($text)) < 35) {
@@ -298,74 +298,94 @@ class BankReconciliationController extends Controller
         }
         return response()->json($recognizer->detect($text,$accounts));
     }
-    private function resolveBankAccount(Request $request, int $businessId, array $detection): int {
+    private function resolveBankAccount(Request $request, int $businessId, string $filePath): int {
         $accounts = DB::table('reconciliation_bank_accounts')->where('client_id', $businessId)->where('active', true)->get();
         $chosen = $request->input('bank_account_id');
-        if ($chosen !== null && $chosen !== '') {
+        if ($chosen !== null && $chosen !== '' && (int)$chosen > 0) {
             $match = $accounts->first(fn($a) => (string)$a->id === (string)$chosen);
-            if (!$match) throw \Illuminate\Validation\ValidationException::withMessages(['bank_account_id' => 'Select a valid active bank account for this business.']);
-            return (int)$match->id;
+            if ($match) {
+                return (int)$match->id;
+            }
         }
-        // The user MUST pick an account explicitly. No auto-creation from OCR.
-        throw \Illuminate\Validation\ValidationException::withMessages(['bank_account_id' => 'Please select or create a bank account for this statement before uploading.']);
-    }
-    public function upload(Request $request, int $businessId) {
-        $this->client($request,$businessId);
-        $request->validate(['file'=>'required|file|mimes:pdf|max:20480','bank_account_id'=>'required|integer']);
-        $file=$request->file('file');
 
-        $verification=app(BankStatementVerificationService::class);
-        // Parse the PDF once. The same analysis drives bank detection, the
-        // stored transaction rows and the verification checks, so the statement
-        // and its rows can never disagree.
-        $analysis=$verification->analyse($file->getRealPath());
-
+        // Automatic Bank Detection:
         $recognizer = app(BankStatementRecognitionService::class);
-        $accounts = DB::table('reconciliation_bank_accounts')->where('client_id', $businessId)->get()->all();
-        // Reuse the text already extracted above; only fall back to the slow
-        // OCR pass when the PDF produced no usable text at all.
-        $detectionText = trim((string) ($analysis['text'] ?? ''));
-        if ($detectionText === '') {
-            $detectionText = $recognizer->extractPdfTextWithOcr($file->getRealPath());
-        }
-        $detection = $recognizer->detect($detectionText, $accounts);
-        $bankAccountId=$this->resolveBankAccount($request,$businessId,$detection);
-        $selected=collect($accounts)->first(fn($account)=>(int)$account->id===$bankAccountId);
-        // The user explicitly picked this account. Log a warning if the OCR
-        // disagrees, but never block — the choice was deliberate.
-        $detectedBank=strtolower(trim((string)($detection['detected_bank']??'')));
-        $selectedBank=strtolower(trim((string)($selected->bank_name??'')));
-        $detectedLastFour=(string)($detection['detected_account_last_four']??'');
-        $selectedLastFour=(string)($selected->account_last_four??'');
-        $banksMatch=$detectedBank==='' || $selectedBank===$detectedBank
-            || str_contains($selectedBank,$detectedBank) || str_contains($detectedBank,$selectedBank);
-        if ((!$banksMatch) || ($detectedLastFour!=='' && $selectedLastFour!=='' && $selectedLastFour!==$detectedLastFour)) {
-            Log::warning('Bank statement uploaded against user-selected account that OCR disagrees with', [
-                'business_id' => $businessId,
-                'selected_bank' => $selected->bank_name ?? null,
-                'selected_last_four' => $selectedLastFour ?: null,
-                'detected_bank' => $detection['detected_bank'] ?? null,
-                'detected_last_four' => $detectedLastFour ?: null,
-            ]);
-        }
-        $hash=hash_file('sha256',$file->getRealPath());
-        if(DB::table('bank_imports')->where('client_id',$businessId)->where('bank_account_id',$bankAccountId)->where('sha256',$hash)->exists())
-            throw ValidationException::withMessages(['file'=>'This bank statement was already imported.']);
+        $text = $recognizer->extractPdfText($filePath);
+        $detection = $recognizer->detect($text, $accounts);
+        $bankName = $detection['detected_bank'] ?? null;
 
-        $rows=$analysis['rows'];
-        if(count($rows)>10000)throw ValidationException::withMessages(['file'=>'Maximum 10,000 transactions per statement.']);
+        if (empty($bankName)) {
+            $ocrText = $recognizer->extractPdfTextWithOcr($filePath);
+            if (!empty($ocrText)) {
+                $detection = $recognizer->detect($ocrText, $accounts);
+                $bankName = $detection['detected_bank'] ?? null;
+            }
+        }
+
+        if (empty($bankName)) {
+            $bankName = 'Bank 1';
+        }
+
+        $existing = $accounts->first(function ($a) use ($bankName) {
+            return strcasecmp(trim($a->bank_name), trim($bankName)) === 0;
+        });
+
+        if ($existing) {
+            return (int)$existing->id;
+        }
+
+        $payload = [
+            'client_id'          => $businessId,
+            'bank_name'          => trim($bankName),
+            'account_last_four'  => $detection['detected_account_last_four'] ?? null,
+            'sort_code'          => $detection['detected_sort_code'] ?? null,
+            'currency'           => 'GBP',
+            'active'             => true,
+            'created_at'         => now(),
+            'updated_at'         => now(),
+        ];
+        if (Schema::hasColumn('reconciliation_bank_accounts', 'account_label')) {
+            $payload['account_label'] = '';
+        }
+
+        return DB::table('reconciliation_bank_accounts')->insertGetId($payload);
+    }
+
+    public function upload(Request $request, int $businessId) {
+        $client = $this->client($request, $businessId);
+        $request->validate([
+            'file' => 'required|file|mimes:pdf|max:51200',
+            'bank_account_id' => 'nullable|integer',
+        ]);
+        $file = $request->file('file');
+        $bankAccountId = $this->resolveBankAccount($request, $businessId, $file->getRealPath());
+
+        $hash = hash_file('sha256', $file->getRealPath());
+        if (DB::table('bank_imports')
+            ->where('client_id', $businessId)
+            ->where('bank_account_id', $bankAccountId)
+            ->where('sha256', $hash)
+            ->exists()) {
+            throw ValidationException::withMessages(['file' => 'This bank statement was already imported.']);
+        }
 
         $uploadedPath = null;
         try {
-            $result=DB::transaction(function()use($rows,$businessId,$bankAccountId,$hash,$file,$request,$analysis,$verification,&$uploadedPath){
-                $client = $this->client($request, $businessId);
-                $importId=DB::table('bank_imports')->insertGetId([
-                    'client_id'=>$businessId,'bank_account_id'=>$bankAccountId,'filename'=>mb_substr($file->getClientOriginalName(),0,255),
-                    'sha256'=>$hash,'storage_path'=>'','file_type'=>'pdf',
-                    'created_by'=>$request->user()->id,'transaction_count'=>0,
-                    'processing_status'=>'awaiting_verification','verification_status'=>'pending',
-                    'pages_total'=>count($analysis['pages']),
-                    'created_at'=>now(),'updated_at'=>now()
+            $result = DB::transaction(function () use ($businessId, $bankAccountId, $hash, $file, $request, $client, &$uploadedPath) {
+                $importId = DB::table('bank_imports')->insertGetId([
+                    'client_id'           => $businessId,
+                    'bank_account_id'     => $bankAccountId,
+                    'filename'            => mb_substr($file->getClientOriginalName(), 0, 255),
+                    'sha256'              => $hash,
+                    'storage_path'        => '',
+                    'file_type'           => 'pdf',
+                    'created_by'          => $request->user()->id,
+                    'transaction_count'   => 0,
+                    'processing_status'   => 'awaiting_verification',
+                    'verification_status' => 'pending',
+                    'pages_total'         => 1,
+                    'created_at'          => now(),
+                    'updated_at'          => now(),
                 ]);
 
                 $statementDir = $this->getStatementDirectory($client, $importId);
@@ -374,33 +394,30 @@ class BankReconciliationController extends Controller
 
                 DB::table('bank_imports')->where('id', $importId)->update(['storage_path' => $uploadedPath]);
 
-                // Avoid re-importing overlapping statement lines, preserving repeated identical
-                // payments inside a statement by tracking their occurrence number.
-                $stored=$this->storeStatementRows($importId,$businessId,$bankAccountId,$rows);
-                DB::table('bank_imports')->where('id',$importId)->update(['transaction_count'=>$stored['added']]);
-
-                $import=BankImport::findOrFail($importId);
-                $summary=$verification->refresh($import,$analysis);
-
-                $message=match($summary['status']){
-                    BankStatementVerificationService::READY=>'Bank statement imported. All automated checks passed — ready for reconciliation.',
-                    BankStatementVerificationService::REVIEW=>'Bank statement imported, but '.$summary['blocking'].' issue(s) need an accountant to compare the rows with the PDF before reconciliation.',
-                    default=>'PDF uploaded safely, but no transactions could be extracted reliably. Please upload a text-based PDF export or ask your accountant to review the original.',
-                };
-                return ['import_id'=>$importId,'bank_account_id'=>$bankAccountId,'count'=>$stored['added'],'duplicates_skipped'=>$stored['skipped'],
-                    'requires_review'=>$summary['status']!==BankStatementVerificationService::READY,
-                    'verification_status'=>$summary['status'],'blocking_exceptions'=>$summary['blocking'],
-                    'pages_total'=>$summary['pages_total'],'opening_balance'=>$summary['opening_balance'],
-                    'closing_balance'=>$summary['closing_balance'],'calculated_closing_balance'=>$summary['calculated_closing_balance'],
-                    'balance_difference'=>$summary['balance_difference'],'message'=>$message];
+                return [
+                    'import_id'                  => $importId,
+                    'bank_account_id'            => $bankAccountId,
+                    'count'                      => 0,
+                    'duplicates_skipped'         => 0,
+                    'requires_review'            => true,
+                    'verification_status'        => 'pending',
+                    'blocking_exceptions'        => 0,
+                    'pages_total'                => 1,
+                    'opening_balance'            => null,
+                    'closing_balance'            => null,
+                    'calculated_closing_balance' => null,
+                    'balance_difference'         => null,
+                    'message'                    => 'Bank statement uploaded safely. It is awaiting OCR scan and verification by an accountant.',
+                ];
             });
-        } catch(\Throwable $e) {
+        } catch (\Throwable $e) {
             if ($uploadedPath) {
                 Storage::disk('s3')->delete($uploadedPath);
             }
             throw $e;
         }
-        return response()->json($result,201);
+
+        return response()->json($result, 201);
     }
 
     /**

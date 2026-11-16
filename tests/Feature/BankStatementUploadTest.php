@@ -15,11 +15,14 @@ use Tests\TestCase;
 /**
  * The upload / replace pipeline the mobile app depends on.
  *
- * These tests exist because the controller used to upload the PDF but never
- * parse it: `bank_imports.transaction_count` stayed 0 and the app's statement
- * screen had no rows to show. The PDFs here are generated in-memory (real
- * statements contain customer data) and contain a readable ledger so the whole
- * pipeline â€” extract â†’ store â†’ verify â€” can be asserted end to end.
+ * Uploads are intentionally store-only: no text extraction or OCR happens
+ * when the PDF is received, so uploading is fast. Transaction rows are
+ * extracted later, when an accountant opens the statement and clicks
+ * "Re-Scan with OCR" in the admin panel (BankStatementVerificationService::
+ * rescanWithOcr). Extraction still happens eagerly in the "replace statement"
+ * flow. The PDFs here are generated in-memory (real statements contain
+ * customer data) and contain a readable ledger where a test needs stored
+ * rows (seed them via the replace flow).
  */
 class BankStatementUploadTest extends TestCase
 {

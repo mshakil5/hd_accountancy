@@ -114,8 +114,10 @@ class BankStatementPageController extends Controller
     public function verification(int $importId)
     {
         $import = BankImport::findOrFail($importId);
-        $this->verification->refresh($import);
-        $import->refresh();
+        if ($import->transaction_count > 0 || DB::table('bank_entries')->where('bank_import_id', $importId)->exists()) {
+            $this->verification->refresh($import);
+            $import->refresh();
+        }
 
         $entries = DB::table('bank_entries')->where('bank_import_id', $importId)
             ->orderByRaw('COALESCE(source_page,1)')->orderByRaw('COALESCE(source_position,0)')->orderBy('id')->get();
