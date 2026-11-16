@@ -104,8 +104,13 @@ Route::middleware(['auth', 'user-access:admin'])->prefix('admin')->group(functio
     Route::get('/bank-statement', fn(\Illuminate\Http\Request $request) => redirect()->route('admin.bank-statements.index', $request->query()));
     Route::get('/bank-statements', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'index'])->name('admin.bank-statements.index');
     Route::get('/bank-statements/banks', [ReceiptController::class, 'getBanksByClient'])->name('admin.bank-statements.banks');
+    Route::get('/bank-statements/accounts', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'accounts'])->name('admin.bank-statements.accounts');
 Route::get('/bank-statements/search-clients', [ReceiptController::class, 'searchClients'])->name('admin.bank-statements.search-clients');
     Route::get('/bank-statements/businesses', [ReceiptController::class, 'getClientsByCredential'])->name('admin.bank-statements.businesses');
+    // Statement upload straight from the website (same pipeline as the app).
+    Route::get('/bank-statements/create', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'create'])->name('admin.bank-statements.create');
+    Route::post('/bank-statements/store', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'store'])->name('admin.bank-statements.store');
+    Route::post('/bank-statements/bank-accounts', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'storeBankAccount'])->name('admin.bank-statements.store-bank-account');
     Route::get('/bank-statements/{importId}/verification', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'verification'])->name('admin.bank-statements.verification');
     Route::get('/bank-statements/{importId}/pdf', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'streamStatement'])->name('admin.bank-statements.statement-view');
     Route::get('/bank-statements/{importId}/download', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'downloadStatement'])->name('admin.bank-statements.statement');

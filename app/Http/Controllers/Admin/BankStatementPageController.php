@@ -11,6 +11,7 @@ use App\Services\BankLedgerPostingService;
 use App\Services\BankStatementVerificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
@@ -110,6 +111,261 @@ class BankStatementPageController extends Controller
     }
 
 
+
+    /**
+     * Show the create form so a statement can be uploaded straight from the
+     * website, mirroring the receipts "New" flow.
+     */
+    public function create(Request $request)
+    {
+        return view('admin.accounting.bank_statement_create', [
+            'presetCredentialId' => (int) $request->query('client_credential_id', 0),
+            'presetBusinessId'   => (int) $request->query('client_id', 0),
+        ]);
+    }
+
+    /**
+     * Register a bank account for the chosen business so it can be picked when
+     * uploading. Same fields and behaviour as the app (BankReconciliationController::storeAccount).
+     */
+    public function storeBankAccount(Request $request)
+    {
+        $data = $request->validate([
+            'client_id'         => 'required|integer|exists:clients,id',
+            'bank_name'         => 'required|string|max:100',
+            'account_last_four' => 'nullable|digits:4',
+            'sort_code'         => 'nullable|string|max:32',
+        ]);
+
+        $client = Client::findOrFail($data['client_id']);
+        if ($request->filled('client_credential_id')) {
+            abort_unless((int) $client->client_credential_id === (int) $request->input('client_credential_id'), 403);
+        }
+
+        $bankName = trim($data['bank_name']);
+        $lastFour = $data['account_last_four'] ?? null;
+
+        // Selecting the same bank twice would otherwise create two identical
+        // entries in the statement picker; reuse the existing one instead.
+        $existing = DB::table('reconciliation_bank_accounts')
+            ->where('client_id', $client->id)
+            ->where('active', 1)
+            ->whereRaw('LOWER(TRIM(bank_name)) = ?', [mb_strtolower($bankName)])
+            ->get()
+            ->first(fn($bank) => (string) ($bank->account_last_four ?? '') === (string) ($lastFour ?? ''));
+
+        if ($existing) {
+            return response()->json([
+                'status'            => 200,
+                'id'                => (int) $existing->id,
+                'bank_name'         => trim((string) $existing->bank_name),
+                'account_last_four' => $existing->account_last_four ?? null,
+                'reused'            => true,
+                'message'           => 'That bank account already exists, so it was selected instead of adding a duplicate.',
+            ]);
+        }
+
+        $payload = [
+            'client_id'         => $client->id,
+            'bank_name'         => $bankName,
+            'account_last_four' => $lastFour,
+            'currency'          => 'GBP',
+            'active'            => true,
+            'created_at'        => now(),
+            'updated_at'        => now(),
+        ];
+        if (Schema::hasColumn('reconciliation_bank_accounts', 'account_label')) {
+            // Legacy column is NOT NULL on older databases; the form does not
+            // collect a label, so store an empty value.
+            $payload['account_label'] = '';
+        }
+        if (!empty($data['sort_code']) && Schema::hasColumn('reconciliation_bank_accounts', 'sort_code')) {
+            $payload['sort_code'] = $data['sort_code'];
+        }
+
+        $id = DB::table('reconciliation_bank_accounts')->insertGetId($payload);
+
+        return response()->json([
+            'status'            => 200,
+            'id'                => $id,
+            'bank_name'         => $payload['bank_name'],
+            'account_last_four' => $payload['account_last_four'],
+        ]);
+    }
+
+    /**
+     * Active bank accounts for one business — exactly what the app's bank
+     * picker shows: legacy "Unknown historical bank" buckets and blank names
+     * hidden, sort code and last four included.
+     */
+    public function accounts(Request $request)
+    {
+        $clientId     = (int) $request->query('client_id', 0);
+        $credentialId = (int) $request->query('client_credential_id', 0);
+
+        if ($clientId <= 0) {
+            return response()->json([]);
+        }
+
+        $client = Client::where('id', $clientId)
+            ->where('status', 1)
+            ->when($credentialId, fn($q) => $q->where('client_credential_id', $credentialId))
+            ->first();
+
+        if (!$client) {
+            return response()->json([]);
+        }
+
+        $columns = ['id', 'bank_name', 'account_last_four'];
+        if (Schema::hasColumn('reconciliation_bank_accounts', 'sort_code')) {
+            $columns[] = 'sort_code';
+        }
+
+        return response()->json(
+            DB::table('reconciliation_bank_accounts')
+                ->where('client_id', $client->id)
+                ->where('active', 1)
+                ->orderBy('bank_name')
+                ->get($columns)
+                ->filter(fn($bank) => $this->usableBankName($bank->bank_name ?? null) !== null)
+                ->map(fn($bank) => [
+                    'id'                => (int) $bank->id,
+                    'bank_name'         => trim((string) $bank->bank_name),
+                    'account_last_four' => $bank->account_last_four ?? null,
+                    'sort_code'         => $bank->sort_code ?? null,
+                ])
+                ->values()
+        );
+    }
+
+    /** Legacy buckets and empty names cannot be picked for a statement. */
+    private function usableBankName(?string $name): ?string
+    {
+        $name = trim((string) $name);
+        if ($name === '' || mb_strtolower($name) === 'unknown historical bank') {
+            return null;
+        }
+
+        return $name;
+    }
+
+    /**
+     * Store a statement uploaded from the website. The PDF is filed in the same
+     * S3 layout and with the same rows as the mobile app upload path, so both
+     * entry points feed one verification/reconciliation pipeline.
+     */
+    public function store(Request $request)
+    {
+        $errors = [];
+        if (!$request->client_credential_id) $errors[] = 'Client (Credential) is required.';
+        if (!$request->client_id)            $errors[] = 'Business / Client is required.';
+        if (!$request->bank_account_id)      $errors[] = 'Bank account is required.';
+
+        $request->validate([
+            'file' => 'required|file|mimes:pdf|max:51200',
+        ]);
+
+        if (count($errors)) {
+            return $this->statementError($errors);
+        }
+
+        $client = Client::where('id', (int) $request->client_id)
+            ->where('client_credential_id', (int) $request->client_credential_id)
+            ->where('status', 1)
+            ->first();
+        if (!$client) {
+            return $this->statementError(['That business does not belong to the selected client.']);
+        }
+
+        $account = DB::table('reconciliation_bank_accounts')
+            ->where('id', (int) $request->bank_account_id)
+            ->where('client_id', $client->id)
+            ->where('active', 1)
+            ->first();
+        if (!$account) {
+            return $this->statementError(['Select a valid active bank account for this business.']);
+        }
+
+        $file = $request->file('file');
+        $hash = hash_file('sha256', $file->getRealPath());
+
+        if (DB::table('bank_imports')
+            ->where('client_id', $client->id)
+            ->where('bank_account_id', $account->id)
+            ->where('sha256', $hash)
+            ->exists()) {
+            return $this->statementError(['This bank statement was already imported for ' . $account->bank_name . '.']);
+        }
+
+        $uploadedPath = null;
+        try {
+            $importId = DB::transaction(function () use ($client, $account, $file, $hash, &$uploadedPath) {
+                $importId = DB::table('bank_imports')->insertGetId([
+                    'client_id'           => $client->id,
+                    'bank_account_id'     => $account->id,
+                    'filename'            => mb_substr($file->getClientOriginalName(), 0, 255),
+                    'sha256'              => $hash,
+                    'storage_path'        => '',
+                    'file_type'           => 'pdf',
+                    'created_by'          => Auth::id(),
+                    'transaction_count'   => 0,
+                    'processing_status'   => 'awaiting_verification',
+                    'verification_status' => 'pending',
+                    'pages_total'         => 1,
+                    'created_at'          => now(),
+                    'updated_at'          => now(),
+                ]);
+
+                $statementDir = $this->getStatementDirectory($client, $importId);
+                $filename = time() . '_' . \Illuminate\Support\Str::random(8) . '.' . $file->getClientOriginalExtension();
+                $uploadedPath = Storage::disk('s3')->putFileAs($statementDir, $file, $filename, 'public');
+
+                DB::table('bank_imports')->where('id', $importId)->update(['storage_path' => $uploadedPath]);
+
+                return $importId;
+            });
+        } catch (\Throwable $e) {
+            if ($uploadedPath) {
+                Storage::disk('s3')->delete($uploadedPath);
+            }
+            report($e);
+            return $this->statementError(['The statement could not be uploaded. Please try again.']);
+        }
+
+        // Optional immediate scan so the accountant lands on rows ready to
+        // verify instead of an empty workspace (same work as "Re-Scan with OCR").
+        $extractionWarning = null;
+        if ($request->boolean('run_extraction')) {
+            @set_time_limit(300);
+            try {
+                $this->verification->rescanWithOcr(BankImport::findOrFail($importId));
+            } catch (\Throwable $e) {
+                report($e);
+                $extractionWarning = 'The PDF was uploaded, but the automatic scan could not read its rows. Run "Re-Scan with OCR" from the verification workspace.';
+            }
+        }
+
+        $message = 'Bank statement uploaded for ' . $account->bank_name . '.';
+        if (!$request->boolean('run_extraction')) {
+            $message .= ' Run "Re-Scan with OCR" to extract its transactions.';
+        }
+
+        return response()->json([
+            'status'   => 200,
+            'message'  => $message,
+            'warning'  => $extractionWarning,
+            'id'       => $importId,
+            'redirect' => route('admin.bank-statements.verification', $importId),
+        ]);
+    }
+
+    private function statementError(array $messages)
+    {
+        return response()->json([
+            'status'  => 303,
+            'message' => "<div class='alert alert-danger'><ul class='mb-0'><li>" . implode('</li><li>', $messages) . '</li></ul></div>',
+        ]);
+    }
 
     public function verification(int $importId)
     {
@@ -387,6 +643,21 @@ class BankStatementPageController extends Controller
         $import = BankImport::findOrFail($ex->bank_import_id);
         $this->verification->refresh($import);
         return back()->with('success', 'Exception marked resolved.');
+    }
+
+    /** Organised S3 folder, identical to the app upload path. */
+    private function getStatementDirectory($client, int $importId): string
+    {
+        $clientName   = $this->sanitizeDirName($client->name ?? 'unknown_client');
+        $businessName = $this->sanitizeDirName($client->business_name ?? $client->name ?? 'unknown_business');
+        $year         = now()->format('Y');
+
+        return "images/bank_statements/{$clientName}/{$businessName}/{$year}/{$importId}";
+    }
+
+    private function sanitizeDirName(?string $name): string
+    {
+        return preg_replace('/[^a-zA-Z0-9_-]/', '_', $name ?? 'unknown');
     }
 
     public function approveImport(Request $request, int $importId)

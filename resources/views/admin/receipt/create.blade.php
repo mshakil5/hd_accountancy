@@ -75,14 +75,6 @@
                         <div class="card-header"><h3 class="card-title">Step 2: Upload Receipt Files</h3></div>
                         <div class="card-body">
                             <div class="detail-field">
-                                <label class="detail-label">Receipt Date</label>
-                                <input type="date" class="form-control" id="receipt_date" name="receipt_date" value="{{ now()->format('Y-m-d') }}" style="max-width:220px;">
-                            </div>
-                            <div class="detail-field">
-                                <label class="detail-label">Client Notes</label>
-                                <textarea class="form-control" id="notes" name="notes" rows="2" placeholder="Optional notes..."></textarea>
-                            </div>
-                            <div class="detail-field">
                                 <label class="detail-label">Files (PDF) <span class="text-danger">*</span></label>
                                 <input type="file" class="form-control" id="fileInput" name="files[]" multiple accept=".pdf">
                                 <small class="text-muted">You can select multiple PDF files.</small>
@@ -380,8 +372,6 @@ $(function () {
         formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
         formData.append('client_credential_id', $('#client_credential_id').val());
         formData.append('client_id',            $('#client_id').val());
-        formData.append('receipt_date',         $('#receipt_date').val());
-        formData.append('notes',                $('#notes').val());
         formData.append('supplier',             $('#supplier').val());
         formData.append('status',               $('#status').val());
         formData.append('account_head_id',      $('#account_head_id').val());
