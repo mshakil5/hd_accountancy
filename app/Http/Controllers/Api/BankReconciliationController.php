@@ -285,6 +285,57 @@ class BankReconciliationController extends Controller
             'active'           => true,
         ], 201);
     }
+
+    /**
+     * Update an existing bank account for this business.
+     */
+    public function updateAccount(Request $request, int $businessId, int $accountId) {
+        $this->client($request, $businessId);
+        $data = $request->validate([
+            'bank_name'        => 'required|string|max:100',
+            'account_last_four'=> 'nullable|string|size:4|regex:/^\d{4}$/',
+            'sort_code'        => 'nullable|string|max:32',
+        ]);
+
+        $account = DB::table('reconciliation_bank_accounts')
+            ->where('client_id', $businessId)
+            ->where('id', $accountId)
+            ->first();
+
+        if (!$account) {
+            abort(404, 'Bank account not found.');
+        }
+
+        $payload = [
+            'bank_name'  => trim($data['bank_name']),
+            'updated_at' => now(),
+        ];
+        if (array_key_exists('account_last_four', $data)) {
+            $payload['account_last_four'] = $data['account_last_four'] ?: null;
+        }
+        if (Schema::hasColumn('reconciliation_bank_accounts', 'sort_code')) {
+            $payload['sort_code'] = $data['sort_code'] ?: null;
+        }
+
+        DB::table('reconciliation_bank_accounts')
+            ->where('client_id', $businessId)
+            ->where('id', $accountId)
+            ->update($payload);
+
+        $updated = DB::table('reconciliation_bank_accounts')
+            ->where('client_id', $businessId)
+            ->where('id', $accountId)
+            ->first();
+
+        return response()->json([
+            'id'               => (int)$updated->id,
+            'bank_name'        => $updated->bank_name,
+            'account_last_four'=> $updated->account_last_four ?? null,
+            'sort_code'        => $updated->sort_code ?? null,
+            'currency'         => $updated->currency ?? 'GBP',
+            'active'           => (bool)$updated->active,
+        ]);
+    }
     public function recogniseStatement(Request $request,int $businessId, BankStatementRecognitionService $recognizer) {
         $this->client($request,$businessId);
         $request->validate(['file'=>'required|file|mimes:pdf|max:51200']);
