@@ -44,6 +44,7 @@ class LloydsParser extends AbstractStatementParser
         $opening = $closing = $totalOut = $totalIn = null;
         $cur = null;
         $done = false;
+        $lastDate = null; // date is printed once per day; later same-day rows inherit it
 
         $flush = function () use (&$cur, &$raw, &$unparsed, &$samples, &$opening, &$closing, &$totalOut, &$totalIn) {
             if ($cur === null) {
@@ -53,33 +54,69 @@ class LloydsParser extends AbstractStatementParser
             $cur = null;
         };
 
+        // Flatten the pages so the same-day lookahead can see across a page break.
+        $lines = [];
         foreach ($pages as $pageNo => $text) {
             foreach (preg_split('/\R/u', (string) $text) ?: [] as $rawLine) {
-                if ($done) {
-                    break 2;
-                }
                 $line = $this->fixAmountTokens($this->ocrFix($this->clean((string) $rawLine)));
-                if ($line === '') {
-                    continue;
+                if ($line !== '') {
+                    $lines[] = ['page' => (int) $pageNo, 'text' => $line];
                 }
-
-                if (preg_match(self::ROW, $line, $m) && isset(self::MONTHS[strtolower($m[2])])
-                    && ($this->isTypedRest($m[4]) || $this->isTypelessRow($m[4])
-                        || preg_match('/^STATEMENT\s*(OPENING|CLOSING)\s*BALANCE/iu', $m[4]))) {
-                    $flush();
-                    $cur = ['page' => (int) $pageNo, 'date' => $this->date($m[1], $m[2], $m[3]), 'rest' => $m[4]];
-                    if (preg_match('/^STATEMENT\s*CLOSING\s*BALANCE/iu', $m[4])) {
-                        $flush();
-                        $done = true;
-                    }
-                    continue;
-                }
-
-                if ($cur === null || $this->isNoise($line)) {
-                    continue;
-                }
-                $cur['rest'] .= ' ' . $line;
             }
+        }
+
+        foreach ($lines as $idx => $item) {
+            if ($done) {
+                break;
+            }
+            $line = $item['text'];
+            $pageNo = $item['page'];
+
+            if (preg_match(self::ROW, $line, $m) && isset(self::MONTHS[strtolower($m[2])])
+                && ($this->isTypedRest($m[4]) || $this->isTypelessRow($m[4])
+                    || preg_match('/^STATEMENT\s*(OPENING|CLOSING)\s*BALANCE/iu', $m[4]))) {
+                $flush();
+                $cur = ['page' => $pageNo, 'date' => $this->date($m[1], $m[2], $m[3]), 'rest' => $m[4]];
+                if (!preg_match('/^STATEMENT\s*(OPENING|CLOSING)\s*BALANCE/iu', $m[4])) {
+                    $lastDate = $cur['date'] ?? $lastDate; // only real transactions set the carried date
+                }
+                if (preg_match('/^STATEMENT\s*CLOSING\s*BALANCE/iu', $m[4])) {
+                    $flush();
+                    $done = true;
+                }
+                continue;
+            }
+
+            // A line that is only a date ("01 Apr 25") starts a new day.
+            if (preg_match('/^(\d{1,2})\s+([A-Za-z]{3})\s+(\d{2}|\d{4})$/u', $line, $dm)
+                && isset(self::MONTHS[strtolower($dm[2])])
+                && ($dayDate = $this->date($dm[1], $dm[2], $dm[3])) !== null) {
+                $flush();
+                $lastDate = $dayDate;
+                continue;
+            }
+
+            if ($this->isNoise($line)) {
+                continue;
+            }
+
+            // Same-day row with no date column. A line that starts with a payment type is a new
+            // transaction only when this row is finished and money still follows (the amount may
+            // sit on a following line for wrapped rows); otherwise it is a wrapped reference.
+            // A typeless row must carry its amount itself.
+            if ($lastDate !== null
+                && (($this->isTypedRest($line)
+                        && ($cur === null || !$this->hasMoney($cur['rest']) || $this->moneyFollows($lines, $idx)))
+                    || ($this->hasMoney($line) && $this->isTypelessRow($line)))) {
+                $flush();
+                $cur = ['page' => $pageNo, 'date' => $lastDate, 'rest' => $line];
+                continue;
+            }
+
+            if ($cur === null) {
+                continue;
+            }
+            $cur['rest'] .= ' ' . $line;
         }
         $flush();
 
@@ -211,6 +248,31 @@ class LloydsParser extends AbstractStatementParser
     private function isTypedRest(string $rest): bool
     {
         return (bool) preg_match('/^(' . implode('|', self::TYPES) . ')\b\s+\S/u', $rest);
+    }
+
+    private function hasMoney(string $rest): bool
+    {
+        return (bool) preg_match('/\d\.\d{2}(?:\s|$)/', $rest);
+    }
+
+    /**
+     * True when an amount closes this row before the next dated row starts. Used so a wrapped
+     * reference line that happens to start with a payment type ("SO REF 12345") is not mistaken
+     * for a new transaction.
+     */
+    private function moneyFollows(array $lines, int $idx): bool
+    {
+        $end = min(count($lines), $idx + 4);
+        for ($k = $idx + 1; $k < $end; $k++) {
+            $text = $lines[$k]['text'];
+            if (preg_match(self::ROW, $text)) {
+                return false;
+            }
+            if ($this->hasMoney($text)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private function isNoise(string $line): bool

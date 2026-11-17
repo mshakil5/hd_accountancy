@@ -125,6 +125,14 @@ class BankStatementVerificationTest extends TestCase
         return $method->invoke($this->verifier(), $text, 1, false);
     }
 
+    /** Parse a continuation page while keeping the cross-page carried date (as evaluatePages does). */
+    private function parsePageContinuing(string $text, int $pageNo, mixed &$carry): array
+    {
+        $method = new \ReflectionMethod($this->verifier(), 'parsePage');
+        $method->setAccessible(true);
+        return $method->invokeArgs($this->verifier(), [$text, $pageNo, false, &$carry]);
+    }
+
     /** Monzo glues the date to the description and prints amount + running balance. */
     public function test_monzo_single_line_rows_are_parsed(): void
     {
@@ -148,7 +156,94 @@ class BankStatementVerificationTest extends TestCase
         $this->assertStringContainsString('MEGAN MARSDEN', $parsed['rows'][0]['description']);
     }
 
-    /** Statement periods and summary blocks must never become transactions. */
+    /** Some banks print the date once per day; later rows on that day must inherit it. */
+    public function test_same_day_rows_inherit_the_printed_date(): void
+    {
+        $parsed = $this->parsePage(
+            "01/04/2025 OPENING 1,000.00\n"
+            . "03/04/2025 TESCO STORES 12.34 987.66\n"
+            . "SHELL 40.00 947.66\n"
+            . 'COSTA 5.50 942.16'
+        );
+
+        $this->assertCount(3, $parsed['rows']);
+        $this->assertSame(['2025-04-03', '2025-04-03', '2025-04-03'], array_column($parsed['rows'], 'transaction_date'));
+        $this->assertSame(['TESCO STORES', 'SHELL', 'COSTA'], array_column($parsed['rows'], 'description'));
+        $this->assertSame(0, $parsed['unparsed']);
+    }
+
+    /** A description may wrap over several lines before the amount appears. */
+    public function test_wrapped_three_line_description_is_kept_whole(): void
+    {
+        $parsed = $this->parsePage(
+            "03/04/2025 TESCO STORES 12.34 987.66\n"
+            . "SHELL STATION\n"
+            . "CARD 1234\n"
+            . "LONDON\n"
+            . '40.00 947.66'
+        );
+
+        $this->assertCount(2, $parsed['rows']);
+        $this->assertSame('SHELL STATION CARD 1234 LONDON', $parsed['rows'][1]['description']);
+        $this->assertSame(40.00, (float) $parsed['rows'][1]['amount']);
+        $this->assertSame(947.66, (float) $parsed['rows'][1]['balance_after']);
+    }
+
+    /** A line that only contains amounts is an OCR column artefact, never a row. */
+    public function test_amount_only_line_is_not_a_transaction(): void
+    {
+        $parsed = $this->parsePage("03/04/2025 TESCO 12.34 987.66\n1,000.00 2,000.00");
+
+        $this->assertCount(1, $parsed['rows']);
+        $this->assertSame('TESCO', $parsed['rows'][0]['description']);
+        $this->assertSame(0, $parsed['unparsed']);
+    }
+
+    /** A merchant whose name starts with "TOTAL" must not end the carried day. */
+    public function test_merchant_starting_with_total_is_kept(): void
+    {
+        $parsed = $this->parsePage(
+            "03/04/2025 COFFEE 5.00 995.00\n"
+            . "TOTAL FITNESS 30.00 965.00\n"
+            . '04/04/2025 SALARY 2,000.00 2,965.00'
+        );
+
+        $this->assertSame(['COFFEE', 'TOTAL FITNESS', 'SALARY'], array_column($parsed['rows'], 'description'));
+        $this->assertSame(0, $parsed['unparsed']);
+    }
+
+    /** Summary labels and their amounts are not transactions. */
+    public function test_summary_block_ends_the_carried_date(): void
+    {
+        $parsed = $this->parsePage(
+            "03/04/2025 TESCO 12.34 987.66\n"
+            . "Your statement summary\n"
+            . "Total outgoings\n"
+            . '-1,000.00'
+        );
+
+        $this->assertCount(1, $parsed['rows']);
+        $this->assertSame(0, $parsed['unparsed']);
+    }
+
+    /** A day can span a page break, even when the table header repeats on page 2. */
+    public function test_carried_date_survives_a_page_break(): void
+    {
+        $carry = null;
+        $first = $this->parsePageContinuing("03/04/2025 TESCO STORES 12.34 987.66", 1, $carry);
+        $second = $this->parsePageContinuing(
+            "Date Description Amount Balance\nSHELL 40.00 947.66\nPage 2 of 4\nCOSTA 5.50 942.16",
+            2,
+            $carry
+        );
+
+        $rows = array_merge($first['rows'], $second['rows']);
+        $this->assertCount(3, $rows);
+        $this->assertSame(['TESCO STORES', 'SHELL', 'COSTA'], array_column($rows, 'description'));
+        $this->assertSame(['2025-04-03', '2025-04-03', '2025-04-03'], array_column($rows, 'transaction_date'));
+        $this->assertSame(0, $first['unparsed'] + $second['unparsed']);
+    }
+
     public function test_statement_header_is_not_a_transaction(): void
     {
         $parsed = $this->parsePage("Business Account statement\n01/04/2025 - 30/04/2025\n£26.07 Business Account balance\n-£3,258.77 Total outgoings");

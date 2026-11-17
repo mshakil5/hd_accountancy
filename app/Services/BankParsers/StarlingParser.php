@@ -48,6 +48,7 @@ class StarlingParser extends AbstractStatementParser
         $cur = null;
         $inTable = false;
         $done = false;
+        $lastDate = null; // date is printed once per day; later same-day rows inherit it
         $typeRe = '(' . implode('|', array_map(fn ($t) => preg_quote($t, '/'), self::TYPES)) . ')';
 
         $flush = function () use (&$cur, &$raw, &$unparsed, &$samples) {
@@ -92,6 +93,13 @@ class StarlingParser extends AbstractStatementParser
                     $opening = $this->toFloat($m[1]);
                     continue;
                 }
+                // The closing balance sits after the last row, even though the table has started.
+                if (preg_match('/^Closing Balance\s+£?\s?(-?[\d,]+\.\d{2})$/iu', $line, $m)) {
+                    $flush();
+                    $closing = $this->toFloat($m[1]);
+                    $done = $inTable;
+                    continue;
+                }
                 if (preg_match('/^(We charge interest|Date range applicable|Interest rate (paid|charged))/iu', $line)) {
                     $flush();
                     if ($inTable) {
@@ -110,6 +118,16 @@ class StarlingParser extends AbstractStatementParser
                         'type' => $m[4],
                         'rest' => $m[5],
                     ];
+                    $lastDate = $cur['date'];
+                    continue;
+                }
+
+                // Same-day row with no date column: starts with a payment type and carries a £ amount.
+                if ($inTable && $lastDate !== null && !$this->isNoise($line)
+                    && preg_match('#^' . $typeRe . '\b\s*(.*)$#u', $line, $m)
+                    && preg_match('/-?£\s?\d/u', $m[2])) {
+                    $flush();
+                    $cur = ['page' => (int) $pageNo, 'date' => $lastDate, 'type' => $m[1], 'rest' => $m[2]];
                     continue;
                 }
 

@@ -49,6 +49,7 @@ class GenericParser implements StatementParserInterface
         $pendingDate = null;
         $pendingDescription = '';
         $pendingLines = 0;
+        $lastDate = null; // date printed once per day; later same-day rows inherit it
 
         foreach (preg_split('/\R/u', $text) ?: [] as $line) {
             $line = trim(preg_replace('/\s+/u', ' ', (string) $line) ?? '');
@@ -68,8 +69,11 @@ class GenericParser implements StatementParserInterface
                 if ($tail !== '' && preg_match('/\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}/', $tail)) {
                     $pendingDate = null;
                     $pendingDescription = '';
+                    $lastDate = null;
                     continue;
                 }
+
+                $lastDate = $date;
 
                 $split = $tail === '' ? null : $this->splitAmounts($tail);
                 if ($split !== null) {
@@ -108,6 +112,15 @@ class GenericParser implements StatementParserInterface
                 }
                 $pendingDescription = trim($pendingDescription . ' ' . $line);
                 $pendingLines++;
+                continue;
+            }
+
+            // Same-day row with no date column: description + amount (+ balance) under the day's date
+            if ($lastDate instanceof Carbon
+                && !preg_match('/^(total|balance|opening|closing|brought|carried|page|statement|sort code|account)\b/i', $line)
+                && ($split = $this->splitAmounts($line)) !== null) {
+                [$description, $amount, $balance] = $split;
+                $rows[] = $this->makeRow($lastDate, $description, $amount, $balance, $pageNo, ++$position, $fromOcr);
                 continue;
             }
 

@@ -40,6 +40,24 @@ class BankStatementVerificationService
         'ocr_no_page_mapping',
     ];
 
+    /** Summary / footer text: the day's transactions are over, forget the carried date. */
+    private const CARRY_END = '/^(?:total\s+(?:outgoings?|incomings?|payments?|credits?|debits?|charges?|fees?|paid|received|money|out|in)\b'
+        . '|(?:your\s+|account\s+|statement\s+)?summary\b'
+        . '|closing\s+balance\b'
+        . '|overdraft\b|arranged\s+overdraft|unarranged\s+overdraft|credit\s+limit\b'
+        . '|interest\s+rate\b'
+        . '|how\s+(?:your|we)\b'
+        . '|important\s+information\b|financial\s+services\b|fscs\b'
+        . '|payments?\s+(?:in|out)\b|money\s+(?:in|out)\b|paid\s+(?:in|out)\b'
+        . ')/iu';
+
+    /** Page furniture inside the table: skip it but keep the carried date (a day can span pages). */
+    private const CARRY_SKIP = '/^(?:page\s*\d+|statement\b|sort\s*code|account\s+(?:number|name|no)|iban|bic\b'
+        . '|opening\s+balance|balance\s+(?:brought|carried)|continued'
+        . '|(?:date|description|details|pmnt|type|amount)$'
+        . '|(?:date|description|details|pmnt|type)\b.*\b(?:description|details|amount|balance|paid|money|debits?|credits?)\b'
+        . ')/iu';
+
     private const DATE_LINE = '/^(\d{2}[\/\-]\d{2}[\/\-](?:\d{4}|\d{2})|\d{1,2}\s+[A-Za-z]{3,9}\s+(?:\d{4}|\d{2}))\b\s*(.*)$/u';
 
     private const DATE_FORMATS = [
@@ -228,8 +246,9 @@ class BankStatementVerificationService
             $totalIn = $res['total_in'];
             $totalOut = $res['total_out'];
         } else {
+            $carryDate = null; // a day can continue onto the next page
             foreach ($pages as $pageNo => $pageText) {
-                $parsed = $this->parsePage((string) $pageText, (int) $pageNo, $ocr);
+                $parsed = $this->parsePage((string) $pageText, (int) $pageNo, $ocr, $carryDate);
                 $rows = array_merge($rows, $parsed['rows']);
                 $unparsed += $parsed['unparsed'];
                 $samples = array_merge($samples, $parsed['samples']);
@@ -316,7 +335,7 @@ class BankStatementVerificationService
     }
 
     /** @return array{rows: array<int,array<string,mixed>>, unparsed:int, samples:array<int,string>} */
-    private function parsePage(string $text, int $pageNo, bool $ocr): array
+    private function parsePage(string $text, int $pageNo, bool $ocr, ?Carbon &$carryDate = null): array
     {
         $rows = [];
         $unparsed = 0;
@@ -325,13 +344,17 @@ class BankStatementVerificationService
         $pendingDate = null;
         $pendingDescription = '';
         $pendingLines = 0;
+        $carryDescription = '';
 
-        foreach (preg_split('/\R/u', $text) ?: [] as $line) {
-            $line = trim(preg_replace('/\s+/u', ' ', (string) $line) ?? '');
-            if ($line === '') {
-                continue;
+        $lines = [];
+        foreach (preg_split('/\R/u', $text) ?: [] as $rawLine) {
+            $rawLine = trim(preg_replace('/\s+/u', ' ', (string) $rawLine) ?? '');
+            if ($rawLine !== '') {
+                $lines[] = $rawLine;
             }
+        }
 
+        foreach ($lines as $line) {
             // Monzo and others glue the date to the description: "30/04/2025Joseph Buckle ...".
             if (preg_match('/^(\d{2}[\/\-]\d{2}[\/\-]\d{4})(?=[^\d\s])/u', $line, $glued)) {
                 $line = $glued[1] . ' ' . mb_substr($line, mb_strlen($glued[1]));
@@ -339,13 +362,17 @@ class BankStatementVerificationService
 
             if (preg_match(self::DATE_LINE, $line, $m) && ($date = $this->date($m[1]))) {
                 $tail = trim($m[2]);
+                $carryDescription = '';
 
                 // "01/04/2025 - 30/04/2025" is the statement period, not a transaction.
                 if ($tail !== '' && preg_match('/\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}/', $tail)) {
                     $pendingDate = null;
                     $pendingDescription = '';
+                    $carryDate = null;
                     continue;
                 }
+
+                $carryDate = $date;
 
                 $split = $tail === '' ? null : $this->splitAmounts($tail);
                 if ($split !== null) {
@@ -388,6 +415,39 @@ class BankStatementVerificationService
                 $pendingDescription = trim($pendingDescription . ' ' . $line);
                 $pendingLines++;
                 continue;
+            }
+
+            // The bank prints the date once per day (first transaction only): later rows reuse it.
+            if ($carryDate instanceof Carbon) {
+                if (preg_match(self::CARRY_END, $line)) {
+                    $carryDate = null;
+                    $carryDescription = '';
+                    continue;
+                }
+                if (preg_match(self::CARRY_SKIP, $line)) {
+                    continue;
+                }
+                $split = $this->splitAmounts($line);
+                if ($split !== null) {
+                    [$description, $amount, $balance] = $split;
+                    // The description may sit on its own line above the amount.
+                    $description = trim($carryDescription . ' ' . $description);
+                    $carryDescription = '';
+                    // A line that is only amounts is an OCR column artefact, not a transaction.
+                    if ($description === '') {
+                        continue;
+                    }
+                    $rows[] = $this->statementRow($carryDate, $description, $amount, $balance, $pageNo, ++$position, $ocr);
+                    continue;
+                }
+                // Wrapped row: description now, amount on one of the following lines. Keep it
+                // here rather than in $pendingDate so trailing footer text is not counted unparsed.
+                if (preg_match('/\p{L}/u', $line) && !str_contains($line, '£')) {
+                    $carryDescription = trim($carryDescription . ' ' . $line);
+                    if (mb_strlen($carryDescription) > 300) {
+                        $carryDescription = '';
+                    }
+                }
             }
 
             if (preg_match('/^(\d{2}[\/\-]\d{2}[\/\-]\d{4}|\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4})/', $line)
