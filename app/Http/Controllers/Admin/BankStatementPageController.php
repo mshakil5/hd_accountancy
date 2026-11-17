@@ -611,24 +611,6 @@ class BankStatementPageController extends Controller
         return back()->with('success', $updated . ' row(s) marked verified.');
     }
 
-    public function verifyAllRowsForClient(Request $request)
-    {
-        $data = $request->validate(['client_id' => 'required|integer|exists:clients,id']);
-        $client = Client::findOrFail($data['client_id']);
-        $updated = DB::table('bank_entries')->where('client_id', $client->id)
-            ->whereNull('verified_at')
-            ->update([
-                'verified_by' => auth()->id(),
-                'verified_at' => now(),
-                'updated_at' => now(),
-            ]);
-        $imports = BankImport::where('client_id', $client->id)->get();
-        foreach ($imports as $imp) {
-            $this->verification->refresh($imp);
-        }
-        return back()->with('success', $updated . ' row(s) marked verified across all statements for ' . $client->name . '.');
-    }
-
     public function resolveException(Request $request, int $exceptionId)
     {
         $data = $request->validate(['resolution_note' => 'required|string|max:1000']);

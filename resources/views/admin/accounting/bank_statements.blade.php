@@ -154,13 +154,6 @@
     <div class="d-flex justify-content-between align-items-center flex-wrap mb-3 gap-2">
       <h5 class="mb-0">Uploaded Bank Statements</h5>
       <div class="d-flex gap-2">
-        @if($businessId)
-        <form method="POST" action="{{ route('admin.bank-statements.verify-all-rows-for-client') }}" onsubmit="return confirm('Verify all unverified rows across all statements for this business?')">
-          @csrf
-          <input type="hidden" name="client_id" value="{{ $businessId }}">
-          <button class="btn btn-outline-success btn-sm"><i class="bi bi-check-all"></i> Verify all rows for client</button>
-        </form>
-        @endif
         <a href="{{ route('admin.bank-statements.create', array_filter(['client_credential_id' => $presetId, 'client_id' => $businessId ?: null])) }}" class="btn btn-primary btn-sm">
           <i class="bi bi-plus-lg"></i> Create
         </a>

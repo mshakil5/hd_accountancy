@@ -121,7 +121,6 @@ Route::get('/bank-statements/search-clients', [ReceiptController::class, 'search
     Route::post('/bank-statements/rows/{entryId}/remove', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'destroyEntry'])->name('admin.bank-statements.destroy-entry');
     Route::post('/bank-statements/rows/{entryId}/verify', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'verifyEntry'])->name('admin.bank-statements.verify-entry');
     Route::post('/bank-statements/{importId}/verify-all-rows', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'verifyAllRows'])->name('admin.bank-statements.verify-all-rows');
-    Route::post('/bank-statements/verify-all-rows-for-client', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'verifyAllRowsForClient'])->name('admin.bank-statements.verify-all-rows-for-client');
     Route::post('/bank-statements/exceptions/{exceptionId}/resolve', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'resolveException'])->name('admin.bank-statements.resolve-exception');
     Route::post('/bank-statements/{importId}/approve', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'approveImport'])->name('admin.bank-statements.approve-import');
 
