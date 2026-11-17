@@ -388,7 +388,6 @@ class VirginMoneyParser extends AbstractStatementParser
                 continue;
             }
 
-            echo "BEFORE_STG: content='$content'\n";
             $stg = null;
             if (preg_match('/^S[tl][gq9]\s?Am[tfl1]\s*(?:g\s*)?(\d{1,3}(?:,\d{3})*\.\d{2}|\d+\.\d{2})\s*(.*)$/iu', $content, $s)) {
                 $stg = $this->toFloat($s[1]);
@@ -416,7 +415,6 @@ class VirginMoneyParser extends AbstractStatementParser
             }
 
             $desc = trim($pending . ' ' . $descPart);
-            echo "DEBUG_ROW: desc='$desc', nums=" . json_encode($nums) . "\n";
             $pending = '';
             $pendingFx = false;
 
@@ -440,7 +438,6 @@ class VirginMoneyParser extends AbstractStatementParser
             ];
         }
 
-        file_put_contents('C:/Users/sakib/.gemini/antigravity/brain/2b89cca8-cfe5-4660-97d0-d24508b5750d/scratch/debug_raw.json', json_encode($raw, JSON_PRETTY_PRINT));
         $rows = $raw;
         $opening = $openingFromStatement ?? $opening;
         if ($closing === null && $rows) {
