@@ -203,4 +203,104 @@ class BankParsersTest extends TestCase
         $this->assertSame(['2025-12-20', '2025-12-24', '2026-01-02'], array_column($rows, 'transaction_date'));
         $this->assertSame(0, $parsed['unparsed']);
     }
+
+    /**
+     * Virgin Money MYR foreign-currency transactions with the right-hand sidebar text
+     * (Opening balance, Debits, Credits, Closing balance, FSCS notice, abbreviation glossary)
+     * interleaved line-by-line as OCR would produce from a two-column PDF.
+     *
+     * Expected behaviour:
+     *  - Every "Cls 77 Myr …" block is a SINGLE transaction whose Sterling amount
+     *    comes from the "Stg Amt X.XX" line.
+     *  - Sidebar amounts (£10688.17, £3736.20, £0.85, £6952.82) must NEVER appear
+     *    as transaction amounts or running balances.
+     *  - The correct opening balance (10688.17) is read from the statement summary.
+     *  - 0 unparsed rows.
+     */
+    public function test_virgin_myr_transactions_with_sidebar_noise_interleaved(): void
+    {
+        // Sidebar summary totals:  Debits=43.21  Credits=0.00  Closing=10644.96
+        // Running balances after each tx: 10685.96 → 10682.80 → 10659.42 → 10657.21 → 10644.96
+        // These must NOT leak into transaction amounts or fake balances.
+        $page1 = implode("\n", [
+            'Virgin Money',
+            'Statement date 30 January 2026',
+            'Date Description Debits Credits Balance',
+            'Account number 34085729',
+            '31 Dec 2025 Previous statement 10688.17',
+            'IBAN GB25YORK05042434085729',
+            '02 Jan Cls 77 Myr 12.00',
+            'BIC YORKGB21424',
+            'Rate 0.18416',
+            'Deposits in this account are eligible',
+            'for cover under the Financial Services',
+            'Compensation Scheme (FSCS)',
+            'Stg Amt 2.21 2.21',
+            'Cls 77 Myr 17.20',
+            'Opening balance',
+            'Rate 0.18372',
+            '£10688.17',
+            'Stg Amt 3.16 3.16',
+            'Debits',
+            'Cls 77 Myr 127.20',
+            '£43.21',
+            'Rate 0.18380',
+            'Credits',
+            'Stg Amt 23.38 23.38 10659.42',
+            '£0.00',
+            'DD = Direct Debit',
+            '05 Jan Cls 77 Myr 12.00',
+            'SO = Standing Order',
+            'Rate 0.18416',
+            'Closing balance',
+            'Stg Amt 2.21 2.21',
+            '£10644.96',
+            'DD Postcode Lottery 12.25 10644.96',
+        ]);
+
+        $parsed = (new VirginMoneyParser())->parseDocument([1 => $page1], false);
+        $rows   = $this->rows($parsed);
+
+        // Should be exactly 5 transactions: 3 on 02-Jan + 1 on 05-Jan + 1 DD
+        $this->assertCount(5, $rows, 'Expected 5 rows; sidebar amounts must not become extra rows');
+
+        // All amounts must be small sterling values, never sidebar summary totals
+        $amounts = array_map('floatval', array_column($rows, 'amount'));
+        foreach ($amounts as $amt) {
+            $this->assertGreaterThan(-4000.0, $amt, "Amount $amt looks like a leaked sidebar total");
+        }
+
+        // Opening balance from summary panel
+        $this->assertEqualsWithDelta(10688.17, $parsed['opening'], 0.01);
+        $this->assertSame(0, $parsed['unparsed']);
+    }
+
+    /**
+     * Virgin Money: Rate lines that have sidebar noise appended must still be dropped,
+     * and Stg Amt lines that have sidebar noise appended must still yield the correct amount.
+     */
+    public function test_virgin_rate_and_stg_lines_with_appended_sidebar_noise(): void
+    {
+        // 5000.00 - 16.91 = 4983.09; 4983.09 - 163.62 = 4819.47
+        $page = implode("\n", [
+            'Virgin Money',
+            'Statement date 05 April 2026',
+            'Opening balance 5000.00',
+            'Date Description Debits Credits Balance',
+            '03 Apr Cls 77 Myr 92.00',
+            'Rate 0.18380 Account number 34085729',
+            'Stg Amt 16.91 16.91 Sort code 05-04-24',
+            '04 Apr DD EE Limited 163.62 4819.47',
+            'Closing balance 4819.47',
+        ]);
+
+        $parsed = (new VirginMoneyParser())->parseDocument([1 => $page], false);
+        $rows   = $this->rows($parsed);
+
+        $this->assertCount(2, $rows);
+        $amounts = array_map('floatval', array_column($rows, 'amount'));
+        $this->assertEqualsWithDelta(-16.91, $amounts[0], 0.01, 'MYR tx sterling amount');
+        $this->assertEqualsWithDelta(-163.62, $amounts[1], 0.01, 'DD amount');
+        $this->assertSame(0, $parsed['unparsed']);
+    }
 }

@@ -31,7 +31,7 @@ class VirginMoneyParser extends AbstractStatementParser
         'VND' => 1, 'ZAR' => 1, 'GEL' => 1, 'JOD' => 1, 'NPR' => 1, 'MUR' => 1, 'MVR' => 1, 'XOF' => 1, 'XAF' => 1,
     ];
 
-    private const PANEL_TAIL = '/\s+(?:Page\s?\d+\s?of\s?\d+|Statement\s?(?:date|No)\b.*|Account\s?name\b.*|Sort\s?code\b.*|Account\s?number\b.*|IBAN\b.*|BIC\b.*|Opening\s?balance\b.*|Closing\s?balance\b.*|(?:Debits|Credits)\s*[£E]?\s?-?[\d,]+\.\d{2}.*|Deposits in this account\b.*|(?:DD|SO|TB|MB|TL|EB|OD|WLT|FGN|CHQ|LTE|MT|PMT|ACC|GBP|REV|Purch|WDL|CCY|Unarr)\s?=\s.*)$/iu';
+    private const PANEL_TAIL = '/\s*(?:Page\s?\d+\s?of\s?\d+|Statement\s?(?:date|No)\b.*|Account\s?name\b.*|Sort\s?code\b.*|Account\s?number\b.*|IBAN\b.*|BIC\b.*|Opening\s?balance\b.*|Closing\s?balance\b.*|(?:Debits|Credits)\b.*|Deposits\s+(?:in\s+this|in\s+ae|ae\s+nea)\s+account\b.*|eligible\s+for\s+cover\b.*|for\s+cover\s+under\b.*|Financial\s+Services\b.*|Services\s+Compensation\b.*|Compensation\s+Scheme\b.*|Scheme\s*\(FSCS\)\b.*|\(FSCS\)\b.*|Scheme\b.*|\d{2}-\d{2}-\d{2}\b.*|GB\d{2}[A-Z0-9]+\b.*|YORKGB[A-Z0-9]+\b.*|MR\s+[A-Z .]+\b.*|(?:Cls|DD|SO|TB|MB|TL|EB|OD|WLT|FGN|CHQ|LTE|MT|PMT|ACC|GBP|REV|Purch|WDL|CCY|Unarr)\s*=\s*.*)$/iu';
 
     /** Table ends here (promo / footer text under the transactions). */
     private const STOP = '/^(Ready,? get set|Have a think|Just so you know|We.ve updated|Interest rate details|Clydesdale Bank|Financial Conduct|mortgages and|Not got the app|Did you know|You can go paper)/iu';
@@ -41,10 +41,12 @@ class VirginMoneyParser extends AbstractStatementParser
         '/^(Sort\s?code|Account\s?number|IBAN|BIC)\b/i', '/^\d{2}-\d{2}-\d{2}$/', '/^\d{8}$/', '/^GB\d{2}[A-Z]{4}\S+$/',
         '/^[A-Z]{6}\d{2}[A-Z0-9]*$/', '/^(MR|MRS|MS|MISS|DR)\b[A-Z .]+$/',
         '/^\d{1,2}\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}$/i',
-        '/^(Deposits in this account|eligible for cover|Financial Services Compensation|Services Compensation|Scheme\b|\(FSCS\))/i',
+        '/^(?:Deposits\s+(?:in\s+this|in\s+ae|ae\s+nea)\s+account|eligible\s+for\s+cover|for\s+cover\s+under|Financial\s+Services|Services\s+Compensation|Compensation\s+Scheme|Scheme\b|\(FSCS\))/iu',
+        '/^for\s+cover\s+under/i',
         '/^Opening balance|^Closing balance|^Debits$|^Credits$/i', '/^(Debits|Credits)\s+[£E]/i',
         '/^[£E]\s?-?[\d,]+\.\d{2}$/u', '/^Your .* Account statement/i',
         '/^(Description|Debits|Credits|Balance)(\s+(Debits|Credits|Balance))*$/i',
+        '/^(?:Cls|DD|SO|TB|MB|TL|EB|OD|WLT|FGN|CHQ|LTE|MT|PMT|ACC|GBP|REV|Purch|WDL|CCY|Unarr)\s*=\s*[A-Za-z ]+$/iu',
     ];
 
     public function name(): string
@@ -64,11 +66,18 @@ class VirginMoneyParser extends AbstractStatementParser
 
         // ---- printed summary (right-hand panel) --------------------------------------------------
         $opening = $closing = null;
-        if (preg_match('/Opening\s?balance\s*[£E]?\s?(-?[\d,]+\.\d{2})/iu', $all, $m)) {
+        if (preg_match('/(?:Opening\s?balance|Previous\s?statement)\s*[£E]?\s?(-?[\d,]+\.\d{2})/iu', $all, $m)) {
             $opening = $this->toFloat($m[1]);
         }
         if (preg_match_all('/Closing\s?balance\s*[£E]?\s?(-?[\d,]+\.\d{2})/iu', $all, $mm) && $mm[1]) {
             $closing = $this->toFloat((string) end($mm[1]));
+        }
+        $totalIn = $totalOut = null;
+        if (preg_match('/Credits\s*[£E]?\s?(-?[\d,]+\.\d{2})/iu', $all, $m)) {
+            $totalIn = $this->toFloat($m[1]);
+        }
+        if (preg_match('/Debits\s*[£E]?\s?(-?[\d,]+\.\d{2})/iu', $all, $m)) {
+            $totalOut = $this->toFloat($m[1]);
         }
         $pageStmt = $this->pageStatementDates($pages);
         $fallbackYear = (int) date('Y');
@@ -230,24 +239,31 @@ class VirginMoneyParser extends AbstractStatementParser
                 continue;
             }
 
-            if (preg_match('/^R[ao]te\s+[\d.,]+$/iu', $content)) {
+            if (preg_match('/^R[ao]te\b/iu', $content)) {
                 continue;
             }
 
             // Foreign currency header: "Cls 77 Myr 12.00" followed by Rate / Stg Amt lines – the sterling
             // amount comes later, so this line is only description text (never the transaction amount).
-            if (preg_match('/^(?:Cls|Card|Cash|Crd)\s?\d*\s+([A-Za-z]{3})\s+[\d,]+\.\d+$/u', $content, $fx)) {
-                $isFx = isset(self::CURRENCIES[strtoupper($fx[1])]);
-                for ($k = 1; !$isFx && $k <= 3; $k++) {
-                    if (isset($lines[$i + $k]) && $lines[$i + $k][0] === $pageNo
-                        && preg_match('/^(?:R[ao]te\b|S[tl][gq9]\s?Am[tfl1]\b)/iu', $lines[$i + $k][1])) {
-                        $isFx = true;
+            $isFx = false;
+            if (preg_match('/^(?:[Qa-z]\s+)?(?:Cls|Card|Cash|Crd)\s*\d*[\s_]*([A-Za-z]{3})?[\s_]*[\d,]+\.\d+/iu', $content, $fx)) {
+                $code = strtoupper($fx[1] ?? '');
+                if ($code !== '' && isset(self::CURRENCIES[$code])) {
+                    $isFx = true;
+                } else {
+                    for ($k = 1; $k <= 3; $k++) {
+                        if (isset($lines[$i + $k]) && $lines[$i + $k][0] === $pageNo
+                            && preg_match('/^(?:R[ao]te\b|S[tl][gq9]\s?Am[tfl1]\b)/iu', $lines[$i + $k][1])) {
+                            $isFx = true;
+                            break;
+                        }
                     }
                 }
-                if ($isFx) {
-                    $pending = trim($pending . ' ' . $content);
-                    continue;
-                }
+            }
+            if ($isFx) {
+                $cleanFx = trim(preg_replace(self::PANEL_TAIL, '', $content) ?? $content);
+                $pending = trim($pending . ' ' . $cleanFx);
+                continue;
             }
 
             $stg = null;
@@ -256,9 +272,18 @@ class VirginMoneyParser extends AbstractStatementParser
                 $content = trim($s[2]);
             }
 
+            // Remove any trailing sidebar noise from content before extracting money
+            $content = trim(preg_replace(self::PANEL_TAIL, '', $content) ?? $content);
+
             [$descPart, $nums] = $this->trailingMoney($content, 2);
             if (!$nums && $stg !== null) {
                 $nums = [$stg];
+            }
+
+            // If trailingMoney picked up a leaked sidebar summary total (like 3736.20 or 10688.17 or 6952.82 or 0.85)
+            // as a balance, discard the leaked balance so it does not desync the ledger.
+            if (count($nums) === 2 && in_array($nums[1], array_filter([$totalOut, $totalIn, $opening, $closing]), true)) {
+                array_pop($nums);
             }
 
             if (!$nums) {
@@ -308,7 +333,7 @@ class VirginMoneyParser extends AbstractStatementParser
         $samples = array_merge($samples, $res['samples']);
 
         // Several statements in one file: printed per-statement totals cannot be compared to the whole set.
-        return $this->result($this->finalise($rows, $fromOcr), $unparsed, $samples, $opening, $closing, null, null);
+        return $this->result($this->finalise($rows, $fromOcr), $unparsed, $samples, $opening, $closing, $totalIn, $totalOut);
     }
 
     /**
