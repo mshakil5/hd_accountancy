@@ -87,32 +87,13 @@ class BankStatementVerificationService
      */
     public function analyse(string $path, bool $forceOcr = false): array
     {
-        // Smalot keeps the whole decoded document (and every page's text) in
-        // memory, so large statements do not fit the default 128M limit.
-        @ini_set('memory_limit', '512M');
-
         $parsedPages = [];
-        $nativePages = null;
-
-        // Large PDFs: read the text layer with native tools first so the full
-        // document never has to sit in PHP memory. When they yield nothing the
-        // file is a scan, and OCR is the right path instead of Smalot.
-        $largeFile = is_file($path) && filesize($path) > 8 * 1024 * 1024;
-        if ($largeFile) {
-            $nativePages = app(InvoiceExtractorService::class)->extractNativeTextByPage($path);
-            if (mb_strlen(trim(implode('', $nativePages))) > 50) {
-                $parsedPages = $nativePages;
+        try {
+            foreach ((new Parser())->parseFile($path)->getPages() as $index => $page) {
+                $parsedPages[$index + 1] = (string) $page->getText();
             }
-        }
-
-        if ($parsedPages === [] && !$largeFile) {
-            try {
-                foreach ((new Parser())->parseFile($path)->getPages() as $index => $page) {
-                    $parsedPages[$index + 1] = (string) $page->getText();
-                }
-            } catch (\Throwable $e) {
-                $parsedPages = [];
-            }
+        } catch (\Throwable $e) {
+            $parsedPages = [];
         }
 
         $pagesTotal = max(1, count($parsedPages));
@@ -127,7 +108,7 @@ class BankStatementVerificationService
 
         // 2. Native text tools (pdftotext / Ghostscript): fixes PDFs whose fonts Smalot cannot decode.
         if (($best === null || !$best['proven']) && is_file($path)) {
-            $native = $nativePages ?? app(InvoiceExtractorService::class)->extractNativeTextByPage($path);
+            $native = app(InvoiceExtractorService::class)->extractNativeTextByPage($path);
             if (!empty($native) && mb_strlen(trim(implode('', $native))) > 50) {
                 $candidate = $this->evaluatePages($native, false);
                 if ($best === null || $this->betterThan($candidate, $best)) {
@@ -727,31 +708,8 @@ class BankStatementVerificationService
         }
 
         if (Storage::disk('s3')->exists($import->storage_path)) {
-            // Stream to disk instead of loading the whole PDF into a PHP string:
-            // a large statement otherwise costs memory two or three times over.
-            $tmpBase = tempnam(sys_get_temp_dir(), 'stmt_');
-            if ($tmpBase === false) {
-                return $callback(null);
-            }
-            $tmpFile = $tmpBase . '.pdf';
-            @unlink($tmpBase);
-
-            $in = Storage::disk('s3')->readStream($import->storage_path);
-            $out = $in !== false ? fopen($tmpFile, 'wb') : false;
-            $copied = false;
-            try {
-                if ($in !== false && $out !== false) {
-                    $copied = stream_copy_to_stream($in, $out) !== false;
-                }
-            } finally {
-                if (is_resource($out)) fclose($out);
-                if (is_resource($in)) fclose($in);
-            }
-            if (!$copied) {
-                @unlink($tmpFile);
-                return $callback(null);
-            }
-
+            $tmpFile = tempnam(sys_get_temp_dir(), 'stmt_') . '.pdf';
+            file_put_contents($tmpFile, Storage::disk('s3')->get($import->storage_path));
             try {
                 return $callback($tmpFile);
             } finally {
@@ -821,6 +779,18 @@ class BankStatementVerificationService
                     $seen[$key] = $occurrence;
 
                     if (in_array($key, $approvedFingerprints, true)) {
+                        continue;
+                    }
+
+                    // Same line already stored by another (overlapping) statement of this bank account.
+                    $alreadyStored = DB::table('bank_entries')
+                        ->where('client_id', $import->client_id)
+                        ->where('bank_account_id', $import->bank_account_id)
+                        ->where('line_fingerprint', $key)
+                        ->where('line_occurrence', $occurrence)
+                        ->where('bank_import_id', '<>', $import->id)
+                        ->exists();
+                    if ($alreadyStored) {
                         continue;
                     }
 

@@ -22,6 +22,15 @@ class VirginMoneyParser extends AbstractStatementParser
     private const MON = 'Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec';
 
     /** Right-hand panel text that OCR may glue onto the end of a table line. */
+    private const CURRENCIES = [
+        'AED' => 1, 'AUD' => 1, 'BDT' => 1, 'BGN' => 1, 'BHD' => 1, 'BRL' => 1, 'CAD' => 1, 'CHF' => 1, 'CNY' => 1,
+        'CZK' => 1, 'DKK' => 1, 'EGP' => 1, 'EUR' => 1, 'HKD' => 1, 'HUF' => 1, 'IDR' => 1, 'ILS' => 1, 'INR' => 1,
+        'ISK' => 1, 'JPY' => 1, 'KES' => 1, 'KRW' => 1, 'KWD' => 1, 'LKR' => 1, 'MAD' => 1, 'MXN' => 1, 'MYR' => 1,
+        'NOK' => 1, 'NZD' => 1, 'OMR' => 1, 'PHP' => 1, 'PKR' => 1, 'PLN' => 1, 'QAR' => 1, 'RON' => 1, 'RSD' => 1,
+        'RUB' => 1, 'SAR' => 1, 'SEK' => 1, 'SGD' => 1, 'THB' => 1, 'TND' => 1, 'TRY' => 1, 'TWD' => 1, 'USD' => 1,
+        'VND' => 1, 'ZAR' => 1, 'GEL' => 1, 'JOD' => 1, 'NPR' => 1, 'MUR' => 1, 'MVR' => 1, 'XOF' => 1, 'XAF' => 1,
+    ];
+
     private const PANEL_TAIL = '/\s+(?:Page\s?\d+\s?of\s?\d+|Statement\s?(?:date|No)\b.*|Account\s?name\b.*|Sort\s?code\b.*|Account\s?number\b.*|IBAN\b.*|BIC\b.*|Opening\s?balance\b.*|Closing\s?balance\b.*|(?:Debits|Credits)\s*[£E]?\s?-?[\d,]+\.\d{2}.*|Deposits in this account\b.*|(?:DD|SO|TB|MB|TL|EB|OD|WLT|FGN|CHQ|LTE|MT|PMT|ACC|GBP|REV|Purch|WDL|CCY|Unarr)\s?=\s.*)$/iu';
 
     /** Table ends here (promo / footer text under the transactions). */
@@ -76,8 +85,13 @@ class VirginMoneyParser extends AbstractStatementParser
             foreach (preg_split('/\R/u', (string) $text) ?: [] as $rawLine) {
                 $line = $this->fixAmountTokens($this->clean((string) $rawLine));
                 $line = trim(preg_replace(self::PANEL_TAIL, '', $line) ?? $line);
-                if ($line !== '') {
-                    $lines[] = [(int) $pageNo, $line];
+                // OCR sometimes merges "Cls 77 Myr 12.00 Rate 0.18416 Stg Amt 2.21 2.21" into one line.
+                $parts = preg_split('/(?<=\S)\s+(?=(?:Rate\s+[\d.]|S[tl][gq9]\s?Am[tfl1]\s+\d))/iu', $line) ?: [$line];
+                foreach ($parts as $part) {
+                    $part = trim($part);
+                    if ($part !== '') {
+                        $lines[] = [(int) $pageNo, $part];
+                    }
                 }
             }
         }
@@ -216,20 +230,28 @@ class VirginMoneyParser extends AbstractStatementParser
                 continue;
             }
 
-            if (preg_match('/^Rate\s+[\d.,]+$/iu', $content)) {
+            if (preg_match('/^R[ao]te\s+[\d.,]+$/iu', $content)) {
                 continue;
             }
 
-            // Foreign currency header: "Cls 24 Eur 32.04" followed by a Rate line – amount comes later.
-            if (preg_match('/^(?:Cls|Card|Cash|Crd)\s?\d*\s+[A-Za-z]{3}\s+[\d,]+\.\d+$/u', $content)
-                && isset($lines[$i + 1]) && $lines[$i + 1][0] === $pageNo
-                && preg_match('/^Rate\b/iu', $lines[$i + 1][1])) {
-                $pending = trim($pending . ' ' . $content);
-                continue;
+            // Foreign currency header: "Cls 77 Myr 12.00" followed by Rate / Stg Amt lines – the sterling
+            // amount comes later, so this line is only description text (never the transaction amount).
+            if (preg_match('/^(?:Cls|Card|Cash|Crd)\s?\d*\s+([A-Za-z]{3})\s+[\d,]+\.\d+$/u', $content, $fx)) {
+                $isFx = isset(self::CURRENCIES[strtoupper($fx[1])]);
+                for ($k = 1; !$isFx && $k <= 3; $k++) {
+                    if (isset($lines[$i + $k]) && $lines[$i + $k][0] === $pageNo
+                        && preg_match('/^(?:R[ao]te\b|S[tl][gq9]\s?Am[tfl1]\b)/iu', $lines[$i + $k][1])) {
+                        $isFx = true;
+                    }
+                }
+                if ($isFx) {
+                    $pending = trim($pending . ' ' . $content);
+                    continue;
+                }
             }
 
             $stg = null;
-            if (preg_match('/^Stg\s?Amt\s+(\d{1,3}(?:,\d{3})*\.\d{2}|\d+\.\d{2})\s*(.*)$/iu', $content, $s)) {
+            if (preg_match('/^S[tl][gq9]\s?Am[tfl1]\s+(\d{1,3}(?:,\d{3})*\.\d{2}|\d+\.\d{2})\s*(.*)$/iu', $content, $s)) {
                 $stg = $this->toFloat($s[1]);
                 $content = trim($s[2]);
             }
