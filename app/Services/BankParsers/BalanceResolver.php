@@ -10,8 +10,8 @@ namespace App\Services\BankParsers;
  */
 final class BalanceResolver
 {
-    private const MAX_GROUP = 45;
-    private const MAX_STATES = 200000;
+    private const MAX_GROUP = 30;
+    private const MAX_STATES = 2000;
 
     /** @return array{unresolved:int, samples:array<int,string>} */
     public static function resolve(array &$rows, ?float $opening, ?float $closing): array

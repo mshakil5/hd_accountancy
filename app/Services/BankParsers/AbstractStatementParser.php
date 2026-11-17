@@ -47,43 +47,6 @@ abstract class AbstractStatementParser implements StatementParserInterface
         return [implode(' ', $tokens), $nums];
     }
 
-    /**
-     * Fill balance_after for rows where the bank prints no balance (e.g. 2nd+ transaction of the
-     * same day): opening/previous balance + credits - debits. Printed balances always win and
-     * re-sync the running total. Rows need 'sign', 'abs' and 'balance'.
-     */
-    protected function fillRunningBalances(array &$rows, ?float $opening): void
-    {
-        if (!$rows) {
-            return;
-        }
-        $cents = fn (float $v): int => (int) round($v * 100);
-
-        $run = $opening !== null ? $cents($opening) : null;
-        if ($run === null) {
-            $acc = 0;
-            foreach ($rows as $r) {
-                $acc += $r['sign'] * $cents($r['abs']);
-                if ($r['balance'] !== null) {
-                    $run = $cents((float) $r['balance']) - $acc;
-                    break;
-                }
-            }
-        }
-        if ($run === null) {
-            return;
-        }
-
-        foreach ($rows as $k => $r) {
-            $run += $r['sign'] * $cents($r['abs']);
-            if ($r['balance'] !== null) {
-                $run = $cents((float) $r['balance']);
-            } else {
-                $rows[$k]['balance'] = round($run / 100, 2);
-            }
-        }
-    }
-
     protected function result(array $rows, int $unparsed, array $samples, ?float $opening, ?float $closing,
                               ?float $totalIn = null, ?float $totalOut = null): array
     {

@@ -284,7 +284,6 @@ class VirginMoneyParser extends AbstractStatementParser
         $res = BalanceResolver::resolve($rows, $opening, $closing);
         $unparsed += $res['unresolved'];
         $samples = array_merge($samples, $res['samples']);
-        $this->fillRunningBalances($rows, $opening);
 
         // Several statements in one file: printed per-statement totals cannot be compared to the whole set.
         return $this->result($this->finalise($rows, $fromOcr), $unparsed, $samples, $opening, $closing, null, null);
