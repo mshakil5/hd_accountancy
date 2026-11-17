@@ -72,6 +72,7 @@ class BankReconciliationPageController extends Controller
             'currentPage' => 1,
             'lastPage' => 1,
             'onlyEntry' => null,
+            'lastReconciled' => null,
         ];
     }
 
@@ -97,6 +98,8 @@ class BankReconciliationPageController extends Controller
                 'to' => $total ? min($total, $page * $perPage) : null,
             ],
             'reconcile_status' => $data['reconcileFilter'],
+            'last_reconciled_html' => view('admin.accounting.partials.last_reconciled',
+                ['lastReconciled' => $data['lastReconciled'] ?? null])->render(),
         ];
     }
 
@@ -236,6 +239,27 @@ class BankReconciliationPageController extends Controller
         $reconciledCount = $scopeEntries()->where('reconciliation_status', 'approved')->count();
         $unreconciledCount = $totalCount - $reconciledCount;
 
+        // “Where did reconciliation stop?” — only meaningful for one bank account.
+        // Newest approval first; transaction date breaks ties for legacy rows without a timestamp.
+        $lastReconciled = null;
+        if ($businessId && $bankAccountId) {
+            $lastReconciled = DB::table('bank_entries')
+                ->where('client_id', $businessId)
+                ->where('bank_account_id', $bankAccountId)
+                ->where('reconciliation_status', 'approved')
+                ->orderByDesc('approved_at')
+                ->orderByDesc('transaction_date')
+                ->orderByDesc('id')
+                ->first();
+            if ($lastReconciled && $lastReconciled->approved_by) {
+                $approver = DB::table('users')->where('id', $lastReconciled->approved_by)
+                    ->first(['first_name', 'last_name']);
+                $lastReconciled->approved_by_name = $approver
+                    ? trim(($approver->first_name ?? '') . ' ' . ($approver->last_name ?? ''))
+                    : null;
+            }
+        }
+
         // Account heads must be global + this credential's, matching the receipt page.
         $heads = AccountHead::where('is_active', 1)->whereNotNull('account_type_id')
             ->where(function ($q) use ($credentialId) {
@@ -369,6 +393,7 @@ class BankReconciliationPageController extends Controller
             'currentPage' => $currentPage,
             'lastPage' => $lastPage,
             'onlyEntry' => $onlyEntry,
+            'lastReconciled' => $lastReconciled,
         ];
     }
 

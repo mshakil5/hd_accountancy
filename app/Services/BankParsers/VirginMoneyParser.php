@@ -22,7 +22,7 @@ class VirginMoneyParser extends AbstractStatementParser
     private const MON = 'Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec';
 
     /** Right-hand panel text that OCR may glue onto the end of a table line. */
-    private const PANEL_TAIL = '/\s+(?:Page\s?\d+\s?of\s?\d+|Statement\s?date\b.*|Account\s?name\b.*|Sort\s?code\b.*|Account\s?number\b.*|IBAN\b.*|BIC\b.*)$/iu';
+    private const PANEL_TAIL = '/\s+(?:Page\s?\d+\s?of\s?\d+|Statement\s?(?:date|No)\b.*|Account\s?name\b.*|Sort\s?code\b.*|Account\s?number\b.*|IBAN\b.*|BIC\b.*|Opening\s?balance\b.*|Closing\s?balance\b.*|(?:Debits|Credits)\s*[£E]?\s?-?[\d,]+\.\d{2}.*|Deposits in this account\b.*|(?:DD|SO|TB|MB|TL|EB|OD|WLT|FGN|CHQ|LTE|MT|PMT|ACC|GBP|REV|Purch|WDL|CCY|Unarr)\s?=\s.*)$/iu';
 
     /** Table ends here (promo / footer text under the transactions). */
     private const STOP = '/^(Ready,? get set|Have a think|Just so you know|We.ve updated|Interest rate details|Clydesdale Bank|Financial Conduct|mortgages and|Not got the app|Did you know|You can go paper)/iu';
@@ -61,13 +61,11 @@ class VirginMoneyParser extends AbstractStatementParser
         if (preg_match_all('/Closing\s?balance\s*[£E]?\s?(-?[\d,]+\.\d{2})/iu', $all, $mm) && $mm[1]) {
             $closing = $this->toFloat((string) end($mm[1]));
         }
+        $pageStmt = $this->pageStatementDates($pages);
         $fallbackYear = (int) date('Y');
-        $statementDate = null;
-        if (preg_match('/Statement\s?date\s+(\d{1,2})\s+([A-Za-z]+)\s+(20\d{2})/iu', $all, $m)
-            && ($mon = self::MONTHS[substr(strtolower($m[2]), 0, 3)] ?? null) !== null
-            && checkdate($mon, (int) $m[1], (int) $m[3])) {
-            $fallbackYear = (int) $m[3];
-            $statementDate = sprintf('%04d-%02d-%02d', (int) $m[3], $mon, (int) $m[1]);
+        $firstStmt = $pageStmt ? reset($pageStmt) : null;
+        if ($firstStmt !== null) {
+            $fallbackYear = $firstStmt['y'];
         } elseif (preg_match('/\b\d{1,2}\s?(?:' . self::MON . ')[a-z]*\s+(20\d{2})\b/iu', $all, $m)) {
             $fallbackYear = (int) $m[1];
         }
@@ -97,10 +95,39 @@ class VirginMoneyParser extends AbstractStatementParser
         $openingFromStatement = null;
 
         /** Running balance printed at the top of a page / statement belongs to the previous row. */
-        $attachBalance = function (?float $bal) use (&$raw) {
-            if ($bal !== null && $raw && $raw[count($raw) - 1]['balance'] === null) {
-                $raw[count($raw) - 1]['balance'] = $bal;
+        $attachBalance = function (?float $bal) use (&$raw, &$unparsed, &$samples) {
+            if ($bal === null || !$raw) {
+                return;
             }
+            $k = count($raw) - 1;
+            if ($raw[$k]['balance'] === null) {
+                $raw[$k]['balance'] = $bal;
+            } elseif (abs($raw[$k]['balance'] - $bal) > 0.004) {
+                $unparsed++;
+                if (count($samples) < 5) {
+                    $samples[] = 'Carried-over balance ' . number_format($bal, 2, '.', '') . ' differs from last printed balance '
+                        . number_format((float) $raw[$k]['balance'], 2, '.', '') . ' (' . $raw[$k]['date'] . ')';
+                }
+            }
+        };
+
+        /**
+         * Year of a "dd Mon" date. The statement date printed on the SAME page decides it
+         * (month after the statement month => previous year). Without it, roll forward from
+         * the previous row (month goes backwards => new year).
+         */
+        $resolveYear = function (int $mon) use (&$year, &$lastMonth, &$curPage, $pageStmt, $firstStmt, $fallbackYear): int {
+            $stmt = $pageStmt[$curPage] ?? null;
+            if ($stmt !== null) {
+                $y = $mon > $stmt['m'] ? $stmt['y'] - 1 : $stmt['y'];
+            } elseif ($year === null) {
+                $y = ($firstStmt !== null && $mon > $firstStmt['m']) ? $fallbackYear - 1 : $fallbackYear;
+            } else {
+                $y = ($lastMonth !== null && $mon < $lastMonth) ? $year + 1 : $year;
+            }
+            $year = $y;
+            $lastMonth = $mon;
+            return $y;
         };
 
         foreach ($lines as $i => [$pageNo, $line]) {
@@ -108,6 +135,28 @@ class VirginMoneyParser extends AbstractStatementParser
                 $curPage = $pageNo;
                 $afterStop = false;
                 $pending = '';
+            }
+
+            // ---- "31 Mar 2023  Previous statement  31084.36" : opening marker, never a transaction ----
+            if (preg_match('/^(?:([0-9OolI]{1,2})\s?(' . self::MON . ')[a-z]*\.?\s*(?:([0-9OolIZ]{2}\s?[0-9OolIZ]{2})\.?)?\s*)?Previous\s?statement\b\s*(.*)$/iu', $line, $p)) {
+                $inTable = true;
+                $afterStop = false;
+                $pending = '';
+                $lastDate = null;
+                if (($p[1] ?? '') !== '' && ($p[3] ?? '') !== '') {
+                    $py = (int) strtr(preg_replace('/\s+/', '', $p[3]), 'OolIZ', '00112');
+                    if ($py >= 2000 && $py <= 2100 && ($firstStmt === null || abs($py - $firstStmt['y']) <= 3)) {
+                        $year = $py;
+                        $lastMonth = self::MONTHS[strtolower($p[2])];
+                    }
+                }
+                [, $nums] = $this->trailingMoney((string) $p[4], 1);
+                $bal = $nums[0] ?? null;
+                if ($openingFromStatement === null && $bal !== null && $raw === []) {
+                    $openingFromStatement = $bal;
+                }
+                $attachBalance($bal);
+                continue;
             }
 
             if (preg_match('/^Date\s+Description\b/iu', $line)) {
@@ -142,41 +191,14 @@ class VirginMoneyParser extends AbstractStatementParser
                 $mon = self::MONTHS[strtolower($m[2])];
                 $rest = trim($m[4]);
 
-                if ($m[3] !== '') {
-                    if (preg_match('/^Previous\s?statement\b\s*(.*)$/iu', $rest, $p)) {
-                        $inTable = true;
-                        $year = (int) $m[3];
-                        $lastMonth = $mon;
-                        $lastDate = null;
-                        $pending = '';
-                        [, $nums] = $this->trailingMoney($p[1], 1);
-                        $bal = $nums[0] ?? null;
-                        if ($openingFromStatement === null && $bal !== null && $raw === []) {
-                            $openingFromStatement = $bal;
-                        }
-                        $attachBalance($bal);
-                    }
-                    // A full "dd Month yyyy" with anything else is header text, not a transaction.
+                // A full "dd Mon yyyy" followed by anything is header text, not a transaction.
+                if (($m[3] ?? '') !== '') {
                     continue;
                 }
 
                 $inTable = true;
-                if ($year === null) {
-                    $year = $fallbackYear;
-                    $lastMonth = $mon;
-                } elseif ($mon < $lastMonth) {
-                    $year++;
-                }
-                $lastMonth = $mon;
-
-                if (checkdate($mon, $day, $year)) {
-                    $lastDate = sprintf('%04d-%02d-%02d', $year, $mon, $day);
-                    // Dates have no year: a Dec–Jan statement issued in January must not roll
-                    // forward into next year. Pull it back to the year before the statement date.
-                    if ($statementDate !== null && $lastDate > $statementDate) {
-                        $lastDate = sprintf('%04d-%02d-%02d', $year - 1, $mon, $day);
-                    }
-                }
+                $y = $resolveYear($mon);
+                $lastDate = checkdate($mon, $day, $y) ? sprintf('%04d-%02d-%02d', $y, $mon, $day) : null;
                 $pending = '';
                 $content = $rest;
             }
@@ -262,14 +284,55 @@ class VirginMoneyParser extends AbstractStatementParser
         $res = BalanceResolver::resolve($rows, $opening, $closing);
         $unparsed += $res['unresolved'];
         $samples = array_merge($samples, $res['samples']);
+        $this->fillRunningBalances($rows, $opening);
 
         // Several statements in one file: printed per-statement totals cannot be compared to the whole set.
         return $this->result($this->finalise($rows, $fromOcr), $unparsed, $samples, $opening, $closing, null, null);
     }
 
+    /**
+     * Statement date printed on each page (right-hand panel). A page only gets a date when it
+     * shows exactly one statement date; pages with none inherit it unless a new statement
+     * starts on them; pages mixing two statements get none (year is then rolled forward).
+     *
+     * @return array<int|string,array{y:int,m:int,d:int}>
+     */
+    private function pageStatementDates(array $pages): array
+    {
+        $out = [];
+        $last = null;
+        foreach ($pages as $no => $text) {
+            $text = (string) $text;
+            $found = [];
+            if (preg_match_all('/Statement\s?date\s*(\d{1,2})\s*([A-Za-z]{3,9})\.?\s*(2[0O][0-9OolI]{2})/u', $text, $mm, PREG_SET_ORDER)) {
+                foreach ($mm as $m) {
+                    $mon = self::MONTHS[strtolower(substr($m[2], 0, 3))] ?? null;
+                    $y = (int) strtr($m[3], 'OolI', '0011');
+                    $d = (int) $m[1];
+                    if ($mon !== null && checkdate($mon, $d, $y)) {
+                        $found[$y . '-' . $mon . '-' . $d] = ['y' => $y, 'm' => $mon, 'd' => $d];
+                    }
+                }
+            }
+            if (count($found) === 1) {
+                $last = reset($found);
+                $out[$no] = $last;
+            } elseif (count($found) > 1) {
+                $last = null;
+            } elseif ($last !== null && !preg_match('/Previous\s?statement/iu', $text)) {
+                $out[$no] = $last;
+            } else {
+                $last = null;
+            }
+        }
+        return $out;
+    }
+
     private function hint(string $desc): int
     {
-        if (preg_match('/^(Gross\s+Interest|Interest\s+Paid)\b/i', $desc)) {
+        if (preg_match('/^(Gross\s+Interest|Interest\s+Paid)\b/i', $desc)
+            || preg_match('/\b(Salary|Dividend)\b/i', $desc)
+            || preg_match('/^Postcode\s+Lottery\s*$/i', $desc)) {
             return 1;
         }
         if (preg_match('/^(Cls|Card|Cash|Crd\s?\d*|DD|SO|Wlt\d*)\b/i', $desc)) {

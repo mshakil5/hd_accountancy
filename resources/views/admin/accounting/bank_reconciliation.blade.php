@@ -207,6 +207,9 @@
   @endforeach
 </div>
 
+{{-- Last reconciled row for the selected client + bank (filled by AJAX as the filters change). --}}
+<div id="hd-last-reconciled">@include('admin.accounting.partials.last_reconciled', ['lastReconciled' => $lastReconciled ?? null])</div>
+
 {{-- ── Workspace: server-rendered fragments, swapped in place by JS ── --}}
 <div class="hd-card hd-workspace" id="hd-reconciliation-workspace"
      data-rows-url="{{ route('admin.bank-reconciliation.rows') }}"
@@ -761,6 +764,7 @@ document.addEventListener('DOMContentLoaded', function(){ hdInitWorkspace(docume
   const pagerEl = document.getElementById('hd-pagination');
   const totalEl = document.getElementById('hd-rows-total');
   const rangeEl = document.getElementById('hd-rows-range');
+  const lastEl  = document.getElementById('hd-last-reconciled');
   const form    = document.getElementById('hd-filter-form');
   const rowsUrl = ws.dataset.rowsUrl;
 
@@ -832,6 +836,7 @@ document.addEventListener('DOMContentLoaded', function(){ hdInitWorkspace(docume
     if(typeof data.html === 'string') rowsEl.innerHTML = data.html;
     else if(!rowsEl.querySelector('.hd-reconcile-row') && !rowsEl.textContent.trim()) rowsEl.innerHTML = data.empty_html || '';
     if(totalEl && data.stats) totalEl.textContent = data.stats.total;
+    if(lastEl && typeof data.last_reconciled_html === 'string') lastEl.innerHTML = data.last_reconciled_html;
     paintCards(data.stats);
     paintPager(data.pagination);
     hdInitWorkspace(rowsEl);
@@ -903,7 +908,7 @@ jQuery(function($){
           $('#hd-rows').html(resp.empty_html || '');
         }
         if(window.hdWorkspacePaint){
-          window.hdWorkspacePaint({html: null, stats: resp.stats, pagination: resp.pagination});
+          window.hdWorkspacePaint({html: null, stats: resp.stats, pagination: resp.pagination, last_reconciled_html: resp.last_reconciled_html});
         }
         hdInitWorkspace($row.length ? $row[0] : document.getElementById('hd-rows'));
       } else if(window.hdWorkspaceLoad){

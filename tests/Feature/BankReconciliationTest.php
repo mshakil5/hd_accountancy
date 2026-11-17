@@ -150,6 +150,46 @@ class BankReconciliationTest extends TestCase
         return new BankReconciliationPageController(app(BankLedgerPostingService::class));
     }
 
+    /** The workspace shows where the selected bank's reconciliation stopped. */
+    public function test_last_reconciled_row_is_exposed_for_client_and_bank(): void
+    {
+        if (!$this->credId) {
+            $this->markTestSkipped('No client credential fixture available.');
+        }
+        DB::table('clients')->where('id', $this->client->id)->update(['status' => 1]);
+
+        $older = $this->makeEntry(-10.00, 'unmatched', $this->bankA);
+        $newer = $this->makeEntry(-20.00, 'unmatched', $this->bankA);
+        DB::table('bank_entries')->where('id', $older)->update([
+            'reconciliation_status' => 'approved', 'approved_by' => $this->userId, 'approved_at' => now()->subDay(),
+        ]);
+        DB::table('bank_entries')->where('id', $newer)->update([
+            'reconciliation_status' => 'approved', 'approved_by' => $this->userId, 'approved_at' => now(),
+        ]);
+        // A newer approval on another bank must not leak into this bank's workspace.
+        $otherBank = $this->makeEntry(-99.00, 'unmatched', $this->bankB);
+        DB::table('bank_entries')->where('id', $otherBank)->update([
+            'reconciliation_status' => 'approved', 'approved_at' => now()->addDay(),
+        ]);
+
+        $scoped = $this->controller()->index(Request::create('/admin/bank-reconciliation', 'GET', [
+            'client_credential_id' => $this->credId,
+            'client_id' => $this->client->id,
+            'bank_account_id' => $this->bankA,
+        ]))->getData();
+
+        $this->assertNotNull($scoped['lastReconciled']);
+        $this->assertSame($newer, (int) $scoped['lastReconciled']->id);
+        $this->assertSame($this->userId, (int) $scoped['lastReconciled']->approved_by);
+
+        // Without a bank selected there is no “last reconciled row” to show.
+        $unscoped = $this->controller()->index(Request::create('/admin/bank-reconciliation', 'GET', [
+            'client_credential_id' => $this->credId,
+            'client_id' => $this->client->id,
+        ]))->getData();
+        $this->assertNull($unscoped['lastReconciled']);
+    }
+
     /** A categorised entry posts exactly one ledger row, and never twice. */
     public function test_categorized_entry_posts_to_ledger_once(): void
     {
