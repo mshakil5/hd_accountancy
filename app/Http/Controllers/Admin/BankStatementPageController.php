@@ -370,7 +370,10 @@ class BankStatementPageController extends Controller
     public function verification(int $importId)
     {
         $import = BankImport::findOrFail($importId);
-        if ($import->transaction_count > 0 || DB::table('bank_entries')->where('bank_import_id', $importId)->exists()) {
+        // Opening the workspace is a read: never re-parse the PDF here. Extraction
+        // runs on upload, on row edits and via "Refresh checks"; only a statement
+        // that has never been analysed is processed once, on its first visit.
+        if ($import->verification_status === null || $import->verification_status === 'pending') {
             $this->verification->refresh($import);
             $import->refresh();
         }
@@ -397,18 +400,48 @@ class BankStatementPageController extends Controller
         ]);
     }
 
+    /** Re-run the extraction/check set on demand (the page itself stays read-only). */
+    public function refreshImport(int $importId)
+    {
+        @set_time_limit(300);
+        $import = BankImport::findOrFail($importId);
+
+        try {
+            $this->verification->refresh($import);
+        } catch (\Throwable $e) {
+            report($e);
+            return back()->with('error', 'The statement could not be re-checked: ' . $e->getMessage());
+        }
+
+        return back()->with('success', 'Statement checks refreshed.');
+    }
+
     public function streamStatement(int $importId)
     {
         $item = BankImport::findOrFail($importId);
+        $headers = [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . addslashes(basename($item->filename)) . '"',
+        ];
+
+        // Stream the file: reading the whole PDF into a string doubles its
+        // memory cost and exhausts the limit on large statements.
         if ($item->storage_path && Storage::disk('s3')->exists($item->storage_path)) {
-            return response(Storage::disk('s3')->get($item->storage_path), 200, [
-                'Content-Type'        => 'application/pdf',
-                'Content-Disposition' => 'inline; filename="' . addslashes(basename($item->filename)) . '"',
-            ]);
+            $stream = Storage::disk('s3')->readStream($item->storage_path);
+            if ($stream !== false) {
+                return response()->stream(function () use ($stream) {
+                    fpassthru($stream);
+                    if (is_resource($stream)) {
+                        fclose($stream);
+                    }
+                }, 200, $headers);
+            }
         }
-        if ($item->storage_path && Storage::disk('s3')->exists($item->storage_path)) {
-            return response()->file(Storage::disk('s3')->path($item->storage_path), ['Content-Type' => 'application/pdf']);
+
+        if ($item->storage_path && Storage::disk('local')->exists($item->storage_path)) {
+            return response()->file(Storage::disk('local')->path($item->storage_path), $headers);
         }
+
         abort(404, 'Statement file not found in cloud or local storage.');
     }
 

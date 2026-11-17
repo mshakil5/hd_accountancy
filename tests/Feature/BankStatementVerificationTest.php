@@ -459,6 +459,62 @@ class BankStatementVerificationTest extends TestCase
         $response->assertSee('Acme Ltd');
     }
 
+    /**
+     * Opening the workspace for a statement that was already analysed must be a
+     * read: re-parsing the PDF there is what exhausts memory on large uploads.
+     */
+    public function test_opening_verification_page_does_not_reparse_the_pdf(): void
+    {
+        $admin = DB::table('users')->where('type', 1)->first();
+        if (!$admin) {
+            $this->markTestSkipped('No admin user fixture available.');
+        }
+        $this->actingAs(User::find($admin->id));
+
+        $import = $this->makeImport(BankStatementVerificationService::READY);
+        $this->makeEntry($import, '2020-06-15', 'Acme Ltd', -10.00, 90.00);
+
+        $spy = new class extends BankStatementVerificationService {
+            public int $refreshCalls = 0;
+            public function refresh(BankImport $import, ?array $analysis = null): array
+            {
+                $this->refreshCalls++;
+                return [];
+            }
+        };
+        $this->app->instance(BankStatementVerificationService::class, $spy);
+
+        $this->get(route('admin.bank-statements.verification', $import->id))->assertOk();
+
+        $this->assertSame(0, $spy->refreshCalls);
+    }
+
+    /** A statement uploaded but never analysed is processed once, on its first open. */
+    public function test_first_open_of_an_unanalysed_statement_runs_extraction_once(): void
+    {
+        $admin = DB::table('users')->where('type', 1)->first();
+        if (!$admin) {
+            $this->markTestSkipped('No admin user fixture available.');
+        }
+        $this->actingAs(User::find($admin->id));
+
+        $import = $this->makeImport(); // uploaded, status "pending"
+
+        $spy = new class extends BankStatementVerificationService {
+            public int $refreshCalls = 0;
+            public function refresh(BankImport $import, ?array $analysis = null): array
+            {
+                $this->refreshCalls++;
+                return [];
+            }
+        };
+        $this->app->instance(BankStatementVerificationService::class, $spy);
+
+        $this->get(route('admin.bank-statements.verification', $import->id))->assertOk();
+
+        $this->assertSame(1, $spy->refreshCalls);
+    }
+
     /** Correcting a row keeps the original value, the correction and the reason. */
     public function test_row_correction_keeps_original_value_and_reason(): void
     {

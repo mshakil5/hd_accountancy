@@ -1134,15 +1134,28 @@ class BankReconciliationPageController extends Controller
 
     public function streamStatement(int $importId) {
         $item = BankImport::findOrFail($importId);
+        $headers = [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . addslashes(basename($item->filename)) . '"',
+        ];
+
+        // Stream instead of buffering the whole PDF in memory.
         if ($item->storage_path && Storage::disk('s3')->exists($item->storage_path)) {
-            return response(Storage::disk('s3')->get($item->storage_path), 200, [
-                'Content-Type'        => 'application/pdf',
-                'Content-Disposition' => 'inline; filename="' . addslashes(basename($item->filename)) . '"',
-            ]);
+            $stream = Storage::disk('s3')->readStream($item->storage_path);
+            if ($stream !== false) {
+                return response()->stream(function () use ($stream) {
+                    fpassthru($stream);
+                    if (is_resource($stream)) {
+                        fclose($stream);
+                    }
+                }, 200, $headers);
+            }
         }
-        if ($item->storage_path && Storage::disk('s3')->exists($item->storage_path)) {
-            return response()->file(Storage::disk('s3')->path($item->storage_path), ['Content-Type' => 'application/pdf']);
+
+        if ($item->storage_path && Storage::disk('local')->exists($item->storage_path)) {
+            return response()->file(Storage::disk('local')->path($item->storage_path), $headers);
         }
+
         abort(404, 'Statement file not found in cloud or local storage.');
     }
 

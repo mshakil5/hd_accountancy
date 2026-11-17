@@ -77,6 +77,12 @@
             </div>
         </div>
         <div class="d-flex align-items-center gap-2">
+            <form method="POST" action="{{ route('admin.bank-statements.refresh', $import->id) }}" onsubmit="const b=this.querySelector('button'); b.disabled=true; b.innerHTML='<span class=\'spinner-border spinner-border-sm mr-1\'></span> Checking...'; return true;">
+                @csrf
+                <button type="submit" class="btn btn-outline-secondary btn-sm" title="Re-read this PDF and recalculate the checks (no forced OCR)">
+                    <i class="bi bi-arrow-repeat mr-1"></i> Refresh checks
+                </button>
+            </form>
             <form method="POST" action="{{ route('admin.bank-statements.rescan-ocr', $import->id) }}" onsubmit="if(!confirm('Re-run deep OCR scan on this entire PDF statement? This will scan all pages with OCR, re-extract transactions, and recalculate system balances.')){ return false; } const b=this.querySelector('button'); b.disabled=true; b.innerHTML='<span class=\'spinner-border spinner-border-sm mr-1\'></span> Scanning with OCR...'; return true;">
                 @csrf
                 <button type="submit" class="btn btn-outline-primary btn-sm" title="Force high-resolution OCR scan of all PDF pages">
