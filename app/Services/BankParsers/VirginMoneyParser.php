@@ -73,10 +73,10 @@ class VirginMoneyParser extends AbstractStatementParser
             $closing = $this->toFloat((string) end($mm[1]));
         }
         $totalIn = $totalOut = null;
-        if (preg_match('/Credits\s*[£E]?\s?(-?[\d,]+\.\d{2})/iu', $all, $m)) {
+        if (preg_match('/Credits\b[^\d£E$]*[£E$]?\s?(-?[\d,]+\.\d{2})/iu', $all, $m)) {
             $totalIn = $this->toFloat($m[1]);
         }
-        if (preg_match('/Debits\s*[£E]?\s?(-?[\d,]+\.\d{2})/iu', $all, $m)) {
+        if (preg_match('/Debits\b[^\d£E$]*[£E$]?\s?(-?[\d,]+\.\d{2})/iu', $all, $m)) {
             $totalOut = $this->toFloat($m[1]);
         }
         $pageStmt = $this->pageStatementDates($pages);
@@ -88,19 +88,53 @@ class VirginMoneyParser extends AbstractStatementParser
             $fallbackYear = (int) $m[1];
         }
 
+        // Build list of known sidebar totals to strip when encountered in text.
+        // NOTE: $opening and $closing are valid running balances (e.g. the last row's balance IS $closing),
+        // so we only strip printed monthly totals ($totalIn, $totalOut) and dollar-signed artifacts from lines.
+        $sidebarTotals = array_filter([$opening, $closing, $totalIn, $totalOut]);
+        $isSidebarTotal = function (float $amt) use ($sidebarTotals): bool {
+            foreach ($sidebarTotals as $s) {
+                if (abs($amt - $s) < 0.005) return true;
+            }
+            return false;
+        };
+        $cleanSidebar = function (string $text) use ($totalIn, $totalOut): string {
+            // Strip dollar-sign amounts (Tesseract OCR artifact for sidebar summary totals)
+            $text = preg_replace('/(?<!\w)\$[\d,]+\.\d{2}/u', ' ', $text);
+            // Strip amounts explicitly preceded by sidebar summary labels
+            $text = preg_replace('/\b(?:Opening\s+balance|Closing\s+balance|Debits|Credits)\s*[£E]?\s*[\d,]+\.\d{2}/iu', ' ', $text);
+            // Strip known sidebar summary monthly totals (Debits / Credits totals)
+            foreach (array_filter([$totalIn, $totalOut]) as $val) {
+                $f1 = preg_quote(number_format($val, 2, '.', ''), '/');
+                $f2 = preg_quote(number_format($val, 2, '.', ','), '/');
+                $text = preg_replace('/\b(?:' . $f1 . '|' . $f2 . ')\b/', ' ', $text);
+            }
+            // Strip common metadata
+            $text = preg_replace('/\b\d{2}-\d{2}-\d{2}\b/', ' ', $text); // sort code
+            $text = preg_replace('/\b(?:GB\d{2}[A-Z0-9]+|YORKGB[A-Z0-9]*)\b/i', ' ', $text); // IBAN/BIC
+            $text = preg_replace('/\bMR\s+[A-Z .]{2,20}\b/i', ' ', $text); // Account holder
+            $text = preg_replace('/\b(?:Account\s*(?:number|no|name)|Sort\s*code|IBAN|BIC|Statement\s*(?:date|No))\b[^\n]*/iu', ' ', $text);
+            // Strip FSCS notices
+            $text = preg_replace('/\bDeposits\s+(?:in|ae|nea|this)[^.\n]*?account\s*(?:are\s*eligible)?\.?/iu', ' ', $text);
+            $text = preg_replace('/\b(?:eligible\s+for\s+cover\s+under\s+the|for\s+cover\s+under\s+the)\b/iu', ' ', $text);
+            $text = preg_replace('/\b(?:Financial\s+Services\s+Compensation\s+Scheme|Financial\s+Services|Services\s+Compensation|Compensation\s+Scheme)\b/iu', ' ', $text);
+            $text = preg_replace('/\b(?:Scheme\s*\(FSCS\)|\(FSCS\)|Scheme)\b/iu', ' ', $text);
+            // Strip glossary definitions
+            $text = preg_replace('/\b(?:Cls|DD|SO|TB|MB|TL|EB|OD|WLT|FGN|CHQ|LTE|MT|PMT|ACC|GBP|REV|Purch|WDL|CCY|Unarr)\s*[-=]\s*[^0-9\n]+/iu', ' ', $text);
+            // Strip sidebar headers
+            $text = preg_replace('/\b(?:Opening|Closing)\s+balance\b/iu', ' ', $text);
+            $text = preg_replace('/\b(?:Debits|Credits)\b/iu', ' ', $text);
+            return trim(preg_replace('/\s+/', ' ', $text));
+        };
+
         // ---- flatten to [page, line] so we can look ahead ----------------------------------------
         $lines = [];
         foreach ($pages as $pageNo => $text) {
             foreach (preg_split('/\R/u', (string) $text) ?: [] as $rawLine) {
                 $line = $this->fixAmountTokens($this->clean((string) $rawLine));
-                $line = trim(preg_replace(self::PANEL_TAIL, '', $line) ?? $line);
-                // OCR sometimes merges "Cls 77 Myr 12.00 Rate 0.18416 Stg Amt 2.21 2.21" into one line.
-                $parts = preg_split('/(?<=\S)\s+(?=(?:Rate\s+[\d.]|S[tl][gq9]\s?Am[tfl1]\s+\d))/iu', $line) ?: [$line];
-                foreach ($parts as $part) {
-                    $part = trim($part);
-                    if ($part !== '') {
-                        $lines[] = [(int) $pageNo, $part];
-                    }
+                $line = $cleanSidebar($line);
+                if ($line !== '') {
+                    $lines[] = [(int) $pageNo, $line];
                 }
             }
         }
@@ -112,6 +146,7 @@ class VirginMoneyParser extends AbstractStatementParser
         $afterStop = false; // promo/footer text reached on the current page
         $curPage = null;
         $pending = '';
+        $pendingFx = false;
         $year = null;
         $lastMonth = null;
         $lastDate = null; // date is printed once per day; later rows inherit it
@@ -158,6 +193,7 @@ class VirginMoneyParser extends AbstractStatementParser
                 $curPage = $pageNo;
                 $afterStop = false;
                 $pending = '';
+                $pendingFx = false;
             }
 
             // ---- "31 Mar 2023  Previous statement  31084.36" : opening marker, never a transaction ----
@@ -165,6 +201,7 @@ class VirginMoneyParser extends AbstractStatementParser
                 $inTable = true;
                 $afterStop = false;
                 $pending = '';
+                $pendingFx = false;
                 $lastDate = null;
                 if (($p[1] ?? '') !== '' && ($p[3] ?? '') !== '') {
                     $py = (int) strtr(preg_replace('/\s+/', '', $p[3]), 'OolIZ', '00112');
@@ -186,6 +223,7 @@ class VirginMoneyParser extends AbstractStatementParser
                 $inTable = true;
                 $afterStop = false;
                 $pending = '';
+                $pendingFx = false;
                 continue;
             }
             if ($afterStop) {
@@ -199,6 +237,7 @@ class VirginMoneyParser extends AbstractStatementParser
             if (preg_match(self::STOP, $line)) {
                 $afterStop = true;
                 $pending = '';
+                $pendingFx = false;
                 continue;
             }
             if (preg_match('/^\w{1,5}\s?=\s/u', $line) || $this->isNoise($line)) {
@@ -223,6 +262,7 @@ class VirginMoneyParser extends AbstractStatementParser
                 $y = $resolveYear($mon);
                 $lastDate = checkdate($mon, $day, $y) ? sprintf('%04d-%02d-%02d', $y, $mon, $day) : null;
                 $pending = '';
+                $pendingFx = false;
                 $content = $rest;
             }
 
@@ -233,69 +273,152 @@ class VirginMoneyParser extends AbstractStatementParser
             // ---- balance carried across a page break ---------------------------------------------
             if (preg_match('/^Balance\s?brought\s?forward\b\s*(.*)$/iu', $content, $bf)) {
                 $pending = '';
+                $pendingFx = false;
                 $withoutText = preg_replace('/^from\s+previous\s+page\s*/iu', '', trim($bf[1])) ?? $bf[1];
                 [, $nums] = $this->trailingMoney($withoutText, 1);
                 $attachBalance($nums[0] ?? null);
                 continue;
             }
 
-            if (preg_match('/^R[ao]te\b/iu', $content)) {
-                continue;
-            }
-
-            // Foreign currency header: "Cls 77 Myr 12.00" followed by Rate / Stg Amt lines – the sterling
-            // amount comes later, so this line is only description text (never the transaction amount).
-            $isFx = false;
-            if (preg_match('/^(?:[Qa-z]\s+)?(?:Cls|Card|Cash|Crd)\s*\d*[\s_]*([A-Za-z]{3})?[\s_]*[\d,]+\.\d+/iu', $content, $fx)) {
+            // --- FX DETECTION & EXTRACTION ---
+            $fxMatch = false;
+            if (preg_match('/^(?:[A-Za-z]{1,3}\s+)?(?:Cls|Card|Cash|Crd)\s*\d*[\s_]*(?<![A-Za-z])([A-Za-z]{3})(?![A-Za-z])/iu', $content, $fx)) {
                 $code = strtoupper($fx[1] ?? '');
                 if ($code !== '' && isset(self::CURRENCIES[$code])) {
-                    $isFx = true;
+                    $fxMatch = true;
                 } else {
-                    for ($k = 1; $k <= 3; $k++) {
-                        if (isset($lines[$i + $k]) && $lines[$i + $k][0] === $pageNo
-                            && preg_match('/^(?:R[ao]te\b|S[tl][gq9]\s?Am[tfl1]\b)/iu', $lines[$i + $k][1])) {
-                            $isFx = true;
+                    for ($k = 1; $k <= 4; $k++) {
+                        if (!isset($lines[$i + $k]) || $lines[$i + $k][0] !== $pageNo) break;
+                        if (preg_match('/^[0-9OolI]{1,2}\s?(?:' . self::MON . ')\b/u', $lines[$i + $k][1])) break;
+                        if (preg_match('/^(?:R[ao]te\b|S[tl][gq9]\s?Am[tfl1]\b)/iu', $lines[$i + $k][1])) {
+                            $fxMatch = true;
                             break;
                         }
                     }
                 }
             }
-            if ($isFx) {
-                $cleanFx = trim(preg_replace(self::PANEL_TAIL, '', $content) ?? $content);
-                $pending = trim($pending . ' ' . $cleanFx);
+
+            if ($fxMatch) {
+                // Remove Rate tokens if merged on this line
+                $testClean = preg_replace('/(?:Rate|Rat\s?are|Reie)\s*[0-9OolI]\.[0-9OolIa-z]+/iu', '', $content);
+                preg_match_all('/\b(\d{1,3}(?:,\d{3})*\.\d{2}|\d+\.\d{2})\b/', $testClean, $nm);
+                $foundNums = [];
+                foreach ($nm[1] ?? [] as $rawN) {
+                    $fn = (float) str_replace(',', '', $rawN);
+                    if ($isSidebarTotal($fn)) continue;
+                    $foundNums[] = $fn;
+                }
+
+                // Description: "Cls 77 Myr" or "Cls 77 Myr 149.00"
+                if (preg_match('/^((?:[A-Za-z]{1,3}\s+)?(?:Cls|Card|Cash|Crd)\s*\d*[\s_]*[A-Za-z]{3}(?:[\s_]*\d+\.\d{2})?)/iu', $content, $dm)) {
+                    $baseDesc = trim($dm[1]);
+                } else {
+                    $baseDesc = preg_replace('/[\s_]*[\d,]+\.\d+\s*$/u', '', $content) ?? $content;
+                }
+
+                // If line contains both foreign amount AND sterling amount (>= 2 numbers):
+                if (count($foundNums) >= 2) {
+                    $stgAmt = (float) $foundNums[1];
+                    $bal = count($foundNums) >= 3 ? (float) $foundNums[2] : null;
+                    if ($bal !== null && $isSidebarTotal($bal)) {
+                        $bal = null;
+                    }
+                    if ($lastDate !== null) {
+                        $raw[] = [
+                            'page' => $pageNo,
+                            'date' => $lastDate,
+                            'desc' => $baseDesc,
+                            'abs' => $stgAmt,
+                            'balance' => $bal,
+                            'hint' => -1,
+                            'key' => $this->key($baseDesc),
+                        ];
+                        $pending = '';
+                        $pendingFx = false;
+                        continue;
+                    }
+                }
+
+                // Normal FX: store description and wait for Rate / Stg Amt
+                $pending = $baseDesc;
+                $pendingFx = true;
                 continue;
             }
 
+            // If pending FX is open and this line contains Rate + Amount:
+            if ($pendingFx && preg_match('/(?:Rate|Rat\s?are|Reie)\b/iu', $content)) {
+                $cleanedRate = preg_replace('/(?:Rate|Rat\s?are|Reie)\s*[0-9OolI]\.[0-9OolIa-z]+/iu', '', $content);
+                preg_match_all('/\b(\d{1,3}(?:,\d{3})*\.\d{2}|\d+\.\d{2})\b/', $cleanedRate, $rnm);
+                $rateNums = [];
+                foreach ($rnm[1] ?? [] as $rawN) {
+                    $rn = (float) str_replace(',', '', $rawN);
+                    if ($isSidebarTotal($rn)) continue;
+                    $rateNums[] = $rn;
+                }
+                if ($rateNums && $lastDate !== null) {
+                    $stgAmt = (float) $rateNums[0];
+                    $bal = count($rateNums) >= 2 ? (float) $rateNums[1] : null;
+                    if ($bal !== null && $isSidebarTotal($bal)) {
+                        $bal = null;
+                    }
+                    $raw[] = [
+                        'page' => $pageNo,
+                        'date' => $lastDate,
+                        'desc' => $pending,
+                        'abs' => $stgAmt,
+                        'balance' => $bal,
+                        'hint' => -1,
+                        'key' => $this->key($pending),
+                    ];
+                    $pending = '';
+                    $pendingFx = false;
+                    continue;
+                }
+                // Pure Rate line: drop it
+                continue;
+            }
+
+            // Drop any Rate line
+            if (preg_match('/^R[ao]te\b/iu', $content) || preg_match('/\bR[ao]te\s+[\d.O0oIlL,]+/iu', $content)) {
+                continue;
+            }
+
+            // When pending FX is active, skip standalone foreign amount like "12.00"
+            if ($pendingFx && preg_match('/^[\$£E]?[\d,]+\.\d+$/', $content)) {
+                continue;
+            }
+
+            echo "BEFORE_STG: content='$content'\n";
             $stg = null;
-            if (preg_match('/^S[tl][gq9]\s?Am[tfl1]\s+(\d{1,3}(?:,\d{3})*\.\d{2}|\d+\.\d{2})\s*(.*)$/iu', $content, $s)) {
+            if (preg_match('/^S[tl][gq9]\s?Am[tfl1]\s*(?:g\s*)?(\d{1,3}(?:,\d{3})*\.\d{2}|\d+\.\d{2})\s*(.*)$/iu', $content, $s)) {
                 $stg = $this->toFloat($s[1]);
                 $content = trim($s[2]);
             }
-
-            // Remove any trailing sidebar noise from content before extracting money
-            $content = trim(preg_replace(self::PANEL_TAIL, '', $content) ?? $content);
 
             [$descPart, $nums] = $this->trailingMoney($content, 2);
             if (!$nums && $stg !== null) {
                 $nums = [$stg];
             }
 
-            // If trailingMoney picked up a leaked sidebar summary total (like 3736.20 or 10688.17 or 6952.82 or 0.85)
-            // as a balance, discard the leaked balance so it does not desync the ledger.
+            // If trailingMoney picked up a leaked sidebar summary total as a balance, discard it
             if (count($nums) === 2 && in_array($nums[1], array_filter([$totalOut, $totalIn, $opening, $closing]), true)) {
                 array_pop($nums);
             }
 
             if (!$nums) {
-                $pending = trim($pending . ' ' . $content);
-                if (mb_strlen($pending) > 300) {
-                    $pending = '';
+                if (!$pendingFx) {
+                    $pending = trim($pending . ' ' . $content);
+                    if (mb_strlen($pending) > 300) {
+                        $pending = '';
+                    }
                 }
                 continue;
             }
 
             $desc = trim($pending . ' ' . $descPart);
+            echo "DEBUG_ROW: desc='$desc', nums=" . json_encode($nums) . "\n";
             $pending = '';
+            $pendingFx = false;
 
             if ($lastDate === null) {
                 $unparsed++;
@@ -317,6 +440,7 @@ class VirginMoneyParser extends AbstractStatementParser
             ];
         }
 
+        file_put_contents('C:/Users/sakib/.gemini/antigravity/brain/2b89cca8-cfe5-4660-97d0-d24508b5750d/scratch/debug_raw.json', json_encode($raw, JSON_PRETTY_PRINT));
         $rows = $raw;
         $opening = $openingFromStatement ?? $opening;
         if ($closing === null && $rows) {

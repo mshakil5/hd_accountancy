@@ -303,4 +303,159 @@ class BankParsersTest extends TestCase
         $this->assertEqualsWithDelta(-163.62, $amounts[1], 0.01, 'DD amount');
         $this->assertSame(0, $parsed['unparsed']);
     }
+
+    /**
+     * Real-world Virgin Money Club Account Statement No: 299 scenario with:
+     * - Interleaved 2-column OCR merging sidebar FSCS notices into Rate and Stg lines
+     * - Currency tokens glued to card numbers without spaces (Cls 77Myr) or with trailing artifacts (77Myr_)
+     * - Prefix OCR noise (nt Cls, Q Cls, a Cls)
+     * - Rate line carrying the Sterling Amount and/or running balance
+     * - Domestic card payment (Card 77 Expedia) that must NOT be misclassified as FX
+     * - 0 unparsed rows, exact balance reconciliation across all pages.
+     */
+    public function test_virgin_statement_299_with_merged_ocr_lines_and_sidebar_noise(): void
+    {
+        $pages = [
+            1 => implode("\n", [
+                'Virgin Money',
+                'Statement date 30 January 2026',
+                'Date Description Debits Credits Balance',
+                '31 Dec 2025 Previous statement 10688.17',
+                '02 Jan Cls 77Myr 12.00',
+                'Rate 0.18416',
+                'Stg Amt 2.21 2.21',
+                'Cls 77Myr_ 12.00',
+                'Deposits ae nea in this account are eligible . Rate 0.18416 for cover under the Financial 2.21 Services Compensation Scheme',
+                'Cls 77 Myr 17.20 (FSCS) 10,688.17',
+                'Rate 0.18372',
+                'Stg Amt 3.16 3.16',
+                'Cls 77 Myr 127.20 Debits Rate 0.18380 £3,736.20',
+                'Stg Amt 23.38 23.38 10657.21 Credits £0.85',
+                '05 Jan Cls 77 Myr 12.00 Rat are 0.18416 $6952.82 3',
+                'Stg Amt 2.21 2.21',
+                'a Cls 77Myr 58.80 SO=StandingOrder a = ba §',
+                'Rate 0.18452',
+                'Stg Amt 10.85 10.85',
+                'Q Cls 77 Myr 92.00 Cls = Contactless Debit Card Transaction',
+                'Rate 0.18380',
+                'Stg Amt 16.91 16.91 10627.24',
+            ]),
+            2 => implode("\n", [
+                'Virgin Money',
+                'Statement date 30 January 2026',
+                'Balance brought forward from previous page 10627.24',
+                '05 Jan Cls 77 Myr 132.60 MR T J BROOK',
+                'Rate 0.18386',
+                'Stg Amt 24.38 24.38',
+                'Cls 77 Myr 149.00 05-04-24 S4085729 27.39 10575.47',
+                'DD Ee Limited 163.62 10411.85',
+                '07 Jan Cls 77 Myr 12.00',
+                'Rate 0.18416',
+                'Stg Amt 2.21 2.21',
+                'Cls 77 Myr 111.30 eligible for cover under the Rate 0.18382 Financial Services Compensation 20.46 10389.18 Scheme (FSCS)',
+                '08 Jan Cls 77 Myr 20.00',
+                'Rate 0.18450',
+                'Stg Amt 3.69 3.69',
+                'Cls 77 Myr 29.70 Rate 0.18451 £3736.20',
+                'Stg Amt 5.48 5.48 £0.85',
+                'Cls 77 Myr 95.40',
+                'Rate 0.18438',
+                'Stg Amt 17.59 17.59 10362.42',
+                '09 Jan Cls 77 Myr 12.00',
+                'Rate 0.18333',
+                'Stg Amt 2.20 2.20',
+                'Cls 77 Myr 53.70',
+                'Rate 0.18361',
+                'Stg Amt 9.86 9.86',
+                'DD Postcode Lottery 12.25 10338.11',
+                '12 Jan Cls 77 Myr 12.00',
+                'Rate 0.18333',
+                'Stg Amt 2.20 2.20',
+                'Cls 77 Myr 12.00',
+                'Rate 0.18416',
+                'Stg Amt 2.21 2.21',
+                'Cls 77 Myr 13.00',
+                'Rate 0.18384',
+                'Stg Amt 2.39 2.39',
+                'Cls 77 Myr 15.00',
+                'Rate 0.18400',
+                'Stg Amt 2.76 2.76',
+                'Cls 77 Myr 15.40',
+                'Rate 0.18376',
+                'Stg Amt 2.83 2.83',
+                'Cls 77 Myr 15.90',
+                'Rate 0.18427',
+                'Stg Amt 2.93 2.93',
+            ]),
+            3 => implode("\n", [
+                'Virgin Money',
+                'Statement date 30 January 2026',
+                'Balance brought forward from previous page 10322.79',
+                '12 Jan nt Cls 77 Myr 26.50 MR T J BROOK',
+                'Rate 0.18415',
+                'Stg Amt 4.88 4.88',
+                'Cls 77 Myr 40.00 05-04-24 sAoas728',
+                'Rate 0.18425',
+                'Stg Amt 7.37 7.37',
+                'Cls 77 Myr 53.10 StgAmt g 9.75 :',
+                'Cls 77 Myr 84.25 Deposits - in this ais account are Rate 0.18421 eligible for cover under the 15.52 Financial Services Compensation',
+                'Cls 77 Myr 138.00 Scheme (FSCS) Reie G1b420 25.42 10259.85 $10688.17',
+                '13 Jan Cls 77 Myr 12.00',
+                'Rate 0.18416',
+                'Stg Amt 2.21 2.21',
+                'Cls 77 Myr 15.40',
+                'Rate 0.18441',
+                'Stg Amt 2.84 2.84',
+                'Cls 77Myr 26.40 -Direat Debit DD Rate 0.18409 SO -Standing Order',
+                'Stg Amt 4.86 4.86',
+                'Cls 77 Myr 91.00 waa beeneronelag ne Rate 0.18417 Cls = Contactless Debit Card Transaction',
+                'Stg Amt 16.76 16.76',
+                'Card 77 Expedia 73347 London 286.05 9947.13',
+                '14 Jan Cls 77 Myr 12.00 ace eyment',
+                'Rate 0.18416',
+                'Stg Amt 2.21 2.21',
+                'Cls 77 Myr 63.00 Rate 0.18396',
+                'Stg Amt 11.59 11.59',
+                'Cls 77Myr 95.40',
+                'Rate 0.18417',
+                'Stg Amt 17.57 17.57',
+                'Mb Gillian Vickerm 500.00 9415.76',
+                '15 Jan Cls 77 Myr 12.00',
+                'Rate 0.18416',
+                'Stg Amt 2.21 2.21',
+                'Cls 77 Myr 57.00',
+                'Rate 0.18385',
+                'Stg Amt 10.48 10.48',
+                'Cls 77 Myr 63.60',
+                'Rate 0.18396',
+                'Stg Amt 11.70 11.70',
+                'Mb Gillian Vickerm 5.00 9386.37',
+            ]),
+        ];
+
+        $parsed = (new VirginMoneyParser())->parseDocument($pages, true);
+        $rows   = $this->rows($parsed);
+
+        // Exactly 42 transactions across the 3 pages
+        $this->assertCount(42, $rows);
+
+        // Zero unparsed rows
+        $this->assertSame(0, $parsed['unparsed']);
+
+        // Correct opening and closing balances
+        $this->assertEqualsWithDelta(10688.17, $parsed['opening'], 0.01);
+        $this->assertEqualsWithDelta(9386.37, $parsed['closing'], 0.01);
+
+        // Verify that Expedia domestic transaction is preserved as 286.05
+        $expedia = array_values(array_filter($rows, fn ($r) => str_contains($r['description'], 'Expedia')));
+        $this->assertCount(1, $expedia);
+        $this->assertEqualsWithDelta(-286.05, (float) $expedia[0]['amount'], 0.01);
+        $this->assertEqualsWithDelta(9947.13, (float) $expedia[0]['balance_after'], 0.01);
+
+        // Verify that leaked sidebar amounts never appear as transaction amounts
+        $amounts = array_map('floatval', array_column($rows, 'amount'));
+        foreach ($amounts as $amt) {
+            $this->assertGreaterThan(-1000.0, $amt, "Amount $amt looks like a leaked sidebar balance or fake debit");
+        }
+    }
 }
