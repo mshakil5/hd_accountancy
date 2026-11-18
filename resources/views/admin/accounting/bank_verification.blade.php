@@ -79,14 +79,14 @@
         <div class="d-flex align-items-center gap-2">
             <form method="POST" action="{{ route('admin.bank-statements.refresh', $import->id) }}" onsubmit="const b=this.querySelector('button'); b.disabled=true; b.innerHTML='<span class=\'spinner-border spinner-border-sm mr-1\'></span> Checking...'; return true;">
                 @csrf
-                <button type="submit" class="btn btn-outline-secondary btn-sm" title="Re-read this PDF and recalculate the checks (no forced OCR)">
-                    <i class="bi bi-arrow-repeat mr-1"></i> Refresh checks
+                <button type="submit" class="btn btn-outline-secondary btn-sm" title="Re-read the PDF and recalculate the checks and balances. Does NOT delete or re-insert rows (safe to run anytime).">
+                    <i class="bi bi-arrow-repeat mr-1"></i> Recalculate checks
                 </button>
             </form>
-            <form method="POST" action="{{ route('admin.bank-statements.rescan-ocr', $import->id) }}" onsubmit="if(!confirm('Re-run deep OCR scan on this entire PDF statement? This will scan all pages with OCR, re-extract transactions, and recalculate system balances.')){ return false; } const b=this.querySelector('button'); b.disabled=true; b.innerHTML='<span class=\'spinner-border spinner-border-sm mr-1\'></span> Scanning with OCR...'; return true;">
+            <form method="POST" action="{{ route('admin.bank-statements.rescan-ocr', $import->id) }}" onsubmit="if(!confirm('Re-extract this statement with OCR? All non-approved rows will be replaced with the OCR result and system balances recalculated. Manual corrections to unapproved rows will be lost.')){ return false; } const b=this.querySelector('button'); b.disabled=true; b.innerHTML='<span class=\'spinner-border spinner-border-sm mr-1\'></span> Extracting with OCR...'; return true;">
                 @csrf
-                <button type="submit" class="btn btn-outline-primary btn-sm" title="Force high-resolution OCR scan of all PDF pages">
-                    <i class="bi bi-cpu mr-1"></i> Re-Scan with OCR
+                <button type="submit" class="btn btn-outline-primary btn-sm" title="Re-read the PDF and re-extract rows with OCR, replace extracted rows, and recalculate balances.">
+                    <i class="bi bi-cpu mr-1"></i> Re-extract with OCR
                 </button>
             </form>
             <div class="text-end">
@@ -134,10 +134,6 @@
                 @endif
             </div>
             <div class="d-flex gap-2 flex-wrap">
-                <form method="POST" action="{{ route('admin.bank-statements.rescan-ocr', $import->id) }}" onsubmit="if(!confirm('Re-run deep OCR scan on this entire PDF statement? This will scan all pages with OCR, re-extract transactions, and recalculate system balances.')){ return false; } const b=this.querySelector('button'); b.disabled=true; b.innerHTML='<span class=\'spinner-border spinner-border-sm mr-1\'></span> Scanning with OCR...'; return true;">
-                    @csrf
-                    <button type="submit" class="btn btn-outline-primary btn-sm" title="Force high-resolution OCR scan of all PDF pages"><i class="bi bi-cpu mr-1"></i> Re-Scan with OCR</button>
-                </form>
                 <form method="POST" action="{{ route('admin.bank-statements.verify-all-rows', $import->id) }}" onsubmit="return confirm('Verify all unverified rows for this statement? This marks them ready for reconciliation.')">
                     @csrf
                     <button type="submit" class="btn btn-outline-success btn-sm"><i class="bi bi-check-all mr-1"></i> Verify all rows</button>
