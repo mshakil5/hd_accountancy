@@ -79,6 +79,47 @@ class VirginMoneyParser extends AbstractStatementParser
         if (preg_match('/Debits\b[^\d£E$]*[£E$]?\s?(-?[\d,]+\.\d{2})/iu', $all, $m)) {
             $totalOut = $this->toFloat($m[1]);
         }
+
+        // OCR merges the right-hand panel into the table line by line, so a label and its value
+        // often are not adjacent ("Credits" / "Stg Amt 23.38 …" / "£0.00"). The panel values keep
+        // their currency sign while table amounts lose it, so bind each label to the nearest
+        // currency-signed amount within a few lines instead of the next plain number.
+        $rawLines = [];
+        foreach ($pages as $text) {
+            foreach (preg_split('/\R/u', (string) $text) ?: [] as $rawLine) {
+                $rawLines[] = (string) $rawLine;
+            }
+        }
+        $summary = ['opening' => null, 'closing' => null, 'debits' => null, 'credits' => null];
+        $waiting = [];
+        foreach ($rawLines as $i => $rawLine) {
+            $waiting = array_values(array_filter($waiting, fn (array $w): bool => $w[1] >= $i));
+            $labels = [
+                'opening' => '/Opening\s?balance\b/iu',
+                'closing' => '/Closing\s?balance\b/iu',
+            ];
+            // The table header also contains "Debits Credits"; it is not a panel label.
+            if (!preg_match('/Date\s+Description/iu', $rawLine)) {
+                $labels['debits'] = '/\bDebits\b(?!\s*=)/iu';
+                $labels['credits'] = '/\bCredits\b(?!\s*=)/iu';
+            }
+            foreach ($labels as $key => $re) {
+                if (preg_match($re, $rawLine)) {
+                    $waiting[] = [$key, $i + 3];
+                }
+            }
+            if ($waiting && preg_match('/(?<!\w)[£$]\s*([\d,]+\.\d{2})/u', $rawLine, $sm)) {
+                [$key] = array_pop($waiting);
+                if ($summary[$key] === null) {
+                    $summary[$key] = $this->toFloat($sm[1]);
+                }
+            }
+        }
+        $opening = $summary['opening'] ?? $opening;
+        $closing = $summary['closing'] ?? $closing;
+        $totalIn = $summary['credits'] ?? $totalIn;
+        $totalOut = $summary['debits'] ?? $totalOut;
+
         $pageStmt = $this->pageStatementDates($pages);
         $fallbackYear = (int) date('Y');
         $firstStmt = $pageStmt ? reset($pageStmt) : null;
@@ -98,9 +139,15 @@ class VirginMoneyParser extends AbstractStatementParser
             }
             return false;
         };
-        $cleanSidebar = function (string $text) use ($totalIn, $totalOut): string {
-            // Strip dollar-sign amounts (Tesseract OCR artifact for sidebar summary totals)
-            $text = preg_replace('/(?<!\w)\$[\d,]+\.\d{2}/u', ' ', $text);
+        $cleanSidebar = function (string $text) use ($totalIn, $totalOut, $fromOcr): string {
+            // Strip currency-signed amounts. Tesseract produces "$" artifacts, and in OCR output
+            // the table amounts lose their sign while the right-hand panel keeps "£", so a
+            // currency-signed amount on a table line can only be sidebar noise.
+            if ($fromOcr) {
+                $text = preg_replace('/(?<!\w)[£$]\s*[\d,]+\.\d{2}/u', ' ', $text);
+            } else {
+                $text = preg_replace('/(?<!\w)\$[\d,]+\.\d{2}/u', ' ', $text);
+            }
             // Strip amounts explicitly preceded by sidebar summary labels
             $text = preg_replace('/\b(?:Opening\s+balance|Closing\s+balance|Debits|Credits)\s*[£E]?\s*[\d,]+\.\d{2}/iu', ' ', $text);
             // Strip known sidebar summary monthly totals (Debits / Credits totals)
@@ -399,8 +446,10 @@ class VirginMoneyParser extends AbstractStatementParser
                 $nums = [$stg];
             }
 
-            // If trailingMoney picked up a leaked sidebar summary total as a balance, discard it
-            if (count($nums) === 2 && in_array($nums[1], array_filter([$totalOut, $totalIn, $opening, $closing]), true)) {
+            // If trailingMoney picked up a leaked sidebar monthly total as a balance, discard it.
+            // Opening/closing are valid running balances (the last row of a day/statement usually
+            // equals closing), so they must never be treated as noise here.
+            if (count($nums) === 2 && in_array($nums[1], array_filter([$totalOut, $totalIn]), true)) {
                 array_pop($nums);
             }
 
