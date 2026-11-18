@@ -76,6 +76,12 @@
 
     <section class="content py-4">
         <div class="container-fluid">
+            @if(session('success'))
+                <div class="alert alert-success">{{ session('success') }}</div>
+            @endif
+            @if(session('error'))
+                <div class="alert alert-danger">{{ session('error') }}</div>
+            @endif
             {{-- Client selector always visible --}}
             <div class="card modern-card mb-3">
                 <div class="card-body py-3">
@@ -403,6 +409,24 @@
                     table.ajax.reload();
                 });
             }
+
+            // Delete an unused receipt after confirmation. The button is only
+            // rendered for pending/to-review/cancelled receipts with no
+            // reconciliation or ledger links.
+            $(document).on('click', '.js-delete-receipt', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var $btn = $(this);
+                var message = 'Delete receipt ' + $btn.data('number') + ' permanently?\n\n'
+                    + 'Its details, uploaded files and the stored PDFs will be removed and the space freed. '
+                    + 'This cannot be undone.';
+                if (!window.confirm(message)) return;
+
+                $('<form>', { method: 'POST', action: $btn.data('url') })
+                    .append($('<input>', { type: 'hidden', name: '_token', value: $('meta[name="csrf-token"]').attr('content') }))
+                    .appendTo('body')
+                    .trigger('submit');
+            });
         });
     </script>
 @endsection

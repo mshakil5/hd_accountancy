@@ -14,6 +14,7 @@ use Carbon\Carbon;
 use DataTables;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage; 
 
@@ -83,9 +84,23 @@ class ReceiptController extends Controller
             })
             ->when(request('amount_min'), fn($q) => $q->whereHas('detail', fn($d) => $d->where('total_amount', '>=', request('amount_min'))))
             ->when(request('amount_max'), fn($q) => $q->whereHas('detail', fn($d) => $d->where('total_amount', '<=', request('amount_max'))))
-            ->latest();
+            ->withCount('transactions');
 
-        return DataTables::of($query)
+        // Link counts decide whether a receipt is still safe to delete. A
+        // receipt used by reconciliation must be unlinked there first.
+        foreach ([
+            'bank_entries' => 'bank_entry_links',
+            'bank_allocation_lines' => 'allocation_links',
+            'bank_settlements' => 'settlement_links',
+        ] as $table => $alias) {
+            if (Schema::hasTable($table)) {
+                $query->addSelect([$alias => DB::table($table)
+                    ->selectRaw('count(*)')
+                    ->whereColumn($table . '.receipt_id', 'receipts.id')]);
+            }
+        }
+
+        return DataTables::of($query->latest())
             ->addIndexColumn()
             ->addColumn('client_name', function ($r) {
                 $credential = $r->client?->credential;
@@ -123,12 +138,24 @@ class ReceiptController extends Controller
                     . ucfirst(str_replace('_', ' ', $r->status)) .
                     '</button>';
             })
-            ->addColumn('action', fn($r) => '
-                <div style="display: flex; gap: 5px; white-space: nowrap;">
-                    <a href="' . route('admin.receipt.show', $r->id) . '" class="btn btn-sm btn-primary">
-                        <i class="fa fa-eye"></i> View
-                    </a>
-                </div>')
+            ->addColumn('action', function ($r) {
+                $html = '<div style="display: flex; gap: 5px; white-space: nowrap;">'
+                    . '<a href="' . route('admin.receipt.show', $r->id) . '" class="btn btn-sm btn-primary">'
+                    . '<i class="fa fa-eye"></i> View'
+                    . '</a>';
+
+                // Only receipts that are not ready/archived and have no
+                // reconciliation or ledger links may be deleted.
+                if ($this->receiptIsDeletable($r)) {
+                    $html .= '<button type="button" class="btn btn-sm btn-danger js-delete-receipt"'
+                        . ' data-url="' . route('admin.receipt.destroy', $r->id) . '"'
+                        . ' data-number="' . e($r->receipt_number ?: ('#' . $r->id)) . '">'
+                        . '<i class="fa fa-trash"></i> Delete'
+                        . '</button>';
+                }
+
+                return $html . '</div>';
+            })
             ->rawColumns(['status_badge', 'action'])
             ->make(true);
     }
@@ -623,6 +650,141 @@ class ReceiptController extends Controller
                 ->get(['id', 'bank_name', 'account_last_four']);
         }
         return response()->json($banks);
+    }
+
+    /**
+     * A receipt can be deleted only while it is still work in progress
+     * (pending / to review / cancelled) and nothing in the books points at it.
+     */
+    private function receiptIsDeletable($receipt): bool
+    {
+        if (!empty($receipt->from_reconciliation)) {
+            return false;
+        }
+
+        if (in_array((string) ($receipt->status ?? 'pending'), ['ready', 'archived'], true)) {
+            return false;
+        }
+
+        foreach (['transactions_count', 'bank_entry_links', 'allocation_links', 'settlement_links'] as $key) {
+            if ((int) ($receipt->{$key} ?? 0) > 0) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Permanently delete an unused receipt: its rows, its files on S3/local
+     * storage and the folder that holds them. Ready/archived receipts and
+     * receipts tied to a reconciliation or ledger posting are refused.
+     */
+    public function destroy($id)
+    {
+        $receipt = Receipt::with('files')->findOrFail($id);
+
+        if (!empty($receipt->from_reconciliation)) {
+            return back()->with('error', 'This receipt was created by bank reconciliation and cannot be deleted here.');
+        }
+
+        if (in_array((string) $receipt->status, ['ready', 'archived'], true)) {
+            return back()->with('error', 'Ready or archived receipts cannot be deleted.');
+        }
+
+        if ($receipt->transactions()->exists()) {
+            return back()->with('error', 'This receipt already has ledger postings. Remove those first, then delete the receipt.');
+        }
+
+        $linkLabels = [
+            'bank_entries' => 'bank statement row',
+            'bank_allocation_lines' => 'bank split allocation',
+            'bank_settlements' => 'bank settlement',
+        ];
+        foreach ($linkLabels as $table => $label) {
+            if (Schema::hasTable($table) && DB::table($table)->where('receipt_id', $receipt->id)->exists()) {
+                return back()->with('error', 'This receipt is linked to a ' . $label . '. Remove that link in Bank Reconciliation before deleting it.');
+            }
+        }
+
+        $receiptId = $receipt->id;
+        $paths = $receipt->files->pluck('file_path')->filter()->all();
+
+        DB::transaction(function () use ($receiptId) {
+            DB::table('receipt_files')->where('receipt_id', $receiptId)->delete();
+            DB::table('receipt_details')->where('receipt_id', $receiptId)->delete();
+            DB::table('receipts')->where('id', $receiptId)->delete();
+        });
+
+        // Remove the stored PDFs (and the receipt's own folder) so the space is
+        // actually reclaimed. Failures are logged, never rolled back.
+        $targets = [];
+        foreach ($paths as $path) {
+            $targets[] = $path;
+            $dir = trim(dirname($path), '/\\');
+            if ($dir !== '' && $dir !== '.' && basename($dir) === (string) $receiptId) {
+                foreach (['s3', 'local'] as $disk) {
+                    try {
+                        foreach (Storage::disk($disk)->allFiles($dir) as $file) {
+                            $targets[] = $file;
+                        }
+                    } catch (\Throwable $e) {
+                        report($e);
+                    }
+                }
+            }
+        }
+
+        foreach (array_unique($targets) as $path) {
+            foreach (['s3', 'local'] as $disk) {
+                try {
+                    if (!Storage::disk($disk)->exists($path)) {
+                        continue;
+                    }
+                    Storage::disk($disk)->delete($path);
+                    if (Storage::disk($disk)->exists($path)) {
+                        logger()->warning('Receipt file could not be deleted from storage.', [
+                            'disk' => $disk,
+                            'path' => $path,
+                            'receipt_id' => $receiptId,
+                        ]);
+                    }
+                } catch (\Throwable $e) {
+                    report($e);
+                }
+            }
+        }
+
+        // Legacy app uploads wrote the PDFs into public/images/receipts with a
+        // relative path, so remove those copies (and their receipt folder) too.
+        foreach (array_unique($paths) as $path) {
+            try {
+                $absolute = public_path($path);
+                if (is_file($absolute)) {
+                    @unlink($absolute);
+                    if (is_file($absolute)) {
+                        logger()->warning('Receipt file could not be deleted from public storage.', [
+                            'path' => $absolute,
+                            'receipt_id' => $receiptId,
+                        ]);
+                    }
+                }
+
+                $dir = dirname($absolute);
+                if (is_dir($dir) && basename($dir) === (string) $receiptId) {
+                    foreach (glob($dir . '/*') ?: [] as $file) {
+                        if (is_file($file)) {
+                            @unlink($file);
+                        }
+                    }
+                    @rmdir($dir);
+                }
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+
+        return back()->with('success', 'Receipt deleted and its stored files removed.');
     }
 
     private function getReceiptDirectory($client, $receiptId)

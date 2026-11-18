@@ -704,13 +704,43 @@ class BankStatementPageController extends Controller
             DB::table('bank_imports')->where('id', $import->id)->delete();
         });
 
-        // File cleanup is best effort: an orphaned PDF is harmless, a failed
-        // delete should not roll back the database work.
+        // The PDF lives on S3 (falling back to the local disk) inside a folder
+        // unique to this statement, so remove every object in that folder —
+        // including leftovers from a re-upload/OCR run — to actually free the
+        // space instead of leaving orphaned files behind.
+        $targets = [];
         if ($storagePath) {
+            $targets[] = $storagePath;
+            $dir = trim(dirname($storagePath), '/\\');
+            if ($dir !== '' && $dir !== '.' && basename($dir) === (string) $import->id) {
+                foreach (['s3', 'local'] as $disk) {
+                    try {
+                        foreach (Storage::disk($disk)->allFiles($dir) as $file) {
+                            $targets[] = $file;
+                        }
+                    } catch (\Throwable $e) {
+                        report($e);
+                    }
+                }
+            }
+        }
+
+        // Best effort: an orphaned PDF is harmless, a failed delete must never
+        // roll back the database work. Failures are logged so the file can be
+        // cleaned up manually if the bucket refuses the delete.
+        foreach (array_unique($targets) as $path) {
             foreach (['s3', 'local'] as $disk) {
                 try {
-                    if (Storage::disk($disk)->exists($storagePath)) {
-                        Storage::disk($disk)->delete($storagePath);
+                    if (!Storage::disk($disk)->exists($path)) {
+                        continue;
+                    }
+                    Storage::disk($disk)->delete($path);
+                    if (Storage::disk($disk)->exists($path)) {
+                        logger()->warning('Bank statement file could not be deleted from storage.', [
+                            'disk' => $disk,
+                            'path' => $path,
+                            'bank_import_id' => $import->id,
+                        ]);
                     }
                 } catch (\Throwable $e) {
                     report($e);

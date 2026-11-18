@@ -815,6 +815,7 @@ Route::get('/bank-reconciliation/search-clients', [ReceiptController::class, 'se
     Route::post('/receipts/{id}/files', [ReceiptController::class, 'uploadFile']);
     Route::get('/receipts/{id}/files/{fileId}/delete', [ReceiptController::class, 'deleteFile']);
     Route::get('/receipts/{id}/cancel', [ReceiptController::class, 'cancel']);
+    Route::post('/receipts/{id}/delete', [ReceiptController::class, 'destroy'])->name('admin.receipt.destroy');
 
     // invoice extraction
     Route::get('/invoice-extract-data/{fileId}', [InvoiceExtractionController::class, 'extractData'])->name('admin.invoice.extractData');
