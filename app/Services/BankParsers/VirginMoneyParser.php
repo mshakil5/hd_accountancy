@@ -276,7 +276,7 @@ class VirginMoneyParser extends AbstractStatementParser
                 $orphanRow = null;
                 $orphanLines = 0;
                 if (($p[1] ?? '') !== '' && ($p[3] ?? '') !== '') {
-                    $py = (int) strtr(preg_replace('/\s+/', '', $p[3]), 'OolIZ', '00112');
+                    $py = (int) strtr(preg_replace('/\s+/', '', $p[3]), 'OolIQZ', '001102');
                     if ($py >= 2000 && $py <= 2100 && ($firstStmt === null || abs($py - $firstStmt['y']) <= 3)) {
                         $year = $py;
                         $lastMonth = self::MONTHS[strtolower($p[2])];
@@ -305,7 +305,7 @@ class VirginMoneyParser extends AbstractStatementParser
             }
             // Before the first table header only a date-looking line may open the table
             // (the header itself can be garbled by OCR or missing on continuation pages).
-            if (!$inTable && !preg_match('/^[0-9OolI]{1,2}\s?(?:' . self::MON . ')\b/u', $line)) {
+            if (!$inTable && !preg_match('/^[0-9OolIQ]{1,2}\s?(?:' . self::MON . ')\b/u', $line)) {
                 continue;
             }
             if (preg_match(self::STOP, $line)) {
@@ -320,8 +320,8 @@ class VirginMoneyParser extends AbstractStatementParser
 
             // ---- date at the start of the line ---------------------------------------------------
             $content = $line;
-            $dl = preg_replace_callback('/^([0-9OolI]{1,2})\s?(' . self::MON . ')\b/u',
-                fn ($x) => strtr($x[1], 'OolI', '0011') . ' ' . $x[2], $line) ?? $line;
+            $dl = preg_replace_callback('/^([0-9OolIQ]{1,2})\s?(' . self::MON . ')\b/u',
+                fn ($x) => strtr($x[1], 'OolIQ', '00110') . ' ' . $x[2], $line) ?? $line;
             if (preg_match('/^(\d{1,2})\s(' . self::MON . ')\b(?:\s+(\d{4}))?\s*(.*)$/iu', $dl, $m)) {
                 $day = (int) $m[1];
                 $mon = self::MONTHS[strtolower($m[2])];
@@ -367,7 +367,7 @@ class VirginMoneyParser extends AbstractStatementParser
                 } else {
                     for ($k = 1; $k <= 4; $k++) {
                         if (!isset($lines[$i + $k]) || $lines[$i + $k][0] !== $pageNo) break;
-                        if (preg_match('/^[0-9OolI]{1,2}\s?(?:' . self::MON . ')\b/u', $lines[$i + $k][1])) break;
+                        if (preg_match('/^[0-9OolIQ]{1,2}\s?(?:' . self::MON . ')\b/u', $lines[$i + $k][1])) break;
                         if (preg_match('/^(?:R[ao]te\b|S[tl][gq9]\s?Am[tfl1]\b)/iu', $lines[$i + $k][1])) {
                             $fxMatch = true;
                             break;
