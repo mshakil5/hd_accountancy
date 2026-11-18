@@ -360,7 +360,7 @@ class VirginMoneyParser extends AbstractStatementParser
 
             // --- FX DETECTION & EXTRACTION ---
             $fxMatch = false;
-            if (preg_match('/^(?:[A-Za-z]{1,3}\s+)?(?:Cls|Card|Cash|Crd)\s*\d*[\s_]*(?<![A-Za-z])([A-Za-z]{3})(?![A-Za-z])/iu', $content, $fx)) {
+            if (preg_match('/^(?:[A-Za-z]{1,3}\s+|[^\w\s]{1,4}\s+)?(?:Cls|Card|Cash|Crd)\s*\d*[\s_]*(?<![A-Za-z])([A-Za-z]{3})(?![A-Za-z])/iu', $content, $fx)) {
                 $code = strtoupper($fx[1] ?? '');
                 if ($code !== '' && isset(self::CURRENCIES[$code])) {
                     $fxMatch = true;
@@ -388,8 +388,8 @@ class VirginMoneyParser extends AbstractStatementParser
                 }
 
                 // Description: "Cls 77 Myr" or "Cls 77 Myr 149.00"
-                if (preg_match('/^((?:[A-Za-z]{1,3}\s+)?(?:Cls|Card|Cash|Crd)\s*\d*[\s_]*[A-Za-z]{3}(?:[\s_]*\d+\.\d{2})?)/iu', $content, $dm)) {
-                    $baseDesc = trim($dm[1]);
+                if (preg_match('/^((?:[A-Za-z]{1,3}\s+|[^\w\s]{1,4}\s+)?(?:Cls|Card|Cash|Crd)\s*\d*[\s_]*[A-Za-z]{3}(?:[\s_]*\d+\.\d{2})?)/iu', $content, $dm)) {
+                    $baseDesc = trim(preg_replace('/^[^\w£]+/u', '', trim($dm[1])) ?? $dm[1]);
                 } else {
                     $baseDesc = preg_replace('/[\s_]*[\d,]+\.\d+\s*$/u', '', $content) ?? $content;
                 }
@@ -467,28 +467,47 @@ class VirginMoneyParser extends AbstractStatementParser
             }
 
             $stg = null;
-            if (preg_match('/^S[tl][gq9]\s?Am[tfl1]\s*(?:g\s*)?(\d{1,3}(?:,\d{3})*\.\d{2}|\d+\.\d{2})\s*(.*)$/iu', $content, $s)) {
-                $stg = $this->toFloat($s[1]);
-                $content = trim($s[2]);
+            $stgDesc = '';
+            if (preg_match('/(?:^|\s)S[tl][gq9]\s?Am[tfl1]\s*(?:g\s*)?(\d{1,3}(?:,\d{3})*\.\d{2}|\d+\.\d{2})\s*(.*)$/iu', $content, $s, PREG_OFFSET_CAPTURE)) {
+                $stg = $this->toFloat($s[1][0]);
+                // OCR sometimes glues debris in front of the label ("3 Stg Amt 2.21 2.21").
+                // Keep a real description, drop a bare digit/punctuation prefix.
+                $before = trim(substr($content, 0, (int) $s[0][1]));
+                if ($before !== '' && preg_match('/[A-Za-z]{2,}/u', $before)) {
+                    $stgDesc = $before;
+                }
+                $content = trim($s[2][0]);
             }
 
-            [$descPart, $nums] = $this->trailingMoney($content, 2);
             $salvaged = false;
-            if (!$nums && $stg === null) {
-                // OCR often loses the comma/decimal point of the printed running balance
-                // ("14,625.51" -> "1462551") and glues the next row's day onto the line:
-                // "Mb Gillian Vickerm 453.00 1462551 04". The amount is still printed there,
-                // so recover it instead of treating the whole line as description text -
-                // otherwise the transaction only surfaces later, against the next row's
-                // amount ("12.25" where the statement says 453.00).
-                $salvage = $this->salvageAmounts($content);
-                if ($salvage !== null) {
-                    [$descPart, $nums] = $salvage;
-                    $salvaged = true;
+            if ($stg !== null) {
+                // "Stg Amt 23.38 | Debits 23.38 | Balance 10657.21" is OCR'd as
+                // "Stg Amt 23.38 23.38 1065721": the second amount repeats the debit
+                // column and the last value is the running balance with its decimal
+                // point lost. They must become amount + balance, not description text.
+                [$descPart, $fxBalance] = $this->fxTail($content, $stg);
+                if ($fxBalance !== null && !$this->plausibleBalance($fxBalance, $raw, $openingFromStatement ?? $opening)) {
+                    // A badly misread digit run ("2695282" for a ~10,254.82 balance) must
+                    // not become a fake PDF balance - that would only create a mismatch.
+                    $fxBalance = null;
                 }
-            }
-            if (!$nums && $stg !== null) {
-                $nums = [$stg];
+                $descPart = trim($stgDesc . ' ' . $descPart);
+                $nums = $fxBalance !== null ? [$stg, $fxBalance] : [$stg];
+            } else {
+                [$descPart, $nums] = $this->trailingMoney($content, 2);
+                if (!$nums) {
+                    // OCR often loses the comma/decimal point of the printed running balance
+                    // ("14,625.51" -> "1462551") and glues the next row's day onto the line:
+                    // "Mb Gillian Vickerm 453.00 1462551 04". The amount is still printed there,
+                    // so recover it instead of treating the whole line as description text -
+                    // otherwise the transaction only surfaces later, against the next row's
+                    // amount ("12.25" where the statement says 453.00).
+                    $salvage = $this->salvageAmounts($content);
+                    if ($salvage !== null) {
+                        [$descPart, $nums] = $salvage;
+                        $salvaged = true;
+                    }
+                }
             }
 
             // If trailingMoney picked up a leaked sidebar monthly total as a balance, discard it.
@@ -627,6 +646,82 @@ class VirginMoneyParser extends AbstractStatementParser
         $body = preg_replace('/^(Cls|Card|Cash|Crd)\s?\d*\s+/i', '', $desc) ?? $desc;
         $body = preg_replace('/[^A-Za-z ].*$/u', '', $body) ?? $body;
         return 'vm|' . mb_strtolower(trim($body));
+    }
+
+    /**
+     * Read the column values printed on a "Stg Amt" line:
+     *
+     *   Stg Amt 23.38 | Debits 23.38 | Balance 10657.21
+     *
+     * OCR flattens that into "Stg Amt 23.38 23.38 1065721". The sterling amount has
+     * already been taken as the transaction amount, so what follows is the duplicate
+     * Debits column and then the running balance - usually with its decimal point lost.
+     *
+     * @return array{0:string,1:?float} remaining description, printed balance
+     */
+    private function fxTail(string $content, float $stg): array
+    {
+        $tokens = preg_split('/\s+/u', trim($content), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $money = [];
+        $balance = null;
+        $firstNumeric = null;
+
+        foreach ($tokens as $i => $token) {
+            if (preg_match('/^-?£?(?:\d{1,3}(?:,\d{3})+|\d+)\.\d{2}$/u', (string) $token)) {
+                if ($firstNumeric === null) {
+                    $firstNumeric = $i;
+                }
+                $money[] = $this->toFloat((string) $token);
+            } elseif (preg_match('/^\d{4,9}$/u', (string) $token)) {
+                // Balance with the decimal point lost: "1065721" -> 10657.21.
+                if ($firstNumeric === null) {
+                    $firstNumeric = $i;
+                }
+                $balance = round(((int) $token) / 100, 2);
+            }
+        }
+
+        // Text after the first column value is OCR spill from the sidebar/glossary.
+        $desc = $firstNumeric === null
+            ? trim(implode(' ', $tokens))
+            : trim(implode(' ', array_slice($tokens, 0, $firstNumeric)));
+
+        if ($balance === null) {
+            if (count($money) >= 2) {
+                $balance = (float) end($money);
+            } elseif (count($money) === 1 && abs($money[0] - $stg) >= 0.005) {
+                $balance = $money[0];
+            }
+        }
+
+        return [$desc, $balance];
+    }
+
+    /**
+     * A recovered balance must be reachable from the last printed balance plus the
+     * rows parsed since then. OCR sometimes turns "1025482" into "2695282"; without
+     * this guard that misread becomes a PDF balance and a fake mismatch.
+     *
+     * @param array<int,array<string,mixed>> $raw
+     */
+    private function plausibleBalance(float $candidate, array $raw, ?float $opening): bool
+    {
+        $anchor = $opening;
+        $since = 0.0;
+        for ($k = count($raw) - 1; $k >= 0; $k--) {
+            if ($raw[$k]['balance'] !== null) {
+                $anchor = (float) $raw[$k]['balance'];
+                break;
+            }
+            $since += abs((float) $raw[$k]['abs']);
+        }
+        if ($anchor === null) {
+            return true;
+        }
+
+        // Allow for rows OCR dropped entirely as well as normal rounding.
+        $margin = max(250.0, abs($anchor) * 0.1);
+        return abs($candidate - $anchor) <= $since + $margin;
     }
 
     /**

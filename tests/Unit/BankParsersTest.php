@@ -513,4 +513,64 @@ class BankParsersTest extends TestCase
         $this->assertEqualsWithDelta(15078.51, (float) $parsed['opening'], 0.01);
         $this->assertEqualsWithDelta(14413.26, (float) $parsed['closing'], 0.01);
     }
+
+    /**
+     * FX rows print "Stg Amt 23.38" in the description column, repeat 23.38 in the
+     * Debits column, and put the day's running balance in the last column. OCR merges
+     * that into "Stg Amt 23.38 23.38 1065721" (balance loses its decimal point) and
+     * adds debris before the label on the next row ("3 Stg Amt 2.21 2.21").
+     */
+    public function test_virgin_fx_rows_keep_their_printed_balance(): void
+    {
+        $parsed = (new VirginMoneyParser())->parseDocument([1 => implode("\n", [
+            'Virgin Money',
+            'Statement date 30 January 2026',
+            'Date Description Debits Credits Balance',
+            '31 Dec 2025 Previousstatement 10688.17',
+            '02 Jan Cls 77 Myr 12.00',
+            'Rate 0.18416',
+            'StgAmt 2.21 2.21',
+            'Cls 77 Myr 12.00',
+            'Rate 0.18416',
+            'StgAmt 2.21 2.21',
+            'Cls 77 Myr 17.20',
+            'Rate 0.18372',
+            'StgAmt 3.16 3.16',
+            'Cls 77 Myr 127.20',
+            'Rate 0.18380',
+            'StgAmt 23.38 23.38 1065721',
+            '05 Jan Cls 77 Myr 12.00',
+            'Rate 0.18416',
+            '3 StgAmt 2.21 2.21',
+            'a Cls 77Myr 58.80',
+            'Rate 0.18452',
+            '.! StgAmt 10.85 10.85',
+            '@ Cls 77 Myr 92.00',
+            'Rate 0.18380',
+            'Stg Amt 16.91 16.91',
+            'Closing balance 10627.24',
+        ])], true);
+
+        $rows = $this->rows($parsed);
+        $this->assertSame(0, $parsed['unparsed']);
+        $this->assertCount(7, $rows);
+        $this->assertSame(
+            ['2026-01-02', '2026-01-02', '2026-01-02', '2026-01-02', '2026-01-05', '2026-01-05', '2026-01-05'],
+            array_column($rows, 'transaction_date')
+        );
+        $this->assertEqualsWithDelta(-23.38, (float) $rows[3]['amount'], 0.01);
+        // 1065721 is the printed balance 10,657.21 with the decimal point lost.
+        $this->assertEqualsWithDelta(10657.21, (float) $rows[3]['balance_after'], 0.01);
+        $this->assertStringNotContainsString('1065721', $rows[3]['description']);
+        // The next row's duplicated 2.21 is the Debits column, not a PDF balance.
+        $this->assertEqualsWithDelta(-2.21, (float) $rows[4]['amount'], 0.01);
+        $this->assertNull($rows[4]['balance_after']);
+        // OCR debris before the label must not turn the foreign amount (58.80 / 92.00)
+        // into the transaction amount - the sterling values are 10.85 and 16.91.
+        $this->assertEqualsWithDelta(-10.85, (float) $rows[5]['amount'], 0.01);
+        $this->assertEqualsWithDelta(-16.91, (float) $rows[6]['amount'], 0.01);
+        $this->assertNull($rows[6]['balance_after']);
+        $this->assertEqualsWithDelta(10627.24, (float) $parsed['closing'], 0.01);
+        $this->assertStringNotContainsString('Stg', implode(' ', array_column($rows, 'description')));
+    }
 }
