@@ -100,13 +100,30 @@ class BankStatementPageController extends Controller
 
         $imports = $query->orderByDesc('id')->paginate(20)->withQueryString();
 
+        // Row counts per statement, used by the delete confirmation so the
+        // accountant knows exactly what else disappears with the statement.
+        $importIds = collect($imports->items())->pluck('id')->all();
+        $hasReconciliation = Schema::hasColumn('bank_entries', 'journal_posted_at');
+        $lockedSql = $hasReconciliation
+            ? 'sum(case when journal_posted_at is not null or reconciliation_status = ? then 1 else 0 end)'
+            : '0';
+        $entryStats = $importIds
+            ? DB::table('bank_entries')
+                ->whereIn('bank_import_id', $importIds)
+                ->selectRaw('bank_import_id, count(*) as rows_total, ' . $lockedSql . ' as rows_locked', $hasReconciliation ? ['approved'] : [])
+                ->groupBy('bank_import_id')
+                ->get()
+                ->keyBy('bank_import_id')
+            : collect();
+
         return view('admin.accounting.bank_statements', compact(
             'credentialId',
             'businessId',
             'bankAccountId',
             'bankAccounts',
             'imports',
-            'importStats'
+            'importStats',
+            'entryStats'
         ));
     }
 
@@ -610,6 +627,98 @@ class BankStatementPageController extends Controller
         });
 
         return back()->with('success', 'Row removed from statement.');
+    }
+
+    /**
+     * Permanently delete an uploaded statement together with everything that
+     * was extracted from it (rows, OCR pages, exceptions, revisions, matches,
+     * splits, settlements) and its stored PDF.
+     *
+     * Statements that already carry approved or ledger-posted rows are refused:
+     * deleting those would silently remove accounting entries, so the
+     * reconciliation has to be reopened/reversed first.
+     */
+    public function destroyImport(int $importId)
+    {
+        $import = BankImport::findOrFail($importId);
+        $entryIds = DB::table('bank_entries')->where('bank_import_id', $importId)->pluck('id')->all();
+
+        if ($entryIds) {
+            $locked = 0;
+            if (Schema::hasColumn('bank_entries', 'journal_posted_at')) {
+                $locked = DB::table('bank_entries')->whereIn('id', $entryIds)
+                    ->where(function ($inner) {
+                        $inner->whereNotNull('journal_posted_at')
+                            ->orWhere('reconciliation_status', 'approved');
+                    })
+                    ->count();
+
+                // A posted internal transfer on the other statement points here too;
+                // removing this side would leave that journal without its pair.
+                $locked += DB::table('bank_entries')->whereIn('linked_bank_entry_id', $entryIds)
+                    ->where(function ($q) {
+                        $q->whereNotNull('journal_posted_at')->orWhere('reconciliation_status', 'approved');
+                    })
+                    ->count();
+            }
+
+            if ($locked > 0) {
+                return back()->with('error', 'This statement contains approved or ledger-posted transactions, so it cannot be deleted. Reopen or reverse those rows in Bank Reconciliation first.');
+            }
+
+            if (Schema::hasTable('transactions') && DB::table('transactions')->whereIn('bank_entry_id', $entryIds)->exists()) {
+                return back()->with('error', 'This statement still has ledger postings linked to its rows. Reverse them in Bank Reconciliation before deleting the statement.');
+            }
+        }
+
+        $storagePath = $import->storage_path;
+
+        DB::transaction(function () use ($import, $entryIds) {
+            if ($entryIds) {
+                // Detach internal-transfer counterparts that live in other statements.
+                DB::table('bank_entries')->whereIn('linked_bank_entry_id', $entryIds)
+                    ->update(['linked_bank_entry_id' => null, 'updated_at' => now()]);
+
+                // Children before parents (same order as AccountingDataCleaner).
+                foreach ([
+                    'bank_match_audits',
+                    'bank_review_notes',
+                    'bank_allocation_lines',
+                    'bank_receipt_requests',
+                    'bank_settlements',
+                    'bank_entry_revisions',
+                ] as $table) {
+                    if (Schema::hasTable($table)) {
+                        DB::table($table)->whereIn('bank_entry_id', $entryIds)->delete();
+                    }
+                }
+            }
+
+            foreach (['bank_statement_exceptions', 'bank_statement_pages'] as $table) {
+                if (Schema::hasTable($table)) {
+                    DB::table($table)->where('bank_import_id', $import->id)->delete();
+                }
+            }
+
+            DB::table('bank_entries')->where('bank_import_id', $import->id)->delete();
+            DB::table('bank_imports')->where('id', $import->id)->delete();
+        });
+
+        // File cleanup is best effort: an orphaned PDF is harmless, a failed
+        // delete should not roll back the database work.
+        if ($storagePath) {
+            foreach (['s3', 'local'] as $disk) {
+                try {
+                    if (Storage::disk($disk)->exists($storagePath)) {
+                        Storage::disk($disk)->delete($storagePath);
+                    }
+                } catch (\Throwable $e) {
+                    report($e);
+                }
+            }
+        }
+
+        return back()->with('success', 'Bank statement "' . $import->filename . '" and its extracted data were deleted.');
     }
 
     public function verifyEntry(int $entryId, Request $request)

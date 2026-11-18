@@ -114,6 +114,7 @@ Route::get('/bank-statements/search-clients', [ReceiptController::class, 'search
     Route::get('/bank-statements/{importId}/verification', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'verification'])->name('admin.bank-statements.verification');
     Route::get('/bank-statements/{importId}/pdf', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'streamStatement'])->name('admin.bank-statements.statement-view');
     Route::get('/bank-statements/{importId}/download', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'downloadStatement'])->name('admin.bank-statements.statement');
+    Route::post('/bank-statements/{importId}/delete', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'destroyImport'])->name('admin.bank-statements.destroy');
     Route::post('/bank-statements/{importId}/rescan-ocr', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'rescanOcr'])->name('admin.bank-statements.rescan-ocr');
     Route::post('/bank-statements/{importId}/refresh', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'refreshImport'])->name('admin.bank-statements.refresh');
     Route::post('/bank-statements/{importId}/verify', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'verifyImport'])->name('admin.bank-statements.verify-import');

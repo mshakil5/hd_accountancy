@@ -186,6 +186,9 @@
                 default => 'secondary'
               };
               $bank = $bankAccounts->firstWhere('id', $imp->bank_account_id);
+              $stat = $entryStats[$imp->id] ?? null;
+              $rowTotal = (int)($stat->rows_total ?? $imp->transaction_count);
+              $rowLocked = (int)($stat->rows_locked ?? 0);
             @endphp
             <tr>
               <td>
@@ -238,6 +241,16 @@
                     <a href="{{ route('admin.bank-statements.statement', $imp->id) }}" class="btn btn-outline-secondary" title="Download original file">
                       <i class="bi bi-download"></i>
                     </a>
+                  @endif
+                  @if($rowLocked === 0)
+                    <button type="button"
+                      class="btn btn-outline-danger js-delete-statement"
+                      title="Delete this statement and its extracted data"
+                      data-url="{{ route('admin.bank-statements.destroy', $imp->id) }}"
+                      data-filename="{{ $imp->filename }}"
+                      data-rows="{{ $rowTotal }}">
+                      <i class="bi bi-trash"></i>
+                    </button>
                   @endif
                 </div>
               </td>
@@ -325,6 +338,23 @@ jQuery(function ($) {
       loadBanksForBusiness($('#filterBusiness').val());
     });
   }
+
+  // Delete a statement (and everything extracted from it) after an explicit
+  // confirmation that lists how many rows will disappear too.
+  $(document).on('click', '.js-delete-statement', function () {
+    var $btn = $(this);
+    var rows = parseInt($btn.data('rows'), 10) || 0;
+    var message = 'Delete "' + $btn.data('filename') + '" permanently?\n\n'
+      + 'This also removes ' + rows + ' extracted row(s), OCR pages, verification checks, '
+      + 'revision history and the stored PDF. Any reconciliation work attached to those rows '
+      + '(matches, splits, settlements, notes) will be deleted too.\n\nThis cannot be undone.';
+    if (!window.confirm(message)) return;
+
+    $('<form>', { method: 'POST', action: $btn.data('url') })
+      .append($('<input>', { type: 'hidden', name: '_token', value: '{{ csrf_token() }}' }))
+      .appendTo('body')
+      .trigger('submit');
+  });
 });
 </script>
 @endsection
