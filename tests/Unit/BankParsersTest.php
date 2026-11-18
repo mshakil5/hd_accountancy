@@ -458,4 +458,59 @@ class BankParsersTest extends TestCase
             $this->assertGreaterThan(-1000.0, $amt, "Amount $amt looks like a leaked sidebar balance or fake debit");
         }
     }
+
+    /**
+     * OCR loses the comma/decimal point of the printed running balance and glues the next
+     * row's day onto the same line: "Mb Gillian Vickerm 453.00 1462551 04". The amount must
+     * stay on its own row instead of surfacing later against the next transaction's amount.
+     */
+    public function test_virgin_amount_survives_garbled_balance_and_trailing_day(): void
+    {
+        $parsed = (new VirginMoneyParser())->parseDocument([1 => implode("\n", [
+            'Virgin Money',
+            'Your M Plus Account statement',
+            'Statement No: 280',
+            'Statement date',
+            '01 May 2025',
+            'Account number',
+            '34605723',
+            'Date Description Debits Credits Balance',
+            'Previous statement 15078.51',
+            '02 Apr Mb Cash 77 Bmachuddesri 200.00 14878.51',
+            'Mb Gillian Vickerm 453.00 1462551 04',
+            'Aor',
+            'Caecilian Ltd',
+            'Deposits in this account are',
+            'Co in this account are',
+            'DD Postcode Lottery 12.25 14413.26',
+            'Deposits in this account are eligible',
+            'for cover under the Financial',
+            'Services Compensation Scheme',
+            '(FSCS)',
+            'Opening balance',
+            '15078.51',
+            'Debits',
+            '1454.36',
+            'Credits',
+            '0.00',
+            'Closing balance',
+            '14413.26',
+        ])], true);
+
+        $rows = $this->rows($parsed);
+        $this->assertCount(3, $rows);
+        $this->assertSame(0, $parsed['unparsed']);
+
+        $this->assertEqualsWithDelta(-200.00, (float) $rows[0]['amount'], 0.01);
+        // The 453.00 debit keeps its own row, not the next row's 12.25.
+        $this->assertEqualsWithDelta(-453.00, (float) $rows[1]['amount'], 0.01);
+        $this->assertStringContainsString('Vickerm', $rows[1]['description']);
+        $this->assertStringNotContainsString('Postcode', $rows[1]['description']);
+        $this->assertEqualsWithDelta(-12.25, (float) $rows[2]['amount'], 0.01);
+        $this->assertStringContainsString('Postcode Lottery', $rows[2]['description']);
+        $this->assertStringNotContainsString('Vickerm', $rows[2]['description']);
+
+        $this->assertEqualsWithDelta(15078.51, (float) $parsed['opening'], 0.01);
+        $this->assertEqualsWithDelta(14413.26, (float) $parsed['closing'], 0.01);
+    }
 }

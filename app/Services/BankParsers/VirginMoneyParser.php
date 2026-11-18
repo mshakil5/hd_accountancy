@@ -47,7 +47,24 @@ class VirginMoneyParser extends AbstractStatementParser
         '/^[£E]\s?-?[\d,]+\.\d{2}$/u', '/^Your .* Account statement/i',
         '/^(Description|Debits|Credits|Balance)(\s+(Debits|Credits|Balance))*$/i',
         '/^(?:Cls|DD|SO|TB|MB|TL|EB|OD|WLT|FGN|CHQ|LTE|MT|PMT|ACC|GBP|REV|Purch|WDL|CCY|Unarr)\s*=\s*[A-Za-z ]+$/iu',
+        // Leftovers from the panel sentence once its boilerplate words are stripped
+        // ("for cover under the Financial", "Deposits in this account are").
+        '/^(?:Financial|Services|Compensation|Scheme|eligible|are|is|for|cover|under|the|co|ae|nea)$/iu',
     ];
+
+    /**
+     * Right-hand panel says "Deposits in this account are eligible for cover under the Financial
+     * Services Compensation Scheme (FSCS)". OCR splits it mid-sentence, so a fragment such as
+     * "Co in this account are" survives the phrase filters below.
+     */
+    private const PANEL_WORDS = [
+        'deposits' => 1, 'in' => 1, 'this' => 1, 'account' => 1, 'are' => 1, 'eligible' => 1,
+        'for' => 1, 'cover' => 1, 'under' => 1, 'the' => 1, 'financial' => 1, 'services' => 1,
+        'compensation' => 1, 'scheme' => 1, 'fscs' => 1, 'co' => 1, 'ae' => 1, 'nea' => 1, 'ne' => 1,
+    ];
+
+    /** OCR tail after a printed amount: a balance with the punctuation lost and/or the next row's day. */
+    private const OCR_TAIL_TOKEN = '/^[\dOolI]{1,9}$/u';
 
     public function name(): string
     {
@@ -162,7 +179,7 @@ class VirginMoneyParser extends AbstractStatementParser
             $text = preg_replace('/\bMR\s+[A-Z .]{2,20}\b/i', ' ', $text); // Account holder
             $text = preg_replace('/\b(?:Account\s*(?:number|no|name)|Sort\s*code|IBAN|BIC|Statement\s*(?:date|No))\b[^\n]*/iu', ' ', $text);
             // Strip FSCS notices
-            $text = preg_replace('/\bDeposits\s+(?:in|ae|nea|this)[^.\n]*?account\s*(?:are\s*eligible)?\.?/iu', ' ', $text);
+            $text = preg_replace('/\bDeposits\s+(?:in|ae|nea|this)[^.\n]*?account\s*(?:(?:are|is)\s*)?(?:eligible)?\.?/iu', ' ', $text);
             $text = preg_replace('/\b(?:eligible\s+for\s+cover\s+under\s+the|for\s+cover\s+under\s+the)\b/iu', ' ', $text);
             $text = preg_replace('/\b(?:Financial\s+Services\s+Compensation\s+Scheme|Financial\s+Services|Services\s+Compensation|Compensation\s+Scheme)\b/iu', ' ', $text);
             $text = preg_replace('/\b(?:Scheme\s*\(FSCS\)|\(FSCS\)|Scheme)\b/iu', ' ', $text);
@@ -198,6 +215,10 @@ class VirginMoneyParser extends AbstractStatementParser
         $lastMonth = null;
         $lastDate = null; // date is printed once per day; later rows inherit it
         $openingFromStatement = null;
+        // Set when a row's amount was recovered from an OCR-garbled line: the rest of that
+        // row's description follows on the next lines, so it must not spill into the next row.
+        $orphanRow = null;
+        $orphanLines = 0;
 
         /** Running balance printed at the top of a page / statement belongs to the previous row. */
         $attachBalance = function (?float $bal) use (&$raw, &$unparsed, &$samples) {
@@ -241,6 +262,8 @@ class VirginMoneyParser extends AbstractStatementParser
                 $afterStop = false;
                 $pending = '';
                 $pendingFx = false;
+                $orphanRow = null;
+                $orphanLines = 0;
             }
 
             // ---- "31 Mar 2023  Previous statement  31084.36" : opening marker, never a transaction ----
@@ -250,6 +273,8 @@ class VirginMoneyParser extends AbstractStatementParser
                 $pending = '';
                 $pendingFx = false;
                 $lastDate = null;
+                $orphanRow = null;
+                $orphanLines = 0;
                 if (($p[1] ?? '') !== '' && ($p[3] ?? '') !== '') {
                     $py = (int) strtr(preg_replace('/\s+/', '', $p[3]), 'OolIZ', '00112');
                     if ($py >= 2000 && $py <= 2100 && ($firstStmt === null || abs($py - $firstStmt['y']) <= 3)) {
@@ -271,6 +296,8 @@ class VirginMoneyParser extends AbstractStatementParser
                 $afterStop = false;
                 $pending = '';
                 $pendingFx = false;
+                $orphanRow = null;
+                $orphanLines = 0;
                 continue;
             }
             if ($afterStop) {
@@ -310,6 +337,8 @@ class VirginMoneyParser extends AbstractStatementParser
                 $lastDate = checkdate($mon, $day, $y) ? sprintf('%04d-%02d-%02d', $y, $mon, $day) : null;
                 $pending = '';
                 $pendingFx = false;
+                $orphanRow = null;
+                $orphanLines = 0;
                 $content = $rest;
             }
 
@@ -321,6 +350,8 @@ class VirginMoneyParser extends AbstractStatementParser
             if (preg_match('/^Balance\s?brought\s?forward\b\s*(.*)$/iu', $content, $bf)) {
                 $pending = '';
                 $pendingFx = false;
+                $orphanRow = null;
+                $orphanLines = 0;
                 $withoutText = preg_replace('/^from\s+previous\s+page\s*/iu', '', trim($bf[1])) ?? $bf[1];
                 [, $nums] = $this->trailingMoney($withoutText, 1);
                 $attachBalance($nums[0] ?? null);
@@ -442,6 +473,20 @@ class VirginMoneyParser extends AbstractStatementParser
             }
 
             [$descPart, $nums] = $this->trailingMoney($content, 2);
+            $salvaged = false;
+            if (!$nums && $stg === null) {
+                // OCR often loses the comma/decimal point of the printed running balance
+                // ("14,625.51" -> "1462551") and glues the next row's day onto the line:
+                // "Mb Gillian Vickerm 453.00 1462551 04". The amount is still printed there,
+                // so recover it instead of treating the whole line as description text -
+                // otherwise the transaction only surfaces later, against the next row's
+                // amount ("12.25" where the statement says 453.00).
+                $salvage = $this->salvageAmounts($content);
+                if ($salvage !== null) {
+                    [$descPart, $nums] = $salvage;
+                    $salvaged = true;
+                }
+            }
             if (!$nums && $stg !== null) {
                 $nums = [$stg];
             }
@@ -455,9 +500,21 @@ class VirginMoneyParser extends AbstractStatementParser
 
             if (!$nums) {
                 if (!$pendingFx) {
-                    $pending = trim($pending . ' ' . $content);
-                    if (mb_strlen($pending) > 300) {
-                        $pending = '';
+                    // A loosely-OCR'd date ("Q7 Jan …") starts a new day: never let it join the
+                    // previous row even when the day itself could not be decoded.
+                    $newDay = (bool) preg_match('/^[0-9OolIQ]{1,2}\s?(?:' . self::MON . ')\b/iu', $content);
+                    if ($orphanRow !== null && !$newDay && $orphanLines < 3) {
+                        // The amount line was cut short by OCR noise, so these lines are the
+                        // rest of THAT row's description - not the next transaction's.
+                        $raw[$orphanRow]['desc'] = trim($raw[$orphanRow]['desc'] . ' ' . $content);
+                        $raw[$orphanRow]['key'] = $this->key($raw[$orphanRow]['desc']);
+                        $orphanLines++;
+                    } else {
+                        $orphanRow = null;
+                        $pending = trim($pending . ' ' . $content);
+                        if (mb_strlen($pending) > 300) {
+                            $pending = '';
+                        }
                     }
                 }
                 continue;
@@ -466,6 +523,12 @@ class VirginMoneyParser extends AbstractStatementParser
             $desc = trim($pending . ' ' . $descPart);
             $pending = '';
             $pendingFx = false;
+
+            // A lone printed amount with no description is a summary-panel value
+            // ("Opening balance / 15078.51", "Debits / 1454.36"), never a transaction.
+            if ($desc === '') {
+                continue;
+            }
 
             if ($lastDate === null) {
                 $unparsed++;
@@ -485,6 +548,8 @@ class VirginMoneyParser extends AbstractStatementParser
                 'hint' => $this->hint($desc),
                 'key' => $this->key($desc),
             ];
+            $orphanRow = $salvaged ? count($raw) - 1 : null;
+            $orphanLines = 0;
         }
 
         $rows = $raw;
@@ -564,6 +629,58 @@ class VirginMoneyParser extends AbstractStatementParser
         return 'vm|' . mb_strtolower(trim($body));
     }
 
+    /**
+     * Recover a transaction whose printed amount is followed by OCR junk: the running balance
+     * with its comma/decimal point lost, and/or the next row's day glued onto the end of the
+     * line. Returns [description, trailing amounts] or null when the line is not of that shape.
+     *
+     * @return array{0:string,1:array<int,float>}|null
+     */
+    private function salvageAmounts(string $content): ?array
+    {
+        $tokens = preg_split('/\s+/u', trim($content), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        if (count($tokens) < 2) {
+            return null;
+        }
+
+        // Walk back over the OCR tail: at most three digit-only tokens.
+        $tail = [];
+        while ($tokens && count($tail) < 3 && preg_match(self::OCR_TAIL_TOKEN, (string) end($tokens))) {
+            $tail[] = (string) array_pop($tokens);
+        }
+        if (!$tail) {
+            return null;
+        }
+        // A lone short number (a house number, a reference) is not a garbled balance.
+        $balanceLike = false;
+        foreach ($tail as $tok) {
+            if (strlen(strtr($tok, 'OolI', '0011')) >= 4) {
+                $balanceLike = true;
+                break;
+            }
+        }
+
+        // Then walk back over the printed amount (and the printed balance, if it kept its point).
+        $nums = [];
+        while ($tokens && count($nums) < 2) {
+            $tok = (string) end($tokens);
+            if (!preg_match('/^-?£?(?:\d{1,3}(?:,\d{3})+|\d+)\.\d{2}$/u', $tok)) {
+                break;
+            }
+            array_unshift($nums, $this->toFloat($tok));
+            array_pop($tokens);
+        }
+        if (!$nums || (!$balanceLike && count($nums) < 2)) {
+            return null;
+        }
+
+        $desc = trim(implode(' ', $tokens));
+        if ($desc === '') {
+            return null;
+        }
+        return [$desc, $nums];
+    }
+
     private function isNoise(string $line): bool
     {
         foreach (self::NOISE as $re) {
@@ -571,6 +688,21 @@ class VirginMoneyParser extends AbstractStatementParser
                 return true;
             }
         }
-        return false;
+        return $this->isPanelFragment($line);
+    }
+
+    /** A line made up only of right-hand panel wording ("Co in this account are"). */
+    private function isPanelFragment(string $line): bool
+    {
+        $words = preg_split('/[^A-Za-z]+/', mb_strtolower($line), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        if (count($words) < 2) {
+            return false;
+        }
+        foreach ($words as $word) {
+            if (!isset(self::PANEL_WORDS[$word])) {
+                return false;
+            }
+        }
+        return true;
     }
 }
