@@ -1106,12 +1106,14 @@ class BankStatementVerificationService
         $rows = $this->sortChronologically($entries, $import->opening_balance !== null ? (float) $import->opening_balance : null);
 
         $previous = null;
+        $between = 0.0; // amounts of rows without a printed balance since the last printed one
         foreach ($rows as $entry) {
             if ($entry->balance_after === null) {
+                $between += (float) ($entry->amount ?? 0);
                 continue;
             }
             $balance = (float) $entry->balance_after;
-            if ($previous !== null && abs(round($previous + (float) $entry->amount, 2) - $balance) >= 0.01) {
+            if ($previous !== null && abs(round($previous + $between + (float) $entry->amount, 2) - $balance) >= 0.01) {
                 $this->exception($import->id, [
                     'bank_entry_id' => $entry->id,
                     'page_no' => $entry->source_page,
@@ -1119,12 +1121,14 @@ class BankStatementVerificationService
                     'severity' => 'blocking',
                     'message' => 'Running balance does not follow from the previous row on page ' . ($entry->source_page ?? 1) . '.',
                     'source_value' => 'previous=' . number_format($previous, 2, '.', '')
+                        . ' between=' . number_format($between, 2, '.', '')
                         . ' amount=' . number_format((float) $entry->amount, 2, '.', '')
                         . ' balance=' . number_format($balance, 2, '.', '')
                         . ' system_balance=' . number_format((float) ($entry->system_balance ?? 0), 2, '.', ''),
                 ]);
             }
             $previous = $balance;
+            $between = 0.0;
         }
     }
 
