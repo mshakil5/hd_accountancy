@@ -112,6 +112,7 @@ Route::get('/bank-statements/search-clients', [ReceiptController::class, 'search
     Route::post('/bank-statements/store', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'store'])->name('admin.bank-statements.store');
     Route::post('/bank-statements/bank-accounts', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'storeBankAccount'])->name('admin.bank-statements.store-bank-account');
     Route::get('/bank-statements/{importId}/verification', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'verification'])->name('admin.bank-statements.verification');
+    Route::get('/bank-statements/{importId}/verification/rows', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'verificationRows'])->name('admin.bank-statements.verification-rows');
     Route::get('/bank-statements/{importId}/pdf', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'streamStatement'])->name('admin.bank-statements.statement-view');
     Route::get('/bank-statements/{importId}/download', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'downloadStatement'])->name('admin.bank-statements.statement');
     Route::post('/bank-statements/{importId}/delete', [\App\Http\Controllers\Admin\BankStatementPageController::class, 'destroyImport'])->name('admin.bank-statements.destroy');
@@ -141,6 +142,7 @@ Route::get('/bank-reconciliation/search-clients', [ReceiptController::class, 'se
     // Statement verification: extraction is not proof of completeness, so rows are
     // checked against the PDF and manually corrected before reconciliation opens up.
     Route::get('/bank-reconciliation/import/{importId}/verification', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'verification'])->name('admin.bank-reconciliation.verification');
+    Route::get('/bank-reconciliation/import/{importId}/verification/rows', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'verificationRows'])->name('admin.bank-reconciliation.verification-rows');
     Route::get('/bank-reconciliation/import/{importId}/pdf', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'streamStatement'])->name('admin.bank-reconciliation.statement-view');
     Route::post('/bank-reconciliation/import/{importId}/verify', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'verifyImport'])->name('admin.bank-reconciliation.verify-import');
     Route::post('/bank-reconciliation/import/{importId}/rows', [\App\Http\Controllers\Admin\BankReconciliationPageController::class, 'storeEntry'])->name('admin.bank-reconciliation.store-entry');

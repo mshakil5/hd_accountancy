@@ -61,6 +61,7 @@ class VirginMoneyParser extends AbstractStatementParser
         'deposits' => 1, 'in' => 1, 'this' => 1, 'account' => 1, 'are' => 1, 'eligible' => 1,
         'for' => 1, 'cover' => 1, 'under' => 1, 'the' => 1, 'financial' => 1, 'services' => 1,
         'compensation' => 1, 'scheme' => 1, 'fscs' => 1, 'co' => 1, 'ae' => 1, 'nea' => 1, 'ne' => 1,
+        'eae' => 1, 'ais' => 1,
     ];
 
     /** OCR tail after a printed amount: a balance with the punctuation lost and/or the next row's day. */
@@ -179,10 +180,11 @@ class VirginMoneyParser extends AbstractStatementParser
             $text = preg_replace('/\bMR\s+[A-Z .]{2,20}\b/i', ' ', $text); // Account holder
             $text = preg_replace('/\b(?:Account\s*(?:number|no|name)|Sort\s*code|IBAN|BIC|Statement\s*(?:date|No))\b[^\n]*/iu', ' ', $text);
             // Strip FSCS notices
-            $text = preg_replace('/\bDeposits\s+(?:in|ae|nea|this)[^.\n]*?account\s*(?:(?:are|is)\s*)?(?:eligible)?\.?/iu', ' ', $text);
+            $text = preg_replace('/\bDeposits\s+(?:in|ae|nea|eae|ais|this)[^.\n]*?account\s*(?:(?:are|is)\s*)?(?:eligible)?\.?/iu', ' ', $text);
             $text = preg_replace('/\b(?:eligible\s+for\s+cover\s+under\s+the|for\s+cover\s+under\s+the)\b/iu', ' ', $text);
             $text = preg_replace('/\b(?:Financial\s+Services\s+Compensation\s+Scheme|Financial\s+Services|Services\s+Compensation|Compensation\s+Scheme)\b/iu', ' ', $text);
-            $text = preg_replace('/\b(?:Scheme\s*\(FSCS\)|\(FSCS\)|Scheme)\b/iu', ' ', $text);
+            // \b does not exist before "(", so the old \b\(FSCS\)\b never matched.
+            $text = preg_replace('/(?:Scheme\s*\(FSCS\)|\(FSCS\)|\bScheme\b)/iu', ' ', $text);
             // Strip glossary definitions
             $text = preg_replace('/\b(?:Cls|DD|SO|TB|MB|TL|EB|OD|WLT|FGN|CHQ|LTE|MT|PMT|ACC|GBP|REV|Purch|WDL|CCY|Unarr)\s*[-=]\s*[^0-9\n]+/iu', ' ', $text);
             // Strip sidebar headers
@@ -306,7 +308,7 @@ class VirginMoneyParser extends AbstractStatementParser
             }
             // Before the first table header only a date-looking line may open the table
             // (the header itself can be garbled by OCR or missing on continuation pages).
-            if (!$inTable && !preg_match('/^[0-9OolIQ]{1,2}\s?(?:' . self::MON . ')\b/u', $line)) {
+            if (!$inTable && !preg_match('/^[0-9OolIQ]{1,3}\s*(?:' . self::MON . ')\b/u', $line)) {
                 continue;
             }
             if (preg_match(self::STOP, $line)) {
@@ -321,8 +323,13 @@ class VirginMoneyParser extends AbstractStatementParser
 
             // ---- date at the start of the line ---------------------------------------------------
             $content = $line;
-            $dl = preg_replace_callback('/^([0-9OolIQ]{1,2})\s?(' . self::MON . ')\b/u',
-                fn ($x) => strtr($x[1], 'OolIQ', '00110') . ' ' . $x[2], $line) ?? $line;
+            $dl = preg_replace_callback('/^([0-9OolIQ]{1,3})\s*(' . self::MON . ')\b/u', function ($x) {
+                // OCR sometimes prefixes the day ("O05 Apr", "l0 Apr"). Keep the last
+                // two digits so the normal date pattern below can still read the line.
+                $digits = preg_replace('/\D/', '', strtr($x[1], 'OolIQ', '00110')) ?? '';
+                $day = (int) substr($digits, -2);
+                return ($day >= 1 && $day <= 31 ? sprintf('%02d', $day) : $x[1]) . ' ' . $x[2];
+            }, $line) ?? $line;
             if (preg_match('/^(\d{1,2})\s(' . self::MON . ')\b(?:\s+(\d{4}))?\s*(.*)$/iu', $dl, $m)) {
                 $day = (int) $m[1];
                 $mon = self::MONTHS[strtolower($m[2])];
@@ -368,7 +375,7 @@ class VirginMoneyParser extends AbstractStatementParser
                 } else {
                     for ($k = 1; $k <= 4; $k++) {
                         if (!isset($lines[$i + $k]) || $lines[$i + $k][0] !== $pageNo) break;
-                        if (preg_match('/^[0-9OolIQ]{1,2}\s?(?:' . self::MON . ')\b/u', $lines[$i + $k][1])) break;
+                        if (preg_match('/^[0-9OolIQ]{1,3}\s*(?:' . self::MON . ')\b/u', $lines[$i + $k][1])) break;
                         if (preg_match('/^(?:R[ao]te\b|S[tl][gq9]\s?Am[tfl1]\b)/iu', $lines[$i + $k][1])) {
                             $fxMatch = true;
                             break;
@@ -511,6 +518,15 @@ class VirginMoneyParser extends AbstractStatementParser
                             array_pop($nums);
                         }
                         $salvaged = true;
+                    } else {
+                        // OCR also glues right-hand panel text AFTER the amount
+                        // ("Aspley 4.75 Financial", "Aspley 8.80 (FSCS)"). The amount is
+                        // printed, but no longer the last token, so trailingMoney() missed
+                        // it and the row would be swallowed into the next description.
+                        [$descPart, $nums] = $this->moneyBeforeJunk($content, 2);
+                        if (count($nums) === 2 && !$this->plausibleBalance($nums[1], $raw, $openingFromStatement ?? $opening)) {
+                            array_pop($nums);
+                        }
                     }
                 }
             }
@@ -526,7 +542,7 @@ class VirginMoneyParser extends AbstractStatementParser
                 if (!$pendingFx) {
                     // A loosely-OCR'd date ("Q7 Jan …") starts a new day: never let it join the
                     // previous row even when the day itself could not be decoded.
-                    $newDay = (bool) preg_match('/^[0-9OolIQ]{1,2}\s?(?:' . self::MON . ')\b/iu', $content);
+                    $newDay = (bool) preg_match('/^[0-9OolIQ]{1,3}\s*(?:' . self::MON . ')\b/iu', $content);
                     if ($orphanRow !== null && !$newDay && $orphanLines < 3) {
                         // The amount line was cut short by OCR noise, so these lines are the
                         // rest of THAT row's description - not the next transaction's.
@@ -727,6 +743,38 @@ class VirginMoneyParser extends AbstractStatementParser
         // Allow for rows OCR dropped entirely as well as normal rounding.
         $margin = max(250.0, abs($anchor) * 0.1);
         return abs($candidate - $anchor) <= $since + $margin;
+    }
+
+    /**
+     * Pull an amount off a line whose printed amount has OCR spill after it:
+     * "Aspley 4.75 Financial" / "Aspley 8.80 (FSCS)". trailingMoney() only reads
+     * the very end of the line, so a sidebar fragment hides the amount. Strip up
+     * to three trailing tokens that contain no digits (panel words / punctuation)
+     * and try again. A line without a money token still yields no rows.
+     *
+     * @return array{0:string,1:array<int,float>}
+     */
+    private function moneyBeforeJunk(string $content, int $max = 2): array
+    {
+        $tokens = preg_split('/\s+/u', trim($content), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $junk = 0;
+        while ($tokens && $junk < 3) {
+            $end = (string) end($tokens);
+            if (preg_match('/^-?£?(?:\d{1,3}(?:,\d{3})+|\d+)\.\d{2}$/u', $end)) {
+                break;
+            }
+            if (preg_match('/\d/u', $end) || mb_strlen($end) > 24) {
+                break;
+            }
+            array_pop($tokens);
+            $junk++;
+        }
+
+        if ($junk === 0) {
+            return [$content, []];
+        }
+
+        return $this->trailingMoney(implode(' ', $tokens), $max);
     }
 
     /**

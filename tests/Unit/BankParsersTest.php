@@ -618,4 +618,57 @@ class BankParsersTest extends TestCase
         $this->assertEqualsWithDelta(10627.24, (float) $parsed['closing'], 0.01);
         $this->assertStringNotContainsString('Stg', implode(' ', array_column($rows, 'description')));
     }
+
+    /**
+     * OCR glues the right-hand panel onto the end of a table row, so the amount is no
+     * longer the last token ("Aspley 4.75 Financial", "Aspley 8.80 (FSCS)"). Those rows
+     * used to be swallowed into the next description, and a garbled day prefix ("O05 Apr")
+     * kept them on the previous date. Both amounts must survive with their own row/date.
+     */
+    public function test_virgin_amount_survives_sidebar_text_after_it_and_garbled_day(): void
+    {
+        $parsed = (new VirginMoneyParser())->parseDocument([1 => implode("\n", [
+            'Virgin Money',
+            'Your M Plus Account statement',
+            'Statement No: 285',
+            'Statement date',
+            '28 Apr 2023',
+            'Account number',
+            '24088579',
+            'Date Description Debits Credits Balance',
+            '31 Mar 2023 Previous statement 30,894.63',
+            '03 Apr Cls 58 Ppoint-*Close 25.05 30,869.58',
+            'Huddersfield',
+            'O05 Apr Cls 58 Table Table41',
+            'Deposits eae in this account are eligible Aspley 4.75 Financial',
+            'Cls 58 Table Table41 Aspley 8.80 (FSCS)',
+            'Cls 58 Martin Mccoll',
+            'Pudsey 11.50 30,844.53',
+            '11 Apr Mb Tim Brook 24.72 30,819.81',
+            'Expenses',
+            'Closing balance 30,819.81',
+        ])], true);
+
+        $rows = $this->rows($parsed);
+        $this->assertCount(5, $rows, 'The 4.75 and 8.80 rows must not be swallowed');
+        $this->assertSame(0, $parsed['unparsed']);
+        $this->assertSame(
+            ['2023-04-03', '2023-04-05', '2023-04-05', '2023-04-05', '2023-04-11'],
+            array_column($rows, 'transaction_date')
+        );
+        $this->assertSame(
+            [-25.05, -4.75, -8.8, -11.5, -24.72],
+            array_map('floatval', array_column($rows, 'amount'))
+        );
+        $this->assertEqualsWithDelta(30869.58, (float) $rows[0]['balance_after'], 0.01);
+        $this->assertNull($rows[1]['balance_after']);
+        $this->assertNull($rows[2]['balance_after']);
+        $this->assertEqualsWithDelta(30844.53, (float) $rows[3]['balance_after'], 0.01);
+        $this->assertEqualsWithDelta(30819.81, (float) $rows[4]['balance_after'], 0.01);
+        // Sidebar wording must not leak into the recovered descriptions.
+        $this->assertStringNotContainsString('Financial', $rows[1]['description']);
+        $this->assertStringNotContainsString('FSCS', $rows[2]['description']);
+        $this->assertEqualsWithDelta(30894.63, (float) $parsed['opening'], 0.01);
+        $this->assertEqualsWithDelta(30819.81, (float) $parsed['closing'], 0.01);
+    }
 }

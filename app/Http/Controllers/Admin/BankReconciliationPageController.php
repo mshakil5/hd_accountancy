@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\RendersStatementVerification;
 use App\Http\Controllers\Controller;
 use App\Models\AccountHead;
 use App\Models\BankImport;
@@ -19,6 +20,8 @@ use Auth;
 
 class BankReconciliationPageController extends Controller
 {
+    use RendersStatementVerification;
+
     public function __construct(private BankLedgerPostingService $posting) {}
 
     public function index(Request $request) {
@@ -1114,22 +1117,16 @@ class BankReconciliationPageController extends Controller
      * ------------------------------------------------------------------ */
 
     public function verification(int $importId) {
-        $import=BankImport::findOrFail($importId);
-        $entries=DB::table('bank_entries')->where('bank_import_id',$importId)
-            ->orderByRaw('COALESCE(source_page,1)')->orderByRaw('COALESCE(source_position,0)')->orderBy('id')->get();
-        // Display oldest → newest with manually added rows interleaved by date.
-        $entries=collect(app(BankStatementVerificationService::class)->sortChronologically($entries, $import->opening_balance !== null ? (float) $import->opening_balance : null));
-        $pages=DB::table('bank_statement_pages')->where('bank_import_id',$importId)->orderBy('page_no')->get();
-        $exceptions=DB::table('bank_statement_exceptions')->where('bank_import_id',$importId)
-            ->orderByRaw('CASE WHEN resolved_at IS NULL THEN 0 ELSE 1 END')->orderByDesc('id')->get();
-        $revisions=DB::table('bank_entry_revisions')->whereIn('bank_entry_id',$entries->pluck('id'))
-            ->latest('id')->limit(100)->get();
-        return view('admin.accounting.bank_verification',[
-            'import'=>$import,'entries'=>$entries,'pages'=>$pages,'exceptions'=>$exceptions,'revisions'=>$revisions,
-            'blocking'=>app(BankStatementVerificationService::class)->blockingCount($import),
-            'bank'=>DB::table('reconciliation_bank_accounts')->find($import->bank_account_id),
-            'client'=>$import->client,
-        ]);
+        $import = BankImport::findOrFail($importId);
+
+        return view('admin.accounting.bank_verification', $this->verificationWorkspace($import));
+    }
+
+    /** JSON fragment: re-render every workspace panel from the database. */
+    public function verificationRows(Request $request, int $importId) {
+        $import = BankImport::findOrFail($importId);
+
+        return response()->json($this->verificationPayload($import));
     }
 
     public function streamStatement(int $importId) {
@@ -1197,8 +1194,13 @@ class BankReconciliationPageController extends Controller
             $verifier->reopen($import);
             $verifier->refresh($import);
         });
-        return redirect()->route('admin.bank-reconciliation.verification',$import->id)
-            ->with('success','Row corrected. Original values, corrected values and your reason were saved.');
+
+        $message='Row corrected. Original values, corrected values and your reason were saved.';
+        if ($request->expectsJson()) {
+            return response()->json($this->verificationPayload($import, $message, $entryId));
+        }
+
+        return redirect()->route('admin.bank-reconciliation.verification',$import->id)->with('success',$message);
     }
 
     public function storeEntry(Request $request,int $importId) {
@@ -1228,8 +1230,13 @@ class BankReconciliationPageController extends Controller
             $verifier->reopen($import);
             $verifier->refresh($import);
         });
-        return redirect()->route('admin.bank-reconciliation.verification',$import->id)
-            ->with('success','Row added to the statement. Checks have been re-run.');
+
+        $message='Row added to the statement. Checks have been re-run.';
+        if ($request->expectsJson()) {
+            return response()->json($this->verificationPayload($import, $message));
+        }
+
+        return redirect()->route('admin.bank-reconciliation.verification',$import->id)->with('success',$message);
     }
 
     public function destroyEntry(Request $request,int $entryId) {
@@ -1249,8 +1256,13 @@ class BankReconciliationPageController extends Controller
             $verifier->reopen($import);
             $verifier->refresh($import);
         });
-        return redirect()->route('admin.bank-reconciliation.verification',$import->id)
-            ->with('success','Row removed and the removal reason was recorded.');
+
+        $message='Row removed and the removal reason was recorded.';
+        if ($request->expectsJson()) {
+            return response()->json($this->verificationPayload($import, $message));
+        }
+
+        return redirect()->route('admin.bank-reconciliation.verification',$import->id)->with('success',$message);
     }
 
     private function getScopeClientIds(Request $request): array
@@ -1285,8 +1297,13 @@ class BankReconciliationPageController extends Controller
             ->where('bank_import_id', $importId)
             ->where('status', 'unmatched')
             ->count();
-        return redirect()->route('admin.bank-reconciliation.verification', $importId)
-            ->with('success', 'All ' . ($count) . ' rows verified and ready for reconciliation.');
+
+        $message = 'All ' . ($count) . ' rows verified and ready for reconciliation.';
+        if ($request->expectsJson()) {
+            return response()->json($this->verificationPayload(BankImport::findOrFail($importId), $message));
+        }
+
+        return redirect()->route('admin.bank-reconciliation.verification', $importId)->with('success', $message);
     }
 
     public function verifyEntry(int $entryId, Request $request) {
@@ -1311,7 +1328,13 @@ class BankReconciliationPageController extends Controller
             }
         }
         if ($request->ajax() || $request->wantsJson()) {
-            return response()->json(['success'=>true,'message'=>'Row verified against the original statement.','entry_id'=>$entryId,'status'=>'unmatched','import_verified'=>$importVerified]);
+            $import = \App\Models\BankImport::find($entry->bank_import_id ?? 0);
+            $payload = $import
+                ? $this->verificationPayload($import, 'Row verified against the original statement.', $entryId)
+                : ['success'=>true,'message'=>'Row verified against the original statement.','entry_id'=>$entryId];
+            $payload['status'] = 'unmatched';
+            $payload['import_verified'] = $importVerified;
+            return response()->json($payload);
         }
         return redirect()->back()->with('success','Row verified against the original statement.'.($importVerified?' Statement verified.':' Statement still has unresolved exceptions — check the verification workspace.'));
     }
@@ -1323,7 +1346,13 @@ class BankReconciliationPageController extends Controller
         DB::table('bank_statement_exceptions')->where('id',$exceptionId)->update([
             'resolved_by'=>auth()->id(),'resolved_at'=>now(),'resolution'=>$data['resolution'],'updated_at'=>now(),
         ]);
-        return back()->with('success','Exception resolved with your reason.');
+
+        $message='Exception resolved with your reason.';
+        if ($request->expectsJson()) {
+            return response()->json($this->verificationPayload(BankImport::findOrFail($exception->bank_import_id), $message));
+        }
+
+        return back()->with('success',$message);
     }
 
     public function approveImport(Request $request,int $importId) {

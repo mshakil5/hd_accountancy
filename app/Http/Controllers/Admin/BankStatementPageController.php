@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\RendersStatementVerification;
 use App\Http\Controllers\Controller;
 use App\Models\BankImport;
 use App\Models\Client;
@@ -17,6 +18,8 @@ use Illuminate\Validation\ValidationException;
 
 class BankStatementPageController extends Controller
 {
+    use RendersStatementVerification;
+
     public function __construct(
         private BankStatementVerificationService $verification,
         private BankLedgerPostingService $posting
@@ -376,28 +379,18 @@ class BankStatementPageController extends Controller
         // Opening the workspace is a pure read: never re-parse the PDF here.
         // Uploads do not extract anything; use "Recalculate checks" or
         // "Re-extract with OCR" to process the statement on demand.
-        $import->refresh();
+        return view('admin.accounting.bank_verification', $this->verificationWorkspace($import));
+    }
 
-        $entries = DB::table('bank_entries')->where('bank_import_id', $importId)
-            ->orderByRaw('COALESCE(source_page,1)')->orderByRaw('COALESCE(source_position,0)')->orderBy('id')->get();
-        // Display oldest → newest with manually added rows interleaved by date.
-        $entries = collect($this->verification->sortChronologically($entries, $import->opening_balance !== null ? (float) $import->opening_balance : null));
-        $pages = DB::table('bank_statement_pages')->where('bank_import_id', $importId)->orderBy('page_no')->get();
-        $exceptions = DB::table('bank_statement_exceptions')->where('bank_import_id', $importId)
-            ->orderByRaw('CASE WHEN resolved_at IS NULL THEN 0 ELSE 1 END')->orderByDesc('id')->get();
-        $revisions = DB::table('bank_entry_revisions')->whereIn('bank_entry_id', $entries->pluck('id'))
-            ->latest('id')->limit(100)->get();
+    /**
+     * JSON fragment for the workspace: the same Blade partials the first paint
+     * uses, re-rendered from the database, so the browser never reloads.
+     */
+    public function verificationRows(Request $request, int $importId)
+    {
+        $import = BankImport::findOrFail($importId);
 
-        return view('admin.accounting.bank_verification', [
-            'import' => $import,
-            'entries' => $entries,
-            'pages' => $pages,
-            'exceptions' => $exceptions,
-            'revisions' => $revisions,
-            'blocking' => $this->verification->blockingCount($import),
-            'bank' => DB::table('reconciliation_bank_accounts')->find($import->bank_account_id),
-            'client' => $import->client,
-        ]);
+        return response()->json($this->verificationPayload($import));
     }
 
     /** Re-run the extraction/check set on demand (the page itself stays read-only). */
@@ -534,7 +527,12 @@ class BankStatementPageController extends Controller
             $this->verification->refresh($import);
         });
 
-        return back()->with('success', 'Row updated and re-verified against the PDF balance.');
+        $message = 'Row updated and re-verified against the PDF balance.';
+        if ($request->expectsJson()) {
+            return response()->json($this->verificationPayload($import, $message, $entryId));
+        }
+
+        return back()->with('success', $message);
     }
 
     public function storeEntry(Request $request, int $importId)
@@ -547,7 +545,7 @@ class BankStatementPageController extends Controller
         ]);
         $import = BankImport::findOrFail($importId);
 
-        DB::transaction(function () use ($import, $data) {
+        $entryId = DB::transaction(function () use ($import, $data) {
             $entryId = DB::table('bank_entries')->insertGetId([
                 'client_id' => $import->client_id,
                 'bank_account_id' => $import->bank_account_id,
@@ -579,9 +577,16 @@ class BankStatementPageController extends Controller
             // Statement edits reopen verification (see updateEntry).
             $this->verification->reopen($import);
             $this->verification->refresh($import);
+
+            return $entryId;
         });
 
-        return back()->with('success', 'Missing row added and balances recalculated.');
+        $message = 'Missing row added and balances recalculated.';
+        if ($request->expectsJson()) {
+            return response()->json($this->verificationPayload($import, $message, $entryId));
+        }
+
+        return back()->with('success', $message);
     }
 
     public function destroyEntry(Request $request, int $entryId)
@@ -609,7 +614,12 @@ class BankStatementPageController extends Controller
             $this->verification->refresh($import);
         });
 
-        return back()->with('success', 'Row removed from statement.');
+        $message = 'Row removed from statement.';
+        if ($request->expectsJson()) {
+            return response()->json($this->verificationPayload($import, $message));
+        }
+
+        return back()->with('success', $message);
     }
 
     /**
@@ -749,7 +759,17 @@ class BankStatementPageController extends Controller
                 $this->verification->refresh($import);
             }
         }
-        return back()->with('success', 'Row verified.');
+
+        $message = 'Row verified.';
+        if ($request->expectsJson()) {
+            $verifiedImport = $entry->bank_import_id ? BankImport::find($entry->bank_import_id) : null;
+
+            return response()->json($verifiedImport
+                ? $this->verificationPayload($verifiedImport, $message, $entryId)
+                : ['success' => true, 'message' => $message, 'entry_id' => $entryId]);
+        }
+
+        return back()->with('success', $message);
     }
 
     public function verifyAllRows(Request $request, int $importId)
@@ -763,23 +783,35 @@ class BankStatementPageController extends Controller
                 'updated_at' => now(),
             ]);
         $this->verification->refresh($import);
-        return back()->with('success', $updated . ' row(s) marked verified.');
+
+        $message = $updated . ' row(s) marked verified.';
+        if ($request->expectsJson()) {
+            return response()->json($this->verificationPayload($import, $message));
+        }
+
+        return back()->with('success', $message);
     }
 
     public function resolveException(Request $request, int $exceptionId)
     {
-        $data = $request->validate(['resolution_note' => 'required|string|max:1000']);
+        $data = $request->validate(['resolution' => 'required|string|max:1000']);
         $ex = DB::table('bank_statement_exceptions')->find($exceptionId);
         abort_unless($ex, 404);
         DB::table('bank_statement_exceptions')->where('id', $exceptionId)->update([
             'resolved_by' => auth()->id(),
             'resolved_at' => now(),
-            'resolution_note' => $data['resolution_note'],
+            'resolution' => $data['resolution'],
             'updated_at' => now(),
         ]);
         $import = BankImport::findOrFail($ex->bank_import_id);
         $this->verification->refresh($import);
-        return back()->with('success', 'Exception marked resolved.');
+
+        $message = 'Exception marked resolved.';
+        if ($request->expectsJson()) {
+            return response()->json($this->verificationPayload($import, $message));
+        }
+
+        return back()->with('success', $message);
     }
 
     /** Organised S3 folder, identical to the app upload path. */
