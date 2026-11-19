@@ -278,7 +278,18 @@ class BankStatementVerificationService
             $out = round(-array_sum(array_map(fn ($r) => min(0.0, (float) $r['amount']), $rows)), 2);
             $balanceOk = abs(round($opening + $sum, 2) - $closing) < 0.01;
             $totalsOk = ($totalIn === null || abs($in - $totalIn) < 0.01) && ($totalOut === null || abs($out - $totalOut) < 0.01);
-            if ($totalIn !== null && !$totalsOk) {
+            // Some statements print the balance only on some rows and a scan may hold just part
+            // of the statement. When the rows chain exactly to the last printed row balance, the
+            // summary-box totals naturally differ - do not report that as an unreadable line.
+            $lastPrinted = null;
+            foreach (array_reverse($rows) as $r) {
+                if (($r['balance_after'] ?? null) !== null) {
+                    $lastPrinted = (float) $r['balance_after'];
+                    break;
+                }
+            }
+            $chainOk = $lastPrinted !== null && abs(round($opening + $sum, 2) - $lastPrinted) < 0.01;
+            if ($totalIn !== null && !$totalsOk && !$chainOk) {
                 $unparsed++;
                 $samples[] = 'Statement totals do not match extracted rows: printed in/out ' . number_format($totalIn, 2, '.', '')
                     . '/' . number_format((float) $totalOut, 2, '.', '') . ' vs extracted ' . number_format($in, 2, '.', '') . '/' . number_format($out, 2, '.', '');
@@ -908,16 +919,45 @@ class BankStatementVerificationService
                 'source_value' => 'opening=' . ($opening ?? 'n/a') . ' closing=' . ($closing ?? 'n/a'),
             ]);
         } elseif (abs($difference) >= 0.01) {
-            $this->exception($import->id, [
-                'code' => 'balance_mismatch',
-                'severity' => 'blocking',
-                'message' => 'Opening balance plus extracted transactions does not reach the PDF closing balance.',
-                'source_value' => 'opening=' . number_format($opening, 2, '.', '')
-                    . ' transactions=' . number_format($sum, 2, '.', '')
-                    . ' calculated=' . number_format((float) $calculated, 2, '.', '')
-                    . ' pdf_closing=' . number_format($closing, 2, '.', '')
-                    . ' difference=' . number_format((float) $difference, 2, '.', ''),
-            ]);
+            // Some statements print the running balance only on some rows, and a scanned
+            // file may contain only part of the statement. When the extracted rows chain
+            // exactly to the last printed row balance, use that as the closing figure
+            // instead of blocking on the (unreachable) statement summary box.
+            $lastPrinted = null;
+            if ($calculated !== null) {
+                foreach (array_reverse($this->sortChronologically($entries, (float) $opening)) as $row) {
+                    if (($row->balance_after ?? null) !== null) {
+                        $lastPrinted = (float) $row->balance_after;
+                        break;
+                    }
+                }
+            }
+
+            if ($lastPrinted !== null && abs($calculated - $lastPrinted) < 0.01) {
+                $summaryClosing = $closing;
+                $closing = $lastPrinted;
+                $difference = 0.0;
+                $this->exception($import->id, [
+                    'code' => 'closing_balance_from_last_row',
+                    'severity' => 'warning',
+                    'message' => 'The statement summary closing balance could not be reached from the extracted rows; the rows chain exactly to the last printed row balance, so that figure was used instead. The file may contain only part of the statement.',
+                    'source_value' => 'summary_closing=' . number_format($summaryClosing, 2, '.', '')
+                        . ' last_row_balance=' . number_format($lastPrinted, 2, '.', '')
+                        . ' calculated=' . number_format((float) $calculated, 2, '.', '')
+                        . ' transactions=' . number_format($sum, 2, '.', ''),
+                ]);
+            } else {
+                $this->exception($import->id, [
+                    'code' => 'balance_mismatch',
+                    'severity' => 'blocking',
+                    'message' => 'Opening balance plus extracted transactions does not reach the PDF closing balance.',
+                    'source_value' => 'opening=' . number_format($opening, 2, '.', '')
+                        . ' transactions=' . number_format($sum, 2, '.', '')
+                        . ' calculated=' . number_format((float) $calculated, 2, '.', '')
+                        . ' pdf_closing=' . number_format($closing, 2, '.', '')
+                        . ' difference=' . number_format((float) $difference, 2, '.', ''),
+                ]);
+            }
         }
 
         return [$opening, $closing, $calculated, $difference];
