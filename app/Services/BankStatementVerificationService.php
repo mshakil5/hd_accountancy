@@ -33,6 +33,7 @@ class BankStatementVerificationService
         'page_without_rows',
         'balance_mismatch',
         'balance_not_detected',
+        'closing_balance_from_last_row',
         'running_balance_mismatch',
         'possible_duplicate',
         'statement_period_gap',
