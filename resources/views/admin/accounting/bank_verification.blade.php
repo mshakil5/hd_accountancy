@@ -329,12 +329,13 @@
 
             <hr>
             <h6>Add a missing row</h6>
+            <div class="hd-small mb-2">Fields marked <span class="text-danger">*</span> are required — the form will not submit (and the page will not reload) until they are filled in.</div>
             <form method="POST" action="{{ route('admin.bank-statements.store-entry', $import->id) }}" class="hd-row-form">
                 @csrf
-                <div><label class="hd-small">Date</label><input type="date" name="transaction_date" required class="form-control form-control-sm"></div>
-                <div><label class="hd-small">Description</label><input type="text" name="description" required maxlength="500" class="form-control form-control-sm"></div>
-                <div><label class="hd-small">Amount</label><input type="number" step="0.01" name="amount" required class="form-control form-control-sm" placeholder="-100.00"></div>
-                <div><label class="hd-small">Reason</label><input type="text" name="reason" maxlength="1000" class="form-control form-control-sm" placeholder="Missing from extraction"></div>
+                <div><label class="hd-small">Date <span class="text-danger">*</span></label><input type="date" name="transaction_date" value="{{ old('transaction_date') }}" required class="form-control form-control-sm"></div>
+                <div><label class="hd-small">Description <span class="text-danger">*</span></label><input type="text" name="description" value="{{ old('description') }}" required maxlength="500" class="form-control form-control-sm"></div>
+                <div><label class="hd-small">Amount <span class="text-danger">*</span></label><input type="number" step="0.01" name="amount" value="{{ old('amount') }}" required class="form-control form-control-sm" placeholder="-100.00"></div>
+                <div><label class="hd-small">Reason <span class="text-danger">*</span></label><input type="text" name="reason" value="{{ old('reason') }}" required maxlength="1000" class="form-control form-control-sm" placeholder="Missing from extraction"></div>
                 <div><button class="btn btn-primary btn-sm">Add row</button></div>
             </form>
         </div>
