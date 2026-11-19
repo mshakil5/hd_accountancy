@@ -196,6 +196,7 @@ class VirginMoneyParser extends AbstractStatementParser
         foreach ($pages as $pageNo => $text) {
             foreach (preg_split('/\R/u', (string) $text) ?: [] as $rawLine) {
                 $line = $this->fixAmountTokens($this->clean((string) $rawLine));
+                $line = $this->normalizeDecimalCommas($line);
                 $line = $cleanSidebar($line);
                 if ($line !== '') {
                     $lines[] = [(int) $pageNo, $line];
@@ -360,7 +361,7 @@ class VirginMoneyParser extends AbstractStatementParser
 
             // --- FX DETECTION & EXTRACTION ---
             $fxMatch = false;
-            if (preg_match('/^(?:[0-9OolIQ]{1,4}\s*(?:' . self::MON . ')\s+)?(?:[A-Za-z]{1,3}\s+|[^\w\s]{1,4}\s+)?(?:Cls|Card|Cash|Crd)\s*\d*[\s_]*(?<![A-Za-z])([A-Za-z]{3})(?![A-Za-z])/iu', $content, $fx)) {
+            if (preg_match('/^(?:[0-9OolIQ]{1,4}\s*(?:' . self::MON . ')\s+)?(?:[A-Za-z]{1,3}\s+|[^\w\s]{1,4}\s+)?(?:C[il1]s?|Card|Cash|Crd)\s*\d*[\s_]*(?<![A-Za-z])([A-Za-z]{3})(?![A-Za-z])/iu', $content, $fx)) {
                 $code = strtoupper($fx[1] ?? '');
                 if ($code !== '' && isset(self::CURRENCIES[$code])) {
                     $fxMatch = true;
@@ -388,7 +389,7 @@ class VirginMoneyParser extends AbstractStatementParser
                 }
 
                 // Description: "Cls 77 Myr" or "Cls 77 Myr 149.00"
-                if (preg_match('/^(?:[0-9OolIQ]{1,4}\s*(?:' . self::MON . ')\s+)?((?:[A-Za-z]{1,3}\s+|[^\w\s]{1,4}\s+)?(?:Cls|Card|Cash|Crd)\s*\d*[\s_]*[A-Za-z]{3}(?:[\s_]*\d+\.\d{2})?)/iu', $content, $dm)) {
+                if (preg_match('/^(?:[0-9OolIQ]{1,4}\s*(?:' . self::MON . ')\s+)?((?:[A-Za-z]{1,3}\s+|[^\w\s]{1,4}\s+)?(?:C[il1]s?|Card|Cash|Crd)\s*\d*[\s_]*[A-Za-z]{3}(?:[\s_]*\d+\.\d{2})?)/iu', $content, $dm)) {
                     $baseDesc = trim(preg_replace('/^[^\w£]+/u', '', trim($dm[1])) ?? $dm[1]);
                 } else {
                     $baseDesc = preg_replace('/[\s_]*[\d,]+\.\d+\s*$/u', '', $content) ?? $content;
@@ -505,6 +506,10 @@ class VirginMoneyParser extends AbstractStatementParser
                     $salvage = $this->salvageAmounts($content);
                     if ($salvage !== null) {
                         [$descPart, $nums] = $salvage;
+                        if (count($nums) === 2 && !$this->plausibleBalance($nums[1], $raw, $openingFromStatement ?? $opening)) {
+                            // A garbled tail must not become a fake printed balance - that would only create a mismatch.
+                            array_pop($nums);
+                        }
                         $salvaged = true;
                     }
                 }
@@ -635,7 +640,7 @@ class VirginMoneyParser extends AbstractStatementParser
             || preg_match('/^Postcode\s+Lottery\s*$/i', $desc)) {
             return 1;
         }
-        if (preg_match('/^(Cls|Card|Cash|Crd\s?\d*|DD|SO|Wlt\d*)\b/i', $desc)) {
+        if (preg_match('/^(C[il1]s?|Card|Cash|Crd\s?\d*|DD|SO|Wlt\d*)\b/i', $desc)) {
             return -1;
         }
         return 0;
@@ -643,7 +648,7 @@ class VirginMoneyParser extends AbstractStatementParser
 
     private function key(string $desc): string
     {
-        $body = preg_replace('/^(Cls|Card|Cash|Crd)\s?\d*\s+/i', '', $desc) ?? $desc;
+        $body = preg_replace('/^(C[il1]s?|Card|Cash|Crd)\s?\d*\s+/i', '', $desc) ?? $desc;
         $body = preg_replace('/[^A-Za-z ].*$/u', '', $body) ?? $body;
         return 'vm|' . mb_strtolower(trim($body));
     }
@@ -738,10 +743,24 @@ class VirginMoneyParser extends AbstractStatementParser
             return null;
         }
 
-        // Walk back over the OCR tail: at most three digit-only tokens.
+        // Walk back over the OCR tail: at most three digit-only tokens. A single stray
+        // trailing non-digit blob (sidebar text glued onto the row, e.g. "o-Wocaen")
+        // may sit behind them and hide the digits - skip exactly one such blob.
         $tail = [];
-        while ($tokens && count($tail) < 3 && preg_match(self::OCR_TAIL_TOKEN, (string) end($tokens))) {
-            $tail[] = (string) array_pop($tokens);
+        $skippedJunk = false;
+        while ($tokens && count($tail) < 3) {
+            $end = (string) end($tokens);
+            if (preg_match(self::OCR_TAIL_TOKEN, $end)) {
+                $tail[] = $end;
+                array_pop($tokens);
+                continue;
+            }
+            if (!$tail && !$skippedJunk && preg_match('/^[^\d]{1,12}$/u', $end)) {
+                array_pop($tokens);
+                $skippedJunk = true;
+                continue;
+            }
+            break;
         }
         if (!$tail) {
             return null;
@@ -769,11 +788,32 @@ class VirginMoneyParser extends AbstractStatementParser
             return null;
         }
 
+        // The OCR tail may hold the running balance with its decimal point lost: "1033811" -> 10338.11.
+        if (count($nums) < 2 && $balanceLike) {
+            foreach ($tail as $tok) {
+                $norm = strtr($tok, 'OolIQ', '00110');
+                if (strlen($norm) >= 4 && ctype_digit($norm)) {
+                    $nums[] = round(((int) $norm) / 100, 2);
+                    break;
+                }
+            }
+        }
+
         $desc = trim(implode(' ', $tokens));
         if ($desc === '') {
             return null;
         }
         return [$desc, $nums];
+    }
+
+    /**
+     * OCR sometimes reads a decimal point in amounts as a comma ("12,25" for £12.25).
+     * Only a comma followed by exactly two decimal digits and not a longer digit run
+     * (i.e. never a thousands separator like "1,234" or "1,234.56") is converted.
+     */
+    private function normalizeDecimalCommas(string $line): string
+    {
+        return preg_replace('/(?<![\w])(\d{1,3}),(\d{2})(?![\d.])/u', '$1.$2', $line) ?? $line;
     }
 
     private function isNoise(string $line): bool
