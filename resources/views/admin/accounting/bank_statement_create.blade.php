@@ -128,14 +128,6 @@
                         </div>
                         <div id="selectedFile" class="alert alert-secondary py-2" style="display:none;"></div>
 
-                        <div class="form-check detail-field">
-                            <input type="checkbox" class="form-check-input" id="run_extraction" name="run_extraction" value="1" checked>
-                            <label class="form-check-label" for="run_extraction" style="font-size:13px;">
-                                Scan the statement now and extract its transactions (OCR)
-                            </label>
-                            <div><small class="text-muted">Leave this on so the rows are ready to verify straight away.</small></div>
-                        </div>
-
                         <div class="alert alert-info py-2" style="font-size:12px;">
                             <i class="bi bi-info-circle"></i> The statement is uploaded as pending. Nothing reaches the books until an accountant verifies the rows and approves the reconciliation.
                         </div>
@@ -356,7 +348,6 @@ $(function () {
         formData.append('client_credential_id', $('#client_credential_id').val());
         formData.append('client_id', $('#client_id').val());
         formData.append('bank_account_id', $('#bank_account_id').val());
-        formData.append('run_extraction', $('#run_extraction').is(':checked') ? '1' : '0');
         formData.append('file', f);
 
         const btn = $(this).prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Uploading...');
@@ -375,7 +366,6 @@ $(function () {
                     btn.prop('disabled', false).html('<i class="fa fa-save"></i> Create Statement');
                     return;
                 }
-                if (d.warning) toastr.warning(d.warning);
                 toastr.success(d.message);
                 setTimeout(function () {
                     window.location.href = d.redirect || "{{ route('admin.bank-statements.index') }}";

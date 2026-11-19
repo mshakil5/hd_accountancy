@@ -349,28 +349,14 @@ class BankStatementPageController extends Controller
             return $this->statementError(['The statement could not be uploaded. Please try again.']);
         }
 
-        // Optional immediate scan so the accountant lands on rows ready to
-        // verify instead of an empty workspace (same work as "Re-Scan with OCR").
-        $extractionWarning = null;
-        if ($request->boolean('run_extraction')) {
-            @set_time_limit(300);
-            try {
-                $this->verification->rescanWithOcr(BankImport::findOrFail($importId));
-            } catch (\Throwable $e) {
-                report($e);
-                $extractionWarning = 'The PDF was uploaded, but the automatic scan could not read its rows. Run "Re-Scan with OCR" from the verification workspace.';
-            }
-        }
-
-        $message = 'Bank statement uploaded for ' . $account->bank_name . '.';
-        if (!$request->boolean('run_extraction')) {
-            $message .= ' Run "Re-Scan with OCR" to extract its transactions.';
-        }
+        // No parsing/OCR happens on upload. The statement is stored as pending;
+        // extraction is a deliberate action from the verification workspace
+        // ("Recalculate checks" / "Re-extract with OCR").
+        $message = 'Bank statement uploaded for ' . $account->bank_name . '. Open it and use "Re-extract with OCR" to extract its transactions.';
 
         return response()->json([
             'status'   => 200,
             'message'  => $message,
-            'warning'  => $extractionWarning,
             'id'       => $importId,
             'redirect' => route('admin.bank-statements.verification', $importId),
         ]);
@@ -387,13 +373,10 @@ class BankStatementPageController extends Controller
     public function verification(int $importId)
     {
         $import = BankImport::findOrFail($importId);
-        // Opening the workspace is a read: never re-parse the PDF here. Extraction
-        // runs on upload, on row edits and via "Refresh checks"; only a statement
-        // that has never been analysed is processed once, on its first visit.
-        if ($import->verification_status === null || $import->verification_status === 'pending') {
-            $this->verification->refresh($import);
-            $import->refresh();
-        }
+        // Opening the workspace is a pure read: never re-parse the PDF here.
+        // Uploads do not extract anything; use "Recalculate checks" or
+        // "Re-extract with OCR" to process the statement on demand.
+        $import->refresh();
 
         $entries = DB::table('bank_entries')->where('bank_import_id', $importId)
             ->orderByRaw('COALESCE(source_page,1)')->orderByRaw('COALESCE(source_position,0)')->orderBy('id')->get();

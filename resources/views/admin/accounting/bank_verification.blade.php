@@ -127,6 +127,10 @@
                     <span class="hd-small font-weight-bold" style="color:#b91c1c">
                         <i class="bi bi-exclamation-triangle-fill mr-1"></i> {{ $blocking }} blocking exception(s) must be resolved before verifying statement.
                     </span>
+                @elseif(in_array($import->verification_status, [null, 'pending'], true))
+                    <span class="hd-small font-weight-bold" style="color:#92400e">
+                        <i class="bi bi-hourglass-split mr-1"></i> Not checked yet — click "Re-extract with OCR" or "Recalculate checks" to process this statement.
+                    </span>
                 @else
                     <span class="hd-small text-success font-weight-bold">
                         <i class="bi bi-check-circle-fill mr-1"></i> All checks passed!
