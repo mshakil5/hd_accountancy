@@ -117,9 +117,54 @@ class BankParsersTest extends TestCase
         $this->assertSame(0, $parsed['unparsed']);
     }
 
-    public function test_starling_same_day_rows_inherit_the_printed_date(): void
+    /**
+     * Lloyds prints an overdrawn balance with a trailing "OD" (144.44 OD). The opening
+     * balance carries the same marker and must be negative too, otherwise every row's
+     * system balance is offset by twice the opening figure.
+     */
+    public function test_lloyds_overdrawn_opening_balance_honours_the_od_marker(): void
     {
-        $p = self::POUND;
+        $parsed = (new LloydsParser())->parseDocument([1 => implode("\n", [
+            'Lloyds Bank',
+            '01 Apr 25 STATEMENT OPENING BALANCE 144.44 OD',
+            '02 Apr 25 PAY CLUB LLOYDS FEE 3.00 147.44 OD',
+            '02 Apr 25 DEB PRIMARK CD 0957 143.20 290.64 OD',
+            '30 Apr 25 STATEMENT CLOSING BALANCE 146.20 0.00 290.64 OD',
+        ])], false);
+
+        $rows = $this->rows($parsed);
+        $this->assertCount(2, $rows);
+        $this->assertEqualsWithDelta(-144.44, (float) $parsed['opening'], 0.01);
+        $this->assertEqualsWithDelta(-147.44, (float) $rows[0]['balance_after'], 0.01);
+        $this->assertEqualsWithDelta(-3.0, (float) $rows[0]['amount'], 0.01);
+        $this->assertEqualsWithDelta(-290.64, (float) $parsed['closing'], 0.01);
+        $this->assertSame(0, $parsed['unparsed']);
+    }
+
+    /**
+     * OCR can drop the OD marker from the opening line while keeping it on every row.
+     * The printed opening then looks positive; the first printed row balance proves the
+     * sign, so the parser must use the proven one.
+     */
+    public function test_lloyds_overdrawn_opening_without_od_is_proven_by_the_first_row(): void
+    {
+        $parsed = (new LloydsParser())->parseDocument([1 => implode("\n", [
+            'Lloyds Bank',
+            '01 Apr 25 STATEMENT OPENING BALANCE 144.44',
+            '02 Apr 25 PAY CLUB LLOYDS FEE 3.00 147.44 OD',
+            '02 Apr 25 DEB PRIMARK CD 0957 143.20 290.64 OD',
+            '30 Apr 25 STATEMENT CLOSING BALANCE 146.20 0.00 290.64 OD',
+        ])], true);
+
+        $rows = $this->rows($parsed);
+        $this->assertCount(2, $rows);
+        $this->assertEqualsWithDelta(-144.44, (float) $parsed['opening'], 0.01);
+        $this->assertEqualsWithDelta(-3.0, (float) $rows[0]['amount'], 0.01);
+        $this->assertSame(0, $parsed['unparsed']);
+    }
+
+    public function test_starling_same_day_rows_inherit_the_printed_date(): void
+    {        $p = self::POUND;
         $parsed = (new StarlingParser())->parseDocument([1 => implode("\n", [
             'Starling Bank',
             "OPENING BALANCE {$p}1,000.00",

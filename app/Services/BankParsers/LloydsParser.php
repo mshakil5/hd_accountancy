@@ -126,10 +126,39 @@ class LloydsParser extends AbstractStatementParser
         }
 
         $res = BalanceResolver::resolve($rows, $opening, $closing);
+
+        // A scan can lose the "OD" marker on the opening line while keeping it on every
+        // row balance, leaving the opening positive against a negative ledger. Prove the
+        // opening against the first printed row balance: when the opposite sign chains
+        // exactly and the printed sign does not, the printed sign was a misread.
+        if ($opening !== null && abs($opening) >= 0.01
+            && $this->chainsToOpening($rows, -$opening)
+            && !$this->chainsToOpening($rows, $opening)) {
+            $opening = -$opening;
+            $res = BalanceResolver::resolve($rows, $opening, $closing);
+        }
+
         $unparsed += $res['unresolved'];
         $samples = array_merge($samples, $res['samples']);
 
         return $this->result($this->finalise($rows, $fromOcr), $unparsed, $samples, $opening, $closing, $totalIn, $totalOut);
+    }
+
+    /** True when the resolved rows add up from this opening to the first printed balance. */
+    private function chainsToOpening(array $rows, float $opening): bool
+    {
+        $running = $opening;
+        foreach ($rows as $row) {
+            $sign = (int) ($row['sign'] ?? 0);
+            if ($sign === 0) {
+                $sign = (int) ($row['hint'] ?? 0);
+            }
+            $running = round($running + $sign * (float) ($row['abs'] ?? 0), 2);
+            if (($row['balance'] ?? null) !== null) {
+                return abs($running - (float) $row['balance']) < 0.01;
+            }
+        }
+        return false;
     }
 
     private function finishRecord(array $cur, array &$raw, int &$unparsed, array &$samples,
@@ -138,8 +167,16 @@ class LloydsParser extends AbstractStatementParser
         $rest = trim($cur['rest']);
 
         if (preg_match('/^STATEMENT\s*OPENING\s*BALANCE\s*(.*)$/iu', $rest, $m)) {
-            [, $nums] = $this->trailingMoney($m[1], 1);
+            // Lloyds marks an overdrawn balance with a trailing "OD" (144.44 OD).
+            // The closing line already honours it; the opening must too, otherwise
+            // the whole ledger is offset by twice the opening balance.
+            $rawOpening = trim($m[1]);
+            $od = (bool) preg_match('/\d\s*OD$/iu', $rawOpening);
+            [, $nums] = $this->trailingMoney(preg_replace('/\s*OD$/iu', '', $rawOpening), 1);
             $opening = $nums[0] ?? null;
+            if ($opening !== null && $od) {
+                $opening = -abs($opening);
+            }
             return;
         }
         if (preg_match('/^STATEMENT\s*CLOSING\s*BALANCE\s*(.*)$/iu', $rest, $m)) {
