@@ -81,9 +81,6 @@ class VirginMoneyParser extends AbstractStatementParser
     {
         $all = implode("\n", array_map('strval', $pages));
 
-        // TEMPORARY DEBUG - Virgin Money only: dump the exact OCR/parse text. Remove after diagnosis.
-        \Illuminate\Support\Facades\Log::info('virgin_ocr_text', ['fromOcr' => $fromOcr, 'text' => $all]);
-
         // ---- printed summary (right-hand panel) --------------------------------------------------
         $opening = $closing = null;
         if (preg_match('/(?:Opening\s?balance|Previous\s?statement)\s*[£E]?\s?(-?[\d,]+\.\d{2})/iu', $all, $m)) {
@@ -363,7 +360,7 @@ class VirginMoneyParser extends AbstractStatementParser
 
             // --- FX DETECTION & EXTRACTION ---
             $fxMatch = false;
-            if (preg_match('/^(?:[A-Za-z]{1,3}\s+|[^\w\s]{1,4}\s+)?(?:Cls|Card|Cash|Crd)\s*\d*[\s_]*(?<![A-Za-z])([A-Za-z]{3})(?![A-Za-z])/iu', $content, $fx)) {
+            if (preg_match('/^(?:[0-9OolIQ]{1,4}\s*(?:' . self::MON . ')\s+)?(?:[A-Za-z]{1,3}\s+|[^\w\s]{1,4}\s+)?(?:Cls|Card|Cash|Crd)\s*\d*[\s_]*(?<![A-Za-z])([A-Za-z]{3})(?![A-Za-z])/iu', $content, $fx)) {
                 $code = strtoupper($fx[1] ?? '');
                 if ($code !== '' && isset(self::CURRENCIES[$code])) {
                     $fxMatch = true;
@@ -391,7 +388,7 @@ class VirginMoneyParser extends AbstractStatementParser
                 }
 
                 // Description: "Cls 77 Myr" or "Cls 77 Myr 149.00"
-                if (preg_match('/^((?:[A-Za-z]{1,3}\s+|[^\w\s]{1,4}\s+)?(?:Cls|Card|Cash|Crd)\s*\d*[\s_]*[A-Za-z]{3}(?:[\s_]*\d+\.\d{2})?)/iu', $content, $dm)) {
+                if (preg_match('/^(?:[0-9OolIQ]{1,4}\s*(?:' . self::MON . ')\s+)?((?:[A-Za-z]{1,3}\s+|[^\w\s]{1,4}\s+)?(?:Cls|Card|Cash|Crd)\s*\d*[\s_]*[A-Za-z]{3}(?:[\s_]*\d+\.\d{2})?)/iu', $content, $dm)) {
                     $baseDesc = trim(preg_replace('/^[^\w£]+/u', '', trim($dm[1])) ?? $dm[1]);
                 } else {
                     $baseDesc = preg_replace('/[\s_]*[\d,]+\.\d+\s*$/u', '', $content) ?? $content;
