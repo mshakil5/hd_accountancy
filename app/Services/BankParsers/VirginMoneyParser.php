@@ -81,6 +81,9 @@ class VirginMoneyParser extends AbstractStatementParser
     {
         $all = implode("\n", array_map('strval', $pages));
 
+        // TEMPORARY DEBUG - Virgin Money only: dump the exact OCR/parse text. Remove after diagnosis.
+        \Illuminate\Support\Facades\Log::info('virgin_ocr_text', ['fromOcr' => $fromOcr, 'text' => $all]);
+
         // ---- printed summary (right-hand panel) --------------------------------------------------
         $opening = $closing = null;
         if (preg_match('/(?:Opening\s?balance|Previous\s?statement)\s*[£E]?\s?(-?[\d,]+\.\d{2})/iu', $all, $m)) {
