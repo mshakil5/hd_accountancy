@@ -31,7 +31,7 @@
         <div class="step-nav">
             <div class="step-btn active" id="stepBtn1"><i class="fa fa-user"></i> 1. Select Client</div>
             <div class="step-btn" id="stepBtn2"><i class="fa fa-university"></i> 2. Bank Account</div>
-            <div class="step-btn" id="stepBtn3"><i class="fa fa-upload"></i> 3. Upload Statement</div>
+            <div class="step-btn" id="stepBtn3"><i class="fa fa-upload"></i> 3. Upload Statements</div>
         </div>
 
         <form id="createStatementForm" enctype="multipart/form-data">
@@ -119,22 +119,22 @@
             {{-- STEP 3: Upload --}}
             <div class="step-section" id="step3">
                 <div class="card card-outline card-success">
-                    <div class="card-header"><h3 class="card-title">Step 3: Upload Statement</h3></div>
+                    <div class="card-header"><h3 class="card-title">Step 3: Upload Statements</h3></div>
                     <div class="card-body">
                         <div class="detail-field">
-                            <label class="detail-label">Statement PDF <span class="text-danger">*</span></label>
-                            <input type="file" class="form-control" id="fileInput" name="file" accept=".pdf,application/pdf">
-                            <small class="text-muted">One PDF up to 50 MB.</small>
+                            <label class="detail-label">Statement PDFs <span class="text-danger">*</span></label>
+                            <input type="file" class="form-control" id="fileInput" name="files[]" accept=".pdf,application/pdf" multiple>
+                            <small class="text-muted">Select one or more PDFs (up to 20, 50 MB each). Each PDF becomes a separate statement.</small>
                         </div>
                         <div id="selectedFile" class="alert alert-secondary py-2" style="display:none;"></div>
 
                         <div class="alert alert-info py-2" style="font-size:12px;">
-                            <i class="bi bi-info-circle"></i> The statement is uploaded as pending. Nothing reaches the books until an accountant verifies the rows and approves the reconciliation.
+                            <i class="bi bi-info-circle"></i> Statements are uploaded as pending. Nothing reaches the books until an accountant verifies the rows and approves the reconciliation.
                         </div>
 
                         <div class="mt-3 d-flex gap-2">
                             <button type="button" class="btn btn-secondary" id="step3Back"><i class="fa fa-arrow-left"></i> Back</button>
-                            <button type="button" class="btn btn-success" id="submitBtn"><i class="fa fa-save"></i> Create Statement</button>
+                            <button type="button" class="btn btn-success" id="submitBtn"><i class="fa fa-save"></i> Create Statements</button>
                         </div>
                     </div>
                 </div>
@@ -325,30 +325,49 @@ $(function () {
         goToStep(3);
     });
 
-    // ── Step 3: file + submit ──
+    // ── Step 3: files + submit ──
+    function isPdf(f) {
+        return f.type === 'application/pdf' || /\.pdf$/i.test(f.name);
+    }
+
     $('#fileInput').on('change', function () {
-        const f = this.files && this.files[0];
-        if (!f) { $('#selectedFile').hide(); return; }
-        if (f.type !== 'application/pdf' && !/\.pdf$/i.test(f.name)) {
-            toastr.error('Please choose a PDF bank statement.');
+        const files = Array.from(this.files || []);
+        const box = $('#selectedFile').empty().hide();
+        if (!files.length) return;
+
+        const invalid = files.find(f => !isPdf(f));
+        if (invalid) {
+            toastr.error('Please choose PDF bank statements only. Invalid file: ' + invalid.name);
             $(this).val('');
-            $('#selectedFile').hide();
             return;
         }
-        $('#selectedFile').html('<i class="fa fa-file-pdf-o text-danger"></i> ' + f.name + ' &nbsp;<span class="text-muted">(' + (f.size / 1048576).toFixed(1) + ' MB)</span>').show();
+        if (files.length > 20) {
+            toastr.error('You can upload up to 20 statements at a time.');
+            $(this).val('');
+            return;
+        }
+
+        const list = $('<ul class="mb-0 pl-3"></ul>');
+        files.forEach(function (f) {
+            list.append($('<li></li>').text(f.name + ' (' + (f.size / 1048576).toFixed(1) + ' MB)'));
+        });
+        box.append($('<strong></strong>').text('Selected statements (' + files.length + '): ')).append(list).show();
     });
 
     $('#submitBtn').click(function () {
         if (!$('#bank_account_id').val()) { toastr.error('Please select a bank account.'); goToStep(2); return; }
-        const f = $('#fileInput')[0].files[0];
-        if (!f) { toastr.error('Please choose the statement PDF.'); return; }
+        const files = Array.from($('#fileInput')[0].files || []);
+        if (!files.length) { toastr.error('Please choose at least one statement PDF.'); return; }
+
+        const invalid = files.find(f => !isPdf(f));
+        if (invalid) { toastr.error('Please choose PDF bank statements only. Invalid file: ' + invalid.name); return; }
 
         const formData = new FormData();
         formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
         formData.append('client_credential_id', $('#client_credential_id').val());
         formData.append('client_id', $('#client_id').val());
         formData.append('bank_account_id', $('#bank_account_id').val());
-        formData.append('file', f);
+        files.forEach(function (f) { formData.append('files[]', f); });
 
         const btn = $(this).prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Uploading...');
 
@@ -363,7 +382,7 @@ $(function () {
                 if (d.status == 303) {
                     $('.ermsg').html(d.message);
                     window.scrollTo(0, 0);
-                    btn.prop('disabled', false).html('<i class="fa fa-save"></i> Create Statement');
+                    btn.prop('disabled', false).html('<i class="fa fa-save"></i> Create Statements');
                     return;
                 }
                 toastr.success(d.message);
@@ -374,9 +393,9 @@ $(function () {
             error: function (xhr) {
                 const msg = (xhr.responseJSON && xhr.responseJSON.errors)
                     ? Object.values(xhr.responseJSON.errors).flat().join(' ')
-                    : 'Something went wrong while uploading the statement.';
+                    : 'Something went wrong while uploading the statements.';
                 toastr.error(msg);
-                btn.prop('disabled', false).html('<i class="fa fa-save"></i> Create Statement');
+                btn.prop('disabled', false).html('<i class="fa fa-save"></i> Create Statements');
             }
         });
     });

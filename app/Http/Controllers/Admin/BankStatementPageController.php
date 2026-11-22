@@ -270,9 +270,10 @@ class BankStatementPageController extends Controller
     }
 
     /**
-     * Store a statement uploaded from the website. The PDF is filed in the same
-     * S3 layout and with the same rows as the mobile app upload path, so both
-     * entry points feed one verification/reconciliation pipeline.
+     * Store statements uploaded from the website. Each PDF becomes its own
+     * bank_import (and therefore its own verification workspace). The files are
+     * filed in the same S3 layout as the mobile app upload path, so both entry
+     * points feed one verification/reconciliation pipeline.
      */
     public function store(Request $request)
     {
@@ -281,8 +282,16 @@ class BankStatementPageController extends Controller
         if (!$request->client_id)            $errors[] = 'Business / Client is required.';
         if (!$request->bank_account_id)      $errors[] = 'Bank account is required.';
 
+        // Accept both the multi-file input and the old single-file field.
+        $files = collect($request->file('files', []))->filter()->values()->all();
+        if ($request->hasFile('file')) {
+            array_unshift($files, $request->file('file'));
+        }
+        $request->merge(['files' => $files]);
+
         $request->validate([
-            'file' => 'required|file|mimes:pdf|max:51200',
+            'files'   => 'required|array|max:20',
+            'files.*' => 'file|mimes:pdf|max:51200',
         ]);
 
         if (count($errors)) {
@@ -306,20 +315,90 @@ class BankStatementPageController extends Controller
             return $this->statementError(['Select a valid active bank account for this business.']);
         }
 
-        $file = $request->file('file');
-        $hash = hash_file('sha256', $file->getRealPath());
+        $createdIds = [];
+        $skipped    = [];
+        $failed     = [];
+        $hashes     = [];
 
-        if (DB::table('bank_imports')
-            ->where('client_id', $client->id)
-            ->where('bank_account_id', $account->id)
-            ->where('sha256', $hash)
-            ->exists()) {
-            return $this->statementError(['This bank statement was already imported for ' . $account->bank_name . '.']);
+        foreach ($files as $file) {
+            $hash = hash_file('sha256', $file->getRealPath());
+
+            // Refuse both previously imported PDFs and duplicates inside this
+            // batch, so one file never produces two statements.
+            $alreadyImported = in_array($hash, $hashes, true) || DB::table('bank_imports')
+                ->where('client_id', $client->id)
+                ->where('bank_account_id', $account->id)
+                ->where('sha256', $hash)
+                ->exists();
+
+            if ($alreadyImported) {
+                $skipped[] = $file->getClientOriginalName();
+                continue;
+            }
+
+            $hashes[] = $hash;
+
+            try {
+                $createdIds[] = $this->storeOneStatement($client, $account, $file, $hash);
+            } catch (\Throwable $e) {
+                report($e);
+                $failed[] = $file->getClientOriginalName();
+            }
         }
 
+        if (!$createdIds) {
+            $messages = [];
+            if ($skipped) {
+                $messages[] = 'Already imported for ' . e($account->bank_name) . ': ' . $this->quotedFileNames($skipped) . '.';
+            }
+            if ($failed) {
+                $messages[] = 'These statements could not be uploaded: ' . $this->quotedFileNames($failed) . '. Please try again.';
+            }
+
+            return $this->statementError($messages ?: ['The statements could not be uploaded. Please try again.']);
+        }
+
+        // No parsing/OCR happens on upload. Each statement is stored as pending;
+        // extraction is a deliberate action from the verification workspace
+        // ("Recalculate checks" / "Re-extract with OCR").
+        $message = count($createdIds) === 1
+            ? 'Bank statement uploaded for ' . $account->bank_name . '. Open it and use "Re-extract with OCR" to extract its transactions.'
+            : count($createdIds) . ' bank statements uploaded for ' . $account->bank_name . '. Each PDF is a separate statement.';
+
+        if ($skipped) {
+            $message .= ' Skipped (already imported): ' . $this->quotedFileNames($skipped) . '.';
+        }
+        if ($failed) {
+            $message .= ' Failed: ' . $this->quotedFileNames($failed) . '.';
+        }
+
+        return response()->json([
+            'status'   => 200,
+            'message'  => $message,
+            'id'       => $createdIds[0],
+            'ids'      => $createdIds,
+            'created'  => count($createdIds),
+            'skipped'  => array_values(array_unique($skipped)),
+            'failed'   => $failed,
+            // One file keeps the old shortcut into its verification workspace;
+            // a batch lands on the list so every new statement is visible.
+            'redirect' => count($createdIds) === 1
+                ? route('admin.bank-statements.verification', $createdIds[0])
+                : route('admin.bank-statements.index', [
+                    'client_credential_id' => $client->client_credential_id,
+                    'client_id'            => $client->id,
+                    'bank_account_id'      => $account->id,
+                ]),
+        ]);
+    }
+
+    /** Persist one uploaded PDF as a single pending bank statement. */
+    private function storeOneStatement($client, $account, $file, string $hash): int
+    {
         $uploadedPath = null;
+
         try {
-            $importId = DB::transaction(function () use ($client, $account, $file, $hash, &$uploadedPath) {
+            return DB::transaction(function () use ($client, $account, $file, $hash, &$uploadedPath) {
                 $importId = DB::table('bank_imports')->insertGetId([
                     'client_id'           => $client->id,
                     'bank_account_id'     => $account->id,
@@ -342,27 +421,21 @@ class BankStatementPageController extends Controller
 
                 DB::table('bank_imports')->where('id', $importId)->update(['storage_path' => $uploadedPath]);
 
-                return $importId;
+                return (int) $importId;
             });
         } catch (\Throwable $e) {
             if ($uploadedPath) {
                 Storage::disk('s3')->delete($uploadedPath);
             }
-            report($e);
-            return $this->statementError(['The statement could not be uploaded. Please try again.']);
+
+            throw $e;
         }
+    }
 
-        // No parsing/OCR happens on upload. The statement is stored as pending;
-        // extraction is a deliberate action from the verification workspace
-        // ("Recalculate checks" / "Re-extract with OCR").
-        $message = 'Bank statement uploaded for ' . $account->bank_name . '. Open it and use "Re-extract with OCR" to extract its transactions.';
-
-        return response()->json([
-            'status'   => 200,
-            'message'  => $message,
-            'id'       => $importId,
-            'redirect' => route('admin.bank-statements.verification', $importId),
-        ]);
+    /** File names are rendered as HTML by the admin UI, so escape them. */
+    private function quotedFileNames(array $names): string
+    {
+        return implode(', ', array_map(fn($name) => e($name), array_values(array_unique($names))));
     }
 
     private function statementError(array $messages)
