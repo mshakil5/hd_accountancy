@@ -7,7 +7,7 @@ class ParserRegistry
     /** @return array<int,StatementParserInterface> */
     public static function all(): array
     {
-        return [new StarlingParser(), new LloydsParser(), new VirginMoneyParser()];
+        return [new SantanderParser(), new StarlingParser(), new LloydsParser(), new VirginMoneyParser()];
     }
 
     public static function detect(string $text): ?StatementParserInterface
