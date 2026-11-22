@@ -136,6 +136,20 @@ class BankStatementVerificationService
             }
             if (!empty($ocrPages)) {
                 $candidate = $this->evaluatePages($ocrPages, true);
+
+                // A table page OCR'd as one uniform block can lose every row. Re-read just
+                // this document with a column-aware page segmentation before giving up.
+                if ($candidate['rows'] === []) {
+                    $alt = $extractor->extractLayoutTextByPage($path, 300, 4);
+                    if (!empty($alt)) {
+                        $altCandidate = $this->evaluatePages($alt, true);
+                        if ($this->betterThan($altCandidate, $candidate)) {
+                            $candidate = $altCandidate;
+                            $ocrReason .= '+psm4';
+                        }
+                    }
+                }
+
                 if ($best === null || $this->betterThan($candidate, $best)) {
                     $best = $candidate;
                 }

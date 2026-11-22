@@ -361,9 +361,10 @@ class InvoiceExtractorService
      *
      * @return array<int, string>
      */
-    public function extractLayoutTextByPage(string $pdfPath, int $dpi = 300): array
+    public function extractLayoutTextByPage(string $pdfPath, int $dpi = 300, int $psm = 6): array
     {
         $dpi = max(200, min($dpi, 400));
+        $psm = max(1, min($psm, 13));
         $pages = [];
         try {
             $tempDir = sys_get_temp_dir();
@@ -379,7 +380,7 @@ class InvoiceExtractorService
                 if (preg_match('/-(\d+)\.png$/', $image, $m)) {
                     $pageNo = (int) $m[1];
                 }
-                $tsv = (string) @shell_exec("{$this->config['tesseract']} \"{$image}\" stdout -l eng --oem 1 --psm 6 -c preserve_interword_spaces=1 tsv 2>/dev/null");
+                $tsv = (string) @shell_exec("{$this->config['tesseract']} \"{$image}\" stdout -l eng --oem 1 --psm {$psm} -c preserve_interword_spaces=1 tsv 2>/dev/null");
                 $pages[$pageNo] = self::layoutTextFromTsv($tsv);
                 @unlink($image);
             }

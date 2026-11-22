@@ -573,4 +573,121 @@ class BankParsersTest extends TestCase
         $this->assertEqualsWithDelta(10627.24, (float) $parsed['closing'], 0.01);
         $this->assertStringNotContainsString('Stg', implode(' ', array_column($rows, 'description')));
     }
+
+    /** Newer layouts print the calendar year on every row; those rows used to be dropped. */
+    public function test_virgin_rows_that_print_a_full_year_are_extracted(): void
+    {
+        $parsed = (new VirginMoneyParser())->parseDocument([1 => implode("\n", [
+            'Virgin Money',
+            'Opening balance 1,000.00',
+            'Date Description Debits Credits Balance',
+            '03 Apr 2025 TESCO STORES 12.34 987.66',
+            'SHELL 40.00 947.66',
+            '04 Apr 2025 SALARY 2,000.00 2,947.66',
+            'Closing balance 2,947.66',
+        ])], false);
+
+        $rows = $this->rows($parsed);
+        $this->assertCount(3, $rows);
+        $this->assertSame(['2025-04-03', '2025-04-03', '2025-04-04'], array_column($rows, 'transaction_date'));
+        $this->assertSame(0, $parsed['unparsed']);
+    }
+
+    /** Numeric day-first dates (03/04/2025) are accepted as transaction rows. */
+    public function test_virgin_numeric_dates_are_extracted(): void
+    {
+        $parsed = (new VirginMoneyParser())->parseDocument([1 => implode("\n", [
+            'Virgin Money',
+            'Opening balance 1,000.00',
+            'Date Description Money out Money in Balance',
+            '03/04/2025 TESCO STORES 12.34 987.66',
+            'SHELL 40.00 947.66',
+            '04/04/2025 SALARY 2,000.00 2,947.66',
+            'Closing balance 2,947.66',
+        ])], false);
+
+        $rows = $this->rows($parsed);
+        $this->assertCount(3, $rows);
+        $this->assertSame(['2025-04-03', '2025-04-03', '2025-04-04'], array_column($rows, 'transaction_date'));
+        $this->assertSame(0, $parsed['unparsed']);
+    }
+
+    /**
+     * A transaction whose text was lost but whose printed amount closes the balance gap is
+     * recovered from that line instead of vanishing (this is what "missing rows" looked like).
+     */
+    public function test_virgin_recovers_a_row_from_the_printed_balance_gap(): void
+    {
+        $parsed = (new VirginMoneyParser())->parseDocument([1 => implode("\n", [
+            'Virgin Money',
+            'Statement date 05 April 2025',
+            'Opening balance 1,000.00',
+            'Date Description Debits Credits Balance',
+            '03 Apr TESCO STORES 12.34 987.66',
+            '04 Apr 453.00 534.66',
+            '05 Apr SHELL 40.00 494.66',
+            'Closing balance 494.66',
+        ])], false);
+
+        $rows = $this->rows($parsed);
+        $this->assertCount(3, $rows);
+        $this->assertSame(['2025-04-03', '2025-04-04', '2025-04-05'], array_column($rows, 'transaction_date'));
+        $this->assertEqualsWithDelta(-453.00, (float) $rows[1]['amount'], 0.01);
+        $this->assertSame(0, $parsed['unparsed']);
+    }
+
+    /** Promo/footer text in the middle of a page must not drop the rows printed after it. */
+    public function test_virgin_resumes_after_footer_text_on_the_same_page(): void
+    {
+        $parsed = (new VirginMoneyParser())->parseDocument([1 => implode("\n", [
+            'Virgin Money',
+            'Statement date 05 April 2025',
+            'Opening balance 1,000.00',
+            'Date Description Debits Credits Balance',
+            '03 Apr TESCO STORES 12.34 987.66',
+            'Just so you know, your rate changes soon',
+            '04 Apr SHELL 40.00 947.66',
+            'Closing balance 947.66',
+        ])], false);
+
+        $rows = $this->rows($parsed);
+        $this->assertCount(2, $rows);
+        $this->assertSame(['2025-04-03', '2025-04-04'], array_column($rows, 'transaction_date'));
+        $this->assertSame(0, $parsed['unparsed']);
+    }
+
+    /** A dated line whose text is the column header is not a transaction. */
+    public function test_virgin_dated_header_line_is_not_a_row(): void
+    {
+        $parsed = (new VirginMoneyParser())->parseDocument([1 => implode("\n", [
+            'Virgin Money',
+            'Statement date 05 April 2025',
+            'Opening balance 1,000.00',
+            '03 Apr 2025 Date Description Debits Credits Balance',
+            '03 Apr 2025 TESCO STORES 12.34 987.66',
+            'Closing balance 987.66',
+        ])], false);
+
+        $rows = $this->rows($parsed);
+        $this->assertCount(1, $rows);
+        $this->assertSame('TESCO STORES', $rows[0]['description']);
+    }
+
+    /** A day with more rows than the subset-sum limit is still signed against its balance. */
+    public function test_balance_resolver_handles_a_day_longer_than_the_group_limit(): void
+    {
+        $rows = [];
+        for ($i = 0; $i < 34; $i++) {
+            $rows[] = ['abs' => 10.0, 'balance' => null, 'hint' => -1, 'key' => 'p' . $i];
+        }
+        // One credit among 34 debits: hints alone cannot reach the printed balance.
+        $rows[] = ['abs' => 500.0, 'balance' => null, 'hint' => 0, 'key' => 'salary'];
+        $rows[] = ['abs' => 0.0, 'balance' => 1160.0, 'hint' => 0, 'key' => 'end'];
+
+        $res = \App\Services\BankParsers\BalanceResolver::resolve($rows, 1000.0, 1160.0);
+
+        $this->assertSame(0, $res['unresolved']);
+        $this->assertEqualsWithDelta(1, $rows[count($rows) - 2]['sign'], 0.001);
+        $this->assertEqualsWithDelta(-1, $rows[0]['sign'], 0.001);
+    }
 }

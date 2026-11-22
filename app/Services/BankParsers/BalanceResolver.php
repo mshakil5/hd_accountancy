@@ -100,11 +100,18 @@ final class BalanceResolver
             $hints[$k] = $type !== 0 ? $type : $h;
         }
 
-        if ($delta === null || $n > self::MAX_GROUP) {
-            return [$delta === null ? self::hintSigns($hints) : null, false];
+        if ($delta === null) {
+            return [self::hintSigns($hints), false];
         }
 
         $target = (int) round($delta * 100);
+
+        // Long groups (a busy day where the balance is only printed once) cannot be solved by
+        // the full subset-sum table, but the printed balance still proves the right answer:
+        // start from the payee hints and flip the one or two rows that close the gap.
+        if ($n > self::MAX_GROUP) {
+            return [self::solveLarge($cents, $hints, $target), false];
+        }
         $levels = [[0 => [0, 1, null, 0]]];
         for ($k = 0; $k < $n; $k++) {
             $next = [];
@@ -150,5 +157,56 @@ final class BalanceResolver
     private static function hintSigns(array $hints): array
     {
         return array_map(fn ($h) => $h !== 0 ? $h : -1, $hints);
+    }
+
+    /**
+     * Sign assignment for groups too long for the subset-sum table: take the payee hints, then
+     * correct them by flipping the single row (or the pair of rows) that makes the group add up
+     * to the printed balance change. Returns null when no such correction exists.
+     *
+     * @param  array<int,int> $cents
+     * @param  array<int,int> $hints
+     * @return array<int,int>|null
+     */
+    private static function solveLarge(array $cents, array $hints, int $target): ?array
+    {
+        $signs = [];
+        $sum = 0;
+        foreach ($cents as $k => $c) {
+            $s = $hints[$k] !== 0 ? $hints[$k] : -1;
+            $signs[$k] = $s;
+            $sum += $s * $c;
+        }
+
+        $diff = $target - $sum;
+        if ($diff === 0) {
+            return $signs;
+        }
+
+        foreach ($cents as $a => $c) {
+            if ($c !== 0 && $signs[$a] * $c * 2 === -$diff) {
+                $signs[$a] = -$signs[$a];
+                return $signs;
+            }
+        }
+
+        foreach ($cents as $a => $ca) {
+            if ($ca === 0) {
+                continue;
+            }
+            $rest = $diff + 2 * $signs[$a] * $ca;
+            foreach ($cents as $b => $cb) {
+                if ($b <= $a || $cb === 0) {
+                    continue;
+                }
+                if ($signs[$b] * $cb * 2 === -$rest) {
+                    $signs[$a] = -$signs[$a];
+                    $signs[$b] = -$signs[$b];
+                    return $signs;
+                }
+            }
+        }
+
+        return null;
     }
 }
