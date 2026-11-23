@@ -558,6 +558,7 @@ class BankStatementPageController extends Controller
             'transaction_date' => 'required|date',
             'description' => 'required|string|max:500',
             'amount' => 'required|numeric|between:-999999999,999999999',
+            'balance_after' => 'nullable|numeric|between:-999999999,999999999',
             'reason' => 'required|string|max:1000',
         ]);
         $entry = DB::table('bank_entries')->find($entryId);
@@ -575,11 +576,13 @@ class BankStatementPageController extends Controller
                     'transaction_date' => $entry->transaction_date,
                     'description' => $entry->description,
                     'amount' => $entry->amount,
+                    'balance_after' => $entry->balance_after,
                 ]),
                 'corrected_values' => json_encode([
                     'transaction_date' => $data['transaction_date'],
                     'description' => $data['description'],
                     'amount' => $data['amount'],
+                    'balance_after' => $data['balance_after'] ?? null,
                 ]),
                 'created_at' => now(),
             ]);
@@ -588,6 +591,7 @@ class BankStatementPageController extends Controller
                 'transaction_date' => $data['transaction_date'],
                 'description' => $data['description'],
                 'amount' => $data['amount'],
+                'balance_after' => $data['balance_after'] ?? null,
                 'is_manually_corrected' => 1,
                 'verified_by' => auth()->id(),
                 'verified_at' => now(),
@@ -614,6 +618,7 @@ class BankStatementPageController extends Controller
             'transaction_date' => 'required|date',
             'description' => 'required|string|max:500',
             'amount' => 'required|numeric|between:-999999999,999999999',
+            'balance_after' => 'nullable|numeric|between:-999999999,999999999',
             'reason' => 'required|string|max:1000',
         ]);
         $import = BankImport::findOrFail($importId);
@@ -627,6 +632,7 @@ class BankStatementPageController extends Controller
                 'transaction_date' => $data['transaction_date'],
                 'description' => $data['description'],
                 'amount' => $data['amount'],
+                'balance_after' => $data['balance_after'] ?? null,
                 'status' => 'needs_review',
                 'is_manually_added' => 1,
                 'verified_by' => auth()->id(),

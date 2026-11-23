@@ -660,6 +660,24 @@ class BankParsersTest extends TestCase
         $this->assertEqualsWithDelta(28488.69, (float) $rows[10]['balance_after'], 0.01);
     }
 
+    /** A clipped OCR balance must not be saved as the row's PDF balance. */
+    public function test_virgin_discards_an_implausibly_truncated_running_balance(): void
+    {
+        $parsed = (new VirginMoneyParser())->parseDocument([1 => implode("\n", [
+            'Virgin Money',
+            'Statement date 30 June 2025',
+            'Opening balance 16,139.31',
+            'Date Description Debits Credits Balance',
+            '24 Jun DD Wateraid 12.00 16127.31',
+            '25 Jun Cls 77 Sainsburys S/Huddersfield 15.55 16.76',
+        ])], false);
+
+        $rows = $this->rows($parsed);
+        $this->assertCount(2, $rows);
+        $this->assertEqualsWithDelta(-15.55, (float) $rows[1]['amount'], 0.01);
+        $this->assertNull($rows[1]['balance_after']);
+    }
+
     /**
      * A scan glues punctuation onto a printed amount ("Huddersfield 10.50,").
      * The token is then not money, the row is read as description text and disappears

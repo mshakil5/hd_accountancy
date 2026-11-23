@@ -588,6 +588,14 @@ class VirginMoneyParser extends AbstractStatementParser
                 array_pop($nums);
             }
 
+            // A clipped balance such as "16.76" from "16,111.76" is not a real
+            // running balance. Keep the transaction, but do not save a false PDF
+            // balance that creates a misleading verification mismatch.
+            if (count($nums) === 2
+                && !$this->plausibleBalance($nums[1], $raw, $openingFromStatement ?? $opening)) {
+                array_pop($nums);
+            }
+
             if (!$nums) {
                 if (!$pendingFx) {
                     // A loosely-OCR'd date ("Q7 Jan …") starts a new day: never let it join the

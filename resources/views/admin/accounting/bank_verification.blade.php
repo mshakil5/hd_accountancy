@@ -244,6 +244,7 @@
     const date = row ? (row.dataset.date || '') : '';
     const description = row ? (row.dataset.description || '') : '';
     const amount = row ? (row.dataset.amount || '') : '';
+    const balance = row ? (row.dataset.balance || '') : '';
     const addUrl = rowsBox.dataset.addUrl;
 
     const fields = isDelete ? '' :
@@ -254,6 +255,8 @@
           '<input type="text" name="description" value="' + esc(isAdd ? '' : description) + '" required maxlength="500" class="form-control form-control-sm" placeholder="e.g. Card payment to supplier"></div>' +
         '<div><label>Amount <span class="text-danger">*</span></label>' +
           '<input type="number" step="0.01" name="amount" value="' + esc(isAdd ? '' : amount) + '" required class="form-control form-control-sm" placeholder="-100.00 or 100.00"></div>' +
+        '<div><label>PDF Balance <span class="text-muted">(optional)</span></label>' +
+          '<input type="number" step="0.01" name="balance_after" value="' + esc(isAdd ? '' : balance) + '" class="form-control form-control-sm" placeholder="Leave blank to remove"></div>' +
         '<div><label>Reason <span class="text-danger">*</span></label>' +
           '<input type="text" name="reason" value="' + esc(isAdd ? 'Missing from extraction' : '') + '" required maxlength="1000" class="form-control form-control-sm" placeholder="' + (isAdd ? 'Missing from extraction' : 'Corrected typo in amount / description') + '"></div>' +
       '</div>';

@@ -15,6 +15,7 @@
     data-date="{{ $dateValue }}"
     data-description="{{ $entry->description }}"
     data-amount="{{ number_format($amount, 2, '.', '') }}"
+    data-balance="{{ $entry->balance_after !== null ? number_format((float) $entry->balance_after, 2, '.', '') : '' }}"
     data-approved="{{ $isApproved ? '1' : '0' }}"
     data-edit-url="{{ route('admin.bank-statements.update-entry', $entry->id) }}"
     data-remove-url="{{ route('admin.bank-statements.destroy-entry', $entry->id) }}"
