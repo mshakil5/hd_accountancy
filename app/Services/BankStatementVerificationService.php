@@ -725,6 +725,45 @@ class BankStatementVerificationService
     }
 
     /**
+     * Recalculate a statement after an accountant edits a stored row.
+     *
+     * Re-reading the PDF here can invoke OCR and make a one-row correction take
+     * minutes. The extraction result and page coverage are already stored, so
+     * retain them and only re-run the balance checks against the saved rows.
+     */
+    public function refreshStoredRows(BankImport $import): array
+    {
+        $pages = DB::table('bank_statement_pages')
+            ->where('bank_import_id', $import->id)
+            ->orderBy('page_no')
+            ->get()
+            ->mapWithKeys(fn ($page) => [(int) $page->page_no => [
+                'text_length' => (int) $page->text_length,
+                'transactions_detected' => $page->status !== 'empty',
+                'rows' => (int) $page->extracted_rows,
+                'ocr_unmapped' => $page->status === 'ocr',
+            ]])
+            ->all();
+
+        return $this->refresh($import, [
+            'pages' => $pages,
+            'rows' => [],
+            'unparsed' => 0,
+            'unparsed_samples' => [],
+            'opening_balance' => $import->opening_balance !== null ? (float) $import->opening_balance : null,
+            'closing_balance' => $import->closing_balance !== null ? (float) $import->closing_balance : null,
+            'opening_balance_source' => $import->balance_source === 'derived' ? 'derived' : 'printed',
+            'closing_balance_source' => $import->balance_source === 'derived' ? 'derived' : 'printed',
+            'derived_opening_balance' => null,
+            'derived_closing_balance' => null,
+            'ocr' => DB::table('bank_statement_exceptions')
+                ->where('bank_import_id', $import->id)
+                ->where('code', 'ocr_no_page_mapping')
+                ->exists(),
+        ]);
+    }
+
+    /**
      * Provide a temporary local file path for a stored statement PDF
      * (fetching from S3 or reading local storage) and clean up after.
      */
@@ -1071,6 +1110,7 @@ class BankStatementVerificationService
 
         $running = $opening !== null ? (float) $opening : null;
         $prevBalance = $opening !== null ? (float) $opening : null;
+        $balanceUpdates = [];
 
         foreach ($chronological as $entry) {
             $hasPdfBalance = $entry->balance_after !== null;
@@ -1090,20 +1130,14 @@ class BankStatementVerificationService
                 if ($amt === null || ($amt == 0.0 && abs($delta) >= 0.01)) {
                     $amt = $delta;
                     $entry->amount = $delta;
-                    DB::table('bank_entries')->where('id', $entry->id)->update([
-                        'amount' => $delta,
-                        'updated_at' => now(),
-                    ]);
                 } elseif (abs(abs($amt) - abs($delta)) < 0.01) {
                     // Magnitude matches the balance change, ensure correct direction sign (+/-)
                     if ($delta < 0 && $amt > 0) {
                         $amt = -$amt;
                         $entry->amount = $amt;
-                        DB::table('bank_entries')->where('id', $entry->id)->update(['amount' => $amt, 'updated_at' => now()]);
                     } elseif ($delta > 0 && $amt < 0) {
                         $amt = abs($amt);
                         $entry->amount = $amt;
-                        DB::table('bank_entries')->where('id', $entry->id)->update(['amount' => $amt, 'updated_at' => now()]);
                     }
                 }
             }
@@ -1124,7 +1158,7 @@ class BankStatementVerificationService
             // Recomputed every refresh (including NULL) so amount/date edits
             // never leave a stale balance behind.
             $update = ['system_balance' => $running];
-            if ($isManual) {
+            if ($isManual && !$hasPdfBalance) {
                 if ($prevBefore !== null && $amt !== null) {
                     $manualBalance = round($prevBefore + $amt, 2);
                 } elseif ($running !== null) {
@@ -1135,11 +1169,25 @@ class BankStatementVerificationService
                 $entry->balance_after = $manualBalance;
                 $update['balance_after'] = $manualBalance;
             }
-            DB::table('bank_entries')->where('id', $entry->id)->update($update);
+            $balanceUpdates[] = [
+                'id' => $entry->id,
+                'amount' => $entry->amount,
+                'balance_after' => $entry->balance_after,
+                'system_balance' => $running,
+                'updated_at' => now(),
+            ];
 
             $prevBalance = $isManual && ($entry->balance_after !== null)
                 ? (float) $entry->balance_after
                 : ($hasPdfBalance ? $pdfBalance : $running);
+        }
+
+        if ($balanceUpdates) {
+            DB::table('bank_entries')->upsert(
+                $balanceUpdates,
+                ['id'],
+                ['amount', 'balance_after', 'system_balance', 'updated_at']
+            );
         }
 
         return $entries;

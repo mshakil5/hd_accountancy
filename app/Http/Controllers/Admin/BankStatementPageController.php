@@ -473,7 +473,7 @@ class BankStatementPageController extends Controller
         $import = BankImport::findOrFail($importId);
 
         try {
-            $this->verification->refresh($import);
+            $this->verification->refreshStoredRows($import);
         } catch (\Throwable $e) {
             report($e);
             return back()->with('error', 'The statement could not be re-checked: ' . $e->getMessage());
@@ -607,7 +607,7 @@ class BankStatementPageController extends Controller
             // Statement edits reopen verification: the accountant must confirm
             // the corrected rows again (matches BankReconciliationPageController).
             $this->verification->reopen($import);
-            $this->verification->refresh($import);
+            $this->verification->refreshStoredRows($import);
         });
 
         $message = 'Row updated and re-verified against the PDF balance.';
@@ -661,7 +661,7 @@ class BankStatementPageController extends Controller
             DB::table('bank_imports')->where('id', $import->id)->increment('transaction_count');
             // Statement edits reopen verification (see updateEntry).
             $this->verification->reopen($import);
-            $this->verification->refresh($import);
+            $this->verification->refreshStoredRows($import);
 
             return $entryId;
         });
@@ -696,7 +696,7 @@ class BankStatementPageController extends Controller
             DB::table('bank_imports')->where('id', $import->id)->decrement('transaction_count');
             // Statement edits reopen verification (see updateEntry).
             $this->verification->reopen($import);
-            $this->verification->refresh($import);
+            $this->verification->refreshStoredRows($import);
         });
 
         $message = 'Row removed from statement.';
@@ -841,7 +841,7 @@ class BankStatementPageController extends Controller
         if ($entry->bank_import_id) {
             $import = BankImport::find($entry->bank_import_id);
             if ($import) {
-                $this->verification->refresh($import);
+                $this->verification->refreshStoredRows($import);
             }
         }
 
@@ -867,7 +867,7 @@ class BankStatementPageController extends Controller
                 'verified_at' => now(),
                 'updated_at' => now(),
             ]);
-        $this->verification->refresh($import);
+        $this->verification->refreshStoredRows($import);
 
         $message = $updated . ' row(s) marked verified.';
         if ($request->expectsJson()) {
@@ -889,7 +889,7 @@ class BankStatementPageController extends Controller
             'updated_at' => now(),
         ]);
         $import = BankImport::findOrFail($ex->bank_import_id);
-        $this->verification->refresh($import);
+        $this->verification->refreshStoredRows($import);
 
         $message = 'Exception marked resolved.';
         if ($request->expectsJson()) {
