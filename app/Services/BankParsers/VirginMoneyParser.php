@@ -380,7 +380,10 @@ class VirginMoneyParser extends AbstractStatementParser
             }
 
             // ---- balance carried across a page break ---------------------------------------------
-            if (preg_match('/^Balance\s?brought\s?forward\b|\bforward\s+from\s+previo|\bbrought\b.{0,30}\bforward\b/iu', $content)) {
+            // "Balance brought forward from previous page" is the carried-over balance, never a
+            // transaction. OCR mangles the words ("alance brouqht torward from previous page"),
+            // so the label is matched fuzzily rather than word for word.
+            if ($this->isBalanceCarryLine($content)) {
                 $pending = '';
                 $pendingFx = false;
                 $orphanRow = null;
@@ -638,6 +641,21 @@ class VirginMoneyParser extends AbstractStatementParser
             $desc = trim($pending . ' ' . $descPart);
             $pending = '';
             $pendingFx = false;
+
+            // "Balance brought forward from previous page 16660.54" (also "brought down",
+            // "carried forward", "b/f"): the statement's carried-over balance, never a
+            // transaction. Handles the label being wrapped or mangled by OCR, because the
+            // words are checked on the whole description, not just at the start of the line.
+            if ($this->isBalanceCarryLine($desc)) {
+                $carry = (float) $nums[0];
+                if ($raw === [] && $openingFromStatement === null) {
+                    $openingFromStatement = $carry;
+                }
+                $attachBalance($carry);
+                $orphanRow = null;
+                $orphanLines = 0;
+                continue;
+            }
 
             // A lone printed amount with no description is a summary-panel value
             // ("Opening balance / 15078.51", "Debits / 1454.36"), never a transaction.
@@ -1305,6 +1323,55 @@ class VirginMoneyParser extends AbstractStatementParser
                 . number_format(abs($r) / 100, 2, '.', '') . ($r > 0 ? ' in' : ' out') . ' - please check';
         }
         return true;
+    }
+
+    /**
+     * "Balance brought forward from previous page" and friends: the running balance carried
+     * over from the previous page / statement, which is never a transaction. OCR turns the
+     * words into anything ("brouqht", "torward", "alance"), so they are compared one word at
+     * a time, allowing the usual one or two character slips.
+     */
+    private function isBalanceCarryLine(string $text): bool
+    {
+        $norm = mb_strtolower((string) preg_replace('/[^A-Za-z\/]+/u', ' ', $text));
+        $norm = trim((string) preg_replace('/\s+/', ' ', $norm));
+        if ($norm === '') {
+            return false;
+        }
+        if (preg_match('#\bb\s*/\s*[fc]\b|\bbrought\s?forward\b#u', $norm)) {
+            return true;
+        }
+
+        $balance = $carried = $forward = $previous = $down = false;
+        foreach (explode(' ', $norm) as $word) {
+            $balance = $balance || $this->looksLikeOcrWord($word, 'balance');
+            $carried = $carried
+                || $this->looksLikeOcrWord($word, 'brought')
+                || $this->looksLikeOcrWord($word, 'carried');
+            $forward = $forward
+                || $this->looksLikeOcrWord($word, 'forward')
+                || $this->looksLikeOcrWord($word, 'fwd')
+                || $this->looksLikeOcrWord($word, 'torward');
+            $previous = $previous || str_starts_with($word, 'previo') || $this->looksLikeOcrWord($word, 'page');
+            $down = $down || $this->looksLikeOcrWord($word, 'down');
+        }
+
+        return ($carried && $forward)
+            || ($balance && $forward)
+            || ($balance && $previous)
+            || ($carried && $down);
+    }
+
+    /** Is $word the keyword, allowing the one or two character slips OCR makes in it? */
+    private function looksLikeOcrWord(string $word, string $keyword): bool
+    {
+        if ($word === $keyword) {
+            return true;
+        }
+        if ($word === '' || abs(strlen($word) - strlen($keyword)) > 2) {
+            return false;
+        }
+        return levenshtein($word, $keyword) <= (strlen($keyword) >= 7 ? 2 : 1);
     }
 
     private function hint(string $desc): int

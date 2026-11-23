@@ -1175,7 +1175,9 @@ class BankReconciliationPageController extends Controller
         $entry=DB::table('bank_entries')->find($entryId);
         abort_unless($entry,404);
         abort_if(($entry->reconciliation_status??'draft')==='approved',409,'Approved reconciliations cannot be edited.');
-        $import=BankImport::findOrFail($entry->bank_import_id);
+        // An internal-transfer counter entry belongs to no statement (bank_import_id is NULL),
+        // so there is no statement to re-check when it is corrected.
+        $import=BankImport::find($entry->bank_import_id);
         DB::transaction(function()use($entry,$import,$data){
             $date=Carbon::parse($data['transaction_date'])->toDateString();
             $amount=round((float)$data['amount'],2);
@@ -1190,17 +1192,23 @@ class BankReconciliationPageController extends Controller
                 'corrected_values'=>json_encode(['transaction_date'=>$date,'description'=>$data['description'],'amount'=>$amount]),
                 'reason'=>$data['reason'],'created_at'=>now(),'updated_at'=>now(),
             ]);
-            $verifier=app(BankStatementVerificationService::class);
-            $verifier->reopen($import);
-            $verifier->refresh($import);
+            if($import){
+                $verifier=app(BankStatementVerificationService::class);
+                $verifier->reopen($import);
+                $verifier->refresh($import);
+            }
         });
 
         $message='Row corrected. Original values, corrected values and your reason were saved.';
         if ($request->expectsJson()) {
-            return response()->json($this->verificationPayload($import, $message, $entryId));
+            return $import
+                ? response()->json($this->verificationPayload($import, $message, $entryId))
+                : response()->json(['success'=>true,'message'=>$message,'entry_id'=>$entryId]);
         }
 
-        return redirect()->route('admin.bank-reconciliation.verification',$import->id)->with('success',$message);
+        return $import
+            ? redirect()->route('admin.bank-reconciliation.verification',$import->id)->with('success',$message)
+            : back()->with('success',$message);
     }
 
     public function storeEntry(Request $request,int $importId) {
@@ -1244,7 +1252,8 @@ class BankReconciliationPageController extends Controller
         $entry=DB::table('bank_entries')->find($entryId);
         abort_unless($entry,404);
         abort_if(($entry->reconciliation_status??'draft')==='approved',409,'Approved reconciliations cannot be removed.');
-        $import=BankImport::findOrFail($entry->bank_import_id);
+        // Transfer counter entries have no statement behind them (bank_import_id is NULL).
+        $import=BankImport::find($entry->bank_import_id);
         DB::transaction(function()use($entry,$import,$data){
             DB::table('bank_entry_revisions')->insert([
                 'bank_entry_id'=>null,'author_id'=>auth()->id(),'action'=>'remove',
@@ -1252,17 +1261,23 @@ class BankReconciliationPageController extends Controller
                 'reason'=>$data['reason'],'created_at'=>now(),'updated_at'=>now(),
             ]);
             DB::table('bank_entries')->where('id',$entry->id)->delete();
-            $verifier=app(BankStatementVerificationService::class);
-            $verifier->reopen($import);
-            $verifier->refresh($import);
+            if($import){
+                $verifier=app(BankStatementVerificationService::class);
+                $verifier->reopen($import);
+                $verifier->refresh($import);
+            }
         });
 
         $message='Row removed and the removal reason was recorded.';
         if ($request->expectsJson()) {
-            return response()->json($this->verificationPayload($import, $message));
+            return $import
+                ? response()->json($this->verificationPayload($import, $message))
+                : response()->json(['success'=>true,'message'=>$message,'entry_id'=>$entryId]);
         }
 
-        return redirect()->route('admin.bank-reconciliation.verification',$import->id)->with('success',$message);
+        return $import
+            ? redirect()->route('admin.bank-reconciliation.verification',$import->id)->with('success',$message)
+            : back()->with('success',$message);
     }
 
     private function getScopeClientIds(Request $request): array

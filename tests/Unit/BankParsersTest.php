@@ -723,6 +723,38 @@ class BankParsersTest extends TestCase
     }
 
     /**
+     * "Balance brought forward from previous page 16660.54" is the balance carried over from
+     * the previous page, never a transaction - and OCR mangles it ("alance brouqht torward
+     * trom previoos page"). Any of those wordings must be skipped, not turned into a row.
+     */
+    public function test_virgin_balance_brought_forward_is_never_a_transaction(): void
+    {
+        $parsed = (new VirginMoneyParser())->parseDocument([1 => implode("\n", [
+            'Virgin Money',
+            'Statement date 30 September 2023',
+            'Date Description Debits Credits Balance',
+            '01 Sep Balance brought forward from previous page 16660.54',
+            'alance brouqht torward trom previoos page 16660.54',
+            'Balance carried forward from previous page 16660.54',
+            'Balance b/f 16660.54',
+            'Brought forward 16660.54',
+            '02 Sep Cls 24 The Lockwood Huddersfield 5.70 16654.84',
+            '03 Sep DD Shelter Nat Camp 15.00 16639.84',
+            'Closing balance 16639.84',
+        ])], true);
+
+        $rows = $this->rows($parsed);
+        $this->assertCount(2, $rows);
+        $this->assertSame(
+            ['Cls 24 The Lockwood Huddersfield', 'DD Shelter Nat Camp'],
+            array_column($rows, 'description')
+        );
+        // The carried-over amount still anchors the opening balance.
+        $this->assertEqualsWithDelta(16660.54, (float) $parsed['opening'], 0.01);
+        $this->assertSame(0, $parsed['unparsed']);
+    }
+
+    /**
      * A transaction whose text was lost but whose printed amount closes the balance gap is
      * recovered from that line instead of vanishing (this is what "missing rows" looked like).
      */
