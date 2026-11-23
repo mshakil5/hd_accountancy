@@ -562,7 +562,13 @@ class BankStatementPageController extends Controller
             'reason' => 'required|string|max:1000',
         ]);
         $entry = DB::table('bank_entries')->find($entryId);
-        abort_unless($entry, 404);
+        if (!$entry) {
+            $message = 'This row no longer exists. It may have been replaced by a statement re-scan; refresh the page and try again.';
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $message], 409);
+            }
+            return back()->with('error', $message);
+        }
         abort_if(($entry->reconciliation_status ?? 'draft') === 'approved', 409, 'Approved reconciliations cannot be edited.');
         $import = BankImport::findOrFail($entry->bank_import_id);
 
