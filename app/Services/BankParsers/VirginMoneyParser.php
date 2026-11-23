@@ -203,6 +203,7 @@ class VirginMoneyParser extends AbstractStatementParser
             $cropped = str_contains((string) $text, '[side panel]');
             foreach (preg_split('/\R/u', (string) $text) ?: [] as $rawLine) {
                 $line = $this->fixAmountTokens($this->clean((string) $rawLine));
+                $line = $this->tidyAmountTokens($line);
                 $line = $this->normalizeDecimalCommas($line);
                 $line = $cleanSidebar($line, $cropped);
                 $line = $this->stripMarginJunk($line);
@@ -1513,6 +1514,22 @@ class VirginMoneyParser extends AbstractStatementParser
      * Only a comma followed by exactly two decimal digits and not a longer digit run
      * (i.e. never a thousands separator like "1,234" or "1,234.56") is converted.
      */
+    /**
+     * A scanned statement leaves stray debris on printed amounts ("10.50," / "10.50." /
+     * "10.50|"). Such a token is not money, so trailingMoney() reads no amount and the
+     * line is taken as description text: the transaction disappears and its amount is
+     * glued onto the NEXT row ("Cls 24 The Lockwood Huddersfield 10.50, DD Shelter").
+     * Strip the debris so the amount is still read.
+     */
+    private function tidyAmountTokens(string $line): string
+    {
+        return preg_replace(
+            '/(?<![\w.])(-?(?:\d{1,3}(?:,\d{3})+|\d+)\.\d{2})[,;:.|~\'"`]+(?=\s|$)/u',
+            '$1',
+            $line
+        ) ?? $line;
+    }
+
     private function normalizeDecimalCommas(string $line): string
     {
         return preg_replace('/(?<![\w])(\d{1,3}),(\d{2})(?![\d.])/u', '$1.$2', $line) ?? $line;

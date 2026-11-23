@@ -661,6 +661,50 @@ class BankParsersTest extends TestCase
     }
 
     /**
+     * A scan glues punctuation onto a printed amount ("Huddersfield 10.50,").
+     * The token is then not money, the row is read as description text and disappears
+     * (its amount also lands on the next row). The amount must still be read.
+     */
+    public function test_virgin_amount_with_scan_punctuation_keeps_its_row(): void
+    {
+        $parsed = (new VirginMoneyParser())->parseDocument([1 => implode("\n", [
+            'Virgin Money',
+            'Statement date 30 September 2023',
+            'Date Description Debits Credits Balance',
+            '11Sep Balance brought forward from previous page',
+            'Cls 24 Ppoint-*Close',
+            'Huddersfield 22.05 28756.84',
+            '13 Sep Cls 24 Costcutter',
+            'Harrogate 11.99 28744.85',
+            '18 Sep Cls 24 The Lockwood',
+            'Huddersfield 5.70',
+            'Cls 24 The Lockwood',
+            'Huddersfield 6.50,',
+            'Cls 24 The Lockwood',
+            'Huddersfield 10.20.',
+            'Cls 24 The Lockwood',
+            'Huddersfield 10.50',
+            'DD Shelter Nat Camp 15.00',
+            'Cls 24 Co-Op Group F 104213 25.45',
+            'Cls 24 Ppoint-*Close 27.97',
+            'DD British Gas 51.28',
+            'DD British Gas 103.56 28488.69',
+        ])], true);
+
+        $rows = $this->rows($parsed);
+        $this->assertCount(11, $rows);
+        $this->assertEqualsWithDelta(
+            [-22.05, -11.99, -5.70, -6.50, -10.20, -10.50, -15.00, -25.45, -27.97, -51.28, -103.56],
+            array_map('floatval', array_column($rows, 'amount')),
+            0.01
+        );
+        $this->assertSame(0, $parsed['unparsed']);
+        // The 10.50 line must not leak into the next payee's description.
+        $this->assertStringContainsString('Shelter', $rows[6]['description']);
+        $this->assertStringNotContainsString('10.50', $rows[6]['description']);
+    }
+
+    /**
      * A transaction whose text was lost but whose printed amount closes the balance gap is
      * recovered from that line instead of vanishing (this is what "missing rows" looked like).
      */

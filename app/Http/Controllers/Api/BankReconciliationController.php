@@ -474,10 +474,9 @@ class BankReconciliationController extends Controller
     /**
      * Store the parsed statement lines for an import.
      *
-     * Repeated identical payments inside one statement are preserved by
-     * tracking an occurrence number, while lines that already exist for the
-     * same bank account are skipped so overlapping statements can be uploaded
-     * without creating duplicates.
+     * Every extracted row is stored. A legitimate payment may be identical to
+     * one on an overlapping statement, so duplicate detection is a review aid,
+     * never a reason to discard a statement line.
      *
      * @param  array<int,array<string,mixed>>  $rows
      * @return array{added:int,skipped:int}
@@ -487,10 +486,6 @@ class BankReconciliationController extends Controller
         foreach($rows as $row) {
             $key=hash('sha256',implode('|',[$row['transaction_date'],$row['description'],$row['reference']??'',number_format((float)$row['amount'],2,'.','')]));
             $occurrence=($seen[$key]??0)+1;$seen[$key]=$occurrence;
-            $already=DB::table('bank_entries')->where('client_id',$businessId)
-                ->when($bankAccountId,fn($q)=>$q->where('bank_account_id',$bankAccountId))
-                ->where('line_fingerprint',$key)->where('line_occurrence',$occurrence)->exists();
-            if($already){$skipped++;continue;}
             $row['client_id']=$businessId;$row['currency']='GBP';
             $row['bank_import_id']=$importId;$row['bank_account_id']=$bankAccountId;
             $row['line_fingerprint']=$key;$row['line_occurrence']=$occurrence;

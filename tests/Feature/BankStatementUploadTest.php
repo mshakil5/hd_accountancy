@@ -303,12 +303,12 @@ class BankStatementUploadTest extends TestCase
         $this->assertSame(3, DB::table('bank_entries')->where('bank_import_id', $importId)->count());
     }
 
-    /** A second, different statement for the same account only adds its new lines. */
-    public function test_a_second_statement_skips_lines_already_on_the_account(): void
+    /** A second statement retains all of its lines, including repeated payments. */
+    public function test_a_second_statement_keeps_lines_already_on_the_account(): void
     {
         $this->upload($this->threeRowPdf());
 
-        // Same ledger, but two new rows at the end â€” only those two are new.
+        // Same ledger, but two new rows at the end. Repeated payments must not be discarded.
         $overlapping = $this->pdf([
             'ACME BUSINESS ACCOUNT',
             'Sort code: 12-34-56   Account number: 12345678',
@@ -322,9 +322,9 @@ class BankStatementUploadTest extends TestCase
         ]);
 
         $payload = $this->upload($overlapping)->getData(true);
-        $this->assertSame(2, $payload['count'], 'Only the unseen lines should be stored.');
-        $this->assertSame(3, $payload['duplicates_skipped']);
-        $this->assertSame(5, DB::table('bank_entries')
+        $this->assertSame(5, $payload['count']);
+        $this->assertSame(0, $payload['duplicates_skipped']);
+        $this->assertSame(8, DB::table('bank_entries')
             ->where('client_id', $this->client->id)
             ->where('bank_account_id', $this->bankId)
             ->count());
