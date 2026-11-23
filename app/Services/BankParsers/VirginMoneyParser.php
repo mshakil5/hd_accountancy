@@ -205,6 +205,7 @@ class VirginMoneyParser extends AbstractStatementParser
                 $line = $this->fixAmountTokens($this->clean((string) $rawLine));
                 $line = $this->normalizeDecimalCommas($line);
                 $line = $cleanSidebar($line, $cropped);
+                $line = $this->stripMarginJunk($line);
                 if ($line !== '') {
                     $lines[] = [(int) $pageNo, $line];
                 }
@@ -380,6 +381,11 @@ class VirginMoneyParser extends AbstractStatementParser
                     $bfBal = $this->toFloat($bm[1]);
                 } elseif (preg_match('/(?:page|previo\w*)\s+(\d{4,9})\s*$/iu', $content, $bm)) {
                     $bfBal = round(((int) $bm[1]) / 100, 2);
+                }
+                // A file that starts part-way through a statement (no "Previous statement" row)
+                // begins at the carried-over balance, not at the statement's printed opening balance.
+                if ($bfBal !== null && $raw === [] && $openingFromStatement === null) {
+                    $openingFromStatement = $bfBal;
                 }
                 $attachBalance($bfBal);
                 continue;
@@ -672,6 +678,27 @@ class VirginMoneyParser extends AbstractStatementParser
 
         // Several statements in one file: printed per-statement totals cannot be compared to the whole set.
         return $this->result($this->finalise($rows, $fromOcr), $unparsed, $samples, $opening, $closing, $totalIn, $totalOut);
+    }
+
+    /**
+     * Margin noise in front of a line ("oO ! 05 Oct Cash 24 Barcyork", "‘a! Cls 24 The Lockwood"):
+     * one or two short junk tokens before a date or a payee marker. A line that already starts
+     * with a date, or whose leading tokens are real markers (Cls, Cash, DD, Mb ...), is left alone.
+     */
+    private function stripMarginJunk(string $line): string
+    {
+        if (preg_match('/^[0-9OolIQ]{1,3}\s*(?:' . self::MON . ')\b/u', $line)) {
+            return $line; // already starts with a date
+        }
+        if (!preg_match('/^((?:\S{1,3}\s+){1,2})(?=(?:[0-9OolIQ]{1,3}\s*(?:' . self::MON . ')\b|(?:C[il1]s|Cash|Card|Crd|DD|OD|Mb|TB)\b))/u', $line, $m)) {
+            return $line;
+        }
+        foreach (preg_split('/\s+/', trim($m[1])) ?: [] as $t) {
+            if (preg_match('/^(?:C[il1]s|Cash|Card|Crd|DD|OD|SO|Mb|TB|WLT)$/i', $t)) {
+                return $line; // a real marker, not margin noise
+            }
+        }
+        return substr($line, strlen($m[1]));
     }
 
     /**
