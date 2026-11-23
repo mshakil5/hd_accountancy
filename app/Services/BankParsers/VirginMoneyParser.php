@@ -832,10 +832,26 @@ class VirginMoneyParser extends AbstractStatementParser
      */
     private function repairByBalances(array &$raw, ?float $opening, int &$unparsed, array &$samples): void
     {
-        if ($opening !== null && $raw) {
+        if ($raw) {
+            // A statement may have no readable opening/"previous statement" balance. Do not
+            // disable balance repair completely in that case: the first printed running balance
+            // is still a reliable anchor for every transaction group that follows it.
             $prev = $opening;
-            $prevBad = false; // previous group could not be proven, so its end balance may be a misread
             $i = 0;
+            if ($prev === null) {
+                foreach ($raw as $anchor => $row) {
+                    if ($row['balance'] !== null) {
+                        $prev = (float) $row['balance'];
+                        $i = $anchor + 1;
+                        break;
+                    }
+                }
+            }
+            if ($prev === null) {
+                // No opening or running-balance anchor exists; there is nothing safe to prove.
+                $i = count($raw);
+            }
+            $prevBad = false; // previous group could not be proven, so its end balance may be a misread
             $guard = 0;
             while ($i < count($raw) && $guard++ < 4000) {
                 $end = $i;
