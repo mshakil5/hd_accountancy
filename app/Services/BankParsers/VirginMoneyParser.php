@@ -34,7 +34,7 @@ class VirginMoneyParser extends AbstractStatementParser
     private const PANEL_TAIL = '/\s*(?:Page\s?\d+\s?of\s?\d+|Statement\s?(?:date|No)\b.*|Account\s?name\b.*|Sort\s?code\b.*|Account\s?number\b.*|IBAN\b.*|BIC\b.*|Opening\s?balance\b.*|Closing\s?balance\b.*|(?:Debits|Credits)\b.*|Deposits\s+(?:in\s+this|in\s+ae|ae\s+nea)\s+account\b.*|eligible\s+for\s+cover\b.*|for\s+cover\s+under\b.*|Financial\s+Services\b.*|Services\s+Compensation\b.*|Compensation\s+Scheme\b.*|Scheme\s*\(FSCS\)\b.*|\(FSCS\)\b.*|Scheme\b.*|\d{2}-\d{2}-\d{2}\b.*|GB\d{2}[A-Z0-9]+\b.*|YORKGB[A-Z0-9]+\b.*|MR\s+[A-Z .]+\b.*|(?:Cls|DD|SO|TB|MB|TL|EB|OD|WLT|FGN|CHQ|LTE|MT|PMT|ACC|GBP|REV|Purch|WDL|CCY|Unarr)\s*=\s*.*)$/iu';
 
     /** Table ends here (promo / footer text under the transactions). */
-    private const STOP = '/^(Ready,? get set|Have a think|Just so you know|We.ve updated|Interest rate details|Clydesdale Bank|Financial Conduct|mortgages and|Not got the app|Did you know|You can go paper)/iu';
+    private const STOP = '/^(\[side panel\]|Ready,? get set|Have a think|Just so you know|We.ve updated|Interest rate details|Clydesdale Bank|Financial Conduct|mortgages and|Not got the app|Did you know|You can go paper)/iu';
 
     private const NOISE = [
         '/^Statement\s?No\b/i', '/^Page\s?\d+\s?of\s?\d+$/i', '/^Statement\s?date\b/i', '/^Account\s?name\b/i',
@@ -157,11 +157,15 @@ class VirginMoneyParser extends AbstractStatementParser
             }
             return false;
         };
-        $cleanSidebar = function (string $text) use ($totalIn, $totalOut, $fromOcr): string {
+        $cleanSidebar = function (string $text, bool $cropped = false) use ($totalIn, $totalOut, $fromOcr): string {
             // Strip currency-signed amounts. Tesseract produces "$" artifacts, and in OCR output
             // the table amounts lose their sign while the right-hand panel keeps "£", so a
             // currency-signed amount on a table line can only be sidebar noise.
-            if ($fromOcr) {
+            if ($cropped) {
+                // Layout OCR already split the panel off, so a glyph in front of an amount is a
+                // misread digit ("$1.23" for 51.23): keep the amount, balance repair fixes the digit.
+                $text = preg_replace('/(?<![\w])[$§£]\s?(?=[\d,]*\.\d{2}\b)/u', '0', $text);
+            } elseif ($fromOcr) {
                 $text = preg_replace('/(?<!\w)[£$]\s*[\d,]+\.\d{2}/u', ' ', $text);
             } else {
                 $text = preg_replace('/(?<!\w)\$[\d,]+\.\d{2}/u', ' ', $text);
@@ -196,10 +200,11 @@ class VirginMoneyParser extends AbstractStatementParser
         // ---- flatten to [page, line] so we can look ahead ----------------------------------------
         $lines = [];
         foreach ($pages as $pageNo => $text) {
+            $cropped = str_contains((string) $text, '[side panel]');
             foreach (preg_split('/\R/u', (string) $text) ?: [] as $rawLine) {
                 $line = $this->fixAmountTokens($this->clean((string) $rawLine));
                 $line = $this->normalizeDecimalCommas($line);
-                $line = $cleanSidebar($line);
+                $line = $cleanSidebar($line, $cropped);
                 if ($line !== '') {
                     $lines[] = [(int) $pageNo, $line];
                 }
@@ -232,11 +237,10 @@ class VirginMoneyParser extends AbstractStatementParser
             if ($raw[$k]['balance'] === null) {
                 $raw[$k]['balance'] = $bal;
             } elseif (abs($raw[$k]['balance'] - $bal) > 0.004) {
-                $unparsed++;
-                if (count($samples) < 5) {
-                    $samples[] = 'Carried-over balance ' . number_format($bal, 2, '.', '') . ' differs from last printed balance '
-                        . number_format((float) $raw[$k]['balance'], 2, '.', '') . ' (' . $raw[$k]['date'] . ')';
-                }
+                // The same balance is printed twice (end of page / top of next page). When the two
+                // readings differ one of them is an OCR misread: remember both, repairByBalances()
+                // keeps whichever the running balance proves.
+                $raw[$k]['balAlt'] = $bal;
             }
         };
 
@@ -270,7 +274,14 @@ class VirginMoneyParser extends AbstractStatementParser
             }
 
             // ---- "31 Mar 2023  Previous statement  31084.36" : opening marker, never a transaction ----
-            if (preg_match('/^(?:([0-9OolI]{1,2})\s?(' . self::MON . ')[a-z]*\.?\s*(?:([0-9OolIZ]{2}\s?[0-9OolIZ]{2})\.?)?\s*)?Previous\s?statement\b\s*(.*)$/iu', $line, $p)) {
+            $isPrev = preg_match('/^(?:([0-9OolI]{1,2})\s?(' . self::MON . ')[a-z]*\.?\s*(?:([0-9OolIZ]{2}\s?[0-9OolIZ]{2})\.?)?\s*)?[^A-Za-z0-9]*Previous\s?statement\b\s*(.*)$/iu', $line, $p);
+            if (!$isPrev && !preg_match('/\b(?:C[il1]s|Card|Cash|DD|Mb)\b|forward|brought|previou\w*\s+pa/iu', $line)
+                && preg_match('/\bPrevio\w{0,3}(?:\s?st\w*)?\s*(.*)$/iu', $line, $pg)) {
+                // "SAS Eas ... O01May2025 = Previou 12866.97": label garbled by OCR, still a statement opener.
+                $p = [$line, '', '', '', (string) $pg[1]];
+                $isPrev = true;
+            }
+            if ($isPrev) {
                 $inTable = true;
                 $afterStop = false;
                 $pending = '';
@@ -287,6 +298,9 @@ class VirginMoneyParser extends AbstractStatementParser
                 }
                 [, $nums] = $this->trailingMoney((string) $p[4], 1);
                 $bal = $nums[0] ?? null;
+                if ($bal === null && preg_match('/(?<![\d.,])(\d{4,9})\s*$/u', (string) $p[4], $dm)) {
+                    $bal = round(((int) $dm[1]) / 100, 2); // "1523713" -> 15237.13
+                }
                 if ($openingFromStatement === null && $bal !== null && $raw === []) {
                     $openingFromStatement = $bal;
                 }
@@ -304,16 +318,11 @@ class VirginMoneyParser extends AbstractStatementParser
                 continue;
             }
             if ($afterStop) {
-                // Footer/promo text does not always end the table: a dated row printed after it
-                // is still a transaction, so resume rather than dropping the rest of the page.
-                if (!preg_match('/^(?:[0-9OolIQ]{1,3}\s*(?:' . self::MON . ')\b|\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}(?![\d]))/u', $line)) {
-                    continue;
-                }
-                $afterStop = false;
+                continue;
             }
             // Before the first table header only a date-looking line may open the table
             // (the header itself can be garbled by OCR or missing on continuation pages).
-            if (!$inTable && !preg_match('/^(?:[0-9OolIQ]{1,3}\s*(?:' . self::MON . ')\b|\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}(?![\d]))/u', $line)) {
+            if (!$inTable && !preg_match('/^[0-9OolIQ]{1,3}\s*(?:' . self::MON . ')\b/u', $line)) {
                 continue;
             }
             if (preg_match(self::STOP, $line)) {
@@ -335,49 +344,18 @@ class VirginMoneyParser extends AbstractStatementParser
                 $day = (int) substr($digits, -2);
                 return ($day >= 1 && $day <= 31 ? sprintf('%02d', $day) : $x[1]) . ' ' . $x[2];
             }, $line) ?? $line;
-            if (preg_match('/^(\d{1,2})\s(' . self::MON . ')\b(?:\s+(\d{4}|\d{2})(?![\d.]))?\s*(.*)$/iu', $dl, $m)) {
+            if (preg_match('/^(\d{1,2})\s(' . self::MON . ')\b(?:\s+(\d{4}))?\s*(.*)$/iu', $dl, $m)) {
                 $day = (int) $m[1];
                 $mon = self::MONTHS[strtolower($m[2])];
                 $rest = trim($m[4]);
-                $printedYear = $this->printedYear($m[3] ?? '');
 
-                // "03 Apr 2025 to 02 May 2025" is the statement period, not a transaction.
-                if ($this->startsWithPeriodRange($rest) || $this->looksLikeTableHeader($rest)) {
-                    $inTable = true;
+                // A full "dd Mon yyyy" followed by anything is header text, not a transaction.
+                if (($m[3] ?? '') !== '') {
                     continue;
                 }
 
                 $inTable = true;
-                if ($printedYear !== null) {
-                    // Newer layouts print the year on every row; it beats the statement-date guess.
-                    $year = $printedYear;
-                    $lastMonth = $mon;
-                    $y = $printedYear;
-                } else {
-                    $y = $resolveYear($mon);
-                }
-                $lastDate = checkdate($mon, $day, $y) ? sprintf('%04d-%02d-%02d', $y, $mon, $day) : null;
-                $pending = '';
-                $pendingFx = false;
-                $orphanRow = null;
-                $orphanLines = 0;
-                $content = $rest;
-            } elseif (preg_match('/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})(?![\d])\s*(.*)$/u', $line, $m)) {
-                // Numeric dates (dd/mm/yy or dd/mm/yyyy) are always day-first on UK statements.
-                $day = (int) $m[1];
-                $mon = (int) $m[2];
-                $printedYear = $this->printedYear($m[3]);
-                $rest = trim($m[4]);
-                if ($mon < 1 || $mon > 12 || $day < 1 || $day > 31
-                    || $this->startsWithPeriodRange($rest) || $this->looksLikeTableHeader($rest)) {
-                    continue;
-                }
-                $inTable = true;
-                $y = $printedYear ?? $resolveYear($mon);
-                if ($printedYear !== null) {
-                    $year = $printedYear;
-                    $lastMonth = $mon;
-                }
+                $y = $resolveYear($mon);
                 $lastDate = checkdate($mon, $day, $y) ? sprintf('%04d-%02d-%02d', $y, $mon, $day) : null;
                 $pending = '';
                 $pendingFx = false;
@@ -391,14 +369,19 @@ class VirginMoneyParser extends AbstractStatementParser
             }
 
             // ---- balance carried across a page break ---------------------------------------------
-            if (preg_match('/^Balance\s?brought\s?forward\b\s*(.*)$/iu', $content, $bf)) {
+            if (preg_match('/^Balance\s?brought\s?forward\b|\bforward\s+from\s+previo|\bbrought\b.{0,30}\bforward\b/iu', $content)) {
                 $pending = '';
                 $pendingFx = false;
                 $orphanRow = null;
                 $orphanLines = 0;
-                $withoutText = preg_replace('/^from\s+previous\s+page\s*/iu', '', trim($bf[1])) ?? $bf[1];
-                [, $nums] = $this->trailingMoney($withoutText, 1);
-                $attachBalance($nums[0] ?? null);
+                // The label can be garbled by OCR; the printed balance is whatever amount ends the line.
+                $bfBal = null;
+                if (preg_match('/(-?(?:\d{1,3}(?:,\d{3})+|\d+)\.\d{2})\s*$/u', $content, $bm)) {
+                    $bfBal = $this->toFloat($bm[1]);
+                } elseif (preg_match('/(?:page|previo\w*)\s+(\d{4,9})\s*$/iu', $content, $bm)) {
+                    $bfBal = round(((int) $bm[1]) / 100, 2);
+                }
+                $attachBalance($bfBal);
                 continue;
             }
 
@@ -454,7 +437,6 @@ class VirginMoneyParser extends AbstractStatementParser
                             'balance' => $bal,
                             'hint' => -1,
                             'key' => $this->key($baseDesc),
-                            'lineNo' => $i,
                         ];
                         $pending = '';
                         $pendingFx = false;
@@ -492,7 +474,6 @@ class VirginMoneyParser extends AbstractStatementParser
                         'balance' => $bal,
                         'hint' => -1,
                         'key' => $this->key($pending),
-                        'lineNo' => $i,
                     ];
                     $pending = '';
                     $pendingFx = false;
@@ -526,7 +507,6 @@ class VirginMoneyParser extends AbstractStatementParser
             }
 
             $salvaged = false;
-            $balanceGuessed = false;
             if ($stg !== null) {
                 // "Stg Amt 23.38 | Debits 23.38 | Balance 10657.21" is OCR'd as
                 // "Stg Amt 23.38 23.38 1065721": the second amount repeats the debit
@@ -552,8 +532,6 @@ class VirginMoneyParser extends AbstractStatementParser
                     $salvage = $this->salvageAmounts($content);
                     if ($salvage !== null) {
                         [$descPart, $nums] = $salvage;
-                        // The balance came from a garbled digit run: only a guess.
-                        $balanceGuessed = count($nums) === 2;
                         if (count($nums) === 2 && !$this->plausibleBalance($nums[1], $raw, $openingFromStatement ?? $opening)) {
                             // A garbled tail must not become a fake printed balance - that would only create a mismatch.
                             array_pop($nums);
@@ -565,6 +543,10 @@ class VirginMoneyParser extends AbstractStatementParser
                         // printed, but no longer the last token, so trailingMoney() missed
                         // it and the row would be swallowed into the next description.
                         [$descPart, $nums] = $this->moneyBeforeJunk($content, 2);
+                        if (!$nums && preg_match('/^(.*?\S)\s+(\d{1,3}(?:,\d{3})*\.\d{2})\s+(?:\S*\d\S*\s*){1,2}$/u', $content, $gm)) {
+                            // amount read, running balance too garbled to use: keep the amount, repair finds the rest
+                            [$descPart, $nums] = [$gm[1], [$this->toFloat($gm[2])]];
+                        }
                         if (count($nums) === 2 && !$this->plausibleBalance($nums[1], $raw, $openingFromStatement ?? $opening)) {
                             array_pop($nums);
                         }
@@ -601,6 +583,23 @@ class VirginMoneyParser extends AbstractStatementParser
                 continue;
             }
 
+            // A running balance OCR'd onto a description line ("Cls 77 Co-Op Group 1 15148.34"): an
+            // amount within a couple of digits of the balance just printed is that balance, not a payment.
+            $lastBal = null;
+            for ($b = count($raw) - 1; $b >= 0; $b--) {
+                if ($raw[$b]['balance'] !== null) {
+                    $lastBal = (float) $raw[$b]['balance'];
+                    break;
+                }
+            }
+            $lastBal ??= $openingFromStatement ?? $opening;
+            if ($lastBal !== null && $nums && $nums[0] >= 1000 && count($nums) === 1
+                && abs($nums[0] - $lastBal) / max($lastBal, 1.0) < 0.25
+                && levenshtein((string) (int) round($nums[0] * 100), (string) (int) round($lastBal * 100)) <= 2) {
+                $pending = trim($pending . ' ' . $descPart);
+                continue;
+            }
+
             $desc = trim($pending . ' ' . $descPart);
             $pending = '';
             $pendingFx = false;
@@ -620,6 +619,25 @@ class VirginMoneyParser extends AbstractStatementParser
             }
 
             $desc = $desc !== '' ? $desc : 'Unlabelled transaction';
+            $segments = $this->splitPayees($desc);
+            if (count($segments) > 1) {
+                // Earlier payees lost their amount to OCR: keep them as "maybe" rows; the printed
+                // balances later either fill the amount in or prove the row was never there.
+                foreach (array_slice($segments, 0, -1) as $seg) {
+                    // "Huddersfield 185" is 1.85 with the decimal point lost: use it as the reading
+                    // (the balance repair corrects it if a digit is wrong too).
+                    $guess = null;
+                    if (preg_match('/\s(\d{3,5})$/', $seg, $gm)) {
+                        $guess = ((int) $gm[1]) / 100;
+                        $seg = trim(substr($seg, 0, -strlen($gm[1])));
+                    }
+                    $raw[] = [
+                        'page' => $pageNo, 'date' => $lastDate, 'desc' => $seg, 'abs' => $guess, 'maybe' => $guess === null,
+                        'suspect' => $guess !== null, 'balance' => null, 'hint' => $this->hint($seg), 'key' => $this->key($seg),
+                    ];
+                }
+                $desc = (string) end($segments);
+            }
             $raw[] = [
                 'page' => $pageNo,
                 'date' => $lastDate,
@@ -628,12 +646,14 @@ class VirginMoneyParser extends AbstractStatementParser
                 'balance' => count($nums) === 2 ? $nums[1] : null,
                 'hint' => $this->hint($desc),
                 'key' => $this->key($desc),
-                'lineNo' => $i,
-                'guessed' => $balanceGuessed && count($nums) === 2,
+                // "$1.23" for 51.23 reaches here as "01.23": a leading zero marks a misread digit.
+                'suspect' => (bool) preg_match('/(?<![\d.])0\d+\.\d{2}(?!\d)/', $line),
             ];
             $orphanRow = $salvaged ? count($raw) - 1 : null;
             $orphanLines = 0;
         }
+
+        $this->repairByBalances($raw, $openingFromStatement ?? $opening, $unparsed, $samples);
 
         $rows = $raw;
         $opening = $openingFromStatement ?? $opening;
@@ -647,26 +667,8 @@ class VirginMoneyParser extends AbstractStatementParser
         }
 
         $res = BalanceResolver::resolve($rows, $opening, $closing);
-        if ($res['unresolved'] > 0) {
-            // A balance rebuilt from a garbled OCR token is only kept when the statement
-            // still reconciles with it; otherwise it hides the real, printed balance.
-            $res = $this->dropUnhelpfulGuesses($rows, $opening, $closing, $res);
-        }
-
-        // A row OCR failed to read leaves a hole in the running balance. The printed balances
-        // prove how much is missing, so recover the row from the line that was skipped rather
-        // than losing the money silently.
-        $recovery = $this->recoverMissingRows($rows, $lines);
-        if ($recovery['rows'] > 0) {
-            // Re-solve from scratch: the recovered rows change the groups, so the earlier
-            // "cannot reconcile" verdict no longer applies.
-            $res = BalanceResolver::resolve($rows, $opening, $closing);
-        }
-
         $unparsed += $res['unresolved'];
         $samples = array_merge($samples, $res['samples']);
-        $unparsed += $recovery['unresolved'];
-        $samples = array_merge($samples, $recovery['samples']);
 
         // Several statements in one file: printed per-statement totals cannot be compared to the whole set.
         return $this->result($this->finalise($rows, $fromOcr), $unparsed, $samples, $opening, $closing, $totalIn, $totalOut);
@@ -710,215 +712,527 @@ class VirginMoneyParser extends AbstractStatementParser
         return $out;
     }
 
-    /** Year printed next to a date ("2025" or "25"), or null when the row carries no year. */
-    private function printedYear(string $raw): ?int
+    /**
+     * Split a description that holds several payees ("Cls 77 Thorton Fenci Huddersfield Mb Aspley
+     * Services"): each payee starts with a card / cash / direct-debit / mobile-banking marker.
+     *
+     * @return array<int,string>
+     */
+    private function splitPayees(string $desc): array
     {
-        $digits = preg_replace('/\D/', '', $raw) ?? '';
-        if ($digits === '') {
-            return null;
+        $re = '/(?<![\w])(?:(?:C[il1]s|Card|Cash|Crd|W[lI1]t\d*)\s?77\b|(?:DD|OD)\s+(?=[A-Z])|Mb\s+(?=[A-Z]))/u';
+        if (!preg_match_all($re, $desc, $m, PREG_OFFSET_CAPTURE) || count($m[0]) < 2) {
+            return [$desc];
         }
-        $y = (int) $digits;
-        if (strlen($digits) === 2) {
-            $y += 2000;
+        $starts = array_map(fn ($x) => (int) $x[1], $m[0]);
+        $parts = [];
+        foreach ($starts as $n => $at) {
+            $to = $starts[$n + 1] ?? strlen($desc);
+            $parts[] = trim(substr($desc, $at, $to - $at));
         }
-        return ($y >= 2000 && $y <= 2100) ? $y : null;
+        $lead = trim(substr($desc, 0, $starts[0]));
+        if ($lead !== '') {
+            $parts[0] = trim($lead . ' ' . $parts[0]);
+        }
+        return array_values(array_filter($parts, fn ($x) => $x !== ''));
     }
 
-    /** "to 02 May 2025" / "- 30 Apr 2025" after a date is a statement period, not a row. */
-    private function startsWithPeriodRange(string $rest): bool
+    /** Do the rows of this group add up to the printed balance change for some money in / out split? */
+    private function fits(array $raw, array $idx, float $delta): bool
     {
-        return (bool) preg_match('/^(?:to|until|[-\x{2013}])\s+\d{1,2}\s*(?:' . self::MON . '|\d{1,2})/iu', $rest);
+        $idx = array_values(array_filter($idx, fn ($k) => $raw[$k]['abs'] !== null));
+        if (!$idx) {
+            return abs($delta) < 0.005;
+        }
+        if (count($idx) > 30) {
+            return true; // too long to prove either way - leave it to the resolver
+        }
+        return BalanceResolver::trySolve($raw, $idx, $delta) !== null;
     }
 
-    /** A dated line whose text is the column header (some layouts repeat it with the date). */
-    private function looksLikeTableHeader(string $rest): bool
+    /** True when two cent amounts differ by at most one OCR-style edit (one wrong, lost or extra digit). */
+    private function similarCents(int $a, int $b): bool
     {
-        return (bool) preg_match('/^(?:date|description|details|transaction\s+details|money\s+(?:in|out)|paid\s+(?:in|out))\b/iu', $rest);
+        return levenshtein((string) $a, (string) $b) <= 1;
     }
 
     /**
-     * Drop balances that were reconstructed from garbled OCR digits when doing so lets the
-     * statement reconcile. A guessed balance that contradicts the printed ones is worse than
-     * no balance at all: it turns one unreadable digit into a phantom missing transaction.
-     *
-     * @param  array<int,array<string,mixed>> $rows
-     * @param  array<string,mixed>            $res
-     * @return array<string,mixed>
+     * How believable is it that OCR turned $to into $from? 0 = a typical Tesseract slip (a thin "1" lost
+     * or added, or look-alike digits 5/6, 5/8, 3/8, 6/8, 0/8, 0/6, 1/7); 1 = any other single edit.
      */
-    private function dropUnhelpfulGuesses(array &$rows, ?float $opening, ?float $closing, array $res): array
+    private function ocrSlip(int $from, int $to): int
     {
-        foreach ($rows as $k => $row) {
-            if (empty($row['guessed']) || $row['balance'] === null) {
-                continue;
-            }
-            $trial = $rows;
-            $trial[$k]['balance'] = null;
-            $attempt = BalanceResolver::resolve($trial, $opening, $closing);
-            if ($attempt['unresolved'] < $res['unresolved']) {
-                $rows = $trial;
-                $res = $attempt;
-            }
-            if ($res['unresolved'] === 0) {
-                break;
-            }
-        }
-        return $res;
-    }
-
-    /**
-     * Recover transactions that were printed but produced no row.
-     *
-     * The statement's own running balance is the proof: between two printed balances the
-     * parsed rows must explain the difference exactly. When they do not, the skipped lines in
-     * between are searched for a single amount that closes the hole; that line becomes a row.
-     * A hole that no printed amount can explain is reported instead of being dropped.
-     *
-     * @param  array<int,array<string,mixed>>                $rows  internal rows (mutated)
-     * @param  array<int,array{0:int,1:string}>              $lines flattened [page, text] lines
-     * @return array{rows:int,unresolved:int,samples:array<int,string>}
-     */
-    private function recoverMissingRows(array &$rows, array $lines): array
-    {
-        $inserted = [];
-        $unresolved = 0;
-        $samples = [];
-
-        $used = [];
-        foreach ($rows as $row) {
-            if (isset($row['lineNo'])) {
-                $used[(int) $row['lineNo']] = true;
-            }
-        }
-
-        /** Balance the statement must show after this row, from the last known balance + its signed amount. */
-        $afterRow = function (?float $expected, array $row): ?float {
-            if ($expected === null) {
-                return null;
-            }
-            $sign = (int) ($row['sign'] ?? 0);
-            if ($sign === 0) {
-                $sign = (int) ($row['hint'] ?? 0) ?: -1;
-            }
-            return round($expected + $sign * (float) $row['abs'], 2);
-        };
-
-        $expected = null;
-
-        $prevLine = -1;
-        $lastDate = null;
-        foreach ($rows as $k => $row) {
-            $printed = $row['balance'] !== null ? (float) $row['balance'] : null;
-            $lineNo = isset($row['lineNo']) ? (int) $row['lineNo'] : $prevLine + 1;
-            $date = $row['date'] ?? $lastDate;
-            $after = $afterRow($expected, $row);
-
-            if ($printed !== null && $after !== null && abs($printed - $after) >= 0.01) {
-                // The printed balance disagrees with this row: a transaction was not read.
-                $gap = round($printed - $after, 2);
-                $found = $this->findGapRow($lines, $used, $prevLine, $lineNo, abs($gap), $date);
-                if ($found !== null) {
-                    $found['sign'] = $gap > 0 ? 1 : -1;
-                    $inserted[$k][] = $found;
-                    $used[(int) $found['lineNo']] = true;
-                } else {
-                    $unresolved++;
-                    if (count($samples) < 5) {
-                        $samples[] = 'Unread transaction of ' . number_format(abs($gap), 2, '.', '')
-                            . ' before ' . ($date ?? '?') . ' (' . mb_substr((string) ($row['desc'] ?? ''), 0, 60) . ')';
-                    }
+        $a = (string) $from;
+        $b = (string) $to;
+        if (strlen($a) === strlen($b)) {
+            for ($i = 0; $i < strlen($a); $i++) {
+                if ($a[$i] !== $b[$i]) {
+                    $pair = $a[$i] < $b[$i] ? $a[$i] . $b[$i] : $b[$i] . $a[$i];
+                    return in_array($pair, ['56', '58', '38', '68', '08', '06', '17', '35', '09'], true) ? 0 : 1;
                 }
-                $expected = $printed;
-            } elseif ($printed !== null) {
-                $expected = $printed;
-            } else {
-                $expected = $after;
             }
-
-            $prevLine = $lineNo;
-            $lastDate = $date;
+            return 0;
         }
-
-        if ($inserted === []) {
-            return ['rows' => 0, 'unresolved' => $unresolved, 'samples' => $samples];
-        }
-
-        $out = [];
-        foreach ($rows as $k => $row) {
-            foreach ($inserted[$k] ?? [] as $extra) {
-                $out[] = $extra;
+        $long = strlen($a) > strlen($b) ? $a : $b;
+        $short = strlen($a) > strlen($b) ? $b : $a;
+        for ($i = 0; $i < strlen($long); $i++) {
+            if (substr($long, 0, $i) . substr($long, $i + 1) === $short) {
+                return $long[$i] === '1' ? 0 : 1;
             }
-            $out[] = $row;
         }
-        $rows = $out;
-
-        return ['rows' => array_sum(array_map('count', $inserted)), 'unresolved' => $unresolved, 'samples' => $samples];
+        return 1;
     }
 
     /**
-     * One skipped line between two rows whose amount explains the balance hole, or null.
+     * OCR misreads digits (15118.43 -> 16118.43, 7.50 -> 7.90), drops a decimal point or loses a
+     * whole amount. Every day ends with a printed running balance, so the numbers prove themselves:
+     * a group whose rows do not add up to the balance change is repaired when exactly ONE
+     * explanation fits (a misread balance, a misread/lost amount, or one missing row).
      *
-     * @param  array<int,array{0:int,1:string}> $lines
-     * @param  array<int,bool>                  $used
-     * @return array<string,mixed>|null
+     * @param array<int,array<string,mixed>> $raw
+     * @param array<int,string> $samples
      */
-    private function findGapRow(array $lines, array $used, int $from, int $to, float $amount, ?string $date): ?array
+    private function repairByBalances(array &$raw, ?float $opening, int &$unparsed, array &$samples): void
     {
-        if ($amount < 0.01 || $to <= $from + 1) {
-            return null;
-        }
-        for ($i = $from + 1; $i < $to; $i++) {
-            if (isset($used[$i]) || !isset($lines[$i])) {
-                continue;
-            }
-            [$pageNo, $text] = $lines[$i];
-            $text = $this->fixAmountTokens($this->clean((string) $text));
-            if ($text === '' || $this->isNoise($text)) {
-                continue;
-            }
-
-            // Strip a leading date so it does not end up in the description.
-            $rowDate = $date;
-            if (preg_match('/^(\d{1,2})\s(' . self::MON . ')\b(?:\s+(\d{4}|\d{2})(?![\d.]))?\s*(.*)$/iu', $text, $dm)) {
-                $mon = self::MONTHS[strtolower($dm[2])];
-                $y = $this->printedYear($dm[3] ?? '') ?? (int) (substr((string) $date, 0, 4) ?: date('Y'));
-                if (checkdate($mon, (int) $dm[1], $y)) {
-                    $rowDate = sprintf('%04d-%02d-%02d', $y, $mon, (int) $dm[1]);
+        if ($opening !== null && $raw) {
+            $prev = $opening;
+            $prevBad = false; // previous group could not be proven, so its end balance may be a misread
+            $i = 0;
+            $guard = 0;
+            while ($i < count($raw) && $guard++ < 4000) {
+                $end = $i;
+                while ($end < count($raw) && $raw[$end]['balance'] === null) {
+                    $end++;
                 }
-                $text = trim($dm[4]);
-            }
+                if ($end >= count($raw)) {
+                    break; // trailing rows after the last printed balance
+                }
+                $idx = range($i, $end);
+                $delta = round((float) $raw[$end]['balance'] - $prev, 2);
 
-            [$descPart, $nums] = $this->trailingMoney($text, 2);
-            if (!$nums) {
-                [$descPart, $nums] = $this->moneyBeforeJunk($text, 2);
-            }
-            if (!$nums) {
-                continue;
-            }
-
-            $candidates = $nums;
-            foreach ($candidates as $value) {
-                if (abs(abs($value) - $amount) >= 0.005) {
+                if ($this->fits($raw, $idx, $delta)) {
+                    $prev = (float) $raw[$end]['balance'];
+                    $prevBad = false;
+                    $i = $end + 1;
                     continue;
                 }
-                $desc = trim($descPart);
-                if ($desc === '') {
-                    $desc = 'Unlabelled transaction';
+                // The balance before this group was never proven (e.g. a lost leading "1": 7186.18 for
+                // 17186.18). This group's own end balance says what it must have been.
+                if ($prevBad && $i > 0) {
+                    $implied = $this->impliedPrevious($raw, $idx, (float) $raw[$end]['balance']);
+                    if ($implied !== null
+                        && levenshtein((string) (int) round($implied * 100), (string) (int) round($prev * 100)) <= 2) {
+                        $raw[$i - 1]['balance'] = $implied;
+                        $prev = $implied;
+                        $prevBad = false;
+                        continue;
+                    }
                 }
-                return [
-                    'page' => $pageNo,
-                    'date' => $rowDate,
-                    'desc' => $desc,
-                    'abs' => abs($value),
-                    'balance' => null,
-                    'hint' => $this->hint($desc),
-                    'key' => $this->key($desc),
-                    'lineNo' => $i,
-                    'recovered' => true,
-                ];
+                // The misread may be in the other copy of this balance (page-top "brought forward").
+                if (isset($raw[$end]['balAlt']) && $this->fits($raw, $idx, round((float) $raw[$end]['balAlt'] - $prev, 2))) {
+                    $raw[$end]['balance'] = (float) $raw[$end]['balAlt'];
+                    unset($raw[$end]['balAlt']);
+                    continue;
+                }
+
+                // A thin leading "1" is the classic Tesseract loss: 7348.27 printed as 17348.27.
+                $endBal = (float) $raw[$end]['balance'];
+                if ($endBal >= 1000 && $endBal < 10000 && $this->fits($raw, $idx, round($endBal + 10000 - $prev, 2))) {
+                    $raw[$end]['balance'] = round($endBal + 10000, 2);
+                    continue;
+                }
+
+                if ($this->resolveMaybeRows($raw, $i, $end, $delta)) {
+                    $raw = array_values($raw);
+                    continue;
+                }
+
+                // Where does the next group stand? A misread BALANCE breaks this group and the next one
+                // in opposite directions; a misread AMOUNT breaks only this group.
+                $nextEnd = $end + 1;
+                while ($nextEnd < count($raw) && $raw[$nextEnd]['balance'] === null) {
+                    $nextEnd++;
+                }
+                $nextFits = $nextEnd >= count($raw)
+                    || $this->fits($raw, range($end + 1, $nextEnd), round((float) $raw[$nextEnd]['balance'] - (float) $raw[$end]['balance'], 2));
+
+                $done = false;
+                if (!$nextFits) {
+                    $done = $this->mergeFix($raw, $i, $prev);
+                }
+                if (!$done) {
+                    $done = $this->amountFix($raw, $i, $end, $delta, true)
+                        || $this->amountFix($raw, $i, $end, $delta, false);
+                }
+                if (!$done && $nextFits) {
+                    $done = $this->mergeFix($raw, $i, $prev);
+                }
+                if (!$done) {
+                    $done = $this->placeholderFix($raw, $i, $end, $delta, $unparsed, $samples);
+                    if ($done) {
+                        $raw = array_values($raw);
+                    }
+                }
+                if (!$done) {
+                    // Cannot be proven: keep what was read, the resolver reports the group.
+                    $prev = (float) $raw[$end]['balance'];
+                    $prevBad = true;
+                    $i = $end + 1;
+                }
             }
         }
 
-        return null;
+        // "Maybe" rows that nothing proved (and nothing disproved) have no amount: never ship them silently.
+        $kept = [];
+        foreach ($raw as $r) {
+            if ($r['abs'] === null) {
+                $unparsed++;
+                if (count($samples) < 5) {
+                    $samples[] = mb_substr('Amount not readable for: ' . $r['desc'] . ' (' . $r['date'] . ')', 0, 200);
+                }
+                continue;
+            }
+            unset($r['maybe'], $r['balAlt'], $r['suspect']);
+            $kept[] = $r;
+        }
+        $raw = $kept;
+    }
+
+    /**
+     * A group holding "maybe" rows (payees whose amount OCR lost): if the group already adds up
+     * without them they were noise; if exactly one of them can carry the missing amount, fill it in.
+     */
+    private function resolveMaybeRows(array &$raw, int $i, int $end, float $delta): bool
+    {
+        $maybe = [];
+        for ($k = $i; $k <= $end; $k++) {
+            if ($raw[$k]['abs'] === null) {
+                $maybe[] = $k;
+            }
+        }
+        if (!$maybe) {
+            return false;
+        }
+        $idx = range($i, $end);
+        // 1) noise only (e.g. a wrapped description that repeats the payee)
+        if ($this->fits($raw, $idx, $delta)) {
+            foreach ($maybe as $k) {
+                unset($raw[$k]);
+            }
+            return true;
+        }
+        // 2) one of them carries the missing amount, the others are noise
+        $hit = null;
+        foreach ($maybe as $k) {
+            $value = $this->impliedAmount($raw, $idx, $k, $delta);
+            if ($value === null) {
+                continue;
+            }
+            $trial = $raw;
+            $trial[$k]['abs'] = $value;
+            if ($this->fits($trial, $idx, $delta)) {
+                if ($hit !== null) {
+                    return false; // ambiguous
+                }
+                $hit = [$k, $value];
+            }
+        }
+        if ($hit === null) {
+            return false;
+        }
+        $raw[$hit[0]]['abs'] = $hit[1];
+        foreach ($maybe as $k) {
+            if ($k !== $hit[0]) {
+                unset($raw[$k]);
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Amount row $k must have so that the group adds up to $delta. Rows whose direction is not
+     * known are tried as money out first (transfers and card spend are almost always debits).
+     */
+    private function impliedAmount(array $raw, array $idx, int $k, float $delta): ?float
+    {
+        $fixed = 0;
+        $free = [];
+        foreach ($idx as $o) {
+            if ($o === $k || $raw[$o]['abs'] === null) {
+                continue;
+            }
+            $c = (int) round($raw[$o]['abs'] * 100);
+            $h = (int) $raw[$o]['hint'];
+            if ($h !== 0) {
+                $fixed += $h * $c;
+            } else {
+                $free[] = $c;
+            }
+        }
+        if (count($free) > 10) {
+            return null;
+        }
+        $target = (int) round($delta * 100);
+        $h = (int) $raw[$k]['hint'];
+        $best = null;
+        for ($mask = 0, $n = 1 << count($free); $mask < $n; $mask++) {
+            $sum = $fixed;
+            $credits = 0;
+            foreach ($free as $b => $c) {
+                if (($mask >> $b) & 1) {
+                    $sum += $c;
+                    $credits++;
+                } else {
+                    $sum -= $c;
+                }
+            }
+            $x = $h !== 0 ? ($target - $sum) * $h : -($target - $sum);
+            if ($x > 0 && ($best === null || $credits < $best[0])) {
+                $best = [$credits, $x];
+            }
+        }
+        return $best === null ? null : $best[1] / 100;
+    }
+
+    /** Balance that must have been printed before this group, given its end balance (rows read as money out first). */
+    private function impliedPrevious(array $raw, array $idx, float $endBalance): ?float
+    {
+        $fixed = 0;
+        $free = [];
+        foreach ($idx as $k) {
+            if ($raw[$k]['abs'] === null) {
+                continue;
+            }
+            $c = (int) round($raw[$k]['abs'] * 100);
+            $h = (int) $raw[$k]['hint'];
+            if ($h !== 0) {
+                $fixed += $h * $c;
+            } else {
+                $free[] = $c;
+            }
+        }
+        if (count($free) > 10) {
+            return null;
+        }
+        $best = null;
+        for ($mask = 0, $n = 1 << count($free); $mask < $n; $mask++) {
+            $sum = $fixed;
+            $credits = 0;
+            foreach ($free as $b => $c) {
+                if (($mask >> $b) & 1) {
+                    $sum += $c;
+                    $credits++;
+                } else {
+                    $sum -= $c;
+                }
+            }
+            if ($best === null || $credits < $best[0]) {
+                $best = [$credits, (int) round($endBalance * 100) - $sum];
+            }
+        }
+        return $best !== null && $best[1] > 0 ? $best[1] / 100 : null;
+    }
+
+    /**
+     * Balance-column misread: this group and the next one fail in opposite directions, but the two
+     * together add up to the later printed balance. The in-between balance is recomputed.
+     */
+    private function mergeFix(array &$raw, int $i, float $prev): bool
+    {
+        $end = $i;
+        for ($hop = 0; $hop < 3; $hop++) {
+            while ($end < count($raw) && $raw[$end]['balance'] === null) {
+                $end++;
+            }
+            if ($end >= count($raw)) {
+                return false;
+            }
+            $anchors = [];
+            $next = $end + 1;
+            while ($next < count($raw) && $raw[$next]['balance'] === null) {
+                $next++;
+            }
+            if ($next >= count($raw)) {
+                return false;
+            }
+            $end = $next; // merge with the following group
+            $idx = range($i, $end);
+            $delta = round((float) $raw[$end]['balance'] - $prev, 2);
+            $signs = $this->fits($raw, $idx, $delta) ? BalanceResolver::trySolve($raw, array_values(array_filter($idx, fn ($k) => $raw[$k]['abs'] !== null)), $delta) : null;
+            if ($signs === null) {
+                continue;
+            }
+            // Recompute the in-between balances and make sure each is within one or two OCR edits of what was printed.
+            $running = $prev;
+            $new = [];
+            $pos = 0;
+            $valid = true;
+            foreach ($idx as $k) {
+                if ($raw[$k]['abs'] === null) {
+                    continue;
+                }
+                $running = round($running + $signs[$pos++] * $raw[$k]['abs'], 2);
+                if ($raw[$k]['balance'] !== null && $k !== $end) {
+                    if (levenshtein((string) (int) round($raw[$k]['balance'] * 100), (string) (int) round($running * 100)) > 2) {
+                        $valid = false;
+                        break;
+                    }
+                    $new[$k] = $running;
+                }
+            }
+            if (!$valid) {
+                continue;
+            }
+            foreach ($new as $k => $bal) {
+                $raw[$k]['balance'] = $bal;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * One amount in the group is misread (or lost): find the single value that makes the group add up
+     * and is within one OCR edit of what was read.
+     */
+    private function amountFix(array &$raw, int $i, int $end, float $delta, bool $useHints): bool
+    {
+        $idx = range($i, $end);
+        $target = (int) round($delta * 100);
+        $found = [];
+        foreach ($idx as $k) {
+            if ($raw[$k]['abs'] === null) {
+                continue;
+            }
+            $fixed = 0;
+            $free = [];
+            foreach ($idx as $o) {
+                if ($o === $k || $raw[$o]['abs'] === null) {
+                    continue;
+                }
+                $c = (int) round($raw[$o]['abs'] * 100);
+                $h = $useHints ? (int) $raw[$o]['hint'] : 0;
+                if ($h !== 0) {
+                    $fixed += $h * $c;
+                } else {
+                    $free[] = $c;
+                }
+            }
+            if (count($free) > 10) {
+                continue;
+            }
+            $orig = (int) round($raw[$k]['abs'] * 100);
+            $own = $useHints && (int) $raw[$k]['hint'] !== 0 ? [(int) $raw[$k]['hint']] : [1, -1];
+            for ($mask = 0, $n = 1 << count($free); $mask < $n; $mask++) {
+                $sum = $fixed;
+                foreach ($free as $b => $c) {
+                    $sum += (($mask >> $b) & 1) ? -$c : $c;
+                }
+                $credits = 0;
+                foreach ($free as $b => $c) {
+                    $credits += (($mask >> $b) & 1);
+                }
+                foreach ($own as $sk) {
+                    $x = ($target - $sum) * $sk;
+                    if ($x > 0 && $x !== $orig && $this->similarCents($orig, $x)) {
+                        // Best explanation first: a flagged (garbled) amount, then the fewest credits.
+                        $rank = [empty($raw[$k]['suspect']) ? 1 : 0, $credits + ($sk === 1 && (int) $raw[$k]['hint'] !== 1 ? 1 : 0), $this->ocrSlip($orig, $x)];
+                        $key = $k . ':' . $x;
+                        if (!isset($found[$key]) || $rank < $found[$key][2]) {
+                            $found[$key] = [$k, $x, $rank];
+                        }
+                    }
+                }
+            }
+        }
+        if (!$found) {
+            return false;
+        }
+        uasort($found, fn ($a, $b) => $a[2] <=> $b[2]);
+        $ranked = array_values($found);
+        if (count($ranked) > 1 && $ranked[0][2] === $ranked[1][2]) {
+            return false; // two equally good explanations: do not guess
+        }
+        [$k, $x] = $ranked[0];
+        $old = $raw[$k]['abs'];
+        $raw[$k]['abs'] = $x / 100;
+        if ($this->fits($raw, $idx, $delta)) {
+            return true;
+        }
+        $raw[$k]['abs'] = $old;
+        return false;
+    }
+
+    /**
+     * Last resort: the group is short by exactly one transaction OCR never delivered. Insert it
+     * (amount recovered from the printed balance) and flag it for review.
+     */
+    private function placeholderFix(array &$raw, int $i, int $end, float $delta, int &$unparsed, array &$samples): bool
+    {
+        $idx = range($i, $end);
+        $fixed = 0;
+        $free = [];
+        foreach ($idx as $k) {
+            if ($raw[$k]['abs'] === null) {
+                continue;
+            }
+            $c = (int) round($raw[$k]['abs'] * 100);
+            $h = (int) $raw[$k]['hint'];
+            if ($h !== 0) {
+                $fixed += $h * $c;
+            } else {
+                $free[] = $c;
+            }
+        }
+        if (count($free) > 8) {
+            return false;
+        }
+        $target = (int) round($delta * 100);
+        $byCredits = [];
+        for ($mask = 0, $n = 1 << count($free); $mask < $n; $mask++) {
+            $sum = $fixed;
+            $credits = 0;
+            foreach ($free as $b => $c) {
+                if (($mask >> $b) & 1) {
+                    $sum += $c;
+                    $credits++;
+                } else {
+                    $sum -= $c;
+                }
+            }
+            $r = $target - $sum;
+            if ($r !== 0) {
+                $byCredits[$credits][$r] = true;
+            }
+        }
+        if (!$byCredits) {
+            return false;
+        }
+        ksort($byCredits);
+        $cands = reset($byCredits); // the most ordinary reading (fewest credits) decides
+        if (count($cands) !== 1) {
+            return false;
+        }
+        $r = (int) array_key_first($cands);
+        if (abs($r) > 300000) {
+            return false; // far too large to be one missing payment: a balance was misread
+        }
+        if (preg_match('/^[1-9]0*$/', (string) abs($r))) {
+            return false; // one wrong digit somewhere (1.00, 30.00, 1000.00 ...), not a missing transaction
+        }
+        $anchor = $raw[$end];
+        $row = [
+            'page' => $anchor['page'], 'date' => $anchor['date'],
+            'desc' => 'Unreadable transaction (recovered from running balance)',
+            'abs' => abs($r) / 100, 'balance' => null, 'hint' => $r > 0 ? 1 : -1, 'key' => 'vm|unreadable',
+        ];
+        array_splice($raw, $end, 0, [$row]);
+        $unparsed++;
+        if (count($samples) < 5) {
+            $samples[] = 'Transaction missing from OCR on ' . $anchor['date'] . ' recovered from the running balance: '
+                . number_format(abs($r) / 100, 2, '.', '') . ($r > 0 ? ' in' : ' out') . ' - please check';
+        }
+        return true;
     }
 
     private function hint(string $desc): int
@@ -928,7 +1242,12 @@ class VirginMoneyParser extends AbstractStatementParser
             || preg_match('/^Postcode\s+Lottery\s*$/i', $desc)) {
             return 1;
         }
-        if (preg_match('/^(C[il1]s?|Card|Cash|Crd\s?\d*|DD|SO|Wlt\d*)\b/i', $desc)) {
+        // Faster Payment / BACS credits carry the payer's 14-digit reference.
+        if (!preg_match('/^(C[il1]s?|Card|Cash|Crd|DD|OD|W[lI1]t)\b/i', $desc)
+            && (preg_match('/(?<!\d)\d{12,16}(?!\d)/', $desc) || preg_match('/\b(Faster\s+Paym|DWP)\b/i', $desc))) {
+            return 1;
+        }
+        if (preg_match('/^(C[il1]s?|Card|Cash|Crd\s?\d*|DD|OD|SO|W[lI1]t\d*)\b/i', $desc)) {
             return -1;
         }
         return 0;

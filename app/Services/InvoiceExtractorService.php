@@ -361,10 +361,9 @@ class InvoiceExtractorService
      *
      * @return array<int, string>
      */
-    public function extractLayoutTextByPage(string $pdfPath, int $dpi = 300, int $psm = 6): array
+    public function extractLayoutTextByPage(string $pdfPath, int $dpi = 300): array
     {
         $dpi = max(200, min($dpi, 400));
-        $psm = max(1, min($psm, 13));
         $pages = [];
         try {
             $tempDir = sys_get_temp_dir();
@@ -380,7 +379,7 @@ class InvoiceExtractorService
                 if (preg_match('/-(\d+)\.png$/', $image, $m)) {
                     $pageNo = (int) $m[1];
                 }
-                $tsv = (string) @shell_exec("{$this->config['tesseract']} \"{$image}\" stdout -l eng --oem 1 --psm {$psm} -c preserve_interword_spaces=1 tsv 2>/dev/null");
+                $tsv = (string) @shell_exec("{$this->config['tesseract']} \"{$image}\" stdout -l eng --oem 1 --psm 6 -c preserve_interword_spaces=1 tsv 2>/dev/null");
                 $pages[$pageNo] = self::layoutTextFromTsv($tsv);
                 @unlink($image);
             }
@@ -392,7 +391,14 @@ class InvoiceExtractorService
         return $pages;
     }
 
-    /** Rebuild text lines (left→right) from Tesseract TSV word boxes. */
+    /**
+     * Rebuild text lines (left→right) from Tesseract TSV word boxes.
+     *
+     * Virgin / Clydesdale / Yorkshire statements print a right-hand panel (sort code, IBAN, FSCS text,
+     * totals, glossary) beside the table. Mixed into the table lines it corrupts amounts, so when that
+     * layout is detected the table and the panel are emitted as separate blocks, the panel after a
+     * "[side panel]" marker line. Every other layout is rebuilt exactly as before.
+     */
     public static function layoutTextFromTsv(string $tsv): string
     {
         $words = [];
@@ -414,32 +420,75 @@ class InvoiceExtractorService
             return '';
         }
 
-        usort($words, fn ($a, $b) => $a['y'] <=> $b['y']);
         $heights = array_column($words, 'h');
         sort($heights);
         $tol = max(4, $heights[(int) (count($heights) / 2)] * 0.55);
 
-        $lines = [];
-        $current = [];
-        $anchor = null;
-        foreach ($words as $w) {
-            if ($anchor !== null && abs($w['y'] - $anchor) > $tol) {
-                $lines[] = $current;
-                $current = [];
-                $anchor = null;
+        $build = function (array $ws) use ($tol): array {
+            usort($ws, fn ($a, $b) => $a['y'] <=> $b['y']);
+            $lines = [];
+            $current = [];
+            $anchor = null;
+            foreach ($ws as $w) {
+                if ($anchor !== null && abs($w['y'] - $anchor) > $tol) {
+                    $lines[] = $current;
+                    $current = [];
+                    $anchor = null;
+                }
+                $current[] = $w;
+                $anchor = $anchor === null ? $w['y'] : ($anchor * (count($current) - 1) + $w['y']) / count($current);
             }
-            $current[] = $w;
-            $anchor = $anchor === null ? $w['y'] : ($anchor * (count($current) - 1) + $w['y']) / count($current);
+            if ($current) {
+                $lines[] = $current;
+            }
+            $out = [];
+            foreach ($lines as $line) {
+                usort($line, fn ($a, $b) => $a['x'] <=> $b['x']);
+                $out[] = implode(' ', array_column($line, 't'));
+            }
+            return $out;
+        };
+
+        // "Date Description Debits Credits Balance" header with a panel to the right of the Balance column.
+        $hdr = null;
+        foreach ($words as $w) {
+            if (strcasecmp($w['t'], 'Balance') !== 0) {
+                continue;
+            }
+            foreach ($words as $d) {
+                if (strcasecmp($d['t'], 'Credits') === 0 && abs($d['y'] - $w['y']) <= $tol && $d['x'] < $w['x']) {
+                    $hdr = $w;
+                    break 2;
+                }
+            }
         }
-        if ($current) {
-            $lines[] = $current;
+        $hasPanel = false;
+        if ($hdr) {
+            foreach ($words as $w) {
+                if ($w['x'] > $hdr['x'] + $hdr['w'] + 60 && preg_match('/^(Sort|IBAN|Opening|Closing)$/i', $w['t'])) {
+                    $hasPanel = true;
+                    break;
+                }
+            }
+        }
+        if (!$hdr || !$hasPanel) {
+            return implode("\n", $build($words));
         }
 
-        $out = [];
-        foreach ($lines as $line) {
-            usort($line, fn ($a, $b) => $a['x'] <=> $b['x']);
-            $out[] = implode(' ', array_column($line, 't'));
+        $cut = $hdr['x'] + $hdr['w'] + 60;
+        $top = [];
+        $table = [];
+        $panel = [];
+        foreach ($words as $w) {
+            if ($w['y'] < $hdr['y'] - $tol) {
+                $top[] = $w;
+            } elseif ($w['x'] >= $cut) {
+                $panel[] = $w;
+            } else {
+                $table[] = $w;
+            }
         }
+        $out = array_merge($build($top), $build($table), ['[side panel]'], $build($panel));
         return implode("\n", $out);
     }
 

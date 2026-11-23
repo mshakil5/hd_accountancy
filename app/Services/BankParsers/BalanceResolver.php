@@ -67,6 +67,18 @@ final class BalanceResolver
         return ['unresolved' => $unresolved, 'samples' => $samples];
     }
 
+    /**
+     * Can these rows (by index) add up to $delta for some choice of money in / out?
+     * Used by parsers to test OCR repairs against the printed balances.
+     *
+     * @return array<int,int>|null signs per position in $idx, or null when no combination fits
+     */
+    public static function trySolve(array $rows, array $idx, float $delta): ?array
+    {
+        [$signs] = self::solve($rows, $idx, $delta, []);
+        return $signs;
+    }
+
     private static function groups(array $rows, ?float $opening, ?float $closing): array
     {
         $groups = [];
@@ -89,6 +101,21 @@ final class BalanceResolver
     /** @return array{0:?array<int,int>,1:bool} */
     private static function solve(array $rows, array $idx, ?float $delta, array $learned): array
     {
+        // Rows with a forced type hint (card payment, direct debit, ...) are tried with that sign
+        // only first. Long days no longer blow the state limit; if the strict reading does not
+        // add up, fall back to the original search where a hint is only a preference.
+        if ($delta !== null) {
+            $strict = self::solveWith($rows, $idx, $delta, $learned, true);
+            if ($strict[0] !== null) {
+                return $strict;
+            }
+        }
+        return self::solveWith($rows, $idx, $delta, $learned, false);
+    }
+
+    /** @return array{0:?array<int,int>,1:bool} */
+    private static function solveWith(array $rows, array $idx, ?float $delta, array $learned, bool $strict): array
+    {
         $n = count($idx);
         $hints = [];
         $cents = [];
@@ -100,23 +127,19 @@ final class BalanceResolver
             $hints[$k] = $type !== 0 ? $type : $h;
         }
 
-        if ($delta === null) {
-            return [self::hintSigns($hints), false];
+        if ($delta === null || $n > self::MAX_GROUP) {
+            return [$delta === null ? self::hintSigns($hints) : null, false];
         }
 
         $target = (int) round($delta * 100);
-
-        // Long groups (a busy day where the balance is only printed once) cannot be solved by
-        // the full subset-sum table, but the printed balance still proves the right answer:
-        // start from the payee hints and flip the one or two rows that close the gap.
-        if ($n > self::MAX_GROUP) {
-            return [self::solveLarge($cents, $hints, $target), false];
-        }
         $levels = [[0 => [0, 1, null, 0]]];
         for ($k = 0; $k < $n; $k++) {
             $next = [];
             foreach ($levels[$k] as $sum => [$cost, $count]) {
                 $options = $cents[$k] === 0 ? [1] : [1, -1];
+                if ($strict && ($rows[$idx[$k]]['hint'] ?? 0) !== 0) {
+                    $options = [(int) $rows[$idx[$k]]['hint']];
+                }
                 foreach ($options as $sign) {
                     $ns = $sum + $sign * $cents[$k];
                     $c = $cost + (($hints[$k] !== 0 && $hints[$k] !== $sign) ? 1 : 0);
@@ -157,56 +180,5 @@ final class BalanceResolver
     private static function hintSigns(array $hints): array
     {
         return array_map(fn ($h) => $h !== 0 ? $h : -1, $hints);
-    }
-
-    /**
-     * Sign assignment for groups too long for the subset-sum table: take the payee hints, then
-     * correct them by flipping the single row (or the pair of rows) that makes the group add up
-     * to the printed balance change. Returns null when no such correction exists.
-     *
-     * @param  array<int,int> $cents
-     * @param  array<int,int> $hints
-     * @return array<int,int>|null
-     */
-    private static function solveLarge(array $cents, array $hints, int $target): ?array
-    {
-        $signs = [];
-        $sum = 0;
-        foreach ($cents as $k => $c) {
-            $s = $hints[$k] !== 0 ? $hints[$k] : -1;
-            $signs[$k] = $s;
-            $sum += $s * $c;
-        }
-
-        $diff = $target - $sum;
-        if ($diff === 0) {
-            return $signs;
-        }
-
-        foreach ($cents as $a => $c) {
-            if ($c !== 0 && $signs[$a] * $c * 2 === -$diff) {
-                $signs[$a] = -$signs[$a];
-                return $signs;
-            }
-        }
-
-        foreach ($cents as $a => $ca) {
-            if ($ca === 0) {
-                continue;
-            }
-            $rest = $diff + 2 * $signs[$a] * $ca;
-            foreach ($cents as $b => $cb) {
-                if ($b <= $a || $cb === 0) {
-                    continue;
-                }
-                if ($signs[$b] * $cb * 2 === -$rest) {
-                    $signs[$a] = -$signs[$a];
-                    $signs[$b] = -$signs[$b];
-                    return $signs;
-                }
-            }
-        }
-
-        return null;
     }
 }
