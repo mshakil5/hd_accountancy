@@ -39,6 +39,7 @@ class BankStatementVerificationService
         'statement_period_gap',
         'no_transactions_extracted',
         'ocr_no_page_mapping',
+        'duplicate_line_skipped',
     ];
 
     /** Summary / footer text: the day's transactions are over, forget the carried date. */
@@ -794,6 +795,7 @@ class BankStatementVerificationService
                     ->delete();
 
                 $seen = [];
+                $skipped = [];
                 foreach ($rows as $row) {
                     $key = hash('sha256', implode('|', [
                         $row['transaction_date'],
@@ -809,14 +811,25 @@ class BankStatementVerificationService
                     }
 
                     // Same line already stored by another (overlapping) statement of this bank account.
-                    $alreadyStored = DB::table('bank_entries')
+                    $alreadyStoredIn = DB::table('bank_entries')
                         ->where('client_id', $import->client_id)
                         ->where('bank_account_id', $import->bank_account_id)
                         ->where('line_fingerprint', $key)
                         ->where('line_occurrence', $occurrence)
                         ->where('bank_import_id', '<>', $import->id)
-                        ->exists();
-                    if ($alreadyStored) {
+                        ->value('bank_import_id');
+                    if ($alreadyStoredIn !== null) {
+                        // Dropping a line is only right for a genuinely overlapping statement. When the
+                        // drop is wrong (a repeated payee with the same amount, or a line this statement
+                        // prints its own running balance for) the running balance no longer reaches the
+                        // printed one and the accountant sees a gap with no explanation. Never lose the
+                        // line silently: name it here so it can be added back with one click.
+                        $skipped[] = mb_substr(
+                            $row['transaction_date'] . ' ' . $row['description'] . ' '
+                            . number_format((float) $row['amount'], 2, '.', '')
+                            . ' (already in statement #' . $alreadyStoredIn . ')',
+                            0, 180
+                        );
                         continue;
                     }
 
@@ -836,6 +849,15 @@ class BankStatementVerificationService
                     $row['created_at'] = now();
                     $row['updated_at'] = now();
                     DB::table('bank_entries')->insert($row);
+                }
+
+                if ($skipped) {
+                    $this->exception($import->id, [
+                        'code' => 'duplicate_line_skipped',
+                        'severity' => 'warning',
+                        'message' => count($skipped) . ' extracted line(s) were not added because the same date, description and amount is already stored in another statement of this bank account. This is correct for an overlapping statement, but if this statement prints a running balance that only adds up with the line, add it back with "Add": ' . implode('; ', array_slice($skipped, 0, 10)) . (count($skipped) > 10 ? ' …' : ''),
+                        'source_value' => mb_substr(implode(' | ', array_slice($skipped, 0, 20)), 0, 2000),
+                    ]);
                 }
 
                 $totalCount = DB::table('bank_entries')->where('bank_import_id', $import->id)->count();

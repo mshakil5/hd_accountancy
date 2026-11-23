@@ -613,6 +613,54 @@ class BankParsersTest extends TestCase
     }
 
     /**
+     * The same payee repeated on one day, each row wrapped over two lines, with the
+     * printed running balance only on a few rows (OCR of this layout usually loses it).
+     * Every row must survive - a repeated "Cls 24 The Lockwood / Huddersfield" block
+     * must not swallow one of its amounts.
+     */
+    public function test_virgin_repeated_payee_rows_on_the_same_day_are_all_kept(): void
+    {
+        $parsed = (new VirginMoneyParser())->parseDocument([1 => implode("\n", [
+            'Virgin Money',
+            'Your Club M Plus Account statement',
+            'Statement date',
+            '30 September 2023',
+            'Date Description Debits Credits Balance',
+            '1Sep Balance brought forward from previous page',
+            'Cls 24 Ppoint-*Close',
+            'Huddersfield 22.05 28756.84',
+            '3 Sep Cls 24 Costcutter',
+            'Harrogate 11.99 28744.85',
+            '3 Sep Cls 24 The Lockwood',
+            'Huddersfield 5.70',
+            'Cls 24 The Lockwood',
+            'Huddersfield 6.50',
+            'Cls 24 The Lockwood',
+            'Huddersfield 10.20',
+            'Cls 24 The Lockwood',
+            'Huddersfield 10.50',
+            '7 Sep DD Shelter Nat Camp 15.00',
+            '8 Sep Cls 24 Co-Op Group F 104213 25.45',
+            '9 Sep Cls 24 Ppoint-*Close 27.97',
+            'DD British Gas 51.28',
+            'DD British Gas 103.56 28488.69',
+            'Cash 24 Postharrrogate 200.00',
+        ])], true);
+
+        $rows = $this->rows($parsed);
+        $this->assertCount(12, $rows);
+        $this->assertEqualsWithDelta(
+            [-22.05, -11.99, -5.70, -6.50, -10.20, -10.50, -15.00, -25.45, -27.97, -51.28, -103.56, -200.00],
+            array_map('floatval', array_column($rows, 'amount')),
+            0.01
+        );
+        // The three printed balances stay with the rows that print them.
+        $this->assertEqualsWithDelta(28756.84, (float) $rows[0]['balance_after'], 0.01);
+        $this->assertEqualsWithDelta(28744.85, (float) $rows[1]['balance_after'], 0.01);
+        $this->assertEqualsWithDelta(28488.69, (float) $rows[10]['balance_after'], 0.01);
+    }
+
+    /**
      * A transaction whose text was lost but whose printed amount closes the balance gap is
      * recovered from that line instead of vanishing (this is what "missing rows" looked like).
      */
