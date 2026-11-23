@@ -382,6 +382,17 @@ class VirginMoneyParser extends AbstractStatementParser
                 } elseif (preg_match('/(?:page|previo\w*)\s+(\d{4,9})\s*$/iu', $content, $bm)) {
                     $bfBal = round(((int) $bm[1]) / 100, 2);
                 }
+                // The carried-over line also names the day of the previous row ("N1Sep", "2 5 Sep"): when OCR
+                // garbled it the normal date reader missed it, so rows right after it would have no date.
+                if ($content === $line
+                    && preg_match('/^[^\dOolIQN|]{0,2}([0-9OolIQN|])?\s?([0-9OolIQN|])\s*(' . self::MON . ')\b/u', $line, $bd)) {
+                    $bday = (int) strtr(($bd[1] ?? '') . $bd[2], 'OolIQN|', '0011011');
+                    $bmon = self::MONTHS[strtolower($bd[3])];
+                    $byear = $resolveYear($bmon);
+                    if ($bday >= 1 && $bday <= 31 && checkdate($bmon, $bday, $byear)) {
+                        $lastDate = sprintf('%04d-%02d-%02d', $byear, $bmon, $bday);
+                    }
+                }
                 // A file that starts part-way through a statement (no "Previous statement" row)
                 // begins at the carried-over balance, not at the statement's printed opening balance.
                 if ($bfBal !== null && $raw === [] && $openingFromStatement === null) {
@@ -694,8 +705,8 @@ class VirginMoneyParser extends AbstractStatementParser
             return $line;
         }
         foreach (preg_split('/\s+/', trim($m[1])) ?: [] as $t) {
-            if (preg_match('/^(?:C[il1]s|Cash|Card|Crd|DD|OD|SO|Mb|TB|WLT)$/i', $t)) {
-                return $line; // a real marker, not margin noise
+            if (preg_match('/^(?:C[il1]s|Cash|Card|Crd|DD|OD|SO|Mb|TB|WLT)$/i', $t) || ctype_digit($t)) {
+                return $line; // a real marker or a split-up day ("2 5 Sep"), not margin noise
             }
         }
         return substr($line, strlen($m[1]));
