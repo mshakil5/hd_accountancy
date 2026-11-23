@@ -332,7 +332,16 @@ class VirginMoneyParser extends AbstractStatementParser
                 $pendingFx = false;
                 continue;
             }
-            if (preg_match('/^\w{1,5}\s?=\s/u', $line) || $this->isNoise($line)) {
+            // Virgin Money PDFs can put a transaction amount on its own OCR line
+            // after a wrapped description, e.g. "Cls 24 The Lockwood" /
+            // "Huddersfield" / "10.50". isNoise() filters standalone money values,
+            // so preserve one when a payee is waiting in $pending.
+            $standaloneAmount = (bool) preg_match(
+                '/^-?£?\s?\d{1,3}(?:,\d{3})*\.\d{2}$/u',
+                trim($line)
+            );
+            if (preg_match('/^\w{1,5}\s?=\s/u', $line)
+                || ($this->isNoise($line) && !($standaloneAmount && trim($pending) !== ''))) {
                 continue;
             }
 
