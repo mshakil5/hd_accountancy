@@ -1171,6 +1171,14 @@ class BankStatementVerificationService
             }
             $balanceUpdates[] = [
                 'id' => $entry->id,
+                // MySQL rejects the insert half of an upsert when a NOT NULL column without a
+                // default is missing, even though the row already exists (SQLSTATE 1364 on
+                // client_id). These columns are only used if the row is inserted; the update
+                // list below still touches amount/balances only.
+                'client_id' => $entry->client_id,
+                'bank_import_id' => $entry->bank_import_id,
+                'transaction_date' => substr((string) $entry->transaction_date, 0, 10),
+                'description' => $entry->description,
                 'amount' => $entry->amount,
                 'balance_after' => $entry->balance_after,
                 'system_balance' => $running,
