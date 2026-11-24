@@ -81,6 +81,9 @@ trait RendersStatementVerification
     {
         return [
             'rows' => (int) $entries->count(),
+            // Rows still waiting for the accountant's per-row check. When this is
+            // zero there is nothing left for "Verify all rows" to do.
+            'unverified' => $entries->filter(fn ($entry) => empty($entry->verified_at))->count(),
             'opening' => $import->opening_balance !== null ? (float) $import->opening_balance : null,
             'total' => (float) $entries->sum(fn ($entry) => (float) $entry->amount),
             'calculated' => $import->calculated_closing_balance !== null ? (float) $import->calculated_closing_balance : null,

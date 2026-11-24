@@ -190,6 +190,60 @@ class BankReconciliationTest extends TestCase
         $this->assertNull($unscoped['lastReconciled']);
     }
 
+    /** Transactions from a statement that is not verified never reach the workspace. */
+    public function test_unverified_statement_rows_are_hidden_from_reconciliation(): void
+    {
+        if (!$this->credId) {
+            $this->markTestSkipped('No client credential fixture available.');
+        }
+        DB::table('clients')->where('id', $this->client->id)->update(['status' => 1]);
+
+        $verified = $this->makeEntry(-10.00, 'unmatched', $this->bankA);
+
+        // A second statement on the same bank, still waiting for verification.
+        $reviewImport = $this->makeImport($this->bankA);
+        DB::table('bank_imports')->where('id', $reviewImport)->update([
+            'verification_status' => 'review', 'verified_by' => null, 'verified_at' => null,
+        ]);
+        $hidden = $this->makeEntry(-20.00, 'unmatched', $this->bankA);
+        DB::table('bank_entries')->where('id', $hidden)->update(['bank_import_id' => $reviewImport]);
+
+        $filters = [
+            'client_credential_id' => $this->credId,
+            'client_id' => $this->client->id,
+            'bank_account_id' => $this->bankA,
+            'reconcile_status' => 'all',
+            'date_from' => '2020-06-15',
+            'date_to' => '2020-06-15',
+        ];
+        $visibleIds = function () use ($filters) {
+            $data = $this->controller()->index(new Request($filters))->getData();
+            return [
+                'ids' => collect($data['entries']->items())->pluck('id')->map(fn ($id) => (int) $id)->all(),
+                'count' => (int) $data['filteredCount'],
+            ];
+        };
+
+        $first = $visibleIds();
+        $this->assertContains($verified, $first['ids']);
+        $this->assertNotContains($hidden, $first['ids']);
+        $this->assertSame(1, $first['count']);
+
+        // Verifying the statement releases its rows into the workspace.
+        DB::table('bank_imports')->where('id', $reviewImport)->update([
+            'verification_status' => 'verified', 'verified_at' => now(),
+        ]);
+        $this->assertContains($hidden, $visibleIds()['ids']);
+
+        // Reconciled rows stay visible as history even if the statement is later
+        // reopened for a correction (editing a draft row clears verification).
+        DB::table('bank_imports')->where('id', $reviewImport)->update([
+            'verification_status' => 'review', 'verified_at' => null,
+        ]);
+        DB::table('bank_entries')->where('id', $hidden)->update(['reconciliation_status' => 'approved']);
+        $this->assertContains($hidden, $visibleIds()['ids']);
+    }
+
     /** A categorised entry posts exactly one ledger row, and never twice. */
     public function test_categorized_entry_posts_to_ledger_once(): void
     {

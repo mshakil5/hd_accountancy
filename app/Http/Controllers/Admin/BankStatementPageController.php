@@ -869,7 +869,9 @@ class BankStatementPageController extends Controller
             ]);
         $this->verification->refreshStoredRows($import);
 
-        $message = $updated . ' row(s) marked verified.';
+        $message = $updated > 0
+            ? $updated . ' row(s) marked verified.'
+            : 'All rows were already verified — nothing left to mark.';
         if ($request->expectsJson()) {
             return response()->json($this->verificationPayload($import, $message));
         }

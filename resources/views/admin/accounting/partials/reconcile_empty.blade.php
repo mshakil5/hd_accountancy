@@ -1,1 +1,1 @@
-<div class="alert alert-info"><strong>No bank transactions found.</strong> Import a statement for this client and business to begin reconciliation.</div>
+<div class="alert alert-info"><strong>No verified bank transactions found.</strong> Import a statement for this client and business, then verify it — transactions appear here only after their statement is verified.</div>

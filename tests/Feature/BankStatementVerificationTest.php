@@ -459,6 +459,31 @@ class BankStatementVerificationTest extends TestCase
         $response->assertSee('Acme Ltd');
     }
 
+    /** "Verify all rows" disappears once there is nothing left to verify. */
+    public function test_verify_all_rows_button_hides_when_no_rows_are_left(): void
+    {
+        $admin = DB::table('users')->where('type', 1)->first();
+        if (!$admin) {
+            $this->markTestSkipped('No admin user fixture available.');
+        }
+        $this->actingAs(User::find($admin->id));
+
+        $import = $this->makeImport(BankStatementVerificationService::READY);
+        $entry = $this->makeEntry($import, '2020-06-15', 'Acme Ltd', -10.00, 90.00);
+        $url = route('admin.bank-reconciliation.verification', $import->id);
+
+        $this->get($url)->assertOk()->assertSee('/verify-all-rows');
+
+        // Every row has now been checked against the PDF, so the bulk action is moot.
+        DB::table('bank_entries')->where('id', $entry)->update([
+            'verified_by' => $admin->id, 'verified_at' => now(),
+        ]);
+
+        $this->get($url)->assertOk()
+            ->assertDontSee('/verify-all-rows')
+            ->assertSee('All rows are already verified');
+    }
+
     /**
      * Opening the workspace for a statement that was already analysed must be a
      * read: re-parsing the PDF there is what exhausts memory on large uploads.

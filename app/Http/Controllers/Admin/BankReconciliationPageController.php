@@ -202,7 +202,21 @@ class BankReconciliationPageController extends Controller
             ->whereIn('client_id', $businessIds)
             ->when($bankAccountId, fn($q) => $q->where('bank_account_id', $bankAccountId))
             ->when($request->filled('date_from'), fn($q) => $q->where('transaction_date', '>=', $request->input('date_from')))
-            ->when($request->filled('date_to'), fn($q) => $q->where('transaction_date', '<=', $request->input('date_to')));
+            ->when($request->filled('date_to'), fn($q) => $q->where('transaction_date', '<=', $request->input('date_to')))
+            // Only transactions from a verified statement are reconcilable. Rows
+            // with no statement (transfer counter-entries) stay, and rows already
+            // reconciled stay visible as history even if their statement was
+            // reopened for a correction.
+            ->where(function ($q) {
+                $q->whereNull('bank_entries.bank_import_id')
+                    ->orWhere('bank_entries.reconciliation_status', 'approved')
+                    ->orWhereExists(function ($sub) {
+                        $sub->select(DB::raw(1))
+                            ->from('bank_imports as i')
+                            ->whereColumn('i.id', 'bank_entries.bank_import_id')
+                            ->where('i.verification_status', BankStatementVerificationService::VERIFIED);
+                    });
+            });
 
         $filteredScope = fn() => $scopeEntries()
             ->when($reconcileFilter === 'unreconciled', function ($q) {

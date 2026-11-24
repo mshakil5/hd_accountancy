@@ -27,11 +27,17 @@
             @endif
         </div>
         <div class="d-flex gap-2 flex-wrap">
-            <form method="POST" action="{{ route('admin.bank-statements.verify-all-rows', $import->id) }}"
-                  data-hd-ajax="1" data-hd-confirm="Verify all unverified rows for this statement? This marks them ready for reconciliation.">
-                @csrf
-                <button type="submit" class="btn btn-outline-success btn-sm"><i class="bi bi-check-all mr-1"></i> Verify all rows</button>
-            </form>
+            @if(($stats['unverified'] ?? 0) > 0)
+                <form method="POST" action="{{ route('admin.bank-statements.verify-all-rows', $import->id) }}"
+                      data-hd-ajax="1" data-hd-confirm="Verify all unverified rows for this statement? This marks them ready for reconciliation.">
+                    @csrf
+                    <button type="submit" class="btn btn-outline-success btn-sm"><i class="bi bi-check-all mr-1"></i> Verify all rows</button>
+                </form>
+            @else
+                <span class="hd-small text-success font-weight-bold">
+                    <i class="bi bi-check2-all mr-1"></i> All rows are already verified.
+                </span>
+            @endif
         </div>
     </div>
 @endif
