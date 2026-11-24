@@ -11,6 +11,11 @@
     @if($exceptions->isEmpty())
         <div class="hd-small">No exceptions recorded. Automated checks passed.</div>
     @else
+        @if($openExceptions->count() < $exceptions->count())
+            <div class="hd-small mt-1 mb-2">
+                Resolved entries stay listed as an audit record — they are not open issues and do not block verification.
+            </div>
+        @endif
         <div class="hd-scroll">
             <table class="hd-table">
                 <thead><tr><th>Severity</th><th>Issue</th><th>Page</th><th>Detail</th><th style="width:120px;text-align:center;">Action</th></tr></thead>

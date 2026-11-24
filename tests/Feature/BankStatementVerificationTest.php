@@ -292,6 +292,31 @@ class BankStatementVerificationTest extends TestCase
         $this->verifier()->verify($import, $this->userId);
     }
 
+    /** Resolving a blocking check is an accountant decision; it survives the refresh it triggers. */
+    public function test_resolved_balance_mismatch_is_not_raised_again(): void
+    {
+        $import = $this->makeImport();
+        $this->makeEntry($import, '2020-06-15', 'Acme Ltd', -10.00);
+        $this->verifier()->refresh($import, $this->analysis(['closing_balance' => 80.00]));
+
+        DB::table('bank_statement_exceptions')->where('bank_import_id', $import->id)
+            ->where('code', 'balance_mismatch')->update([
+                'resolved_at' => now(), 'resolved_by' => $this->userId,
+                'resolution' => 'Known difference; accepted as fine.',
+            ]);
+
+        $summary = $this->verifier()->refreshStoredRows(BankImport::findOrFail($import->id));
+
+        $this->assertSame(0, $summary['blocking']);
+        $this->assertSame(BankStatementVerificationService::READY, $summary['status']);
+        $this->assertSame(0, DB::table('bank_statement_exceptions')->where('bank_import_id', $import->id)
+            ->where('code', 'balance_mismatch')->whereNull('resolved_at')->count());
+
+        $this->verifier()->verify(BankImport::findOrFail($import->id), $this->userId);
+        $this->assertSame(BankStatementVerificationService::VERIFIED,
+            DB::table('bank_imports')->where('id', $import->id)->value('verification_status'));
+    }
+
     /** Lines that look like transactions but were not parsed must be flagged. */
     public function test_unreadable_rows_are_flagged_as_blocking(): void
     {

@@ -1374,14 +1374,13 @@ class BankStatementVerificationService
 
     private function exception(int $importId, array $data): void
     {
-        // A warning the accountant already cleared must not be raised again by
-        // the next check run: the standing OCR notice (and similar outcomes)
-        // describes the same unchanged condition, so re-flagging it on every
-        // re-scan buries the work still outstanding. Blocking checks are always
-        // re-raised: resolving one records the old state, not the fix.
+        // A check the accountant explicitly resolved is a decision: the very same
+        // finding must not be raised again by the next check run (resolving an
+        // exception itself triggers a refresh, which is why it used to reappear
+        // instantly). It is re-raised only when the figures or scope change, so a
+        // different discrepancy is still caught.
         $code = $data['code'] ?? null;
-        if ($code !== null && ($data['severity'] ?? 'blocking') === 'warning'
-            && in_array($code, self::AUTO_CODES, true)) {
+        if ($code !== null && in_array($code, self::AUTO_CODES, true)) {
             $existing = DB::table('bank_statement_exceptions')
                 ->where('bank_import_id', $importId)
                 ->where('code', $code)
