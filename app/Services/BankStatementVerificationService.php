@@ -39,6 +39,7 @@ class BankStatementVerificationService
         'statement_period_gap',
         'no_transactions_extracted',
         'ocr_no_page_mapping',
+        'derived_balances_only',
         'duplicate_line_skipped',
     ];
 
@@ -1373,6 +1374,33 @@ class BankStatementVerificationService
 
     private function exception(int $importId, array $data): void
     {
+        // A warning the accountant already cleared must not be raised again by
+        // the next check run: the standing OCR notice (and similar outcomes)
+        // describes the same unchanged condition, so re-flagging it on every
+        // re-scan buries the work still outstanding. Blocking checks are always
+        // re-raised: resolving one records the old state, not the fix.
+        $code = $data['code'] ?? null;
+        if ($code !== null && ($data['severity'] ?? 'blocking') === 'warning'
+            && in_array($code, self::AUTO_CODES, true)) {
+            $existing = DB::table('bank_statement_exceptions')
+                ->where('bank_import_id', $importId)
+                ->where('code', $code)
+                ->where(fn ($q) => empty($data['bank_entry_id'])
+                    ? $q->whereNull('bank_entry_id')
+                    : $q->where('bank_entry_id', $data['bank_entry_id']))
+                ->where(fn ($q) => empty($data['page_no'])
+                    ? $q->whereNull('page_no')
+                    : $q->where('page_no', $data['page_no']))
+                ->where(fn ($q) => ($data['source_value'] ?? null) === null
+                    ? $q->whereNull('source_value')
+                    : $q->where('source_value', $data['source_value']))
+                ->where(fn ($q) => $q->whereNotNull('resolved_at')->orWhereNotNull('acknowledged_at'))
+                ->exists();
+            if ($existing) {
+                return;
+            }
+        }
+
         DB::table('bank_statement_exceptions')->insert(array_merge([
             'bank_import_id' => $importId,
             'bank_entry_id' => null,

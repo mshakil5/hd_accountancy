@@ -396,6 +396,61 @@ class BankStatementVerificationTest extends TestCase
             ->where('code', 'balance_not_detected')->where('severity', 'warning')->count());
     }
 
+    /** A cleared standing warning must not be raised again by the next check run. */
+    public function test_resolved_ocr_warning_does_not_come_back(): void
+    {
+        $import = $this->makeImport();
+        $this->makeEntry($import, '2020-06-15', 'Acme Ltd', -10.00);
+        $analysis = $this->analysis(['opening_balance' => null, 'closing_balance' => null, 'ocr' => true]);
+
+        $this->verifier()->refresh($import, $analysis);
+        $warning = DB::table('bank_statement_exceptions')->where('bank_import_id', $import->id)
+            ->where('code', 'ocr_no_page_mapping')->first();
+        $this->assertNotNull($warning);
+
+        DB::table('bank_statement_exceptions')->where('id', $warning->id)->update([
+            'resolved_at' => now(), 'resolved_by' => $this->userId,
+            'resolution' => 'Compared every row with the original PDF.',
+        ]);
+
+        $this->verifier()->refresh(BankImport::findOrFail($import->id), $analysis);
+
+        $this->assertSame(1, DB::table('bank_statement_exceptions')->where('bank_import_id', $import->id)
+            ->where('code', 'ocr_no_page_mapping')->count());
+        $this->assertSame(0, DB::table('bank_statement_exceptions')->where('bank_import_id', $import->id)
+            ->where('code', 'ocr_no_page_mapping')->whereNull('resolved_at')->count());
+    }
+
+    /** OCR statements require every row to be checked before the statement sign-off. */
+    public function test_ocr_statement_requires_every_row_verified(): void
+    {
+        $import = $this->makeImport();
+        $entry = $this->makeEntry($import, '2020-06-15', 'Acme Ltd', -10.00);
+        $analysis = $this->analysis(['opening_balance' => null, 'closing_balance' => null, 'ocr' => true]);
+        $this->verifier()->refresh($import, $analysis);
+
+        DB::table('bank_statement_exceptions')->where('bank_import_id', $import->id)
+            ->where('severity', 'warning')->update([
+                'resolved_at' => now(), 'resolved_by' => $this->userId,
+                'resolution' => 'Compared every row with the original PDF.',
+            ]);
+
+        try {
+            $this->verifier()->verify(BankImport::findOrFail($import->id), $this->userId);
+            $this->fail('An OCR statement with unchecked rows must not verify.');
+        } catch (ValidationException $exception) {
+            $this->assertStringContainsString('row-level', $exception->getMessage());
+        }
+
+        DB::table('bank_entries')->where('id', $entry)->update([
+            'verified_at' => now(), 'verified_by' => $this->userId,
+        ]);
+        $this->verifier()->verify(BankImport::findOrFail($import->id), $this->userId);
+
+        $this->assertSame(BankStatementVerificationService::VERIFIED,
+            DB::table('bank_imports')->where('id', $import->id)->value('verification_status'));
+    }
+
     /** Verification records who signed it off and unlocks reconciliation. */
     public function test_verification_records_the_approver(): void
     {
