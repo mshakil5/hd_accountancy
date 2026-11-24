@@ -432,7 +432,8 @@
                     $('#stmtPeriod').text('For the period ' + d.from + ' to ' + d.to);
                     $('#stmtNote').text(
                         'Statement-based: only bank statement lines reconciled to a receipt. Amounts are ' +
-                        (s.basis === 'net' ? 'net of VAT.' : 'gross, including VAT.'));
+                        (s.basis === 'net' ? 'net of VAT.' : 'gross, including VAT.') +
+                        ' The second column is the same period one year earlier.');
                     $('#stmtFootLeft').text('Profit and Loss  ' + d.business_name);
                     $('#stmtFootRight').text(@json(now()->format('d/m/Y')));
                     $('#reportOutput').fadeIn();

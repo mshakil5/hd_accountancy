@@ -132,16 +132,19 @@ class AccountingController extends Controller
         $report = $this->buildProfitLoss($from, $to, $credentialId, $businessId, $paymentMethod);
 
         // Statement-based report: only bank lines reconciled to a receipt.
-        // Columns are the chosen period plus the same period a year earlier.
+        // Columns are the chosen period plus the same period a year earlier; the
+        // caption states the dates because a bare year reads as a full calendar year.
         $statement = null;
         if ($businessId) {
             $currentTo = Carbon::parse($to);
             $currentFrom = Carbon::parse($from);
+            $previousTo = $currentTo->copy()->subYear();
+            $previousFrom = $currentFrom->copy()->subYear();
             $statement = app(StatementReportService::class)->profitLossColumns(
                 (int) $businessId,
                 [
-                    ['label' => $currentTo->year, 'from' => $currentFrom->toDateString(), 'to' => $currentTo->toDateString()],
-                    ['label' => $currentTo->copy()->subYear()->year, 'from' => $currentFrom->copy()->subYear()->toDateString(), 'to' => $currentTo->copy()->subYear()->toDateString()],
+                    ['label' => $this->profitLossColumnLabel($currentFrom, $currentTo), 'from' => $currentFrom->toDateString(), 'to' => $currentTo->toDateString()],
+                    ['label' => $this->profitLossColumnLabel($previousFrom, $previousTo), 'from' => $previousFrom->toDateString(), 'to' => $previousTo->toDateString()],
                 ],
                 $paymentMethod,
                 $basis
@@ -178,6 +181,17 @@ class AccountingController extends Controller
             $basis,
             (int) $request->head_id
         ));
+    }
+
+    /**
+     * Column caption for a statement period. A bare year ("2026") makes a six-month
+     * run look like a full calendar year, so both endpoints are shown.
+     */
+    private function profitLossColumnLabel(Carbon $from, Carbon $to): string
+    {
+        return $from->year === $to->year
+            ? $from->format('d M') . ' – ' . $to->format('d M Y')
+            : $from->format('d M Y') . ' – ' . $to->format('d M Y');
     }
 
     /**
@@ -958,11 +972,13 @@ class AccountingController extends Controller
 
         $currentTo = Carbon::parse($to);
         $currentFrom = Carbon::parse($from);
+        $previousTo = $currentTo->copy()->subYear();
+        $previousFrom = $currentFrom->copy()->subYear();
         $report = app(StatementReportService::class)->profitLossColumns(
             $businessId,
             [
-                ['label' => $currentTo->year, 'from' => $currentFrom->toDateString(), 'to' => $currentTo->toDateString()],
-                ['label' => $currentTo->copy()->subYear()->year, 'from' => $currentFrom->copy()->subYear()->toDateString(), 'to' => $currentTo->copy()->subYear()->toDateString()],
+                ['label' => $this->profitLossColumnLabel($currentFrom, $currentTo), 'from' => $currentFrom->toDateString(), 'to' => $currentTo->toDateString()],
+                ['label' => $this->profitLossColumnLabel($previousFrom, $previousTo), 'from' => $previousFrom->toDateString(), 'to' => $previousTo->toDateString()],
             ],
             $request->payment_method,
             $basis
