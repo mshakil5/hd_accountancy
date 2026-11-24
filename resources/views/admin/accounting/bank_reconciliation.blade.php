@@ -99,6 +99,23 @@
 @media(max-width:520px){.hd-receipt-grid{grid-template-columns:1fr}}
 /* ── Reconciled banner ── */
 .hd-reconciled-banner{background:linear-gradient(135deg,#dcfce7,#bbf7d0);border:1px solid #86efac;border-radius:8px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+/* ── Last reconciled strip ── */
+.hd-last-recon{display:flex;align-items:stretch;background:#fff;border:1px solid #e5eaf1;border-left:3px solid #16a34a;border-radius:10px;margin-bottom:16px;overflow:hidden}
+.hd-last-recon__main{flex:1 1 auto;min-width:0;padding:10px 16px}
+.hd-last-recon__label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#64748b}
+.hd-last-recon__title{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px;margin-top:2px;font-size:14px;color:#0f172a}
+.hd-last-recon__date{font-weight:700}
+.hd-last-recon__desc{font-weight:500;overflow-wrap:anywhere}
+.hd-last-recon__meta{margin-top:3px;font-size:12px;color:#64748b}
+.hd-last-recon__cells{display:flex;align-items:stretch;border-left:1px solid #eef2f7}
+.hd-last-recon__cell{padding:10px 16px;text-align:right;min-width:126px;display:flex;flex-direction:column;justify-content:center}
+.hd-last-recon__cell+.hd-last-recon__cell{border-left:1px solid #eef2f7}
+.hd-last-recon__cell .hd-last-recon__label{font-size:9.5px}
+.hd-last-recon__val{margin-top:2px;font-size:15px;font-weight:700;color:#0f172a;white-space:nowrap;line-height:1.2}
+.hd-last-recon__val--neg{color:#b91c1c}
+.hd-last-recon__val--pos{color:#15803d}
+.hd-last-recon__sub{margin-top:2px;font-size:11.5px;color:#64748b;white-space:nowrap}
+@media(max-width:991px){.hd-last-recon{flex-direction:column}.hd-last-recon__cells{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-left:0;border-top:1px solid #eef2f7}.hd-last-recon__cell{min-width:0;padding:9px 12px;text-align:left}.hd-last-recon__cell:first-child{border-left:0}.hd-last-recon__val{font-size:13px;white-space:normal}.hd-last-recon__sub{white-space:normal}}
 /* ── Notes ── */
 .hd-note-pill{background:#f1f5f9;border-radius:6px;padding:7px 10px;font-size:12px;margin-bottom:6px;border-left:3px solid #cbd5e1}
 /* ── Quick add btn ── */
