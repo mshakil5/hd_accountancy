@@ -182,12 +182,15 @@ class BankReconciliationTest extends TestCase
         $this->assertSame($newer, (int) $scoped['lastReconciled']->id);
         $this->assertSame($this->userId, (int) $scoped['lastReconciled']->approved_by);
 
-        // Without a bank selected there is no “last reconciled row” to show.
+        // With no bank selected the strip shows the latest approval across the
+        // client's accounts, labelled with the bank it belongs to.
         $unscoped = $this->controller()->index(Request::create('/admin/bank-reconciliation', 'GET', [
             'client_credential_id' => $this->credId,
             'client_id' => $this->client->id,
         ]))->getData();
-        $this->assertNull($unscoped['lastReconciled']);
+        $this->assertNotNull($unscoped['lastReconciled']);
+        $this->assertSame($otherBank, (int) $unscoped['lastReconciled']->id);
+        $this->assertSame('Barclays', $unscoped['lastReconciled']->bank_name);
     }
 
     /** Transactions from a statement that is not verified never reach the workspace. */

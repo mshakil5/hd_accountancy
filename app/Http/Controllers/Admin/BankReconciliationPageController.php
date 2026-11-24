@@ -256,18 +256,21 @@ class BankReconciliationPageController extends Controller
         $reconciledCount = $scopeEntries()->where('reconciliation_status', 'approved')->count();
         $unreconciledCount = $totalCount - $reconciledCount;
 
-        // “Where did reconciliation stop?” — only meaningful for one bank account.
+        // “Where did reconciliation stop?” — the most recent approval in the current
+        // scope. One account keeps the balance unambiguous; when the filter spans
+        // accounts the row is labelled with its bank so it is not read as a total.
         // Newest approval first; transaction date breaks ties for legacy rows without a timestamp.
         $lastReconciled = null;
-        if ($businessId && $bankAccountId) {
-            $lastReconciled = DB::table('bank_entries')
-                ->where('client_id', $businessId)
-                ->where('bank_account_id', $bankAccountId)
-                ->where('reconciliation_status', 'approved')
-                ->orderByDesc('approved_at')
-                ->orderByDesc('transaction_date')
-                ->orderByDesc('id')
-                ->first();
+        if ($businessIds) {
+            $lastReconciled = DB::table('bank_entries as b')
+                ->leftJoin('reconciliation_bank_accounts as a', 'a.id', '=', 'b.bank_account_id')
+                ->whereIn('b.client_id', $businessIds)
+                ->when($bankAccountId, fn ($q) => $q->where('b.bank_account_id', $bankAccountId))
+                ->where('b.reconciliation_status', 'approved')
+                ->orderByDesc('b.approved_at')
+                ->orderByDesc('b.transaction_date')
+                ->orderByDesc('b.id')
+                ->first(['b.*', 'a.bank_name', 'a.account_last_four']);
             if ($lastReconciled && $lastReconciled->approved_by) {
                 $approver = DB::table('users')->where('id', $lastReconciled->approved_by)
                     ->first(['first_name', 'last_name']);

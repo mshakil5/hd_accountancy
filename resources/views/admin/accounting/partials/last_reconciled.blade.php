@@ -6,8 +6,16 @@
       {{ \Carbon\Carbon::parse($lastReconciled->transaction_date)->format('d/m/Y') }}
       · {{ $lastReconciled->description }}
     </div>
-    @if($lastReconciled->balance_after !== null)
-      <div class="hd-small text-muted">Balance after: £{{ number_format((float) $lastReconciled->balance_after, 2) }}</div>
+    @php
+      $bankLabel = trim(($lastReconciled->bank_name ?? '') . (!empty($lastReconciled->account_last_four) ? ' ••' . $lastReconciled->account_last_four : ''));
+      $shownBalance = $lastReconciled->balance_after ?? $lastReconciled->system_balance;
+    @endphp
+    @if($bankLabel !== '' || $shownBalance !== null)
+      <div class="hd-small text-muted">
+        @if($bankLabel !== ''){{ $bankLabel }}@endif
+        @if($bankLabel !== '' && $shownBalance !== null) · @endif
+        @if($shownBalance !== null)Balance after: £{{ number_format((float) $shownBalance, 2) }}{{ $lastReconciled->balance_after === null ? ' (calculated)' : '' }}@endif
+      </div>
     @endif
   </div>
   <div class="text-right">
