@@ -1295,17 +1295,9 @@ class BankStatementVerificationService
                 'verification' => $blocking . ' blocking statement exception(s) must be resolved before this statement can be verified.',
             ]);
         }
-        // A warning is cleared by resolving it (the workspace's Resolve action
-        // requires a note, which is the acknowledgement) or by a dedicated
-        // acknowledgement, so either stamp satisfies the gate.
-        $openWarnings = DB::table('bank_statement_exceptions')
-            ->where('bank_import_id', $import->id)->where('severity', 'warning')
-            ->whereNull('resolved_at')->whereNull('acknowledged_at')->count();
-        if ($openWarnings > 0) {
-            throw ValidationException::withMessages([
-                'verification' => $openWarnings . ' warning(s) remain unresolved. Resolve each warning (with a note) before verifying.',
-            ]);
-        }
+        // Warnings are advisory: duplicates, OCR provenance and similar findings
+        // are shown for the accountant to review, but only blocking exceptions
+        // stop a statement from being verified.
         // OCR or derived balances require full row-level verification.
         // OCR provenance is independent of whether an accountant acknowledged its warning.
         // Acknowledgement must never bypass mandatory row-by-row verification.

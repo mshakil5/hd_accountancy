@@ -1176,7 +1176,7 @@ class BankReconciliationPageController extends Controller
         try {
             app(BankStatementVerificationService::class)->verify($import,auth()->id(),$data['verification_note']??null);
         } catch (ValidationException $exception) {
-            return back()->withErrors($exception->errors())->with('error',$exception->getMessage());
+            return back()->withErrors($exception->errors());
         }
         return back()->with('success','Statement verified. Its rows can now be reconciled.');
     }

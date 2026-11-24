@@ -547,7 +547,9 @@ class BankStatementPageController extends Controller
         try {
             $this->verification->verify($import, auth()->id(), $data['verification_note'] ?? null);
         } catch (ValidationException $exception) {
-            return back()->withErrors($exception->errors())->with('error', $exception->getMessage());
+            // The page already prints the validation bag; adding the same text as
+            // a flash message printed every error twice.
+            return back()->withErrors($exception->errors());
         }
         return back()->with('success', 'Statement verified. Its rows can now be reconciled.');
     }

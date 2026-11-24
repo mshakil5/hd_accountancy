@@ -379,26 +379,16 @@ class BankStatementVerificationTest extends TestCase
             ->where('code', 'possible_duplicate')->where('severity', 'warning')->count());
     }
 
-    /** Warnings are advisory, but the accountant must clear them before signing off. */
-    public function test_warning_blocks_verification_until_resolved(): void
+    /** Warnings are advisory: they are shown, but only blocking findings stop the sign-off. */
+    public function test_warnings_do_not_block_verification(): void
     {
         $import = $this->makeImport();
         $this->makeEntry($import, '2020-06-15', 'Acme Ltd', -10.00, 90.00, 1, 1);
         $this->makeEntry($import, '2020-06-15', 'Acme Ltd', -10.00, 80.00, 1, 2);
         $this->verifier()->refresh($import, $this->analysis(['closing_balance' => 80.00]));
 
-        try {
-            $this->verifier()->verify($import, $this->userId);
-            $this->fail('A statement with an unresolved warning must not verify.');
-        } catch (ValidationException $exception) {
-            $this->assertStringContainsString('warning', $exception->getMessage());
-        }
-
-        DB::table('bank_statement_exceptions')->where('bank_import_id', $import->id)
-            ->where('severity', 'warning')->update([
-                'resolved_at' => now(), 'resolved_by' => $this->userId,
-                'resolution' => 'Checked the duplicate against the PDF; both payments are genuine.',
-            ]);
+        $this->assertSame(2, DB::table('bank_statement_exceptions')->where('bank_import_id', $import->id)
+            ->where('severity', 'warning')->whereNull('resolved_at')->count());
 
         $this->verifier()->verify(BankImport::findOrFail($import->id), $this->userId);
 
