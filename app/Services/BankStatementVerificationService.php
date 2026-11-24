@@ -1294,12 +1294,15 @@ class BankStatementVerificationService
                 'verification' => $blocking . ' blocking statement exception(s) must be resolved before this statement can be verified.',
             ]);
         }
-        $unackWarnings = DB::table('bank_statement_exceptions')
+        // A warning is cleared by resolving it (the workspace's Resolve action
+        // requires a note, which is the acknowledgement) or by a dedicated
+        // acknowledgement, so either stamp satisfies the gate.
+        $openWarnings = DB::table('bank_statement_exceptions')
             ->where('bank_import_id', $import->id)->where('severity', 'warning')
-            ->whereNull('acknowledged_at')->count();
-        if ($unackWarnings > 0) {
+            ->whereNull('resolved_at')->whereNull('acknowledged_at')->count();
+        if ($openWarnings > 0) {
             throw ValidationException::withMessages([
-                'verification' => $unackWarnings . ' warning(s) remain unacknowledged. Acknowledge each warning (with a note) before verifying.',
+                'verification' => $openWarnings . ' warning(s) remain unresolved. Resolve each warning (with a note) before verifying.',
             ]);
         }
         // OCR or derived balances require full row-level verification.

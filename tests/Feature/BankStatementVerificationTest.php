@@ -354,6 +354,33 @@ class BankStatementVerificationTest extends TestCase
             ->where('code', 'possible_duplicate')->where('severity', 'warning')->count());
     }
 
+    /** Warnings are advisory, but the accountant must clear them before signing off. */
+    public function test_warning_blocks_verification_until_resolved(): void
+    {
+        $import = $this->makeImport();
+        $this->makeEntry($import, '2020-06-15', 'Acme Ltd', -10.00, 90.00, 1, 1);
+        $this->makeEntry($import, '2020-06-15', 'Acme Ltd', -10.00, 80.00, 1, 2);
+        $this->verifier()->refresh($import, $this->analysis(['closing_balance' => 80.00]));
+
+        try {
+            $this->verifier()->verify($import, $this->userId);
+            $this->fail('A statement with an unresolved warning must not verify.');
+        } catch (ValidationException $exception) {
+            $this->assertStringContainsString('warning', $exception->getMessage());
+        }
+
+        DB::table('bank_statement_exceptions')->where('bank_import_id', $import->id)
+            ->where('severity', 'warning')->update([
+                'resolved_at' => now(), 'resolved_by' => $this->userId,
+                'resolution' => 'Checked the duplicate against the PDF; both payments are genuine.',
+            ]);
+
+        $this->verifier()->verify(BankImport::findOrFail($import->id), $this->userId);
+
+        $this->assertSame(BankStatementVerificationService::VERIFIED,
+            DB::table('bank_imports')->where('id', $import->id)->value('verification_status'));
+    }
+
     /** Scanned PDFs (OCR) cannot be page-mapped, so the balance check warns. */
     public function test_missing_balances_produce_a_warning_not_a_block(): void
     {
@@ -482,6 +509,32 @@ class BankStatementVerificationTest extends TestCase
         $this->get($url)->assertOk()
             ->assertDontSee('/verify-all-rows')
             ->assertSee('All rows are already verified');
+    }
+
+    /** The workspace exposes the statement-level sign-off, and it unlocks reconciliation. */
+    public function test_ready_statement_can_be_signed_off_from_the_workspace(): void
+    {
+        $admin = DB::table('users')->where('type', 1)->first();
+        if (!$admin) {
+            $this->markTestSkipped('No admin user fixture available.');
+        }
+        $this->actingAs(User::find($admin->id));
+
+        $import = $this->makeImport(BankStatementVerificationService::READY);
+        $this->makeEntry($import, '2020-06-15', 'Acme Ltd', -10.00, 90.00);
+        $page = route('admin.bank-reconciliation.verification', $import->id);
+        $signOff = route('admin.bank-statements.verify-import', $import->id);
+
+        $this->get($page)->assertOk()->assertSee($signOff);
+
+        $this->post($signOff)->assertRedirect();
+
+        $this->assertSame(BankStatementVerificationService::VERIFIED,
+            DB::table('bank_imports')->where('id', $import->id)->value('verification_status'));
+
+        $this->get($page)->assertOk()
+            ->assertSee('Verified. Reconciliation is unlocked')
+            ->assertDontSee($signOff);
     }
 
     /**

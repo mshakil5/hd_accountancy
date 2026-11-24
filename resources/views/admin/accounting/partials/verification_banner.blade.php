@@ -27,6 +27,16 @@
             @endif
         </div>
         <div class="d-flex gap-2 flex-wrap">
+            @if($blocking === 0 && ($stats['rows'] ?? 0) > 0
+                && in_array($import->verification_status, ['ready_for_reconciliation', 'needs_accountant_review'], true))
+                <form method="POST" action="{{ route('admin.bank-statements.verify-import', $import->id) }}"
+                      onsubmit="return confirm('Verify this statement? Its rows will unlock in Bank Reconciliation.');">
+                    @csrf
+                    <button type="submit" class="btn btn-success btn-sm">
+                        <i class="bi bi-shield-check mr-1"></i> Verify statement
+                    </button>
+                </form>
+            @endif
             @if(($stats['unverified'] ?? 0) > 0)
                 <form method="POST" action="{{ route('admin.bank-statements.verify-all-rows', $import->id) }}"
                       data-hd-ajax="1" data-hd-confirm="Verify all unverified rows for this statement? This marks them ready for reconciliation.">
