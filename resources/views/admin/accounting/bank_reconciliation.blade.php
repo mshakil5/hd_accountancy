@@ -213,7 +213,11 @@
 {{-- ── Workspace: server-rendered fragments, swapped in place by JS ── --}}
 <div class="hd-card hd-workspace" id="hd-reconciliation-workspace"
      data-rows-url="{{ route('admin.bank-reconciliation.rows') }}"
-     data-reconcile-status="{{ $reconcileFilter ?? 'unreconciled' }}">
+     data-reconcile-status="{{ $reconcileFilter ?? 'unreconciled' }}"
+     data-page="{{ $currentPage ?? 1 }}"
+     data-last-page="{{ $lastPage ?? 1 }}"
+     data-total="{{ $filteredCount ?? 0 }}"
+     data-per-page="25">
   <div class="d-flex justify-content-between align-items-center flex-wrap mb-2">
     <h5 class="mb-0">Bank Transactions <span class="badge badge-secondary" id="hd-rows-total" style="font-size:13px">{{ $entries->total() }}</span></h5>
     <span class="hd-small" id="hd-rows-range"></span>
@@ -869,8 +873,24 @@ document.addEventListener('DOMContentLoaded', function(){ hdInitWorkspace(docume
     });
   });
 
+  // First paint: the rows arrive server-rendered, so the pager and its
+  // "Showing X–Y of Z" range have to be painted from the state the server
+  // already sent — otherwise they only appear after the first AJAX reload.
+  const initialPage = parseInt(ws.dataset.page || '1', 10) || 1;
+  const initialLastPage = Math.max(1, parseInt(ws.dataset.lastPage || '1', 10) || 1);
+  const initialTotal = Math.max(0, parseInt(ws.dataset.total || '0', 10) || 0);
+  const initialPerPage = Math.max(1, parseInt(ws.dataset.perPage || '25', 10) || 25);
+  paintPager({
+    page: Math.min(initialPage, initialLastPage),
+    last_page: initialLastPage,
+    per_page: initialPerPage,
+    total: initialTotal,
+    from: initialTotal ? (Math.min(initialPage, initialLastPage) - 1) * initialPerPage + 1 : 0,
+    to: Math.min(initialTotal, Math.min(initialPage, initialLastPage) * initialPerPage)
+  });
+
   // Keep the address bar in step with what is on screen.
-  syncUrl(filterParams(), parseInt(new URLSearchParams(location.search).get('page') || '1', 10) || 1);
+  syncUrl(filterParams(), initialPage);
 })();
 </script>
 
